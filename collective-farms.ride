@@ -214,13 +214,14 @@ func verify() = {
     if (payment.assetId == getEggId()) then accum + payment.amount else accum
   }
 
-  if (checkStarted == false) then throw("_14") else
-  if (getBool(kLocked) == true) then throw("_22") else
   match (tx) {
       case inv:InvokeScriptTransaction => {
         let toDistr = getInt(kToDistr)
 
         # Avoid scam with high fees => allow only Waves and minimal amount
+
+        if (checkStarted == false) then throw("_14") else
+        if (getBool(kLocked) == true) then throw("_22") else
         if (inv.fee > 900000 || inv.feeAssetId != unit) then {
           throw("_15")
         }else if (inv.function == "claimReward") then {
@@ -230,8 +231,6 @@ func verify() = {
         } else if ((assetBalance(this, getEggId()) - FOLD<3>(inv.payments, 0, totalEggSpending)) < toDistr) then {
           throw("_18=" + toDistr.toString())
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "claimCeoFee") then {
-          true
-        } else if (inv.dApp.addressFromRecipient() == this && inv.function == "callMarketplaceProxy") then {
           true
         } else {
           let allowedContracts = getStrA(mAccAddr, "allowed_contracts")
