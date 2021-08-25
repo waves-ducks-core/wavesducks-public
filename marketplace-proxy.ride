@@ -1,0 +1,189 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+
+let mAccPKey = base58'23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T'
+let mAccAddr = mAccPKey.addressFromPublicKey()
+let redeployPubKey = base58''
+let feePercent = 10
+
+
+let kTotalLiquidity = "total_liquidity"
+let kInitialized = "INITIALIZED"
+let kLiquidityThreshold = "LIQUIDITY_THRESHOLD"
+let kTotalShareTokens = "total_share_tokens"
+let kShareAssetId = "SHARE_ASSET_ID"
+let kIncubatorDapp = "INCUBATOR_DAPP"
+let kBreederDapp = "BREEDER_DAPP"
+let kFarmingDapp = "FARMING_DAPP"
+let kMarketDapp = "MARKETPLACE_DAPP"
+let kLocked = "LOCKED"
+let kTotalFarmingReward = "total_farming_reward"
+let kCeoCollectedFee = "ceo_collected_fee"
+let kCeoCollectedFeeOverall = "ceo_fee_overall"
+let kToDistr = "to_distribute"
+
+func getInt(key: String) = {
+  match getInteger(this, key) {
+      case b:Int => b
+     case _ => 0
+  }
+}
+
+func getStr(key: String) = {
+  match getString(this, key) {
+      case b:String => b
+      case _ => ""
+  }
+}
+
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => unit
+  }
+}
+
+func getStrA(a: Address, k: String) = {
+  match getString(a, k) {
+      case b:String => b
+      case _ => ""
+  }
+}
+
+func getIntA(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func getMarketAddr() = {
+  getStrA(mAccAddr, kMarketDapp)
+}
+
+func amountOrClear(amount: String) = {
+  if (amount.contains("0")) then {""} else {amount}
+}
+
+func isSymbolA(acc: Int, sym: String) = { if (sym == "A") then {acc+1} else {acc+0} }
+func isSymbolB(acc: Int, sym: String) = { if (sym == "B") then {acc+1} else {acc+0} }
+func isSymbolC(acc: Int, sym: String) = { if (sym == "C") then {acc+1} else {acc+0} }
+func isSymbolD(acc: Int, sym: String) = { if (sym == "D") then {acc+1} else {acc+0} }
+func isSymbolE(acc: Int, sym: String) = { if (sym == "E") then {acc+1} else {acc+0} }
+func isSymbolF(acc: Int, sym: String) = { if (sym == "F") then {acc+1} else {acc+0} }
+func isSymbolG(acc: Int, sym: String) = { if (sym == "G") then {acc+1} else {acc+0} }
+func isSymbolH(acc: Int, sym: String) = { if (sym == "H") then {acc+1} else {acc+0} }
+
+func getGen(assetName: String) = {
+  # getGen("DUCK-ABCDDCBA-GY") -> 2A2B2C2D-G
+  let geno = assetName.drop(5).dropRight(3).split("")
+  amountOrClear(toString(FOLD<8>(geno, 0, isSymbolA)) + "A") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolB)) + "B") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolC)) + "C") +
+  amountOrClear(toString(FOLD<8>(geno, 0, isSymbolD)) + "D") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolE)) + "E") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolF)) + "F") +
+  amountOrClear(toString(FOLD<8>(geno, 0, isSymbolG)) + "G") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolH)) + "H")
+}
+
+
+func getAssetOrigin(generation: String) = {
+  let incubatorAddress = getStrA(mAccAddr, kIncubatorDapp)
+  let breederAddress = getStrA(mAccAddr, kBreederDapp)
+
+  if (generation == "G") then {incubatorAddress.fromBase58String()} else {breederAddress.fromBase58String()}
+}
+
+func getAssetRarity(geno: String, generation: String) = {
+  let quantity = getIntegerValue(Address(getAssetOrigin(generation)), "stats_"+geno+"_quantity")
+  let power = pow(10000 / quantity, 4, 5, 1, 2, FLOOR)
+  if (power > 0) then {power} else {2}
+}
+
+func getAssetFarmingPower(assetId: ByteVector) = {
+  let breederAddress = getStrA(mAccAddr, kBreederDapp).fromBase58String()
+  let incubatorAddress = getStrA(mAccAddr, kIncubatorDapp).fromBase58String()
+  
+  if (assetInfo(assetId).value().issuer == Address(breederAddress) || assetInfo(assetId).value().issuer == Address(incubatorAddress)) then {
+    let assetName = assetInfo(assetId).value().name
+    let generation = assetName.takeRight(2).take(1)
+    let gen = getGen(assetName) + "-" + generation
+    getAssetRarity(gen, generation)
+  } else {
+    throw("_20")
+  }
+}
+
+func getDuckMarketPrice(nftId: ByteVector) = {
+  let rarity = getAssetFarmingPower(nftId)
+  let breederAddress = getStrA(mAccAddr, kBreederDapp).addressFromStringValue()
+  let canBreed = getIntA(breederAddress, "asset_" + nftId.toBase58String() + "_children")
+  let canBreedText = if canBreed > 0 then "1" else "0"
+  let val = getInteger(mAccAddr, "r-" + rarity.toString() + "-b-" + canBreedText)
+  val.valueOrErrorMessage("There is no oracle data for this type of duck")
+}
+
+func getDuckIdByAuctionId(auctionId: String) = {
+  let marketAddr = getMarketAddr()
+  getStrA(marketAddr.addressFromStringValue(), "auction_" + auctionId + "_assetId")
+}
+
+func getBidAmount(auctionId: String, bidId: String) = {
+  let marketAddr = getMarketAddr()
+  getIntA(marketAddr.addressFromStringValue(), "auction_" + auctionId + "_bid_" + bidId + "_amount")
+}
+
+
+# params format
+@Callable(i)
+func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, str2: String) = {
+  let marketplaceDappAddress = getMarketAddr().addressFromStringValue()
+  # if initAuction => allow to sell only with price > marketPrice - 15%
+  if (getBool(kLocked) == true) then throw("_22") else
+  if (function == "initAuction") then {
+    let asset = i.payments[0].value()
+    let duckMarketPrice = getDuckMarketPrice(asset.assetId.value())
+    let initialPrice = int1
+    let buyoutPrice = int2
+    if ((initialPrice >= duckMarketPrice - (duckMarketPrice / 100 * 15)) && buyoutPrice >= initialPrice) then {
+      strict initAuction = invoke(marketplaceDappAddress, "initAuction", [initialPrice, buyoutPrice, str1], [AttachedPayment(asset.assetId.value(), 1)])
+      [
+        StringEntry("tx_" + i.transactionId.toBase58String(), asset.assetId.value().toBase58String())
+      ]
+    } else throw("_9=" + duckMarketPrice.toString())
+  } else if (function == "placeBid") then {
+    # if placeBid => allow to buy only with price < marketPrice + 10%
+    let auctionId = str1
+    let duckAssetId = getDuckIdByAuctionId(auctionId)
+    let duckMarketPrice = getDuckMarketPrice(duckAssetId.fromBase58String())
+    let bidAmount = i.payments[0].value().amount.value()
+    if (bidAmount < duckMarketPrice + (duckMarketPrice / 100 * 10)) then {
+      strict placeBid = invoke(marketplaceDappAddress, "placeBid", [auctionId], [AttachedPayment(unit, bidAmount)])
+      []
+    } else throw("_10=" + duckMarketPrice.toString())
+  } else if (function == "acceptBid") then {
+    # if acceptBid => allow to sell only with price > marketPrice - 15%
+    let auctionId = str1
+    let bidId = str2
+    let duckAssetId = getDuckIdByAuctionId(auctionId)
+    let duckMarketPrice = getDuckMarketPrice(duckAssetId.fromBase58String())
+    let bidAmount = getBidAmount(auctionId, bidId)
+
+    if (bidAmount >= duckMarketPrice - (duckMarketPrice / 100 * 15)) then {
+      strict acceptBid = invoke(marketplaceDappAddress, "acceptBid", [auctionId, bidId], [])
+      []
+    } else throw("_11=" + duckMarketPrice.toString())
+  } else if (function == "instantBuy") then {
+    # if acceptBid => allow to sell only with price > marketPrice - 15%
+    let auctionId = str1
+    let duckAssetId = getDuckIdByAuctionId(auctionId)
+    let duckMarketPrice = getDuckMarketPrice(duckAssetId.fromBase58String())
+    let bidAmount = i.payments[0].value().amount.value()
+    if (bidAmount < duckMarketPrice + (duckMarketPrice / 100 * 10)) then {
+      strict instantBuy = invoke(marketplaceDappAddress, "instantBuy", [auctionId], [AttachedPayment(unit, bidAmount)])
+      []
+    } else throw("_12" + duckMarketPrice.toString())
+  } else throw("_13")
+}
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        
