@@ -4,13 +4,13 @@
 
 let mAccPKey = base58'23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T'
 let mAccAddr = mAccPKey.addressFromPublicKey()
-let redeployPubKey = base58''
 let feePercent = getIntegerValue(mAccAddr, "f_" + this.toString() + "_fee")
 
 
 let kTotalLiquidity = "total_liquidity"
 let kInitialized = "INITIALIZED"
 let kLiquidityThreshold = "LIQUIDITY_THRESHOLD"
+let kFarmParticipants = "farm_participants"
 let kTotalShareTokens = "total_share_tokens"
 let kShareAssetId = "SHARE_ASSET_ID"
 let kIncubatorDapp = "INCUBATOR_DAPP"
@@ -60,64 +60,6 @@ func getIntA(address: Address, key: String) = {
 
 func getMarketAddr() = {
   getStrA(mAccAddr, kMarketDapp)
-}
-
-func amountOrClear(amount: String) = {
-  if (amount.contains("0")) then {""} else {amount}
-}
-
-func isSymbolA(acc: Int, sym: String) = { if (sym == "A") then {acc+1} else {acc+0} }
-func isSymbolB(acc: Int, sym: String) = { if (sym == "B") then {acc+1} else {acc+0} }
-func isSymbolC(acc: Int, sym: String) = { if (sym == "C") then {acc+1} else {acc+0} }
-func isSymbolD(acc: Int, sym: String) = { if (sym == "D") then {acc+1} else {acc+0} }
-func isSymbolE(acc: Int, sym: String) = { if (sym == "E") then {acc+1} else {acc+0} }
-func isSymbolF(acc: Int, sym: String) = { if (sym == "F") then {acc+1} else {acc+0} }
-func isSymbolG(acc: Int, sym: String) = { if (sym == "G") then {acc+1} else {acc+0} }
-func isSymbolH(acc: Int, sym: String) = { if (sym == "H") then {acc+1} else {acc+0} }
-
-func getGen(assetName: String) = {
-  # getGen("DUCK-ABCDDCBA-GY") -> 2A2B2C2D-G
-  let geno = assetName.drop(5).dropRight(3).split("")
-  amountOrClear(toString(FOLD<8>(geno, 0, isSymbolA)) + "A") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolB)) + "B") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolC)) + "C") +
-  amountOrClear(toString(FOLD<8>(geno, 0, isSymbolD)) + "D") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolE)) + "E") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolF)) + "F") +
-  amountOrClear(toString(FOLD<8>(geno, 0, isSymbolG)) + "G") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolH)) + "H")
-}
-
-
-func getAssetOrigin(generation: String) = {
-  let incubatorAddress = getStrA(mAccAddr, kIncubatorDapp)
-  let breederAddress = getStrA(mAccAddr, kBreederDapp)
-
-  if (generation == "G") then {incubatorAddress.fromBase58String()} else {breederAddress.fromBase58String()}
-}
-
-func getAssetRarity(geno: String, generation: String) = {
-  let quantity = getIntegerValue(Address(getAssetOrigin(generation)), "stats_"+geno+"_quantity")
-  let power = pow(10000 / quantity, 4, 5, 1, 2, FLOOR)
-  if (power > 0) then {power} else {2}
-}
-
-func getAssetFarmingPower(assetId: ByteVector) = {
-  let breederAddress = getStrA(mAccAddr, kBreederDapp).fromBase58String()
-  let incubatorAddress = getStrA(mAccAddr, kIncubatorDapp).fromBase58String()
-  
-  if (assetInfo(assetId).value().issuer == Address(breederAddress) || assetInfo(assetId).value().issuer == Address(incubatorAddress)) then {
-    let assetName = assetInfo(assetId).value().name
-    let generation = assetName.takeRight(2).take(1)
-    let gen = getGen(assetName) + "-" + generation
-    getAssetRarity(gen, generation)
-  } else {
-    throw("_20")
-  }
-}
-
-func getDuckMarketPrice(nftId: ByteVector) = {
-  let rarity = getAssetFarmingPower(nftId)
-  let breederAddress = getStrA(mAccAddr, kBreederDapp).addressFromStringValue()
-  let canBreed = getIntA(breederAddress, "asset_" + nftId.toBase58String() + "_children")
-  let canBreedText = if canBreed > 0 then "1" else "0"
-  let val = getInteger(mAccAddr, "r-" + rarity.toString() + "-b-" + canBreedText)
-  val.valueOrErrorMessage("There is no oracle data for this type of duck")
 }
 
 func getDuckIdByAuctionId(auctionId: String) = {
@@ -188,12 +130,18 @@ func provideLiquidity() = {
     let shareTokensId = getStr(kShareAssetId).fromBase58String()
 
     let reissue = Reissue(getShareAssetId(), shareTokensToGive, true)
+    let farmParticipants = getInt(kFarmParticipants)
+    let kParticipated = "account_" + i.caller.toString() + "_participated"
+    let alreadyParticipated = getBool(kParticipated)
+    let newFarmParticipants = if (alreadyParticipated == unit) then farmParticipants + 1 else farmParticipants
 
     [
       reissue,
       ScriptTransfer(i.caller, shareTokensToGive, shareTokensId),
       IntegerEntry(kTotalShareTokens, totalShareTokens + shareTokensToGive),
-      IntegerEntry(kTotalLiquidity, totalLiquidity + i.payments[0].amount.value())
+      IntegerEntry(kTotalLiquidity, totalLiquidity + i.payments[0].amount.value()),
+      IntegerEntry(kFarmParticipants, newFarmParticipants),
+      BooleanEntry(kParticipated, true)
     ]
   }
 }
