@@ -5,7 +5,7 @@
 let mAccPKey = base58'23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T'
 let mAccAddr = mAccPKey.addressFromPublicKey()
 let redeployPubKey = base58''
-let feePercent = 10
+let feePercent = getIntegerValue(mAccAddr, "f_" + this.toString() + "_fee")
 
 
 let kTotalLiquidity = "total_liquidity"
@@ -146,7 +146,7 @@ func initCollectiveFarm(name: String, minimumThreshold: Int) = {
   } else if (i.payments[0].amount != 10 || i.payments[0].assetId != getEggId()) then {
       throw("_20")
   } else {
-      let shareTokens = 10
+      let shareTokens = 1_0_000_000
       let shareToken = Issue(name, "Share token for the \"" + name + "\" collective farm", shareTokens, 8, true)
       
       [
