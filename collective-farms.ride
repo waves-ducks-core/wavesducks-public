@@ -220,6 +220,7 @@ func verify() = {
 
         # Avoid scam with high fees => allow only Waves and minimal amount
 
+        if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false) then throw("_100") else
         if (checkStarted == false) then throw("_14") else
         if (getBool(kLocked) == true) then throw("_22") else
         if (inv.fee > 900000 || inv.feeAssetId != unit) then {
@@ -231,7 +232,7 @@ func verify() = {
         } else if ((assetBalance(this, getEggId()) - FOLD<3>(inv.payments, 0, totalEggSpending)) < toDistr) then {
           throw("_18=" + toDistr.toString())
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "claimCeoFee") then {
-          true
+          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else {
           let allowedContracts = getStrA(mAccAddr, "allowed_contracts")
           let marketAddr = getMarketAddr()
