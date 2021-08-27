@@ -123,9 +123,15 @@ func getDuckMarketPrice(nftId: ByteVector) = {
   let rarity = getAssetFarmingPower(nftId)
   let breederAddress = getStrA(mAccAddr, kBreederDapp).addressFromStringValue()
   let canBreed = getIntA(breederAddress, "asset_" + nftId.toBase58String() + "_children")
-  let canBreedText = if canBreed > 0 then "1" else "0"
+  let canBreedText = if canBreed > 0 then "0" else "1"
   let val = getInteger(mAccAddr, "r-" + rarity.toString() + "-b-" + canBreedText)
-  val.valueOrErrorMessage("There is no oracle data for this type of duck")
+  match val {
+    case price: Int => {
+      let minPrice = if (canBreed > 0) then 2_00_000_000 * rarity else 180_00_000_000
+      if (price < minPrice) then minPrice else price
+    }
+    case _ => throw("There is no price for such duck")
+  }
 }
 
 func getDuckIdByAuctionId(auctionId: String) = {
