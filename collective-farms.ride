@@ -62,16 +62,6 @@ func getMarketAddr() = {
   getStrA(mAccAddr, kMarketDapp)
 }
 
-func getDuckIdByAuctionId(auctionId: String) = {
-  let marketAddr = getMarketAddr()
-  getStrA(marketAddr.addressFromStringValue(), "auction_" + auctionId + "_assetId")
-}
-
-func getBidAmount(auctionId: String, bidId: String) = {
-  let marketAddr = getMarketAddr()
-  getIntA(marketAddr.addressFromStringValue(), "auction_" + auctionId + "_bid_" + bidId + "_amount")
-}
-
 func getEggId() = {
   getStringValue(mAccAddr, "EGG_ASSET_ID").fromBase58String()
 }
@@ -233,16 +223,13 @@ func verify() = {
           throw("_18=" + toDistr.toString())
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "claimCeoFee") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        } else if (inv.dApp.addressFromRecipient() == getMarketAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
+          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else {
           let allowedContracts = getStrA(mAccAddr, "allowed_contracts")
-          let marketAddr = getMarketAddr()
           let allowedContractsList = allowedContracts.split(";")
           let dappToCall = inv.dApp.addressFromRecipient().toString()
-          # limit duck buy/sell parameters
-          if (dappToCall == marketAddr) then {
-            throw("_19")
-          # allow to call only contracts from the white-list (duck contracts + swop.fi)
-          } else allowedContractsList.indexOf(dappToCall) != unit
+          allowedContractsList.indexOf(dappToCall) != unit
         }
       }
       case ss: SetScriptTransaction => {
