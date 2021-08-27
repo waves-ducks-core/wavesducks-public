@@ -16,7 +16,8 @@ let kShareAssetId = "SHARE_ASSET_ID"
 let kIncubatorDapp = "INCUBATOR_DAPP"
 let kBreederDapp = "BREEDER_DAPP"
 let kFarmingDapp = "FARMING_DAPP"
-let kMarketDapp = "MARKETPLACE_DAPP"
+let kMarketProxyDapp = "MARKETPLACE_PROXY_DAPP"
+let kAuctionDapp = "AUCTION_DAPP"
 let kLocked = "LOCKED"
 let kTotalFarmingReward = "total_farming_reward"
 let kCeoCollectedFee = "ceo_collected_fee"
@@ -58,8 +59,8 @@ func getIntA(address: Address, key: String) = {
     }
 }
 
-func getMarketAddr() = {
-  getStrA(mAccAddr, kMarketDapp)
+func getMarketProxyAddr() = {
+  getStrA(mAccAddr, kMarketProxyDapp)
 }
 
 func getEggId() = {
@@ -223,7 +224,7 @@ func verify() = {
           throw("_18=" + toDistr.toString())
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "claimCeoFee") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-        } else if (inv.dApp.addressFromRecipient() == getMarketAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
+        } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else {
           let allowedContracts = getStrA(mAccAddr, "allowed_contracts")
