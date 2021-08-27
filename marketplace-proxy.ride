@@ -131,7 +131,7 @@ func getDuckMarketPrice(nftId: ByteVector) = {
       let minPrice = if (sterile > 0) then 2_00_000_000 * rarity else 180_00_000_000
       if (price < minPrice) then minPrice else price
     }
-    case _ => throw("There is no price for such duck")
+    case _ => throw("There is no price for such duck: " + "r-" + rarity.toString() + "-b-" + canBreedText)
   }
 }
 
@@ -209,6 +209,14 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
         StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
       ]
     } else throw("_12=" + duckMarketPrice.toString())
+  } else if (function == "cancelBid") then {
+    # if acceptBid => allow to sell only with price > marketPrice - 15%
+    let auctionId = str1
+    let bidId = str2
+    strict acceptBid = invoke(auctionDappAddress, "cancelBid", [auctionId, bidId], [])
+    [
+      StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
+    ]
   } else throw("_13")
 }
 
