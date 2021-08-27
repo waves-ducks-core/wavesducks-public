@@ -45,6 +45,13 @@ func getBool(key: String) = {
   }
 }
 
+func getBoolA(a: Address, key: String) = {
+  match getBoolean(a, key) {
+      case b:Boolean => b
+      case _ => unit
+  }
+}
+
 func getStrA(a: Address, k: String) = {
   match getString(a, k) {
       case b:String => b
@@ -137,12 +144,14 @@ func getBidAmount(auctionId: String, bidId: String) = {
 func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, str2: String) = {
   let marketplaceDappAddress = getMarketAddr().addressFromStringValue()
   # if initAuction => allow to sell only with price > marketPrice - 15%
+  if (getBoolA(mAccAddr, "farm_" + i.caller.toString()) != true) then throw("_301=") else
   if (function == "initAuction") then {
     let asset = i.payments[0].value()
     let duckMarketPrice = getDuckMarketPrice(asset.assetId.value())
     let initialPrice = int1
     let buyoutPrice = int2
     let maxPriceDiff = fraction(duckMarketPrice, 15, 100)
+    if (asset.amount.value() != 1) then throw("_103") else
     if ((initialPrice >= (duckMarketPrice - maxPriceDiff)) && buyoutPrice >= initialPrice) then {
       strict initAuction = invoke(marketplaceDappAddress, "initAuction", [initialPrice, buyoutPrice, str1], [AttachedPayment(asset.assetId.value(), 1)])
       [
@@ -156,6 +165,8 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let duckMarketPrice = getDuckMarketPrice(duckAssetId.fromBase58String())
     let bidAmount = i.payments[0].value().amount.value()
     let maxPriceDiff = fraction(duckMarketPrice, 10, 100)
+    if (i.payments.size() != 1) then throw("_103") else
+    if (i.payments[0].value().assetId != unit) then throw("_104") else
     if (bidAmount < (duckMarketPrice + maxPriceDiff)) then {
       strict placeBid = invoke(marketplaceDappAddress, "placeBid", [auctionId], [AttachedPayment(unit, bidAmount)])
       [
@@ -173,7 +184,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     if (bidAmount >= (duckMarketPrice - maxPriceDiff)) then {
       strict acceptBid = invoke(marketplaceDappAddress, "acceptBid", [auctionId, bidId], [])
       [
-        
+        StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
       ]
     } else throw("_11=" + duckMarketPrice.toString())
   } else if (function == "instantBuy") then {
@@ -183,9 +194,13 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let duckMarketPrice = getDuckMarketPrice(duckAssetId.fromBase58String())
     let bidAmount = i.payments[0].value().amount.value()
     let maxPriceDiff = fraction(duckMarketPrice, 10, 100)
+    if (i.payments.size() != 1) then throw("_103") else
+    if (i.payments[0].value().assetId != unit) then throw("_104") else
     if (bidAmount < (duckMarketPrice + maxPriceDiff)) then {
       strict instantBuy = invoke(marketplaceDappAddress, "instantBuy", [auctionId], [AttachedPayment(unit, bidAmount)])
-      []
+      [
+        StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
+      ]
     } else throw("_12=" + duckMarketPrice.toString())
   } else throw("_13")
 }
