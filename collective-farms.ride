@@ -23,6 +23,7 @@ let kTotalFarmingReward = "total_farming_reward"
 let kCeoCollectedFee = "ceo_collected_fee"
 let kCeoCollectedFeeOverall = "ceo_fee_overall"
 let kToDistr = "to_distribute"
+let kUnstakedReward = "unstaked_reward"
 
 func getInt(key: String) = {
   match getInteger(this, key) {
@@ -196,6 +197,24 @@ func voteForLiquidation(auctionId: String) = {
   throw("_7")
 }
 
+@Callable(i)
+func callUnstakeProxy(function: String, assetId: String) = {
+  if (getBool(kLocked) == true) then throw("Contract is locked now") else
+  if (function != "unstakeNFT" && function != "unstakeJackpot") then throw("Bad function name") else
+  if (i.caller != this) then throw("Can be called only by the account") else {
+    let farmingDappAddress = getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue()
+    strict ustakedReward = invoke(farmingDappAddress, function, [assetId], [])
+    let unstakedRewardNow = getInt(kUnstakedReward)
+
+    let newUnstakedReward = match ustakedReward {
+      case int: Int => unstakedRewardNow + int
+      case _ => throw("Error during unstaking")
+    }
+    [
+      IntegerEntry(kUnstakedReward, newUnstakedReward)
+    ]
+  }
+}
 
 @Verifier(tx)
 func verify() = {
@@ -207,10 +226,15 @@ func verify() = {
 
   match (tx) {
       case inv:InvokeScriptTransaction => {
+        let unstakedRewardNow = getInt(kUnstakedReward)
         let toDistr = getInt(kToDistr)
+
+        let minBalance = unstakedRewardNow + toDistr
 
         # Avoid scam with high fees => allow only Waves and minimal amount
 
+
+        if (inv.function == "unstakeNFT" || inv.function == "unstakeJackpot") then throw("You cannot call these functions directly") else
         if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false) then throw("_100") else
         if (checkStarted == false) then throw("_14") else
         if (getBool(kLocked) == true) then throw("_22") else
@@ -220,8 +244,8 @@ func verify() = {
           throw("_16")
         } else if (inv.payments.size() > 2) then {
           throw("_17")
-        } else if ((assetBalance(this, getEggId()) - FOLD<3>(inv.payments, 0, totalEggSpending)) < toDistr) then {
-          throw("_18=" + toDistr.toString())
+        } else if ((assetBalance(this, getEggId()) - FOLD<3>(inv.payments, 0, totalEggSpending)) < minBalance) then {
+          throw("Your minimal balance should be = " + minBalance.toString())
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "claimCeoFee") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
