@@ -164,7 +164,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
       [
         StringEntry("tx_" + i.transactionId.toBase58String(), asset.assetId.value().toBase58String())
       ]
-    } else throw("_9=" + duckMarketPrice.toString())
+    } else throw("Price is too low, avg price: " + duckMarketPrice.toString() + ", min. price: " + (duckMarketPrice - maxPriceDiff).toString() + ", your bid: " + initialPrice.toString())
   } else if (function == "placeBid") then {
     # if placeBid => allow to buy only with price < marketPrice + 10%
     let auctionId = str1
@@ -179,7 +179,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
       [
         StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
       ]
-    } else throw("_10=" + duckMarketPrice.toString())
+    } else throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString())
   } else if (function == "acceptBid") then {
     # if acceptBid => allow to sell only with price > marketPrice - 15%
     let auctionId = str1
@@ -193,7 +193,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
       [
         StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
       ]
-    } else throw("_11=" + duckMarketPrice.toString())
+    } else throw("Price is too low, avg price: " + duckMarketPrice.toString() + ", min. price: " + (duckMarketPrice - maxPriceDiff).toString() + ", your bid: " + bidAmount.toString())
   } else if (function == "instantBuy") then {
     # if acceptBid => allow to sell only with price > marketPrice - 15%
     let auctionId = str1
@@ -208,7 +208,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
       [
         StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
       ]
-    } else throw("_12=" + duckMarketPrice.toString())
+    } else throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString())
   } else if (function == "cancelBid") then {
     let auctionId = str1
     let bidId = str2
