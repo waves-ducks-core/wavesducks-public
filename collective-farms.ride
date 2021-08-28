@@ -216,6 +216,33 @@ func callUnstakeProxy(function: String, assetId: String) = {
   }
 }
 
+@Callable(i)
+func revertTransfer(txId: String) = {
+  if (getBool(kLocked) == true) then throw("Contract is locked now") else
+  if (i.caller != this) then throw("Can be called only by the account") else {
+    let tx = transferTransactionById(txId.fromBase58String()).value()
+    let kReverted = "tx_revert_" + txId
+    let txReverted = getBool(kReverted)
+
+    let unstakedRewardNow = getInt(kUnstakedReward)
+    let toDistr = getInt(kToDistr)
+
+    let minBalance = unstakedRewardNow + toDistr
+    let currentEggBalance = assetBalance(this, getEggId())
+
+    if (txReverted == true) then throw("Tx already reverted") else 
+    if (tx.recipient != this) then throw("Tx recipient is another account") else
+    if (tx.assetId != getEggId()) then throw("Transaction is not with EGG tokens") else 
+    if ((currentEggBalance - tx.amount) < minBalance) then throw("Revert makes balance too low") else {
+      [
+        ScriptTransfer(tx.sender, tx.amount, tx.assetId),
+        BooleanEntry(kReverted, true)
+      ]
+    }
+  }
+
+}
+
 @Verifier(tx)
 func verify() = {
   let checkStarted = getInt(kTotalLiquidity) >= getInt(kLiquidityThreshold)
@@ -246,6 +273,8 @@ func verify() = {
           throw("_17")
         } else if ((assetBalance(this, getEggId()) - FOLD<3>(inv.payments, 0, totalEggSpending)) < minBalance) then {
           throw("Your minimal balance should be = " + minBalance.toString())
+        } else if (inv.dApp.addressFromRecipient() == this && inv.function == "callUnstakeProxy") then {
+          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "claimCeoFee") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
