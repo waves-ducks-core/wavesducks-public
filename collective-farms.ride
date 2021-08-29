@@ -159,7 +159,7 @@ func claimFarmingRewardProxy(ids: String) = {
       case int: Int => int
       case _ => throw("_6")
     }
-    let farmCeoFeeSize = fraction(claimedReward, feePercent, 100)
+    let farmCeoFeeSize = fraction(claimedReward * 1_000_000, feePercent, 100)
 
     let toDistr = getInt(kToDistr)
     let totalFarmingReward = getInt(kTotalFarmingReward)
@@ -168,8 +168,8 @@ func claimFarmingRewardProxy(ids: String) = {
 
     [
       IntegerEntry(kTotalFarmingReward, totalFarmingReward + claimedReward - farmCeoFeeSize),
-      IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
       IntegerEntry(kToDistr, toDistr + claimedReward - farmCeoFeeSize),
+      IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
       IntegerEntry(kCeoCollectedFeeOverall, ceoFeeOverall + farmCeoFeeSize)
     ]
   }
@@ -181,7 +181,7 @@ func claimCeoFee(address: String) = {
   if (i.caller == this) then {
     let currentCeoCollectedFee = getInt(kCeoCollectedFee)
     [
-      ScriptTransfer(address.addressFromStringValue(), currentCeoCollectedFee, getEggId()),
+      ScriptTransfer(address.addressFromStringValue(), currentCeoCollectedFee / 1_000_000, getEggId()),
       IntegerEntry(kCeoCollectedFee, 0)
     ]
   } else throw("_8")
@@ -210,7 +210,14 @@ func callUnstakeProxy(function: String, assetId: String) = {
       case int: Int => unstakedRewardNow + int
       case _ => throw("Error during unstaking")
     }
+
+    let currentCeoFee = getInt(kCeoCollectedFee)
+    let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
+    let farmCeoFeeSize = fraction(unstakedRewardNow * 1_000_000, feePercent, 100)
+
     [
+      IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
+      IntegerEntry(kCeoCollectedFeeOverall, ceoFeeOverall + farmCeoFeeSize),
       IntegerEntry(kUnstakedReward, newUnstakedReward)
     ]
   }
@@ -240,7 +247,45 @@ func revertTransfer(txId: String) = {
       ]
     }
   }
+}
 
+@Callable(i)
+func setUnstakedReward(val: Int) = {
+  if (i.caller != mAccAddr) then throw("Method can be called only by master account") else {
+    [
+      IntegerEntry(kUnstakedReward, val)
+    ]
+  }
+}
+
+#address1=send=change;address2=send=change;...
+@Callable(i)
+func distributeRewards(addresses: String) = {
+  if (i.caller != mAccAddr) then throw("Method can be called only by master account") else
+  let addressPairs = addresses.split(";")
+
+  func processAddress(accum: (Int, List[IntegerEntry | ScriptTransfer]), addressPair: String) = {
+    let addressParts = addressPair.split("=")
+    let addressStr = addressParts[0]
+    let address = addressStr.addressFromStringValue()
+    let eggletsAmount = addressParts[1].parseIntValue()
+    let change = addressParts[2].parseIntValue()
+    let kAddrEarned = "address_" + addressStr + "_total_earned"
+    let addrTotalEarned = getInt(kAddrEarned)
+    let totalRewardNow = (eggletsAmount * 1_000_000) + change
+    let res = [
+      IntegerEntry("address_" + addressStr + "_change", change),
+      IntegerEntry(kAddrEarned, addrTotalEarned + totalRewardNow)
+    ]
+    if (eggletsAmount > 0) then {
+      (accum._1 + eggletsAmount, accum._2 ++ res ++ [ScriptTransfer(address, eggletsAmount, getEggId())])
+    }
+    else (accum._1, accum._2 ++ res)
+  }
+
+  let result = FOLD<30>(addressPairs, (0, []), processAddress)
+  let toDistr = getInt(kToDistr)
+  result._2 ++ [IntegerEntry(kToDistr, toDistr - result._1), IntegerEntry(kUnstakedReward, 0)]
 }
 
 @Verifier(tx)
@@ -274,6 +319,8 @@ func verify() = {
         } else if ((assetBalance(this, getEggId()) - FOLD<3>(inv.payments, 0, totalEggSpending)) < minBalance) then {
           throw("Your minimal balance should be = " + minBalance.toString())
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "callUnstakeProxy") then {
+          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        } else if (inv.dApp.addressFromRecipient() == this && inv.function == "revertTransfer") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "claimCeoFee") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
