@@ -138,6 +138,17 @@ func provideLiquidity() = {
   }
 }
 
+# @Callable(i)
+# func clearFarmingState() = {
+#   if (i.caller != mAccAddr) then throw("Can be called only by master") else 
+#   [
+#     DeleteEntry(kTotalFarmingReward),
+#     DeleteEntry(kToDistr),
+#     DeleteEntry(kCeoCollectedFee),
+#     DeleteEntry(kCeoCollectedFeeOverall),
+#     DeleteEntry(kUnstakedReward)
+#   ]
+# }
 
 @Callable(i)
 func claimFarmingRewardProxy(ids: String) = {
@@ -154,12 +165,12 @@ func claimFarmingRewardProxy(ids: String) = {
     }
 
     let nftIds = ids.split(";")
-    let foldResult = FOLD<30>(nftIds, 0, claimReward)
+    let foldResult = FOLD<10>(nftIds, 0, claimReward)
     let claimedReward = match foldResult {
-      case int: Int => int
+      case int: Int => int * 1_000_000
       case _ => throw("_6")
     }
-    let farmCeoFeeSize = fraction(claimedReward * 1_000_000, feePercent, 100)
+    let farmCeoFeeSize = fraction(claimedReward, feePercent, 100)
 
     let toDistr = getInt(kToDistr)
     let totalFarmingReward = getInt(kTotalFarmingReward)
@@ -207,13 +218,13 @@ func callUnstakeProxy(function: String, assetId: String) = {
     let unstakedRewardNow = getInt(kUnstakedReward)
 
     let newUnstakedReward = match ustakedReward {
-      case int: Int => unstakedRewardNow + int
+      case int: Int => unstakedRewardNow + (int * 1_000_000)
       case _ => throw("Error during unstaking")
     }
 
     let currentCeoFee = getInt(kCeoCollectedFee)
     let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
-    let farmCeoFeeSize = fraction(unstakedRewardNow * 1_000_000, feePercent, 100)
+    let farmCeoFeeSize = fraction(unstakedRewardNow, feePercent, 100)
 
     [
       IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
@@ -249,14 +260,14 @@ func revertTransfer(txId: String) = {
   }
 }
 
-@Callable(i)
-func setUnstakedReward(val: Int) = {
-  if (i.caller != mAccAddr) then throw("Method can be called only by master account") else {
-    [
-      IntegerEntry(kUnstakedReward, val)
-    ]
-  }
-}
+# @Callable(i)
+# func setUnstakedReward(val: Int) = {
+#   if (i.caller != mAccAddr) then throw("Method can be called only by master account") else {
+#     [
+#       IntegerEntry(kUnstakedReward, val)
+#     ]
+#   }
+# }
 
 #address1=send=change;address2=send=change;...
 @Callable(i)
@@ -275,7 +286,8 @@ func distributeRewards(addresses: String) = {
     let totalRewardNow = (eggletsAmount * 1_000_000) + change
     let res = [
       IntegerEntry("address_" + addressStr + "_change", change),
-      IntegerEntry(kAddrEarned, addrTotalEarned + totalRewardNow)
+      IntegerEntry(kAddrEarned, addrTotalEarned + totalRewardNow),
+      IntegerEntry("address_" + addressStr + "_reward_" + lastBlock.timestamp.toString(), totalRewardNow)
     ]
     if (eggletsAmount > 0) then {
       (accum._1 + eggletsAmount, accum._2 ++ res ++ [ScriptTransfer(address, eggletsAmount, getEggId())])
@@ -283,9 +295,9 @@ func distributeRewards(addresses: String) = {
     else (accum._1, accum._2 ++ res)
   }
 
-  let result = FOLD<30>(addressPairs, (0, []), processAddress)
+  let result = FOLD<20>(addressPairs, (0, []), processAddress)
   let toDistr = getInt(kToDistr)
-  result._2 ++ [IntegerEntry(kToDistr, toDistr - result._1), IntegerEntry(kUnstakedReward, 0)]
+  result._2 ++ [IntegerEntry(kToDistr, toDistr - (result._1 * 1_000_000)), IntegerEntry(kUnstakedReward, 0)]
 }
 
 @Verifier(tx)
@@ -316,7 +328,7 @@ func verify() = {
           throw("_16")
         } else if (inv.payments.size() > 2) then {
           throw("_17")
-        } else if ((assetBalance(this, getEggId()) - FOLD<3>(inv.payments, 0, totalEggSpending)) < minBalance) then {
+        } else if ((assetBalance(this, getEggId()) - FOLD<3>(inv.payments, 0, totalEggSpending)) * 1_000_000 < minBalance) then {
           throw("Your minimal balance should be = " + minBalance.toString())
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "callUnstakeProxy") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
