@@ -24,6 +24,7 @@ let kCeoCollectedFee = "ceo_collected_fee"
 let kCeoCollectedFeeOverall = "ceo_fee_overall"
 let kToDistr = "to_distribute"
 let kUnstakedReward = "unstaked_reward"
+let kLockedInvestments = "locked_investments"
 
 func getInt(key: String) = {
   match getInteger(this, key) {
@@ -107,9 +108,33 @@ func setLock(s: Boolean) = {
   }
 }
 
+
+@Callable(i)
+func lockInvestments() = {
+  if (i.caller != this) then {
+    throw("You cannot lock this contract")
+  } else {
+      [
+        BooleanEntry(kLockedInvestments, true)
+      ]
+  }
+}
+
+@Callable(i)
+func unlockInvestments() = {
+  if (i.caller != this) then {
+    throw("You cannot lock this contract")
+  } else {
+      [
+        BooleanEntry(kLockedInvestments, false)
+      ]
+  }
+}
+
 @Callable(i)
 func provideLiquidity() = {
   let eggAssetId = getEggId()
+  if (getBool(kLockedInvestments) == true) then throw("Contract is locked for investments by it's CEO. Please invest in another collective farm.") else
   if (getBool(kLocked) == true) then throw("_22") else
   if (i.payments[0].assetId != eggAssetId) then {
     throw("_4")
