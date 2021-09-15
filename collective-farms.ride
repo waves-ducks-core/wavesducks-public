@@ -5,7 +5,8 @@
 let mAccPKey = base58'23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T'
 let mAccAddr = mAccPKey.addressFromPublicKey()
 let feePercent = getIntegerValue(mAccAddr, "f_" + this.toString() + "_fee")
-
+let oldEggAssetId = base58'JCGDtrVy64cCJ1wCKfCaiNQMnyYwii71TbE5QeAHfxgF'
+let swapEggDappAddress = "3PJQUUiJdvz9etUKED9ju7o7VrcNMtnkXBU".addressFromStringValue()
 
 let kTotalLiquidity = "total_liquidity"
 let kInitialized = "INITIALIZED"
@@ -136,13 +137,13 @@ func provideLiquidity() = {
   let eggAssetId = getEggId()
   if (getBool(kLockedInvestments) == true) then throw("Contract is locked for investments by it's CEO. Please invest in another collective farm.") else
   if (getBool(kLocked) == true) then throw("_22") else
-  if (i.payments[0].assetId != eggAssetId) then {
-    throw("_4")
-  } else {
+  if (i.payments[0].assetId != eggAssetId) then throw("_4") else
+  if (i.payments[0].amount < 1_000_000) then throw("Min amount to invest is 0.01 EGG")
+  else {
     let totalLiquidity = getInt(kTotalLiquidity)
     let totalShareTokens = getInt(kTotalShareTokens)
     let currentLiquidityAmount = i.payments[0].amount
-    let shareTokensToGive = currentLiquidityAmount * 1_000_000 # decimals difference
+    let shareTokensToGive = currentLiquidityAmount # decimals difference
 
     let shareTokensId = getStr(kShareAssetId).fromBase58String()
 
@@ -192,7 +193,7 @@ func claimFarmingRewardProxy(ids: String) = {
     let nftIds = ids.split(";")
     let foldResult = FOLD<10>(nftIds, 0, claimReward)
     let claimedReward = match foldResult {
-      case int: Int => int * 1_000_000
+      case int: Int => int
       case _ => throw("_6")
     }
     let farmCeoFeeSize = fraction(claimedReward, feePercent, 100)
@@ -217,7 +218,7 @@ func claimCeoFee(address: String) = {
   if (i.caller == this) then {
     let currentCeoCollectedFee = getInt(kCeoCollectedFee)
     [
-      ScriptTransfer(address.addressFromStringValue(), currentCeoCollectedFee / 1_000_000, getEggId()),
+      ScriptTransfer(address.addressFromStringValue(), currentCeoCollectedFee, getEggId()),
       IntegerEntry(kCeoCollectedFee, 0)
     ]
   } else throw("_8")
@@ -243,7 +244,7 @@ func callUnstakeProxy(function: String, assetId: String) = {
     let unstakedRewardNow = getInt(kUnstakedReward)
 
     let newUnstakedReward = match ustakedReward {
-      case int: Int => unstakedRewardNow + (int * 1_000_000)
+      case int: Int => unstakedRewardNow + (int)
       case _ => throw("Error during unstaking")
     }
 
@@ -275,7 +276,7 @@ func revertTransfer(txId: String) = {
 
     if (txReverted == true) then throw("Tx already reverted") else 
     if (tx.recipient != this) then throw("Tx recipient is another account") else
-    if (tx.assetId != getEggId()) then throw("Transaction is not with EGG tokens") else 
+    if (tx.assetId != getEggId() && tx.assetId != getShareAssetId()) then throw("Transaction is not with EGG or share tokens") else 
     if ((currentEggBalance - tx.amount) < minBalance) then throw("Revert makes balance too low") else {
       [
         ScriptTransfer(tx.sender, tx.amount, tx.assetId),
@@ -294,9 +295,9 @@ func revertTransfer(txId: String) = {
 #   }
 # }
 
-#address1=send=change;address2=send=change;...
+#address1=number-of-share-tokens;address2=number-of-share-tokens;...
 @Callable(i)
-func distributeRewards(addresses: String) = {
+func distributeRewards(addresses: String, totalShareTokensToDistribute: Int) = {
   if (i.caller != mAccAddr) then throw("Method can be called only by master account") else
   let addressPairs = addresses.split(";")
 
@@ -309,10 +310,12 @@ func distributeRewards(addresses: String) = {
     let kAddrEarned = "address_" + addressStr + "_total_earned"
     let addrTotalEarned = getInt(kAddrEarned)
     let totalRewardNow = (eggletsAmount * 1_000_000) + change
+    let kAddrChange = "address_" + addressStr + "_change"
+    let earnedLastDay = totalRewardNow - getInt(kAddrChange)
     let res = [
-      IntegerEntry("address_" + addressStr + "_change", change),
-      IntegerEntry(kAddrEarned, addrTotalEarned + totalRewardNow),
-      IntegerEntry("address_" + addressStr + "_reward_" + lastBlock.timestamp.toString(), totalRewardNow)
+      IntegerEntry(kAddrChange, change),
+      IntegerEntry(kAddrEarned, addrTotalEarned + earnedLastDay),
+      IntegerEntry("address_" + addressStr + "_reward_" + lastBlock.timestamp.toString(), earnedLastDay)
     ]
     if (eggletsAmount > 0) then {
       (accum._1 + eggletsAmount, accum._2 ++ res ++ [ScriptTransfer(address, eggletsAmount, getEggId())])
@@ -323,6 +326,40 @@ func distributeRewards(addresses: String) = {
   let result = FOLD<20>(addressPairs, (0, []), processAddress)
   let toDistr = getInt(kToDistr)
   result._2 ++ [IntegerEntry(kToDistr, toDistr - (result._1 * 1_000_000)), IntegerEntry(kUnstakedReward, 0)]
+}
+
+@Callable(i)
+func swapEgg() = {
+  if (i.caller != mAccAddr) then throw("Method can be called by master account only") else {
+    let oldEggBalance = assetBalance(this, oldEggAssetId)
+    strict swapTx = invoke(swapEggDappAddress, "swapEgg", [], [AttachedPayment(oldEggAssetId, oldEggBalance)])
+    [
+      BooleanEntry("swapped_egg", true),
+      IntegerEntry("swapped_egg_emount", oldEggBalance)
+    ]
+  }
+}
+
+
+@Callable(i)
+func payChange(addresses: String) = {
+  if (i.caller != mAccAddr) then throw("Method can be called only by main account") else {
+    let addressValues = addresses.split(";")
+    if (addressValues.size() > 20) then throw("Can't send more than 20 transfers at once") else {
+      func processAddress(accum: List[IntegerEntry | ScriptTransfer], addressStr: String) = {
+        let kAddrChange = "address_" + addressStr + "_change"
+        let kAddrEarned = "address_" + addressStr + "_total_earned"
+        let changeValue = getInt(kAddrChange)
+        [
+          IntegerEntry(kAddrChange, 0),
+          IntegerEntry(kAddrEarned, 0),
+          ScriptTransfer(addressStr.addressFromStringValue(), changeValue, getEggId())
+        ]
+      }
+      let result = FOLD<20>(addressValues, [], processAddress)
+      result
+    }
+  }
 }
 
 @Verifier(tx)
@@ -360,6 +397,8 @@ func verify() = {
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "revertTransfer") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else if (inv.dApp.addressFromRecipient() == this && inv.function == "claimCeoFee") then {
+          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        } else if (inv.dApp.addressFromRecipient() == this && (inv.function == "lockInvestments" || inv.function == "unlockInvestments" )) then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
