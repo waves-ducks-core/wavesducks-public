@@ -297,7 +297,7 @@ func revertTransfer(txId: String) = {
 
 #address1=number-of-share-tokens;address2=number-of-share-tokens;...
 @Callable(i)
-func distributeRewards(addresses: String, totalShareTokensToDistribute: Int) = {
+func distributeRewards(addresses: String, totalShareTokens: Int, totalRewardToDistribute: Int) = {
   if (i.caller != mAccAddr) then throw("Method can be called only by master account") else
   let addressPairs = addresses.split(";")
 
@@ -305,27 +305,23 @@ func distributeRewards(addresses: String, totalShareTokensToDistribute: Int) = {
     let addressParts = addressPair.split("=")
     let addressStr = addressParts[0]
     let address = addressStr.addressFromStringValue()
-    let eggletsAmount = addressParts[1].parseIntValue()
-    let change = addressParts[2].parseIntValue()
+    let userShareTokens = addressParts[1].parseIntValue()
+
     let kAddrEarned = "address_" + addressStr + "_total_earned"
     let addrTotalEarned = getInt(kAddrEarned)
-    let totalRewardNow = (eggletsAmount * 1_000_000) + change
-    let kAddrChange = "address_" + addressStr + "_change"
-    let earnedLastDay = totalRewardNow - getInt(kAddrChange)
+    let userRewardNow = fraction(totalRewardToDistribute, userShareTokens, totalShareTokens)
+
     let res = [
-      IntegerEntry(kAddrChange, change),
-      IntegerEntry(kAddrEarned, addrTotalEarned + earnedLastDay),
-      IntegerEntry("address_" + addressStr + "_reward_" + lastBlock.timestamp.toString(), earnedLastDay)
+      IntegerEntry(kAddrEarned, addrTotalEarned + userRewardNow),
+      IntegerEntry("address_" + addressStr + "_reward_" + lastBlock.timestamp.toString(), userRewardNow),
+      ScriptTransfer(address, userRewardNow, getEggId())
     ]
-    if (eggletsAmount > 0) then {
-      (accum._1 + eggletsAmount, accum._2 ++ res ++ [ScriptTransfer(address, eggletsAmount, getEggId())])
-    }
-    else (accum._1, accum._2 ++ res)
+    (accum._1 + userRewardNow, accum._2 ++ res)
   }
 
   let result = FOLD<20>(addressPairs, (0, []), processAddress)
   let toDistr = getInt(kToDistr)
-  result._2 ++ [IntegerEntry(kToDistr, toDistr - (result._1 * 1_000_000)), IntegerEntry(kUnstakedReward, 0)]
+  result._2 ++ [IntegerEntry(kToDistr, toDistr - result._1), IntegerEntry(kUnstakedReward, 0)]
 }
 
 @Callable(i)
@@ -335,30 +331,8 @@ func swapEgg() = {
     strict swapTx = invoke(swapEggDappAddress, "swapEgg", [], [AttachedPayment(oldEggAssetId, oldEggBalance)])
     [
       BooleanEntry("swapped_egg", true),
-      IntegerEntry("swapped_egg_emount", oldEggBalance)
+      IntegerEntry("swapped_egg_amount", oldEggBalance)
     ]
-  }
-}
-
-
-@Callable(i)
-func payChange(addresses: String) = {
-  if (i.caller != mAccAddr) then throw("Method can be called only by main account") else {
-    let addressValues = addresses.split(";")
-    if (addressValues.size() > 20) then throw("Can't send more than 20 transfers at once") else {
-      func processAddress(accum: List[IntegerEntry | ScriptTransfer], addressStr: String) = {
-        let kAddrChange = "address_" + addressStr + "_change"
-        let kAddrEarned = "address_" + addressStr + "_total_earned"
-        let changeValue = getInt(kAddrChange)
-        [
-          IntegerEntry(kAddrChange, 0),
-          IntegerEntry(kAddrEarned, 0),
-          ScriptTransfer(addressStr.addressFromStringValue(), changeValue, getEggId())
-        ]
-      }
-      let result = FOLD<20>(addressValues, [], processAddress)
-      result
-    }
   }
 }
 
@@ -408,6 +382,12 @@ func verify() = {
           let dappToCall = inv.dApp.addressFromRecipient().toString()
           allowedContractsList.indexOf(dappToCall) != unit
         }
+      }
+      case mt: MassTransferTransaction => {
+        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
+      }
+      case dt: DataTransaction => {
+        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
       }
       case ss: SetScriptTransaction => {
         sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
