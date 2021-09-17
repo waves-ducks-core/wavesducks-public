@@ -79,7 +79,7 @@ func initCollectiveFarm(name: String, minimumThreshold: Int) = {
       throw("_1")
   }else if (getBool(kInitialized) != unit) then {
       throw("_2")
-  } else if (i.payments[0].amount != 10 || i.payments[0].assetId != getEggId()) then {
+  } else if (i.payments[0].amount != 10 * 1_000_000 || i.payments[0].assetId != getEggId()) then {
       throw("_20")
   } else {
       let shareTokens = 1_0_000_000
@@ -142,8 +142,7 @@ func provideLiquidity() = {
   else {
     let totalLiquidity = getInt(kTotalLiquidity)
     let totalShareTokens = getInt(kTotalShareTokens)
-    let currentLiquidityAmount = i.payments[0].amount
-    let shareTokensToGive = currentLiquidityAmount # decimals difference
+    let shareTokensToGive = i.payments[0].amount # decimals difference
 
     let shareTokensId = getStr(kShareAssetId).fromBase58String()
 
@@ -157,7 +156,7 @@ func provideLiquidity() = {
       reissue,
       ScriptTransfer(i.caller, shareTokensToGive, shareTokensId),
       IntegerEntry(kTotalShareTokens, totalShareTokens + shareTokensToGive),
-      IntegerEntry(kTotalLiquidity, totalLiquidity + i.payments[0].amount.value()),
+      IntegerEntry(kTotalLiquidity, totalLiquidity + (i.payments[0].amount.value() / 1_000_000)),
       IntegerEntry(kFarmParticipants, newFarmParticipants),
       BooleanEntry(kParticipated, true)
     ]
@@ -273,27 +272,20 @@ func revertTransfer(txId: String) = {
 
     let minBalance = unstakedRewardNow + toDistr
     let currentEggBalance = assetBalance(this, getEggId())
+    let result = [
+      ScriptTransfer(tx.sender, tx.amount, tx.assetId),
+      BooleanEntry(kReverted, true)
+    ]
 
     if (txReverted == true) then throw("Tx already reverted") else 
     if (tx.recipient != this) then throw("Tx recipient is another account") else
-    if (tx.assetId != getEggId() && tx.assetId != getShareAssetId()) then throw("Transaction is not with EGG or share tokens") else 
+    if (tx.assetId == getShareAssetId()) then result else
+    if (tx.assetId != getEggId()) then throw("Transaction is not with EGG or share tokens") else 
     if ((currentEggBalance - tx.amount) < minBalance) then throw("Revert makes balance too low") else {
-      [
-        ScriptTransfer(tx.sender, tx.amount, tx.assetId),
-        BooleanEntry(kReverted, true)
-      ]
+      result
     }
   }
 }
-
-# @Callable(i)
-# func setUnstakedReward(val: Int) = {
-#   if (i.caller != mAccAddr) then throw("Method can be called only by master account") else {
-#     [
-#       IntegerEntry(kUnstakedReward, val)
-#     ]
-#   }
-# }
 
 #address1=number-of-share-tokens;address2=number-of-share-tokens;...
 @Callable(i)
@@ -322,18 +314,6 @@ func distributeRewards(addresses: String, totalShareTokens: Int, totalRewardToDi
   let result = FOLD<20>(addressPairs, (0, []), processAddress)
   let toDistr = getInt(kToDistr)
   result._2 ++ [IntegerEntry(kToDistr, toDistr - result._1), IntegerEntry(kUnstakedReward, 0)]
-}
-
-@Callable(i)
-func swapEgg() = {
-  if (i.caller != mAccAddr) then throw("Method can be called by master account only") else {
-    let oldEggBalance = assetBalance(this, oldEggAssetId)
-    strict swapTx = invoke(swapEggDappAddress, "swapEgg", [], [AttachedPayment(oldEggAssetId, oldEggBalance)])
-    [
-      BooleanEntry("swapped_egg", true),
-      IntegerEntry("swapped_egg_amount", oldEggBalance)
-    ]
-  }
 }
 
 @Verifier(tx)
@@ -382,12 +362,6 @@ func verify() = {
           let dappToCall = inv.dApp.addressFromRecipient().toString()
           allowedContractsList.indexOf(dappToCall) != unit
         }
-      }
-      case mt: MassTransferTransaction => {
-        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
-      }
-      case dt: DataTransaction => {
-        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
       }
       case ss: SetScriptTransaction => {
         sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
