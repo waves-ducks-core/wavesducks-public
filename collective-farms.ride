@@ -366,6 +366,9 @@ func verify() = {
       case ss: SetScriptTransaction => {
         sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
       }
+      case mt: MassTransferTransaction => {
+        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
+      }
       case _ => false
     }
 }
