@@ -1,0 +1,53 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let breederContract = base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+let incubatorContract = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+
+func keyDuckLock(callerAddress: String, duckId: String) = {
+  "address_" + callerAddress + "_duck_" + duckId + "_status"
+}
+
+@Callable(i)
+func lockNftForWars() = {
+  func handlePayment(accum: List[BooleanEntry], payment: AttachedPayment) = {
+    let assetId = payment.assetId.value()
+    let nft = assetInfo(assetId).valueOrErrorMessage("There is not asset with such an id " + assetId.toBase58String())
+    if (nft.issuer != Address(breederContract) && nft.issuer != Address(incubatorContract)) then throw("NFT was NOT issued by WavesDucks contracts")
+    else {
+      let kDuckLock = keyDuckLock(i.originCaller.toString(), assetId.toBase58String())
+      accum ++ [BooleanEntry(kDuckLock, true)]
+    }
+  }
+  FOLD<10>(i.payments, [], handlePayment)
+}
+
+
+#duckId1;duckId2;...
+@Callable(i)
+func unlockNftForWars(duckIds: String) = {
+  let duckIdsList = duckIds.split(";")
+  if (duckIdsList.size() > 10) then throw("You cannot unlock more than 10 ducks in one transaction")
+  else {
+    func handleUnlockOneDuck(accum: List[DeleteEntry | ScriptTransfer], duckId: String) = {
+      let kDuckLock = keyDuckLock(i.originCaller.toString(), duckId)
+      let duckLockedValue = this.getBoolean(kDuckLock)
+      let duckIsLocked = match (duckLockedValue) {
+          case t:Boolean => t
+          case _ => false
+      }
+      if (duckIsLocked == false) then throw("Whhhhat, the duck is not locked by you: " + duckId) else {
+        accum ++ [
+          DeleteEntry(kDuckLock),
+          ScriptTransfer(i.originCaller, 1, duckId.fromBase58String())
+        ]
+      }
+    }
+    FOLD<10>(duckIdsList, [], handleUnlockOneDuck)
+  }
+}
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        
