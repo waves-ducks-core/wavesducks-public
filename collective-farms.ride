@@ -303,11 +303,10 @@ func distributeRewards(addresses: String, totalShareTokens: Int, totalRewardToDi
     let addrTotalEarned = getInt(kAddrEarned)
     let userRewardNow = fraction(totalRewardToDistribute, userShareTokens, totalShareTokens)
 
-    let res = [
+    let res = ([
       IntegerEntry(kAddrEarned, addrTotalEarned + userRewardNow),
-      IntegerEntry("address_" + addressStr + "_reward_" + lastBlock.timestamp.toString(), userRewardNow),
-      ScriptTransfer(address, userRewardNow, getEggId())
-    ]
+      IntegerEntry("address_" + addressStr + "_reward_" + lastBlock.timestamp.toString(), userRewardNow)
+    ] ++ if address != this then [ScriptTransfer(address, userRewardNow, getEggId())] else [])
     (accum._1 + userRewardNow, accum._2 ++ res)
   }
 
@@ -367,6 +366,9 @@ func verify() = {
         sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
       }
       case mt: MassTransferTransaction => {
+        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
+      }
+      case dt: DataTransaction => {
         sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
       }
       case _ => false
