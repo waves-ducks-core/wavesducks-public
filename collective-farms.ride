@@ -66,6 +66,10 @@ func getMarketProxyAddr() = {
   getStrA(mAccAddr, kMarketProxyDapp)
 }
 
+func keyAutocompound(address: Address) = {
+  "address_" + address.toString() + "_autocompound"
+}
+
 func getEggId() = {
   getStringValue(mAccAddr, "EGG_ASSET_ID").fromBase58String()
 }
@@ -287,6 +291,14 @@ func revertTransfer(txId: String) = {
   }
 }
 
+@Callable(i)
+func setAutocompound(val: Boolean) = {
+  let kAutocompound = keyAutocompound(i.originCaller)
+  [
+    BooleanEntry(kAutocompound, val)
+  ]
+}
+
 #address1=number-of-share-tokens;address2=number-of-share-tokens;...
 @Callable(i)
 func distributeRewards(addresses: String, totalShareTokens: Int, totalRewardToDistribute: Int) = {
@@ -302,11 +314,15 @@ func distributeRewards(addresses: String, totalShareTokens: Int, totalRewardToDi
     let kAddrEarned = "address_" + addressStr + "_total_earned"
     let addrTotalEarned = getInt(kAddrEarned)
     let userRewardNow = fraction(totalRewardToDistribute, userShareTokens, totalShareTokens)
+    let autocompoundEnabled = getBool(keyAutocompound(addressStr.addressFromStringValue()))
+    let assetToSend = if autocompoundEnabled == true then getShareAssetId() else getEggId()
 
     let res = ([
       IntegerEntry(kAddrEarned, addrTotalEarned + userRewardNow),
       IntegerEntry("address_" + addressStr + "_reward_" + lastBlock.timestamp.toString(), userRewardNow)
-    ] ++ if address != this then [ScriptTransfer(address, userRewardNow, getEggId())] else [])
+    ] 
+    ++ if autocompoundEnabled == true then [Reissue(assetToSend, userRewardNow, true)] else []
+    ++ if address != this then [ScriptTransfer(address, userRewardNow, assetToSend)] else [])
     (accum._1 + userRewardNow, accum._2 ++ res)
   }
 
