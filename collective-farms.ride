@@ -315,7 +315,7 @@ func distributeRewards(addresses: String, totalShareTokens: Int, totalRewardToDi
     let addrTotalEarned = getInt(kAddrEarned)
     let userRewardNow = fraction(totalRewardToDistribute, userShareTokens, totalShareTokens)
     let autocompoundEnabled = getBool(keyAutocompound(addressStr.addressFromStringValue()))
-    let assetToSend = if autocompoundEnabled == true then getShareAssetId() else getEggId()
+    let assetToSend = if autocompoundEnabled == true && getBool(kLockedInvestments) != true then getShareAssetId() else getEggId()
 
     let res = ([
       IntegerEntry(kAddrEarned, addrTotalEarned + userRewardNow),
