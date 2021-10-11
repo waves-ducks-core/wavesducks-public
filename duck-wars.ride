@@ -2,11 +2,142 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let breederContract = base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-let incubatorContract = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+let breederContract = base58'3P9REuLBnYBafDqtEu6hfzs2Rv2haSU158y'
+let incubatorContract = base58'3P6TwNU39Ykkbeqhn5TE4a2736xsA1vXemM'
+let eggAssetId = base58'3v7zGkeHS6KrsvmTRzEzvCxm5cdzkCtM7z5cM6efcjCB'
+let MANTLENAME = "mantle"
+
+let STATUSFREE = "FREE"
+let STATUSOCCUPIED = "OCCUPIED"
 
 func keyDuckLock(callerAddress: String, duckId: String) = {
   "address_" + callerAddress + "_duck_" + duckId + "_status"
+}
+
+func keyInvestor(callerAddress: String) = {
+  "address_" + callerAddress + "_amount"
+}
+
+
+func keyArtefactOwner(type: String, artefactId: ByteVector) = {
+  "artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_owner"
+}
+
+func keyArtefactStatus(type: String, artefactId: ByteVector) = {
+  "artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_status"
+}
+
+func keyArtefactType(artefactId: ByteVector) = {
+  "artefactId_" + artefactId.toBase58String() + "_type"
+}
+
+func keyArtefactLevel(type: String, owner: String, artefactId: ByteVector) = {
+  "address_" + owner + "_artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_level"
+}
+
+func keyPutOnArtefact(type: String, owner: String, duckId: String, artefactId: ByteVector) = {
+  "address_" + owner + "_duck_" + duckId + "_artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_status"
+}
+
+func keyArtefactExists(type: String, artefactId: ByteVector) = {
+  "artefact_" + type + "_id_" + artefactId.toBase58String()
+}
+
+@Callable(i)
+func buyArtefact(type: String) = {
+  if (type != MANTLENAME) then throw("You can buy only mantles now") 
+  else {
+    let MANTLEPRICE = 1_000_000
+    let firstPayment = i.payments[0].value()
+    if (firstPayment.assetId != eggAssetId) then throw("You can attach only EGG tokens with the following asset id: " + eggAssetId.toBase58String())
+    else if (firstPayment.amount != MANTLEPRICE) then throw("To buy a mantle you currently need the following amount of EGGlets: " + MANTLEPRICE.toString())
+    else {
+
+      let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false)
+      let mantleNftId = issueMantleNFT.calculateAssetId()
+
+      let kMantleLevel = keyArtefactLevel(MANTLENAME, i.caller.toString(), mantleNftId)
+      let kMantleExists = keyArtefactExists(MANTLENAME, mantleNftId)
+      let kMantleOwner = keyArtefactOwner(MANTLENAME, mantleNftId)
+      let kMantleStatus = keyArtefactStatus(MANTLENAME, mantleNftId)
+      let kArtefactType = keyArtefactType(mantleNftId)
+      [
+        IntegerEntry(kMantleLevel, 1),
+        BooleanEntry(kMantleExists, true),
+        StringEntry(kMantleOwner, i.caller.toString()),
+        StringEntry(kMantleStatus, STATUSFREE),
+        StringEntry(kArtefactType, MANTLENAME)
+      ]
+    }
+  } 
+}
+
+@Callable(i)
+func upgradeMantle(mantleId: String) = {
+  let upgradePointPrice = 1_000_000
+  let firstPayment = i.payments[0].value()
+  if (firstPayment.assetId != eggAssetId) then throw("You can attach only EGG tokens with the following asset id: " + eggAssetId.toBase58String())
+  else if (firstPayment.amount < upgradePointPrice) then throw("Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
+  else {
+    let kMantleExists = keyArtefactExists(MANTLENAME, mantleId.fromBase58String())
+    let kMantleOwner = keyArtefactOwner(MANTLENAME, mantleId.fromBase58String())
+
+    let mantleExists = getBooleanValue(kMantleExists)
+    let mantleOwner = getStringValue(kMantleOwner)
+    if (!mantleExists) then throw("Mantle with such an ID does not exist") else
+    if (mantleOwner != i.caller.toString()) then throw("You're not an owner of the mantle")
+    else {
+      let kMantleLevel = keyArtefactLevel(MANTLENAME, i.caller.toString(), mantleId.fromBase58String())
+      let mantleLevel = getIntegerValue(kMantleLevel)
+      let toUpgradeValue = firstPayment.amount / upgradePointPrice
+      [
+        IntegerEntry(kMantleLevel, toUpgradeValue + mantleLevel)
+      ]
+    }
+  }
+}
+
+@Callable(i)
+func putOnArtefact(artefactId: String) = {
+  let firstPayment = i.payments[0].value()
+  let attachedAssetInfo = assetInfo(firstPayment.assetId.value()).value()
+  if (attachedAssetInfo.issuer.bytes != incubatorContract && attachedAssetInfo.issuer.bytes != breederContract) then throw("You can attach only DUCKs issued by incubator or breeder ")
+  else {
+    let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
+    let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
+    let kMantleStatus = keyArtefactStatus(MANTLENAME, artefactId.fromBase58String())
+
+    let mantleExists = getBooleanValue(kMantleExists)
+    let mantleOwner = getStringValue(kMantleOwner)
+    let mantleStatus = getStringValue(kMantleStatus)
+
+    if (!mantleExists) then throw("Mantle with such an ID does not exist") else
+    if (mantleOwner != i.caller.toString()) then throw("You're not an owner of the mantle") else 
+    if (mantleStatus != STATUSFREE) then throw("Mantle is already used!")
+    else {
+      let kPutOnArtefact = keyPutOnArtefact(MANTLENAME, i.caller.toString(), firstPayment.assetId.value().toBase58String(), artefactId.fromBase58String())
+      [
+        BooleanEntry(kPutOnArtefact, true),
+        StringEntry(kMantleStatus, STATUSOCCUPIED)
+      ]
+    }
+  }
+}
+
+@Callable(i)
+func takeOffArtefact(duckId:String, artefactId: String) = {
+  let kArtefactType = keyArtefactType(artefactId.fromBase58String())
+  let artefactType = getStringValue(kArtefactType)
+  let kPutOnArtefact = keyPutOnArtefact(artefactType, i.caller.toString(), duckId, artefactId.fromBase58String())
+  let kPutOnArtefactStatus = getBooleanValue(kPutOnArtefact)
+  let kMantleStatus = keyArtefactStatus(artefactType, artefactId.fromBase58String())
+  if (kPutOnArtefactStatus != true) then throw("There is no duck with such parameteres")
+  else {
+    [
+      DeleteEntry(kPutOnArtefact),
+      StringEntry(kMantleStatus, STATUSFREE)
+    ]
+  }
 }
 
 @Callable(i)
@@ -47,6 +178,25 @@ func unlockNftForWars(duckIds: String) = {
     FOLD<10>(duckIdsList, [], handleUnlockOneDuck)
   }
 }
+
+@Callable(i)
+func investEgg() = {
+  let payment = i.payments[0]
+  if (payment.assetId.value() != eggAssetId) then throw("Only EGG token can be invested")
+  else {
+    let investorBalanceKey = keyInvestor(i.originCaller.toString())
+    let investorBalanceValue = getInteger(investorBalanceKey)
+    let investorOldBalance = match (investorBalanceValue) {
+      case t:Int => t
+      case _ => 0
+    }
+    let investorNewBalance = investorOldBalance + payment.amount
+    [
+      IntegerEntry(investorBalanceKey, investorNewBalance)
+    ]
+  }
+}
+
 
 @Verifier(tx)
 func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
