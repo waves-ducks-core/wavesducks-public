@@ -19,8 +19,20 @@ func keyInvestor(callerAddress: String) = {
 }
 
 
+func keyArtefactInvested(type: String, artefactId: String) = {
+  "artefact_" + type + "_artefactId_" + artefactId + "_invested"
+}
+
+func keyArtefactIdByDuckAndType(type: String, duckId: ByteVector) = {
+  "artefact_ " + type + "_duck_" + duckId.toBase58String() + "_artefactId"
+}
+
 func keyArtefactOwner(type: String, artefactId: ByteVector) = {
   "artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_owner"
+}
+
+func keyArtefactOwnerAndStatus(type: String, owner: String, artefactId: ByteVector) = {
+  "address_" + owner + "_artefact_" + type + "_artefactId_" + artefactId.toBase58String() + "_status"
 }
 
 func keyArtefactStatus(type: String, artefactId: ByteVector) = {
@@ -32,15 +44,15 @@ func keyArtefactType(artefactId: ByteVector) = {
 }
 
 func keyArtefactLevel(type: String, owner: String, artefactId: ByteVector) = {
-  "address_" + owner + "_artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_level"
+  "address_" + owner + "_artefact_" + type + "_artefactId_" + artefactId.toBase58String() + "_level"
 }
 
 func keyPutOnArtefact(type: String, owner: String, duckId: String, artefactId: ByteVector) = {
-  "address_" + owner + "_duck_" + duckId + "_artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_status"
+  "address_" + owner + "_duck_" + duckId + "_artefact_" + type + "_artefactId_" + artefactId.toBase58String() + "_status"
 }
 
 func keyArtefactExists(type: String, artefactId: ByteVector) = {
-  "artefact_" + type + "_id_" + artefactId.toBase58String()
+  "artefact_" + type + "_artefactId_" + artefactId.toBase58String()
 }
 
 @Callable(i)
@@ -61,37 +73,47 @@ func buyArtefact(type: String) = {
       let kMantleOwner = keyArtefactOwner(MANTLENAME, mantleNftId)
       let kMantleStatus = keyArtefactStatus(MANTLENAME, mantleNftId)
       let kArtefactType = keyArtefactType(mantleNftId)
+      let kMantleInvested = keyArtefactInvested(MANTLENAME, mantleNftId.toBase58String())
+      let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, i.caller.toString(), mantleNftId)
       [
         IntegerEntry(kMantleLevel, 1),
+        IntegerEntry(kMantleInvested, MANTLEPRICE),
         BooleanEntry(kMantleExists, true),
         StringEntry(kMantleOwner, i.caller.toString()),
         StringEntry(kMantleStatus, STATUSFREE),
-        StringEntry(kArtefactType, MANTLENAME)
+        StringEntry(kArtefactType, MANTLENAME),
+        StringEntry(kArtefactOwnerAndStatus, STATUSFREE)
       ]
     }
   } 
 }
 
 @Callable(i)
-func upgradeMantle(mantleId: String) = {
+func upgradeMantle(artefactId: String) = {
   let upgradePointPrice = 1_000_000
   let firstPayment = i.payments[0].value()
   if (firstPayment.assetId != eggAssetId) then throw("You can attach only EGG tokens with the following asset id: " + eggAssetId.toBase58String())
   else if (firstPayment.amount < upgradePointPrice) then throw("Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
   else {
-    let kMantleExists = keyArtefactExists(MANTLENAME, mantleId.fromBase58String())
-    let kMantleOwner = keyArtefactOwner(MANTLENAME, mantleId.fromBase58String())
+    let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
+    let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
 
     let mantleExists = getBooleanValue(kMantleExists)
     let mantleOwner = getStringValue(kMantleOwner)
     if (!mantleExists) then throw("Mantle with such an ID does not exist") else
     if (mantleOwner != i.caller.toString()) then throw("You're not an owner of the mantle")
     else {
-      let kMantleLevel = keyArtefactLevel(MANTLENAME, i.caller.toString(), mantleId.fromBase58String())
-      let mantleLevel = getIntegerValue(kMantleLevel)
-      let toUpgradeValue = firstPayment.amount / upgradePointPrice
+
+      let kMantleInvested = keyArtefactInvested(MANTLENAME, artefactId)
+      let mantleAlreadyInvested = getIntegerValue(kMantleInvested)
+
+      let kMantleLevel = keyArtefactLevel(MANTLENAME, i.caller.toString(), artefactId.fromBase58String())
+
+      let totalInvested = mantleAlreadyInvested + firstPayment.amount
+      let newLevel = (10 * pow(totalInvested, 8, 6, 1, 8, HALFUP) + 100000000) / 100000000
       [
-        IntegerEntry(kMantleLevel, toUpgradeValue + mantleLevel)
+        IntegerEntry(kMantleLevel, newLevel),
+        IntegerEntry(kMantleInvested, totalInvested)
       ]
     }
   }
@@ -106,10 +128,13 @@ func putOnArtefact(artefactId: String) = {
     let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
     let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
     let kMantleStatus = keyArtefactStatus(MANTLENAME, artefactId.fromBase58String())
-
+    let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, i.caller.toString(), artefactId.fromBase58String())
+    let kDuckLock = keyDuckLock(i.originCaller.toString(), firstPayment.assetId.value().toBase58String())
     let mantleExists = getBooleanValue(kMantleExists)
     let mantleOwner = getStringValue(kMantleOwner)
     let mantleStatus = getStringValue(kMantleStatus)
+
+    let kArtefactIdByType = keyArtefactIdByDuckAndType(MANTLENAME, firstPayment.assetId.value())
 
     if (!mantleExists) then throw("Mantle with such an ID does not exist") else
     if (mantleOwner != i.caller.toString()) then throw("You're not an owner of the mantle") else 
@@ -118,85 +143,58 @@ func putOnArtefact(artefactId: String) = {
       let kPutOnArtefact = keyPutOnArtefact(MANTLENAME, i.caller.toString(), firstPayment.assetId.value().toBase58String(), artefactId.fromBase58String())
       [
         BooleanEntry(kPutOnArtefact, true),
-        StringEntry(kMantleStatus, STATUSOCCUPIED)
+        StringEntry(kMantleStatus, STATUSOCCUPIED),
+        StringEntry(kArtefactOwnerAndStatus, STATUSOCCUPIED),
+        BooleanEntry(kDuckLock, true),
+        StringEntry(kArtefactIdByType, artefactId)
       ]
     }
   }
 }
 
 @Callable(i)
-func takeOffArtefact(duckId:String, artefactId: String) = {
+func takeOffArtefact(duckId:String, artefactType: String) = {
+  
+  let kArtefactIdByTypeAndDuck = keyArtefactIdByDuckAndType(artefactType, duckId.fromBase58String())
+  let artefactId = getStringValue(kArtefactIdByTypeAndDuck)
+  
   let kArtefactType = keyArtefactType(artefactId.fromBase58String())
-  let artefactType = getStringValue(kArtefactType)
   let kPutOnArtefact = keyPutOnArtefact(artefactType, i.caller.toString(), duckId, artefactId.fromBase58String())
   let kPutOnArtefactStatus = getBooleanValue(kPutOnArtefact)
+  let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(artefactType, i.caller.toString(), artefactId.fromBase58String())
+  let kDuckLock = keyDuckLock(i.originCaller.toString(), duckId)
+
   let kMantleStatus = keyArtefactStatus(artefactType, artefactId.fromBase58String())
   if (kPutOnArtefactStatus != true) then throw("There is no duck with such parameteres")
   else {
     [
       DeleteEntry(kPutOnArtefact),
-      StringEntry(kMantleStatus, STATUSFREE)
+      DeleteEntry(kArtefactIdByTypeAndDuck),
+      DeleteEntry(kDuckLock),
+      StringEntry(kMantleStatus, STATUSFREE),
+      StringEntry(kArtefactOwnerAndStatus, STATUSFREE)
     ]
   }
 }
 
+#stateKey;stateKey;...
 @Callable(i)
-func lockNftForWars() = {
-  func handlePayment(accum: List[BooleanEntry], payment: AttachedPayment) = {
-    let assetId = payment.assetId.value()
-    let nft = assetInfo(assetId).valueOrErrorMessage("There is not asset with such an id " + assetId.toBase58String())
-    if (nft.issuer != Address(breederContract) && nft.issuer != Address(incubatorContract)) then throw("NFT was NOT issued by WavesDucks contracts")
+func unlockNftForWars(keys: String) = {
+  if (i.callerPublicKey != base58'ArbTEDzZLUKHkNzZSqEHfu5cpjvXnPtEPqBVwUTiCRSa') then throw("Cannot call this method") else {
+    let keysList = keys.split(";")
+    if (keysList.size() > 10) then throw("You cannot unlock more than 10 ducks in one transaction")
     else {
-      let kDuckLock = keyDuckLock(i.originCaller.toString(), assetId.toBase58String())
-      accum ++ [BooleanEntry(kDuckLock, true)]
-    }
-  }
-  FOLD<10>(i.payments, [], handlePayment)
-}
-
-
-#duckId1;duckId2;...
-@Callable(i)
-func unlockNftForWars(duckIds: String) = {
-  let duckIdsList = duckIds.split(";")
-  if (duckIdsList.size() > 10) then throw("You cannot unlock more than 10 ducks in one transaction")
-  else {
-    func handleUnlockOneDuck(accum: List[DeleteEntry | ScriptTransfer], duckId: String) = {
-      let kDuckLock = keyDuckLock(i.originCaller.toString(), duckId)
-      let duckLockedValue = this.getBoolean(kDuckLock)
-      let duckIsLocked = match (duckLockedValue) {
-          case t:Boolean => t
-          case _ => false
-      }
-      if (duckIsLocked == false) then throw("Whhhhat, the duck is not locked by you: " + duckId) else {
+      func handleUnlockOneDuck(accum: List[DeleteEntry | ScriptTransfer], key: String) = {
+        let kDuckLock = key.split("_") #address, {address}, duck, {assetId}, status
         accum ++ [
-          DeleteEntry(kDuckLock),
-          ScriptTransfer(i.originCaller, 1, duckId.fromBase58String())
-        ]
+            DeleteEntry(key),
+            ScriptTransfer(kDuckLock[1].value().addressFromStringValue(), 1, kDuckLock[3].value().fromBase58String())
+          ]
       }
+      FOLD<10>(keysList, [], handleUnlockOneDuck)
     }
-    FOLD<10>(duckIdsList, [], handleUnlockOneDuck)
   }
 }
-
-@Callable(i)
-func investEgg() = {
-  let payment = i.payments[0]
-  if (payment.assetId.value() != eggAssetId) then throw("Only EGG token can be invested")
-  else {
-    let investorBalanceKey = keyInvestor(i.originCaller.toString())
-    let investorBalanceValue = getInteger(investorBalanceKey)
-    let investorOldBalance = match (investorBalanceValue) {
-      case t:Int => t
-      case _ => 0
-    }
-    let investorNewBalance = investorOldBalance + payment.amount
-    [
-      IntegerEntry(investorBalanceKey, investorNewBalance)
-    ]
-  }
-}
-
 
 @Verifier(tx)
 func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
