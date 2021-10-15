@@ -108,13 +108,13 @@ func upgradeMantle(artefactId: String) = {
     let mantleExists = getBooleanValue(kMantleExists)
     let mantleOwner = getStringValue(kMantleOwner)
     if (!mantleExists) then throw("Mantle with such an ID does not exist") else
-    if (mantleOwner != i.caller.toString()) then throw("You're not an owner of the mantle")
+    if (mantleOwner != i.originCaller.toString()) then throw("You're not an owner of the mantle")
     else {
 
       let kMantleInvested = keyArtefactInvested(MANTLENAME, artefactId)
       let mantleAlreadyInvested = getIntegerValue(kMantleInvested)
 
-      let kMantleLevel = keyArtefactLevel(MANTLENAME, i.caller.toString(), artefactId.fromBase58String())
+      let kMantleLevel = keyArtefactLevel(MANTLENAME, i.originCaller.toString(), artefactId.fromBase58String())
       let kOnlyArtefactLevel = keyOnlyArtefactLevel(artefactId.fromBase58String())
 
       let totalInvested = mantleAlreadyInvested + firstPayment.amount
@@ -137,7 +137,7 @@ func putOnArtefact(artefactId: String) = {
     let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
     let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
     let kMantleStatus = keyArtefactStatus(MANTLENAME, artefactId.fromBase58String())
-    let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, i.caller.toString(), artefactId.fromBase58String())
+    let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, i.originCaller.toString(), artefactId.fromBase58String())
     let kDuckLock = keyDuckLock(i.originCaller.toString(), firstPayment.assetId.value().toBase58String())
     let mantleExists = getBooleanValue(kMantleExists)
     let mantleOwner = getStringValue(kMantleOwner)
@@ -146,10 +146,10 @@ func putOnArtefact(artefactId: String) = {
     let kArtefactIdByType = keyArtefactIdByDuckAndType(MANTLENAME, firstPayment.assetId.value())
 
     if (!mantleExists) then throw("Mantle with such an ID does not exist") else
-    if (mantleOwner != i.caller.toString()) then throw("You're not an owner of the mantle") else 
+    if (mantleOwner != i.originCaller.toString()) then throw("You're not an owner of the mantle") else 
     if (mantleStatus != STATUSFREE) then throw("Mantle is already used!")
     else {
-      let kPutOnArtefact = keyPutOnArtefact(MANTLENAME, i.caller.toString(), firstPayment.assetId.value().toBase58String(), artefactId.fromBase58String())
+      let kPutOnArtefact = keyPutOnArtefact(MANTLENAME, i.originCaller.toString(), firstPayment.assetId.value().toBase58String(), artefactId.fromBase58String())
       [
         BooleanEntry(kPutOnArtefact, true),
         StringEntry(kMantleStatus, STATUSOCCUPIED),
@@ -168,9 +168,9 @@ func takeOffArtefact(duckId:String, artefactType: String) = {
   let artefactId = getStringValue(kArtefactIdByTypeAndDuck)
   
   let kArtefactType = keyArtefactType(artefactId.fromBase58String())
-  let kPutOnArtefact = keyPutOnArtefact(artefactType, i.caller.toString(), duckId, artefactId.fromBase58String())
+  let kPutOnArtefact = keyPutOnArtefact(artefactType, i.originCaller.toString(), duckId, artefactId.fromBase58String())
   let kPutOnArtefactStatus = getBooleanValue(kPutOnArtefact)
-  let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(artefactType, i.caller.toString(), artefactId.fromBase58String())
+  let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(artefactType, i.originCaller.toString(), artefactId.fromBase58String())
   let kDuckLock = keyDuckLock(i.originCaller.toString(), duckId)
 
   let kMantleStatus = keyArtefactStatus(artefactType, artefactId.fromBase58String())
@@ -181,7 +181,8 @@ func takeOffArtefact(duckId:String, artefactType: String) = {
       DeleteEntry(kArtefactIdByTypeAndDuck),
       DeleteEntry(kDuckLock),
       StringEntry(kMantleStatus, STATUSFREE),
-      StringEntry(kArtefactOwnerAndStatus, STATUSFREE)
+      StringEntry(kArtefactOwnerAndStatus, STATUSFREE),
+      ScriptTransfer(i.originCaller, 1, duckId.fromBase58String())
     ]
   }
 }
