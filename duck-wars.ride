@@ -23,6 +23,10 @@ func keyArtefactInvested(type: String, artefactId: String) = {
   "artefact_" + type + "_artefactId_" + artefactId + "_invested"
 }
 
+func keyOnlyArtefactLevel(artefactId: ByteVector) = {
+  "artefactId_" + artefactId.toBase58String() + "_level"
+}
+
 func keyArtefactIdByDuckAndType(type: String, duckId: ByteVector) = {
   "artefact_ " + type + "_duck_" + duckId.toBase58String() + "_artefactId"
 }
@@ -75,6 +79,8 @@ func buyArtefact(type: String) = {
       let kArtefactType = keyArtefactType(mantleNftId)
       let kMantleInvested = keyArtefactInvested(MANTLENAME, mantleNftId.toBase58String())
       let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, i.caller.toString(), mantleNftId)
+      let kOnlyArtefactLevel = keyOnlyArtefactLevel(mantleNftId)
+
       [
         IntegerEntry(kMantleLevel, 1),
         IntegerEntry(kMantleInvested, MANTLEPRICE),
@@ -82,7 +88,8 @@ func buyArtefact(type: String) = {
         StringEntry(kMantleOwner, i.caller.toString()),
         StringEntry(kMantleStatus, STATUSFREE),
         StringEntry(kArtefactType, MANTLENAME),
-        StringEntry(kArtefactOwnerAndStatus, STATUSFREE)
+        StringEntry(kArtefactOwnerAndStatus, STATUSFREE),
+        IntegerEntry(kOnlyArtefactLevel, 1)
       ]
     }
   } 
@@ -108,12 +115,14 @@ func upgradeMantle(artefactId: String) = {
       let mantleAlreadyInvested = getIntegerValue(kMantleInvested)
 
       let kMantleLevel = keyArtefactLevel(MANTLENAME, i.caller.toString(), artefactId.fromBase58String())
+      let kOnlyArtefactLevel = keyOnlyArtefactLevel(artefactId.fromBase58String())
 
       let totalInvested = mantleAlreadyInvested + firstPayment.amount
       let newLevel = (10 * pow(totalInvested, 8, 6, 1, 8, HALFUP) + 100000000) / 100000000
       [
         IntegerEntry(kMantleLevel, newLevel),
-        IntegerEntry(kMantleInvested, totalInvested)
+        IntegerEntry(kMantleInvested, totalInvested),
+        IntegerEntry(kOnlyArtefactLevel, newLevel)
       ]
     }
   }
