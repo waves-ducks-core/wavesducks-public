@@ -2,9 +2,9 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let breederContract = base58'3P9REuLBnYBafDqtEu6hfzs2Rv2haSU158y'
-let incubatorContract = base58'3P6TwNU39Ykkbeqhn5TE4a2736xsA1vXemM'
-let eggAssetId = base58'3v7zGkeHS6KrsvmTRzEzvCxm5cdzkCtM7z5cM6efcjCB'
+let breederContract = base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+let incubatorContract = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 let MANTLENAME = "mantle"
 
 let STATUSFREE = "FREE"
@@ -184,25 +184,6 @@ func takeOffArtefact(duckId:String, artefactType: String) = {
       StringEntry(kArtefactOwnerAndStatus, STATUSFREE),
       ScriptTransfer(i.originCaller, 1, duckId.fromBase58String())
     ]
-  }
-}
-
-#stateKey;stateKey;...
-@Callable(i)
-func unlockNftForWars(keys: String) = {
-  if (i.callerPublicKey != base58'ArbTEDzZLUKHkNzZSqEHfu5cpjvXnPtEPqBVwUTiCRSa') then throw("Cannot call this method") else {
-    let keysList = keys.split(";")
-    if (keysList.size() > 10) then throw("You cannot unlock more than 10 ducks in one transaction")
-    else {
-      func handleUnlockOneDuck(accum: List[DeleteEntry | ScriptTransfer], key: String) = {
-        let kDuckLock = key.split("_") #address, {address}, duck, {assetId}, status
-        accum ++ [
-            DeleteEntry(key),
-            ScriptTransfer(kDuckLock[1].value().addressFromStringValue(), 1, kDuckLock[3].value().fromBase58String())
-          ]
-      }
-      FOLD<10>(keysList, [], handleUnlockOneDuck)
-    }
   }
 }
 
