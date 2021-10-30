@@ -1,0 +1,214 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let rebirthAddress = base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+let backendPubKey = base58'BmKAXRQy7jZm44fa1YxNQDTcAwNSb74EpQwP5CT7UHdV'
+let STARTTIMESTAMP = 1_632_474_000_000
+let LAPLENGTH = 21_600_000
+let EGGASSETID = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+let DUCKLINGPRICE = 8_0_000_000
+let percentGrowthPrecision = 1_000_000_000_000_000_0
+let existingDuckPrecision = 1_000_000_000_000_00
+
+func keyTotalFeed(ducklingId: String) = {
+  "duckling_" + ducklingId + "_feed"
+}
+
+func keyDucklingFedLap(ducklingId: String) = {
+  "duckling_" + ducklingId + "_fedLap"
+}
+
+func keyDucklingLevel(ducklingId: String) = {
+  "duckling_" + ducklingId + "_level"
+}
+
+func keyFeedForLap(address: String, lap: Int) = {
+  "address_" + address + "_lap_" + lap.toString() + "_feed"
+}
+
+
+func tryGetInteger(key: String) = {
+    let val = match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+    val
+}
+
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => unit
+  }
+}
+
+func getCurrentLevelBigInt(ducklingId: String) = {
+  let kDuckLevel = keyDucklingLevel(ducklingId)
+  match (getString(kDuckLevel)){
+    case s: String => s.parseBigIntValue()
+    case _ => {
+      match getBoolean("duckling_" + ducklingId + "_issuedByFeedCall") {
+        case b:Boolean => 0.toBigInt()
+        case _ => (20 * existingDuckPrecision).toBigInt() # duckling from rebirth
+      }
+    }
+  }
+}
+
+func getCurrentLap() = {
+  ((lastBlock.timestamp - STARTTIMESTAMP) / LAPLENGTH) + 1
+}
+
+# ducklingGrowthLevel counted with precision BigInt
+func calculateNewDucklingLevel(ducklingId: String, paymentAmount: Int) = {
+
+  let kFedLap = keyDucklingFedLap(ducklingId)
+  let lastFedLapNumber = tryGetInteger(kFedLap)
+  let currentlap = getCurrentLap()
+  let penalty = if lastFedLapNumber == 0 then 0.toBigInt() else ((currentlap - lastFedLapNumber - 1) / 4).toBigInt() * existingDuckPrecision.toBigInt()
+
+  let growth = fraction(paymentAmount.toBigInt(), percentGrowthPrecision.toBigInt(), DUCKLINGPRICE.toBigInt())
+  # throw("currentLevel: " + getCurrentLevelBigInt(ducklingId).toString() + " penalty: " + penalty.toString() + "growth: " + growth.toString())
+  let newLevel = ((getCurrentLevelBigInt(ducklingId) - penalty) + growth)
+  if (newLevel < 0.toBigInt()) then growth.toString() else newLevel.toString()
+}
+
+func getFeedByLap(address: String, lap: Int) = {
+  let kFeedForLap = keyFeedForLap(address, lap)
+  tryGetInteger(kFeedForLap)
+}
+
+func stringListToIntList(list: List[String]) = {
+
+  func parser(acc: List[Int], val: String) = {
+    acc ++ [val.parseInt().value()]
+  }
+
+  FOLD<10>(list, [], parser)
+}
+
+func getMaxFeedAmount(laps: List[Int], rewards: List[Int], address: String) = {
+  let currentLap = getCurrentLap()
+  if (laps[3] != currentLap - 1 || laps[2] != currentLap - 2 || laps[1] != currentLap - 3 || laps[0] != currentLap - 4) then throw("Outdated data for laps") else {
+    func getFeedForLap(acc: List[Int], lap: Int) = {
+      acc :+ getFeedByLap(address, lap)
+    }
+    func sum(acc: Int, reward: Int) = {
+      acc + reward
+    }
+    let feedLastLaps = FOLD<4>(laps, [], getFeedForLap)
+    let maxFeed = feedLastLaps.max()
+    let totalReward = FOLD<4>(rewards, 0, sum)
+    totalReward - maxFeed
+  }
+}
+
+func getBackendProof(laps: List[String], rewards: List[String], address: String) = {
+
+  func IntListToByteVector(acc: String, item: String) = {
+    acc + item
+  }
+
+  let lapsStringPart = FOLD<10>(laps, "", IntListToByteVector)
+  let rewardsStringPart = FOLD<10>(rewards, "", IntListToByteVector)
+  lapsStringPart + rewardsStringPart + address
+}
+
+@Callable(i)
+func issueFreeDuckling(address: String, txIdStr: String) = {
+  let asset = Issue("BABY-11111111-GZ", "", 1, 0, false, unit, height)
+    let assetId = asset.calculateAssetId()
+    ([
+      StringEntry(address + "_" + txIdStr + "_di", assetId.toBase58String()),
+      IntegerEntry("stats_amount", tryGetInteger("stats_amount") + 1),
+      BooleanEntry("duckling_" + assetId.toBase58String() + "_issuedByFeedCall", i.caller == this),
+      asset,
+      ScriptTransfer(addressFromString(address).value(), 1, assetId)
+    ], assetId.toBase58String())
+}
+
+#backendProof should be lap1Number + lap2Number + lap3Number + lap4Number + value1 + value2 + value3 + value4 + address;
+@Callable(i)
+func feedDuckling(ducklingId: String, backendSignature: String, lapsList: String, rewardsList: String) = {
+  let addressString = i.caller.toString()
+  let laps = lapsList.split(",").value()
+  let rewards = rewardsList.split(",").value()
+  let backendProof = getBackendProof(laps, rewards, addressString)
+
+  let realDucklingId = if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), backendPubKey)) then throw("Invalid proof from backend") else 
+    if (i.payments.size() != 1 || i.payments[0].value().assetId != EGGASSETID) then throw("Bad payment attached (asset[s] or amount)") else {
+    if (ducklingId == "") then {
+      strict ducklingAssetId = invoke(this, "issueFreeDuckling", [i.originCaller.toString(), i.transactionId.toBase58String()], [])
+      let id = match ducklingAssetId {
+        case v: String => v
+        case _ => throw("Can't generate NFT")
+      }
+      # new duckling will always have 1 as level
+      id
+    } else {
+      let ducklingIdCheck = assetInfo(ducklingId.fromBase58String()).value()
+      if (assetBalance(i.caller, ducklingIdCheck.id) != 1) then throw("You're not the owner of the duckling") else
+      if (ducklingIdCheck.issuer != this) then throw("Cant find duckling with such id") 
+      else {
+        let ducklingIdString = ducklingIdCheck.id.toBase58String()
+        ducklingIdString
+      }
+    }
+  }
+
+  let intLaps = stringListToIntList(laps)
+  let intRewards = stringListToIntList(rewards)
+
+  let maxFeedAmount = getMaxFeedAmount(intLaps, intRewards, i.caller.toString())
+  let kDucklingFedLap = keyDucklingFedLap(realDucklingId)
+  let lastFedLap = tryGetInteger(kDucklingFedLap)
+  let currentPayment = i.payments[0].value().amount
+  let kNewLevel = keyDucklingLevel(realDucklingId)
+  let kTotalFeed = keyTotalFeed(realDucklingId)
+  let totalFeed = tryGetInteger(kTotalFeed)
+  let feedTxStats = "duckling_" + realDucklingId + "_stat_" + lastBlock.timestamp.toString()
+
+  if (maxFeedAmount < currentPayment) then throw("Cannot feed duckling for such amount, max feed amount is: " + maxFeedAmount.toString()) else {
+    [
+      IntegerEntry(kDucklingFedLap, getCurrentLap()),
+      IntegerEntry(keyFeedForLap(addressString, intLaps[0]), getFeedByLap(addressString, intLaps[0]) + currentPayment),
+      IntegerEntry(keyFeedForLap(addressString, intLaps[1]), getFeedByLap(addressString, intLaps[1]) + currentPayment),
+      IntegerEntry(keyFeedForLap(addressString, intLaps[2]), getFeedByLap(addressString, intLaps[2]) + currentPayment),
+      IntegerEntry(keyFeedForLap(addressString, intLaps[3]), getFeedByLap(addressString, intLaps[3]) + currentPayment),
+      IntegerEntry(kTotalFeed, totalFeed + currentPayment),
+      IntegerEntry(feedTxStats, currentPayment),
+      StringEntry(kNewLevel, calculateNewDucklingLevel(realDucklingId, currentPayment))
+    ]
+  }
+}
+
+@Callable(i)
+func fixLevels(ducklingIds: String) = {
+  if (i.callerPublicKey != base58'GDxBbsDRmeY39quNrDsTXKJzFWbQVtjxHseF4ikxZ7n9') then throw("") else {
+    let ducklingIdsList = ducklingIds.split(",").value()
+    func handleId(acc: List[StringEntry], id: String) = {
+      let kTotalFeed = keyTotalFeed(id)
+      let totalFeed = tryGetInteger(kTotalFeed)
+      let kNewLevel = keyDucklingLevel(id)
+      let startingLevel = match getBoolean("duckling_" + id + "_issuedByFeedCall"){
+        case b: Boolean => 0.toBigInt()
+        case _ => (20 * existingDuckPrecision).toBigInt()
+      }
+
+      let growth = fraction(totalFeed.toBigInt(), percentGrowthPrecision.toBigInt(), DUCKLINGPRICE.toBigInt())
+      acc ++ [StringEntry(kNewLevel, (startingLevel + growth).toString())]
+    }
+
+    FOLD<20>(ducklingIdsList, [], handleId)
+  }
+}
+
+@Callable(i)
+func turnDucklingIntoDuck() = {
+  throw("Not implemented yet")
+}
+
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
