@@ -156,7 +156,6 @@ func topUpReward () = {
 }
 
 #both
-#TODO: if -1 wd all
 @Callable(i)
 func withdrawFarmTokens (amount: Int, compound: Boolean) = {
   let shareTokenId = getShareAssetId()
