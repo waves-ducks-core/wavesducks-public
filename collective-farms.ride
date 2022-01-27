@@ -74,6 +74,8 @@ func getShareAssetId() = {
   getStr(kShareAssetId).fromBase58String()
 }
 
+func getIntFromAny(a: Any) = value(a.as[Int])
+
 @Callable(i)
 func calculateCompoundShareAndIssue(amount: Int) = {
   if (i.caller != this) then {
@@ -223,10 +225,7 @@ func claimFarmingRewardProxy(ids: String) = {
     let amountToPay = claimedReward-farmCeoFeeSize
     
     strict amountCompontCall = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[])
-    let compound = match amountCompontCall {
-      case int: Int => int
-      case _ => throw("Error during compound calcuations")
-    }
+    let compound = getIntFromAny(amountCompontCall)
     strict topUp = invoke(stakingAddress,"topUpReward",[],[
                           AttachedPayment(eggAssetId,amountToPay-compound),
                           AttachedPayment(shareAssetId,compound)]
@@ -286,10 +285,7 @@ func callUnstakeProxy(function: String, assetId: String) = {
 
     let amountToPay = reward-farmCeoFeeSize
     strict amountCompontCall = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[])
-    let compound = match amountCompontCall {
-      case int: Int => int
-      case _ => throw("Error during compound calcuations")
-    }
+    let compound = getIntFromAny(amountCompontCall)
     strict topUp = invoke(stakingAddress,"topUpReward",[],[
                           AttachedPayment(eggAssetId,amountToPay-compound),
                           AttachedPayment(shareAssetId,compound)]

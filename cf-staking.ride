@@ -118,7 +118,7 @@ func handleCompoundTopUp(amount: Int)={
 func handleStakingTopUp (amount: Int) = {
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let totalStakedAmount = tryGetInteger(keyGlobalStaked)
-    let interestDelta = if ((totalStakedAmount > 0))
+    let interestDelta = if (totalStakedAmount > 0)
         then fraction(amount, Scale, totalStakedAmount)
         else 0
     [
@@ -156,6 +156,7 @@ func topUpReward () = {
 }
 
 #both
+#TODO: if -1 wd all
 @Callable(i)
 func withdrawFarmTokens (amount: Int, compound: Boolean) = {
   let shareTokenId = getShareAssetId()
@@ -166,12 +167,13 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
     let total = tryGetInteger(keyTotalCompound)
     let vp = calcVirtualPrice(staked,total)
 
-    #Calculate the virtual amount from your tokens to wd
-    let virtualWd = fraction(amount, VPScale, vp)
-
     #Get amount of staked
     let keyStakedCompoundU = keyStakedCompoundUser(i.caller)
     let personalStaked = tryGetInteger(keyStakedCompoundU)
+
+    #Calculate the virtual amount from your tokens to wd
+    let virtualWd = if (amount == -1)then personalStaked else fraction(amount, VPScale, vp)
+    let amountWd =  if (amount == -1) then fraction(virtualWd,vp,VPScale)else amount
 
     if virtualWd > personalStaked
     then throw("You don't have so much funds to withdraw")
@@ -179,23 +181,27 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
       [
           IntegerEntry(keyStakedCompoundU, personalStaked-virtualWd),
           IntegerEntry(keyStakedCompound, staked-virtualWd),
-          IntegerEntry(keyTotalCompound, total-amount),
-          ScriptTransfer(i.caller,amount,shareTokenId),
-          IntegerEntry(keyLastVP,vp)
+          IntegerEntry(keyTotalCompound, total-amountWd),
+          ScriptTransfer(i.caller,amountWd,shareTokenId),
+          IntegerEntry(keyLastVP,vp),
+          IntegerEntry("last_virt_compound_wd",virtualWd),
+          IntegerEntry("last_amount_compound_wd",amountWd)
       ]
     }
   }
   else{
     let addressStr = toString(i.caller)
     let stakedAmount = tryGetInteger(keyStakedAmount(i.caller))
-    if ((amount > stakedAmount))
+    let wdAmount = if (amount == -1) then stakedAmount else amount
+    if ((wdAmount > stakedAmount))
         then throw("you don't have tokens available")
         else (
           claimStakingResult(i.caller) ++ 
           [
-            IntegerEntry(keyStakedAmount(i.caller), (stakedAmount - amount)), 
-            IntegerEntry(keyGlobalStaked, (tryGetInteger(keyGlobalStaked) - amount)), 
-            ScriptTransfer(i.caller, amount, shareTokenId)
+            IntegerEntry(keyStakedAmount(i.caller), (stakedAmount - wdAmount)), 
+            IntegerEntry(keyGlobalStaked, (tryGetInteger(keyGlobalStaked) - wdAmount)), 
+            ScriptTransfer(i.caller, amount, shareTokenId),
+            IntegerEntry("last_staking_wd",wdAmount)
           ]
         )
   }
