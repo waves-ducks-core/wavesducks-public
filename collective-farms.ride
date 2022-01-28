@@ -2,8 +2,20 @@
 {-# SCRIPT_TYPE ACCOUNT #-}
 {-# CONTENT_TYPE DAPP #-}
 
-let mAccPKey = base58'HyXCiJpt1eh1M1zZWDpYzbVW81yZL4XBjiJjGwxZqk2'
-let mAccAddr = mAccPKey.addressFromPublicKey()
+let keyMAccPKey = "master_pk"
+
+func getStr(key: String) = {
+  match getString(this, key) {
+      case b:String => b
+      case _ => ""
+  }
+}
+
+let mAccPKeyString = getStr(keyMAccPKey)
+let mAccPKey = mAccPKeyString.fromBase58String()
+
+let mAccAddr = addressFromPublicKey(mAccPKey)
+
 let feePercent = getIntegerValue(mAccAddr, "f_" + this.toString() + "_fee")
 let stakingAddress = valueOrErrorMessage(getString(mAccAddr, "f_" + this.toString() + "_stake_address"),"f_" + this.toString() + "_stake_address not defined").addressFromStringValue()
 
@@ -30,13 +42,6 @@ func getInt(key: String) = {
   match getInteger(this, key) {
       case b:Int => b
      case _ => 0
-  }
-}
-
-func getStr(key: String) = {
-  match getString(this, key) {
-      case b:String => b
-      case _ => ""
   }
 }
 
@@ -77,6 +82,21 @@ func getShareAssetId() = {
 func getIntFromAny(a: Any) = value(a.as[Int])
 
 @Callable(i)
+func initMasterKey(publicKey: String)={
+  if (i.caller != this) then {
+    throw("You cannot do this action")
+  } else if mAccPKeyString != "" then {
+      throw("Master public key already set, you can't override!")
+  }else{
+      [
+      StringEntry(keyMAccPKey,publicKey)
+      ]
+  }
+  
+
+}
+
+@Callable(i)
 func calculateCompoundShareAndIssue(amount: Int) = {
   if (i.caller != this) then {
     throw("You cannot do this action")
@@ -107,7 +127,9 @@ func calculateCompoundShareAndIssue(amount: Int) = {
 
 @Callable(i)
 func initCollectiveFarm(name: String, minimumThreshold: Int) = {
-  if (i.callerPublicKey != mAccPKey) then {
+  if mAccPKeyString == "" then {
+      throw("First initiatie a master public key!")
+  }else if (i.callerPublicKey != mAccPKey) then {
       throw("_1")
   }else if (getBool(kInitialized) != unit) then {
       throw("_2")
@@ -352,7 +374,8 @@ func verify() = {
 
 
         if (inv.function == "unstakeNFT" || inv.function == "unstakeJackpot") then throw("You cannot call these functions directly") else
-        if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false) then throw("_100") else
+        if (inv.dApp.addressFromRecipient() == this &&inv.function == "initMasterKey" && mAccPKeyString=="")then sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        else if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false) then throw("_100") else
         if (checkStarted == false) then throw("_14") else
         if (getBool(kLocked) == true) then throw("_22") else
         if (inv.fee > 900000 || inv.feeAssetId != unit) then {

@@ -3,7 +3,13 @@
 {-# SCRIPT_TYPE ACCOUNT #-}
 
 #General variables
-let mAccPKey = base58'HyXCiJpt1eh1M1zZWDpYzbVW81yZL4XBjiJjGwxZqk2'
+let keyMAccPKey = "master_pk"
+
+func getCFAddress() = {
+  getStringValue(this, "CF_ADDRESS").addressFromStringValue()
+}
+
+let mAccPKey = getStringValue(getCFAddress(),keyMAccPKey).fromBase58String()
 
 let mAccAddr = mAccPKey.addressFromPublicKey()
 
@@ -47,10 +53,6 @@ let keyGlobalStaked = "global_staked"
 let keyGlobalEggEarned =  "global_earnings"
 
 let kLockedInvestments = "locked_investments"
-
-func getCFAddress() = {
-  getStringValue(this, "CF_ADDRESS").addressFromStringValue()
-}
 
 func isCollectiveFarmLocked()= {
     match getBoolean(getCFAddress(), kLockedInvestments) {
@@ -269,7 +271,7 @@ func stakeFarmTokens (compound: Boolean) = {
 
 @Callable(i)
 func initiateDapp(address: String) = {
-  if (i.caller != this) then throw("Can be called only by the account") else {
+  if (i.caller != this) then throw("Can be called only by the dapp-account") else {
     setCFAddress(address)
   }
 }
