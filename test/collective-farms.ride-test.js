@@ -12,6 +12,12 @@ if (userSeed == null) {
   throw new Error(`Please provide userSeed`);
 }
 
+//const masterSeed = env.masterSeed;
+const masterSeed = "";
+if (masterSeed == null) {
+  throw new Error(`Please provide masterSeed`);
+}
+
 //const cfStakingSeed = env.cfStakingSeed;
 const cfStakingSeed = "";
 if (cfStakingSeed == null) {
@@ -96,6 +102,40 @@ describe("cf test suite", async function () {
         );
         await expect(broadcast(invoke)).rejectedWith(
           "Transaction is not allowed by account-script"
+        );
+      });
+      it("unstakeNFT", async function () {
+        const invoke = invokeScript(
+          {
+            version: 1,
+            dApp: address(cfSeed),
+            call: {
+              function: "unstakeNFT",
+              args: [],
+            },
+            additionalFee: 400000,
+          },
+          cfSeed
+        );
+        await expect(broadcast(invoke)).rejectedWith(
+          "You cannot call these functions directly"
+        );
+      });
+      it("unstakeJackpot", async function () {
+        const invoke = invokeScript(
+          {
+            version: 1,
+            dApp: address(cfSeed),
+            call: {
+              function: "unstakeJackpot",
+              args: [],
+            },
+            additionalFee: 400000,
+          },
+          cfSeed
+        );
+        await expect(broadcast(invoke)).rejectedWith(
+          "You cannot call these functions directly"
         );
       });
       it("initCollectiveFarm", async function () {
@@ -218,6 +258,148 @@ describe("cf test suite", async function () {
         );
         await expect(broadcast(invoke)).rejectedWith(
           "Error while executing account-script: _16"
+        );
+      });
+    });
+    describe("Make sure a CF can only 1 time be started", () => {
+      it("initCollectiveFarm", async function () {
+        const invoke = invokeScript(
+          {
+            version: 1,
+            dApp: address(cfSeed),
+            call: {
+              function: "initCollectiveFarm",
+              args: [
+                { type: "string", value: "arguments" },
+                { type: "integer", value: 250 },
+              ],
+            },
+            additionalFee: 400000,
+          },
+          masterSeed
+        );
+        await expect(broadcast(invoke)).rejectedWith(
+          "Error while executing account-script: _2"
+        );
+      });
+    });
+    describe("Make sure a CF can put a duck on perch and remove it", () => {
+      it("remove duck from perch", async function () {
+        const invoke = invokeScript(
+          {
+            version: 1,
+            dApp: address(cfSeed),
+            call: {
+              function: "callUnstakeProxy",
+              args: [
+                { type: "string", value: "unstakeNFT" },
+                {
+                  type: "string",
+                  value: "AkVMrqVFCXhDB6CeA5hHVykU31sreMhsGmnSmLcscD1U",
+                },
+              ],
+            },
+            additionalFee: 400000,
+          },
+          cfSeed
+        );
+        await broadcast(invoke);
+        const output = await waitForTx(invoke.id);
+        await expect(output.stateChanges.invokes[0].dApp).to.equal(
+          "3PH75p2rmMKCV2nyW4TsAdFgFtmc61mJaqA"
+        );
+        await expect(output.stateChanges.invokes[1].dApp).to.equal(
+          "3P2dfhgUswGVaJeseCj3kj7ZxXAYSv2e5Hj"
+        );
+        await expect(output.stateChanges.invokes[2].dApp).to.equal(
+          "3PBjiMHNTqqcee1phQhv6GhHWc1XsANJ252"
+        );
+      });
+      it("put duck on perch", async function () {
+        const invoke = invokeScript(
+          {
+            version: 1,
+            dApp: "3PH75p2rmMKCV2nyW4TsAdFgFtmc61mJaqA",
+            call: {
+              function: "stakeNFT",
+              args: [],
+            },
+            payment: [
+              {
+                amount: 1,
+                assetId: "AkVMrqVFCXhDB6CeA5hHVykU31sreMhsGmnSmLcscD1U",
+              },
+            ],
+            additionalFee: 400000,
+          },
+          cfSeed
+        );
+        await broadcast(invoke);
+        const output = await waitForTx(invoke.id);
+        await expect(output.applicationStatus).to.equal("succeeded");
+      });
+    });
+    describe("Lock and unlock investments", () => {
+      it("by owner", async function () {
+        const invokeLock = invokeScript(
+          {
+            version: 1,
+            dApp: address(cfSeed),
+            call: {
+              function: "lockInvestments",
+              args: [],
+            },
+            additionalFee: 400000,
+          },
+          cfSeed
+        );
+        await broadcast(invokeLock);
+        await waitForTx(invokeLock.id);
+        const invokeUnlock = invokeScript(
+          {
+            version: 1,
+            dApp: address(cfSeed),
+            call: {
+              function: "unlockInvestments",
+              args: [],
+            },
+            additionalFee: 400000,
+          },
+          cfSeed
+        );
+        await broadcast(invokeUnlock);
+        await waitForTx(invokeUnlock.id);
+      });
+      it("by outsider should fail", async function () {
+        const invokeLock = invokeScript(
+          {
+            version: 1,
+            dApp: address(cfSeed),
+            call: {
+              function: "lockInvestments",
+              args: [],
+            },
+            additionalFee: 400000,
+          },
+          masterSeed
+        );
+        await expect(broadcast(invokeLock)).rejectedWith(
+          "You cannot lock this contract"
+        );
+        const invokeUnlock = invokeScript(
+          {
+            version: 1,
+            dApp: address(cfSeed),
+            call: {
+              function: "unlockInvestments",
+              args: [],
+            },
+            additionalFee: 400000,
+          },
+          masterSeed
+        );
+        await expect(broadcast(invokeUnlock)).rejectedWith(
+          "You cannot lock this contract"
         );
       });
     });

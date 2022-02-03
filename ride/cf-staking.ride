@@ -201,7 +201,7 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
           [
             IntegerEntry(keyStakedAmount(i.caller), (stakedAmount - wdAmount)), 
             IntegerEntry(keyGlobalStaked, (tryGetInteger(keyGlobalStaked) - wdAmount)), 
-            ScriptTransfer(i.caller, amount, shareTokenId),
+            ScriptTransfer(i.caller, wdAmount, shareTokenId),
             IntegerEntry("last_staking_wd",wdAmount)
           ]
         )
