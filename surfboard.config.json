@@ -1,0 +1,29 @@
+{
+    "ride_directory": "ride",
+    "test_directory": "test",
+    "envs": {
+        "custom": {
+            "API_BASE": "http://localhost:6869/",
+            "CHAIN_ID": "R",
+            "SEED": "waves private node seed with waves tokens",
+            "timeout": 60000
+        },
+        "mainnet": {
+            "API_BASE": "https://cluster.node.turtlenetwork.eu",
+            "CHAIN_ID": "W",
+            "SEED": "arena weekend brand trophy final father oblige math minor drift armed wife",
+            "timeout": 60000
+
+        },
+        "testnet": {
+            "API_BASE": "https://nodes-testnet.wavesnodes.com/",
+            "CHAIN_ID": "T",
+            "SEED": "arena weekend brand trophy final father oblige math minor drift armed wife",
+            "timeout": 60000
+        }
+    },
+    "defaultEnv": "mainnet",
+    "mocha": {
+        "timeout": 60000
+    }
+}

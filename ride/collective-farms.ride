@@ -2,11 +2,22 @@
 {-# SCRIPT_TYPE ACCOUNT #-}
 {-# CONTENT_TYPE DAPP #-}
 
-let mAccPKey = base58'23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T'
-let mAccAddr = mAccPKey.addressFromPublicKey()
+let keyMAccPKey = "master_pk"
+
+func getStr(key: String) = {
+  match getString(this, key) {
+      case b:String => b
+      case _ => ""
+  }
+}
+
+let mAccPKeyString = getStr(keyMAccPKey)
+let mAccPKey = mAccPKeyString.fromBase58String()
+
+let mAccAddr = addressFromPublicKey(mAccPKey)
+
 let feePercent = getIntegerValue(mAccAddr, "f_" + this.toString() + "_fee")
-let oldEggAssetId = base58'JCGDtrVy64cCJ1wCKfCaiNQMnyYwii71TbE5QeAHfxgF'
-let swapEggDappAddress = "3PJQUUiJdvz9etUKED9ju7o7VrcNMtnkXBU".addressFromStringValue()
+let stakingAddress = valueOrErrorMessage(getString(mAccAddr, "f_" + this.toString() + "_stake_address"),"f_" + this.toString() + "_stake_address not defined").addressFromStringValue()
 
 let kTotalLiquidity = "total_liquidity"
 let kInitialized = "INITIALIZED"
@@ -20,24 +31,17 @@ let kFarmingDapp = "FARMING_DAPP"
 let kMarketProxyDapp = "MARKETPLACE_PROXY_DAPP"
 let kAuctionDapp = "AUCTION_DAPP"
 let kLocked = "LOCKED"
-let kTotalFarmingReward = "total_farming_reward"
 let kCeoCollectedFee = "ceo_collected_fee"
 let kCeoCollectedFeeOverall = "ceo_fee_overall"
-let kToDistr = "to_distribute"
-let kUnstakedReward = "unstaked_reward"
 let kLockedInvestments = "locked_investments"
+
+let keyTotalCompound = "total_compound"
+let keyGlobalStaked = "global_staked"
 
 func getInt(key: String) = {
   match getInteger(this, key) {
       case b:Int => b
      case _ => 0
-  }
-}
-
-func getStr(key: String) = {
-  match getString(this, key) {
-      case b:String => b
-      case _ => ""
   }
 }
 
@@ -66,9 +70,7 @@ func getMarketProxyAddr() = {
   getStrA(mAccAddr, kMarketProxyDapp)
 }
 
-func keyAutocompound(address: Address) = {
-  "address_" + address.toString() + "_autocompound"
-}
+
 
 func getEggId() = {
   getStringValue(mAccAddr, "EGG_ASSET_ID").fromBase58String()
@@ -77,17 +79,65 @@ func getShareAssetId() = {
   getStr(kShareAssetId).fromBase58String()
 }
 
+func getIntFromAny(a: Any) = value(a.as[Int])
+
+@Callable(i)
+func initMasterKey(publicKey: String)={
+  if (i.caller != this) then {
+    throw("You cannot do this action")
+  } else if mAccPKeyString != "" then {
+      throw("Master public key already set, you can't override!")
+  }else{
+      [
+      StringEntry(keyMAccPKey,publicKey)
+      ]
+  }
+  
+
+}
+
+@Callable(i)
+func calculateCompoundShareAndIssue(amount: Int) = {
+  if (i.caller != this) then {
+    throw("You cannot do this action")
+  } else {
+    if (getBool(kLockedInvestments) == true) 
+    then  ([],
+          0)
+    else{
+      let shareAssetId = getShareAssetId()
+      let totalCompound = getIntA(stakingAddress,keyTotalCompound)
+      let totalStaked   = getIntA(stakingAddress,keyGlobalStaked)
+      let totalLocked = totalStaked+totalCompound
+      let amountForCompound = fraction(amount,totalCompound,totalLocked)
+      let totalShareTokens = getInt(kTotalShareTokens)
+
+      (
+        [
+          Reissue(shareAssetId, amountForCompound, true),
+          IntegerEntry(kTotalShareTokens, totalShareTokens + amountForCompound)
+        ],
+        amountForCompound
+      )
+    }
+  }
+
+
+}
+
 @Callable(i)
 func initCollectiveFarm(name: String, minimumThreshold: Int) = {
-  if (i.callerPublicKey != mAccPKey) then {
+  if mAccPKeyString == "" then {
+      throw("First initiatie a master public key!")
+  }else if (i.callerPublicKey != mAccPKey) then {
       throw("_1")
   }else if (getBool(kInitialized) != unit) then {
       throw("_2")
-  } else if (i.payments[0].amount != 10 * 1_000_000 || i.payments[0].assetId != getEggId()) then {
+  } else if (i.payments[0].amount != 1000_0000 || i.payments[0].assetId != getEggId()) then {
       throw("_20")
   } else {
-      let shareTokens = 1_0_000_000
-      let shareToken = Issue(name, "Share token for the \"" + name + "\" collective farm", shareTokens, 8, true)
+      let shareTokens = 1000_0000
+      let shareToken = Issue(name, "Team token for the \"" + name + "\" collective farm", shareTokens, 8, true)
       
       [
         StringEntry(kShareAssetId, shareToken.calculateAssetId().toBase58String()),
@@ -142,7 +192,7 @@ func provideLiquidity() = {
   if (getBool(kLockedInvestments) == true) then throw("Contract is locked for investments by it's CEO. Please invest in another collective farm.") else
   if (getBool(kLocked) == true) then throw("_22") else
   if (i.payments[0].assetId != eggAssetId) then throw("_4") else
-  if (i.payments[0].amount < 1_000_000) then throw("Min amount to invest is 0.01 EGG")
+  if (i.payments[0].amount < 100_0000) then throw("Min amount to invest is 0.01 EGG")
   else {
     let totalLiquidity = getInt(kTotalLiquidity)
     let totalShareTokens = getInt(kTotalShareTokens)
@@ -155,34 +205,26 @@ func provideLiquidity() = {
     let kParticipated = "account_" + i.caller.toString() + "_participated"
     let alreadyParticipated = getBool(kParticipated)
     let newFarmParticipants = if (alreadyParticipated == unit) then farmParticipants + 1 else farmParticipants
-
-    [
+    ([
       reissue,
       ScriptTransfer(i.caller, shareTokensToGive, shareTokensId),
       IntegerEntry(kTotalShareTokens, totalShareTokens + shareTokensToGive),
-      IntegerEntry(kTotalLiquidity, totalLiquidity + (i.payments[0].amount.value() / 1_000_000)),
+      IntegerEntry(kTotalLiquidity, totalLiquidity + (i.payments[0].amount.value() / 100_0000)),
       IntegerEntry(kFarmParticipants, newFarmParticipants),
       BooleanEntry(kParticipated, true)
-    ]
+    ],
+    shareTokensToGive
+    )
   }
 }
-
-# @Callable(i)
-# func clearFarmingState() = {
-#   if (i.caller != mAccAddr) then throw("Can be called only by master") else 
-#   [
-#     DeleteEntry(kTotalFarmingReward),
-#     DeleteEntry(kToDistr),
-#     DeleteEntry(kCeoCollectedFee),
-#     DeleteEntry(kCeoCollectedFeeOverall),
-#     DeleteEntry(kUnstakedReward)
-#   ]
-# }
 
 @Callable(i)
 func claimFarmingRewardProxy(ids: String) = {
   if (i.callerPublicKey != mAccPKey) then throw("_23")
   else {
+    let eggAssetId = getEggId()
+    let shareAssetId = getShareAssetId()
+
     let farmingDapp = getStrA(mAccAddr, kFarmingDapp).addressFromStringValue()
 
     func claimReward(accum: Int, nftId: String) = {
@@ -200,15 +242,17 @@ func claimFarmingRewardProxy(ids: String) = {
       case _ => throw("_6")
     }
     let farmCeoFeeSize = fraction(claimedReward, feePercent, 100)
-
-    let toDistr = getInt(kToDistr)
-    let totalFarmingReward = getInt(kTotalFarmingReward)
     let currentCeoFee = getInt(kCeoCollectedFee)
     let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
-
+    let amountToPay = claimedReward-farmCeoFeeSize
+    
+    strict amountCompontCall = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[])
+    let compound = getIntFromAny(amountCompontCall)
+    strict topUp = invoke(stakingAddress,"topUpReward",[],[
+                          AttachedPayment(eggAssetId,amountToPay-compound),
+                          AttachedPayment(shareAssetId,compound)]
+                          )
     [
-      IntegerEntry(kTotalFarmingReward, totalFarmingReward + claimedReward - farmCeoFeeSize),
-      IntegerEntry(kToDistr, toDistr + claimedReward - farmCeoFeeSize),
       IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
       IntegerEntry(kCeoCollectedFeeOverall, ceoFeeOverall + farmCeoFeeSize)
     ]
@@ -246,23 +290,31 @@ func callUnstakeProxy(function: String, assetId: String) = {
   if (getBool(kLocked) == true) then throw("Contract is locked now") else
   if (function != "unstakeNFT" && function != "unstakeJackpot") then throw("Bad function name") else
   if (i.caller != this) then throw("Can be called only by the account") else {
+    let eggAssetId = getEggId()
+    let shareAssetId = getShareAssetId()
     let farmingDappAddress = getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue()
-    strict ustakedReward = invoke(farmingDappAddress, function, [assetId], [])
-    let unstakedRewardNow = getInt(kUnstakedReward)
+    strict unstakedReward = invoke(farmingDappAddress, function, [assetId], [])
 
-    let newUnstakedReward = match ustakedReward {
-      case int: Int => unstakedRewardNow + (int)
+    let reward = match unstakedReward {
+      case int: Int =>  int
       case _ => throw("Error during unstaking")
     }
 
+
     let currentCeoFee = getInt(kCeoCollectedFee)
     let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
-    let farmCeoFeeSize = fraction(unstakedRewardNow, feePercent, 100)
+    let farmCeoFeeSize = fraction(reward, feePercent, 100)
 
+    let amountToPay = reward-farmCeoFeeSize
+    strict amountCompontCall = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[])
+    let compound = getIntFromAny(amountCompontCall)
+    strict topUp = invoke(stakingAddress,"topUpReward",[],[
+                          AttachedPayment(eggAssetId,amountToPay-compound),
+                          AttachedPayment(shareAssetId,compound)]
+                          )
     [
       IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
-      IntegerEntry(kCeoCollectedFeeOverall, ceoFeeOverall + farmCeoFeeSize),
-      IntegerEntry(kUnstakedReward, newUnstakedReward)
+      IntegerEntry(kCeoCollectedFeeOverall, ceoFeeOverall + farmCeoFeeSize)
     ]
   }
 }
@@ -274,11 +326,6 @@ func revertTransfer(txId: String) = {
     let tx = transferTransactionById(txId.fromBase58String()).value()
     let kReverted = "tx_revert_" + txId
     let txReverted = getBool(kReverted)
-
-    let unstakedRewardNow = getInt(kUnstakedReward)
-    let toDistr = getInt(kToDistr)
-
-    let minBalance = unstakedRewardNow + toDistr
     let currentEggBalance = assetBalance(this, getEggId())
     let result = [
       ScriptTransfer(tx.sender, tx.amount, tx.assetId),
@@ -289,50 +336,26 @@ func revertTransfer(txId: String) = {
     if (tx.recipient != this) then throw("Tx recipient is another account") else
     if (tx.assetId == getShareAssetId()) then result else
     if (tx.assetId != getEggId()) then throw("Transaction is not with EGG or share tokens") else 
-    if ((currentEggBalance - tx.amount) < minBalance) then throw("Revert makes balance too low") else {
+    if ((currentEggBalance - tx.amount) < 0) then throw("Revert makes balance too low") else {
       result
     }
   }
 }
 
 @Callable(i)
-func setAutocompound(val: Boolean) = {
-  let kAutocompound = keyAutocompound(i.originCaller)
-  [
-    BooleanEntry(kAutocompound, val)
-  ]
-}
+func claimReward() = {
+  let addresses = getStr("rew1")
+  let addressParts = addresses.split(";")
 
-#address1=number-of-share-tokens;address2=number-of-share-tokens;...
-@Callable(i)
-func distributeRewards(addresses: String, totalShareTokens: Int, totalRewardToDistribute: Int) = {
-  if (i.caller != mAccAddr) then throw("Method can be called only by master account") else
-  let addressPairs = addresses.split(";")
-
-  func processAddress(accum: (Int, List[IntegerEntry | ScriptTransfer]), addressPair: String) = {
-    let addressParts = addressPair.split("=")
-    let addressStr = addressParts[0]
-    let address = addressStr.addressFromStringValue()
-    let userShareTokens = addressParts[1].parseIntValue()
-
-    let kAddrEarned = "address_" + addressStr + "_total_earned"
-    let addrTotalEarned = getInt(kAddrEarned)
-    let userRewardNow = fraction(totalRewardToDistribute, userShareTokens, totalShareTokens)
-    let autocompoundEnabled = getBool(keyAutocompound(addressStr.addressFromStringValue())) == true && getBool(kLockedInvestments) != true 
-    let assetToSend = if autocompoundEnabled == true then getShareAssetId() else getEggId()
-
-    let res = ([
-      IntegerEntry(kAddrEarned, addrTotalEarned + userRewardNow),
-      IntegerEntry("address_" + addressStr + "_reward_" + lastBlock.timestamp.toString(), userRewardNow)
-    ] 
-    ++ if autocompoundEnabled == true then [Reissue(assetToSend, userRewardNow, true)] else []
-    ++ if address != this then [ScriptTransfer(address, userRewardNow, assetToSend)] else [])
-    (accum._1 + userRewardNow, accum._2 ++ res)
+  func findReward (acc: Int, val: String) = {
+    let parts = val.split("=").value()
+    if (parts[0].value() == i.caller.toString()) then acc + parseIntValue(parts[1]) else 0
   }
 
-  let result = FOLD<20>(addressPairs, (0, []), processAddress)
-  let toDistr = getInt(kToDistr)
-  result._2 ++ [IntegerEntry(kToDistr, toDistr - result._1), IntegerEntry(kUnstakedReward, 0)]
+  let reward = FOLD<83>(addressParts, 0, findReward)
+  [
+    IntegerEntry("a", reward)
+  ]
 }
 
 @Verifier(tx)
@@ -345,37 +368,29 @@ func verify() = {
 
   match (tx) {
       case inv:InvokeScriptTransaction => {
-        let unstakedRewardNow = getInt(kUnstakedReward)
-        let toDistr = getInt(kToDistr)
-
-        let minBalance = unstakedRewardNow + toDistr
-
+        let acceptedCallsStaking = ["stakeFarmTokens","claimReward","withdrawFarmTokens"]
+        let acceptedCallsThis = ["callUnstakeProxy","revertTransfer","claimCeoFee","lockInvestments","unlockInvestments"]
         # Avoid scam with high fees => allow only Waves and minimal amount
 
 
         if (inv.function == "unstakeNFT" || inv.function == "unstakeJackpot") then throw("You cannot call these functions directly") else
-        if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false) then throw("_100") else
+        if (inv.dApp.addressFromRecipient() == this &&inv.function == "initMasterKey" && mAccPKeyString=="")then sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        else if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false) then throw("_100") else
         if (checkStarted == false) then throw("_14") else
         if (getBool(kLocked) == true) then throw("_22") else
         if (inv.fee > 900000 || inv.feeAssetId != unit) then {
           throw("_15")
-        }else if (inv.function == "claimReward") then {
+        }else if (inv.dApp.addressFromRecipient() != stakingAddress && inv.function == "claimReward") then {
           throw("_16")
         } else if (inv.payments.size() > 2) then {
           throw("_17")
-        } else if ((assetBalance(this, getEggId()) - FOLD<3>(inv.payments, 0, totalEggSpending)) * 1_000_000 < minBalance) then {
-          throw("Your minimal balance should be = " + minBalance.toString())
-        } else if (inv.dApp.addressFromRecipient() == this && inv.function == "callUnstakeProxy") then {
-          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-        } else if (inv.dApp.addressFromRecipient() == this && inv.function == "revertTransfer") then {
-          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-        } else if (inv.dApp.addressFromRecipient() == this && inv.function == "claimCeoFee") then {
-          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-        } else if (inv.dApp.addressFromRecipient() == this && (inv.function == "lockInvestments" || inv.function == "unlockInvestments" )) then {
+        } else if (inv.dApp.addressFromRecipient() == this && containsElement(acceptedCallsThis,inv.function)) then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-        } else {
+        } else if (inv.dApp.addressFromRecipient() == stakingAddress && containsElement(acceptedCallsStaking,inv.function) ) then {
+          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        }else {
           let allowedContracts = getStrA(mAccAddr, "allowed_contracts")
           let allowedContractsList = allowedContracts.split(";")
           let dappToCall = inv.dApp.addressFromRecipient().toString()
