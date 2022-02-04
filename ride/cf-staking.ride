@@ -230,16 +230,7 @@ func stakeFarmTokens (compound: Boolean) = {
         let rawStakeAmount = i.payments[0].amount
         let exactStakeAmount = fraction(rawStakeAmount, VPScale, vp)
 
-        #bug fix to make sure first claim also succeeds
-        let lastCheckInterest = tryGetInteger(keyLastCheckInterest(i.caller))
-        let currentInterest = tryGetInteger(keyGlobalLastInterest)
-
-        let storeInterest = if (lastCheckInterest > 0)
-        then lastCheckInterest
-        else currentInterest
-
         [
-          IntegerEntry(keyLastCheckInterest(i.caller), storeInterest), 
           IntegerEntry(keyStakedCompoundU,alreadyStaked+exactStakeAmount),
           IntegerEntry(keyTotalCompound,total+rawStakeAmount),
           IntegerEntry(keyStakedCompound,staked+exactStakeAmount),
