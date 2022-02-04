@@ -132,11 +132,6 @@ func handleStakingTopUp (amount: Int) = {
 #both
 @Callable(i)
 func topUpReward () = {
-
-    let totalCompound = tryGetInteger(keyTotalCompound)
-    let totalStaked   = tryGetInteger(keyGlobalStaked)
-    let totalLocked = totalStaked+totalCompound
-
     let eggAssetId = getEggId()
     let shareTokenId = getShareAssetId()
     if (i.payments[0].assetId != eggAssetId)
