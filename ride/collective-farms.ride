@@ -319,51 +319,13 @@ func callUnstakeProxy(function: String, assetId: String) = {
   }
 }
 
-@Callable(i)
-func revertTransfer(txId: String) = {
-  if (getBool(kLocked) == true) then throw("Contract is locked now") else
-  if (i.caller != this) then throw("Can be called only by the account") else {
-    let tx = transferTransactionById(txId.fromBase58String()).value()
-    let kReverted = "tx_revert_" + txId
-    let txReverted = getBool(kReverted)
-    let currentEggBalance = assetBalance(this, getEggId())
-    let result = [
-      ScriptTransfer(tx.sender, tx.amount, tx.assetId),
-      BooleanEntry(kReverted, true)
-    ]
-
-    if (txReverted == true) then throw("Tx already reverted") else 
-    if (tx.recipient != this) then throw("Tx recipient is another account") else
-    if (tx.assetId == getShareAssetId()) then result else
-    if (tx.assetId != getEggId()) then throw("Transaction is not with EGG or share tokens") else {
-      result
-    }
-  }
-}
-
-@Callable(i)
-func claimReward() = {
-  let addresses = getStr("rew1")
-  let addressParts = addresses.split(";")
-
-  func findReward (acc: Int, val: String) = {
-    let parts = val.split("=").value()
-    if (parts[0].value() == i.caller.toString()) then acc + parseIntValue(parts[1]) else 0
-  }
-
-  let reward = FOLD<83>(addressParts, 0, findReward)
-  [
-    IntegerEntry("a", reward)
-  ]
-}
-
 @Verifier(tx)
 func verify() = {
   let checkStarted = getInt(kTotalLiquidity) >= getInt(kLiquidityThreshold)
   match (tx) {
       case inv:InvokeScriptTransaction => {
         let acceptedCallsStaking = ["stakeFarmTokens","claimReward","withdrawFarmTokens"]
-        let acceptedCallsThis = ["callUnstakeProxy","revertTransfer","claimCeoFee","lockInvestments","unlockInvestments"]
+        let acceptedCallsThis = ["callUnstakeProxy","claimCeoFee","lockInvestments","unlockInvestments"]
         if (inv.function == "unstakeNFT" || inv.function == "unstakeJackpot") then throw("You cannot call these functions directly") else
         if (inv.dApp.addressFromRecipient() == this &&inv.function == "initMasterKey" && mAccPKeyString=="")then sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         else if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false) then throw("_100") else
@@ -372,8 +334,6 @@ func verify() = {
         # Avoid scam with high fees => allow only Waves and minimal amount
         if (inv.fee > 900000 || inv.feeAssetId != unit) then {
           throw("_15")
-        }else if (inv.dApp.addressFromRecipient() != stakingAddress && inv.function == "claimReward") then {
-          throw("_16")
         } else if (inv.payments.size() > 2) then {
           throw("_17")
         } else if (inv.dApp.addressFromRecipient() == this && containsElement(acceptedCallsThis,inv.function)) then {
@@ -393,9 +353,6 @@ func verify() = {
         sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
       }
       case mt: MassTransferTransaction => {
-        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
-      }
-      case dt: DataTransaction => {
         sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
       }
       case _ => false
