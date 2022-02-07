@@ -7,7 +7,7 @@ if (cfSeed == null) {
 }
 
 //const userSeed = env.userSeed;
-const userSeed = "the first duck owner ever been";
+const userSeed = "";
 if (userSeed == null) {
   throw new Error(`Please provide userSeed`);
 }
@@ -191,7 +191,7 @@ describe("cf staking test suite", async function () {
               function: "withdrawFarmTokens",
               args: [
                 { type: "integer", value: -1 },
-                { type: "boolean", value: true },
+                { type: "boolean", value: false },
               ],
             },
           },

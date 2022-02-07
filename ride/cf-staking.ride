@@ -100,10 +100,11 @@ func claimStakingResult (address: Address) = {
     let reward = if (lastCheckInterest > 0)
         then fraction((currentInterest - lastCheckInterest), stakedAmount, Scale)
         else 0
+    let transfer = if (reward >0 ) then [ScriptTransfer(address, reward, getEggId())] else []
+      transfer++
       [
         IntegerEntry(keyLastCheckInterest(address), currentInterest), 
-        IntegerEntry(keyEggClaimed(address), (tryGetInteger(keyEggClaimed(address))) + reward), 
-        ScriptTransfer(address, reward, getEggId())
+        IntegerEntry(keyEggClaimed(address), (tryGetInteger(keyEggClaimed(address))) + reward)
       ]
     }
 
@@ -132,11 +133,6 @@ func handleStakingTopUp (amount: Int) = {
 #both
 @Callable(i)
 func topUpReward () = {
-
-    let totalCompound = tryGetInteger(keyTotalCompound)
-    let totalStaked   = tryGetInteger(keyGlobalStaked)
-    let totalLocked = totalStaked+totalCompound
-
     let eggAssetId = getEggId()
     let shareTokenId = getShareAssetId()
     if (i.payments[0].assetId != eggAssetId)
@@ -235,16 +231,7 @@ func stakeFarmTokens (compound: Boolean) = {
         let rawStakeAmount = i.payments[0].amount
         let exactStakeAmount = fraction(rawStakeAmount, VPScale, vp)
 
-        #bug fix to make sure first claim also succeeds
-        let lastCheckInterest = tryGetInteger(keyLastCheckInterest(i.caller))
-        let currentInterest = tryGetInteger(keyGlobalLastInterest)
-
-        let storeInterest = if (lastCheckInterest > 0)
-        then lastCheckInterest
-        else currentInterest
-
         [
-          IntegerEntry(keyLastCheckInterest(i.caller), storeInterest), 
           IntegerEntry(keyStakedCompoundU,alreadyStaked+exactStakeAmount),
           IntegerEntry(keyTotalCompound,total+rawStakeAmount),
           IntegerEntry(keyStakedCompound,staked+exactStakeAmount),
