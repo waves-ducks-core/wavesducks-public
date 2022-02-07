@@ -1,7 +1,8 @@
 const wvs = 10 ** 8;
 
 //const cfSeed = env.cfSeed;
-const cfSeed = "";
+const cfSeed =
+  "";
 if (cfSeed == null) {
   throw new Error(`Please provide dappSedd`);
 }
@@ -13,7 +14,8 @@ if (userSeed == null) {
 }
 
 //const masterSeed = env.masterSeed;
-const masterSeed = "";
+const masterSeed =
+  "";
 if (masterSeed == null) {
   throw new Error(`Please provide masterSeed`);
 }

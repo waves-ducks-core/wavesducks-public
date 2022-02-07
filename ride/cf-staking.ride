@@ -100,10 +100,11 @@ func claimStakingResult (address: Address) = {
     let reward = if (lastCheckInterest > 0)
         then fraction((currentInterest - lastCheckInterest), stakedAmount, Scale)
         else 0
+    let transfer = if (reward >0 ) then [ScriptTransfer(address, reward, getEggId())] else []
+      transfer++
       [
         IntegerEntry(keyLastCheckInterest(address), currentInterest), 
-        IntegerEntry(keyEggClaimed(address), (tryGetInteger(keyEggClaimed(address))) + reward), 
-        ScriptTransfer(address, reward, getEggId())
+        IntegerEntry(keyEggClaimed(address), (tryGetInteger(keyEggClaimed(address))) + reward)
       ]
     }
 

@@ -79,7 +79,10 @@ func getShareAssetId() = {
   getStr(kShareAssetId).fromBase58String()
 }
 
-func getIntFromAny(a: Any) = value(a.as[Int])
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
 
 @Callable(i)
 func initMasterKey(publicKey: String)={
@@ -142,7 +145,7 @@ func initCollectiveFarm(name: String, minimumThreshold: Int) = {
       [
         StringEntry(kShareAssetId, shareToken.calculateAssetId().toBase58String()),
         BooleanEntry(kInitialized, true),
-        IntegerEntry(kTotalLiquidity, 10),
+        IntegerEntry(kTotalLiquidity, 1000_0000),
         IntegerEntry(kTotalShareTokens, shareTokens),
         shareToken,
         ScriptTransfer(i.caller, shareTokens, shareToken.calculateAssetId()),
@@ -209,7 +212,7 @@ func provideLiquidity() = {
       reissue,
       ScriptTransfer(i.caller, shareTokensToGive, shareTokensId),
       IntegerEntry(kTotalShareTokens, totalShareTokens + shareTokensToGive),
-      IntegerEntry(kTotalLiquidity, totalLiquidity + (i.payments[0].amount.value() / 100_0000)),
+      IntegerEntry(kTotalLiquidity, totalLiquidity + i.payments[0].amount.value() ),
       IntegerEntry(kFarmParticipants, newFarmParticipants),
       BooleanEntry(kParticipated, true)
     ],
@@ -246,11 +249,10 @@ func claimFarmingRewardProxy(ids: String) = {
     let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
     let amountToPay = claimedReward-farmCeoFeeSize
     
-    strict amountCompontCall = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[])
-    let compound = getIntFromAny(amountCompontCall)
+    strict amountCompound = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[]).asInt()
     strict topUp = invoke(stakingAddress,"topUpReward",[],[
-                          AttachedPayment(eggAssetId,amountToPay-compound),
-                          AttachedPayment(shareAssetId,compound)]
+                          AttachedPayment(eggAssetId,amountToPay-amountCompound),
+                          AttachedPayment(shareAssetId,amountCompound)]
                           )
     [
       IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
@@ -261,15 +263,18 @@ func claimFarmingRewardProxy(ids: String) = {
 
 @Callable(i)
 func claimCeoFee(address1: String, address2: String, address1Share: Int, address2Share: Int) = {
+  if(address1Share <0 ) then throw("Share 1 can't be negative") else
+  if(address2Share <0 ) then throw("Share 2 can't be negative") else  
   if (address1Share + address2Share != 100) then throw("Sum of shares should be 100") else
   if (getBool(kLocked) == true) then throw("_22") else
   if (i.caller == this) then {
     let currentCeoCollectedFee = getInt(kCeoCollectedFee)
     let address1Reward = if (address2 == "") then currentCeoCollectedFee else fraction(currentCeoCollectedFee, address1Share, 100)
     let address2Reward = if (address2 == "") then 0 else fraction(currentCeoCollectedFee, address2Share, 100)
+    let scriptTransferAddress2 = if (address2 == "") then [] else [ScriptTransfer(address2.addressFromStringValue(), address2Reward, getEggId())]
+    scriptTransferAddress2++
     [
       ScriptTransfer(address1.addressFromStringValue(), address1Reward, getEggId()),
-      ScriptTransfer(address2.addressFromStringValue(), address2Reward, getEggId()),
       IntegerEntry(kCeoCollectedFee, 0)
     ]
   } else throw("Only manager can call the contract")
@@ -307,10 +312,10 @@ func callUnstakeProxy(function: String, assetId: String) = {
 
     let amountToPay = reward-farmCeoFeeSize
     strict amountCompontCall = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[])
-    let compound = getIntFromAny(amountCompontCall)
+    strict amountCompound = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[]).asInt()
     strict topUp = invoke(stakingAddress,"topUpReward",[],[
-                          AttachedPayment(eggAssetId,amountToPay-compound),
-                          AttachedPayment(shareAssetId,compound)]
+                          AttachedPayment(eggAssetId,amountToPay-amountCompound),
+                          AttachedPayment(shareAssetId,amountCompound)]
                           )
     [
       IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
