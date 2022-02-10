@@ -8,6 +8,8 @@ const axios = require("axios");
 //3) Cf staking dapp needs to be initialized with cf address (done by ducks team)
 //4) Cf needs to have invoked: initMasterKey (done by user)
 //5) take all ducks out perches, breeding, incubator,.... (done by user)
+//5) Make sure to have all ceo fee claimed
+//5) Make sure to have enough waves fee available
 
 //6) Vova will disable pool by pool
 //6) Inal will run the final payments for the CF's that will be migrated that day.
