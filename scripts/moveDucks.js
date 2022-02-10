@@ -1,16 +1,75 @@
 const axios = require("axios");
 
+//1) Pre requirements: deployed staking sc on new address (done by ducks team)
+//2) Deployed CF sc on new address (done by user)
+//3) Cf staking dapp needs to be initialized with cf address
+//4) Cf needs to have invoked: initMasterKey
+
+//5) take all ducks out perches, breeding, incubator,....
+//6) run this script
+//7) check old cf is empty, check that all assets migrated
+
+const farmDapp = "3PH75p2rmMKCV2nyW4TsAdFgFtmc61mJaqA";
 const cfAddress = "3P2dfhgUswGVaJeseCj3kj7ZxXAYSv2e5Hj";
+//Fail script if still ducks on perches
+(async () => {
+  axios({
+    method: "get",
+    url:
+      "https://node.turtlenetwork.eu/addresses/data/" +
+      farmDapp +
+      "?matches=address_" +
+      cfAddress +
+      "_asset_.%2A_farmingPower",
+  }).then(({ data }) => {
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].value != 0) {
+        console.log("Still ducks on perches, halt migration!");
+        process.exit(1);
+      }
+    }
+  });
+})();
+
+//Print old perches
+(async () => {
+  axios({
+    method: "get",
+    url:
+      "https://node.turtlenetwork.eu/addresses/data/" +
+      farmDapp +
+      "?matches=address_" +
+      cfAddress +
+      "_perchesAvailable_.%2A",
+  }).then(({ data }) => {
+    console.log(data);
+  });
+})();
+
+//old CF
 const cfPublicKey = "B3nAk9hER1sVM4CAFi7rfex69eZ4vKBhFLynWAejx49c";
-const destinationAddress = "3P2dfhgUswGVaJeseCj3kj7ZxXAYSv2e5Hj";
 const name = "CFMIGRATIONTEST";
-let minimumThreshold = 0; //LIQUIDITY_THRESHOLD
-const migration = true;
-let totalFarmingReward = 0; //total_farming_reward
-const totalLiquidity = 0; //total_liquidity
-const totalFarmToken = 0; //we need to calculate based on circulating, taken from assetid  : SHARE_ASSET_ID
 
 const masterSeed = "";
+
+const newCFAddress = "3P94jwfaQAm4BEWsBmHV96kBKTf7dp2FHJV";
+const newCFStakeAddress = "3P69m61RVNDJdE11qT7CC5tquXT5XRQvbwy";
+const newMasterSeed = masterSeed;
+
+const lockOldFarm = invokeScript(
+  {
+    version: 1,
+    dApp: cfAddress,
+    call: {
+      additionalFee: 400000,
+      function: "setLock",
+      args: [{ type: "boolean", value: true }],
+    },
+  },
+  masterSeed
+);
+
+broadcast(lockOldFarm).catch((e) => console.log(e));
 
 //Send over NFT
 (async () => {
@@ -28,12 +87,12 @@ const masterSeed = "";
           additionalFee: 400000,
           senderPublicKey: cfPublicKey,
           assetId: data[i]["assetId"],
-          transfers: [{ recipient: destinationAddress, amount: 1 }],
+          transfers: [{ recipient: newCFAddress, amount: 1 }],
         },
         null
       );
       let SignedTx = signTx(massTx, masterSeed);
-      // broadcast(SignedTx).catch((e) => console.log(e));
+      broadcast(SignedTx).catch((e) => console.log(e));
     }
   });
 })();
@@ -52,7 +111,7 @@ const masterSeed = "";
           assetId: data.balances[i]["assetId"],
           transfers: [
             {
-              recipient: destinationAddress,
+              recipient: newCFAddress,
               amount: data.balances[i]["balance"],
             },
           ],
@@ -60,11 +119,32 @@ const masterSeed = "";
         null
       );
       let SignedTx = signTx(massTx, masterSeed);
-      //broadcast(SignedTx).catch((e) => console.log(e));
+      broadcast(SignedTx).catch((e) => console.log(e));
     }
   });
 })();
-
+//Send over waves
+(async () => {
+  axios({
+    url: "https://cluster.node.turtlenetwork.eu/addresses/balance/" + cfAddress,
+  }).then(({ data }) => {
+    const massTx = massTransfer(
+      {
+        additionalFee: 400000,
+        senderPublicKey: cfPublicKey,
+        transfers: [
+          {
+            recipient: newCFAddress,
+            amount: data["balance"] - 600000,
+          },
+        ],
+      },
+      null
+    );
+    let SignedTx = signTx(massTx, masterSeed);
+    broadcast(SignedTx).catch((e) => console.log(e));
+  });
+})();
 function getCall(address, key) {
   return axios({
     method: "get",
@@ -77,6 +157,37 @@ function getCall(address, key) {
   });
 }
 
+function getDetailsCall(assetId) {
+  return axios({
+    method: "get",
+    async: false,
+    url: "https://node.turtlenetwork.eu/assets/details/" + assetId,
+  });
+}
+
+//make sure correct data is in masterseed
+const dataTx = data(
+  {
+    additionalFee: 400000,
+    data: [
+      { type: "integer", key: "f_" + newCFAddress + "_fee", value: "10" },
+      {
+        type: "string",
+        key: "f_" + newCFAddress + "_stake_address",
+        value: newCFStakeAddress,
+      },
+      {
+        type: "boolean",
+        key: "farm_" + newCFAddress,
+        value: true,
+      },
+    ],
+  },
+  newMasterSeed
+);
+broadcast(dataTx).catch((e) => console.log(e));
+
+//move over data and create tokens
 async function getData() {
   try {
     const { data: minimumTreshold } = await getCall(
@@ -108,9 +219,39 @@ async function getData() {
     this.totalLiquidity = 0;
   }
 
+  const { data: shareAssetID } = await getCall(cfAddress, "SHARE_ASSET_ID");
+  this.shareAssetID = shareAssetID.value;
+
+  const { data: circulating } = await getDetailsCall(this.shareAssetID);
+  this.circulating = circulating.quantity;
+
   console.log("1: ", this.minimumThreshold);
   console.log("2: ", this.totalFarmingReward);
   console.log("3: ", this.totalLiquidity);
+  console.log("4: ", this.shareAssetID);
+  console.log("5: ", this.circulating);
+
+  const initCF = invokeScript(
+    {
+      version: 1,
+      additionalFee: 100400000,
+      dApp: newCFAddress,
+      call: {
+        function: "initCollectiveFarm",
+        args: [
+          { type: "string", value: name },
+          { type: "integer", value: this.minimumThreshold },
+          { type: "boolean", value: true },
+          { type: "integer", value: this.totalFarmingReward },
+          { type: "integer", value: this.totalLiquidity },
+          { type: "integer", value: this.circulating },
+        ],
+      },
+    },
+    newMasterSeed
+  );
+
+  broadcast(initCF).catch((e) => console.log(e));
 }
 
 getData();

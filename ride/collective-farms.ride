@@ -1,3 +1,6 @@
+#TODO: investByClashOfFarms
+# Should invest into CF by masteraccount
+
 {-# STDLIB_VERSION 5 #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 {-# CONTENT_TYPE DAPP #-}
@@ -132,7 +135,7 @@ func initCollectiveFarm(name: String, minimumThreshold: Int, migration: Boolean,
       throw("_1")
   }else if (getBool(kInitialized) != unit) then {
       throw("_2")
-  } else if ((i.payments[0].amount != 1000_0000 || i.payments[0].assetId != getEggId()) && migration==false) then {
+  } else if (migration==false && (i.payments[0].amount != 1000_0000 || i.payments[0].assetId != getEggId()) ) then {
       throw("_20")
   } else {
       let shareTokens = if (migration) then totalFarmToken else 1000_0000
