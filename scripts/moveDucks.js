@@ -1,16 +1,33 @@
 const axios = require("axios");
 
+//0) First CF to migrate: Duxplorer, Math, Turtle, eggseggs, pesolatino, fomo, mundo, eggpoint
+//0) Second CF to migrate: Endo, Marvin, eggmoon, street, kolhkoz, forklog, cgu
+
 //1) Pre requirements: deployed staking sc on new address (done by ducks team)
 //2) Deployed CF sc on new address (done by user)
-//3) Cf staking dapp needs to be initialized with cf address
-//4) Cf needs to have invoked: initMasterKey
+//3) Cf staking dapp needs to be initialized with cf address (done by ducks team)
+//4) Cf needs to have invoked: initMasterKey (done by user)
+//5) take all ducks out perches, breeding, incubator,.... (done by user)
 
-//5) take all ducks out perches, breeding, incubator,....
-//6) run this script
-//7) check old cf is empty, check that all assets migrated
+//6) Vova will disable pool by pool
+//6) Inal will run the final payments for the CF's that will be migrated that day.
 
-const farmDapp = "3PH75p2rmMKCV2nyW4TsAdFgFtmc61mJaqA";
+//7) run this script (edit the params correctly!!!!) (done by ducks team)
+//8) check old cf is empty, check that all assets migrated (done by ducks team)
+
 const cfAddress = "3P2dfhgUswGVaJeseCj3kj7ZxXAYSv2e5Hj";
+//old CF
+const cfPublicKey = "B3nAk9hER1sVM4CAFi7rfex69eZ4vKBhFLynWAejx49c";
+//new token name CF
+const name = "CFMIGRATIONTEST";
+const newCFAddress = "3P94jwfaQAm4BEWsBmHV96kBKTf7dp2FHJV";
+const newCFStakeAddress = "3P69m61RVNDJdE11qT7CC5tquXT5XRQvbwy";
+
+const masterSeed = "";
+const farmSeed = "";
+const farmDapp = "3PH75p2rmMKCV2nyW4TsAdFgFtmc61mJaqA";
+const newMasterSeed = masterSeed;
+
 //Fail script if still ducks on perches
 (async () => {
   axios({
@@ -31,31 +48,6 @@ const cfAddress = "3P2dfhgUswGVaJeseCj3kj7ZxXAYSv2e5Hj";
   });
 })();
 
-//Print old perches
-(async () => {
-  axios({
-    method: "get",
-    url:
-      "https://node.turtlenetwork.eu/addresses/data/" +
-      farmDapp +
-      "?matches=address_" +
-      cfAddress +
-      "_perchesAvailable_.%2A",
-  }).then(({ data }) => {
-    console.log(data);
-  });
-})();
-
-//old CF
-const cfPublicKey = "B3nAk9hER1sVM4CAFi7rfex69eZ4vKBhFLynWAejx49c";
-const name = "CFMIGRATIONTEST";
-
-const masterSeed = "";
-
-const newCFAddress = "3P94jwfaQAm4BEWsBmHV96kBKTf7dp2FHJV";
-const newCFStakeAddress = "3P69m61RVNDJdE11qT7CC5tquXT5XRQvbwy";
-const newMasterSeed = masterSeed;
-
 const lockOldFarm = invokeScript(
   {
     version: 1,
@@ -70,6 +62,43 @@ const lockOldFarm = invokeScript(
 );
 
 broadcast(lockOldFarm).catch((e) => console.log(e));
+
+//Transfer old perches
+(async () => {
+  axios({
+    method: "get",
+    url:
+      "https://node.turtlenetwork.eu/addresses/data/" +
+      farmDapp +
+      "?matches=address_" +
+      cfAddress +
+      "_perchesAvailable_.%2A",
+  }).then(({ data: dataO }) => {
+    const newList = [];
+    for (let i = 0; i < dataO.length; i++) {
+      const item = {
+        key: dataO[i].key.replace(cfAddress, newCFAddress),
+        type: dataO[i].type,
+        value: dataO[i].value,
+      };
+      const oldItem = {
+        key: dataO[i].key,
+        value: null,
+      };
+      newList.push(item);
+      newList.push(oldItem);
+    }
+    console.log(newList);
+    const dataTx = data(
+      {
+        additionalFee: 400000,
+        data: newList,
+      },
+      farmSeed
+    );
+    broadcast(dataTx).catch((e) => console.log(e));
+  });
+})();
 
 //Send over NFT
 (async () => {
@@ -251,7 +280,7 @@ async function getData() {
     newMasterSeed
   );
 
-  broadcast(initCF).catch((e) => console.log(e));
+  initCF.catch((e) => console.log(e));
 }
 
 getData();
