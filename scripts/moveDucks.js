@@ -3,19 +3,20 @@ const axios = require("axios");
 //0) First CF to migrate: Duxplorer, Math, Turtle, eggseggs, pesolatino, fomo, mundo, eggpoint
 //0) Second CF to migrate: Endo, Marvin, eggmoon, street, kolhkoz, forklog, cgu
 
-//1) Pre requirements: deployed staking sc on new address (done by ducks team)
-//2) Deployed CF sc on new address (done by user)
-//3) Cf staking dapp needs to be initialized with cf address (done by ducks team)
-//4) Cf needs to have invoked: initMasterKey (done by user)
-//5) take all ducks out perches, breeding, incubator,.... (done by user)
-//5) Make sure to have all ceo fee claimed
-//5) Make sure to have enough waves fee available
+//1) Pre requirements: Deployed CF sc on new address (done by user) (13th/14th)
+//2) Cf needs to have invoked: initMasterKey (done by user) (13/14th)
+//3) deployed staking sc on new address (done by ducks team) (13/14th)
+//4) Cf staking dapp needs to be initialized with cf address (done by ducks team)  (13/14th)
+//5) take all ducks out perches, breeding, incubator,.... (done by user) (15th)
+//5) Make sure to have all ceo fee claimed (15th)
+//5) Make sure to have enough waves fee available (15th)
 
-//6) Vova will disable pool by pool
-//6) Inal will run the final payments for the CF's that will be migrated that day.
+//6) Vova will disable pool by pool (15th/16th)
+//6) Inal will run the final payments for the CF's that will be migrated that day. (15th)
 
-//7) run this script (edit the params correctly!!!!) (done by ducks team)
-//8) check old cf is empty, check that all assets migrated (done by ducks team)
+//7) run this script (edit the params correctly!!!!) (done by ducks team) (16th)
+//8) check old cf is empty, check that all assets migrated (done by ducks team) (16th)
+//9) run airdrop script to airdorp new tokens(16th)
 
 const cfAddress = "3P2dfhgUswGVaJeseCj3kj7ZxXAYSv2e5Hj";
 //old CF
