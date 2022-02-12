@@ -11,8 +11,8 @@ const axios = require("axios");
 //5) Make sure to have all ceo fee claimed (15th)
 //5) Make sure to have enough waves fee available (15th)
 
+//6) Inal will run the final payments for the CF's that will be migrated the next day. (15th)
 //6) Vova will disable pool by pool (15th/16th)
-//6) Inal will run the final payments for the CF's that will be migrated that day. (15th)
 
 //7) run this script (edit the params correctly!!!!) (done by ducks team) (16th)
 //8) check old cf is empty, check that all assets migrated (done by ducks team) (16th)
