@@ -6,7 +6,7 @@ newCF = "3P94jwfaQAm4BEWsBmHV96kBKTf7dp2FHJV"
 
 
 
-masterSeed = ""
+masterSeed = "11"
 
 assetIdKey = "SHARE_ASSET_ID"
 
@@ -18,6 +18,9 @@ newCFAssetId = newCFOracle.getData(assetIdKey)
 
 
 masterAcc = pywaves.Address(seed=masterSeed)
+
+print(masterAcc)
+
 
 height = pywaves.height()-1
 print(oldCFAssetId,newCFAssetId)
@@ -38,6 +41,7 @@ for item in output['items']:
 print(list)
 
 masterAcc.massTransferAssets(list,asset)
+
 
 while hasNext:
     lastItem = output['lastItem']

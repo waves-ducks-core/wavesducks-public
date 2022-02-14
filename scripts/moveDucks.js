@@ -29,6 +29,8 @@ const newCFStakeAddress = "3P69m61RVNDJdE11qT7CC5tquXT5XRQvbwy";
 const masterSeed = "";
 const farmSeed = "";
 const farmDapp = "3PH75p2rmMKCV2nyW4TsAdFgFtmc61mJaqA";
+const jeduckSeed = "";
+const jeduckDapp = "3PCoF5ZnsQJKAJJCoSqUcVVqJ2Dm4fvn9ar";
 const newMasterSeed = masterSeed;
 
 //Fail script if still ducks on perches
@@ -103,6 +105,43 @@ broadcast(lockOldFarm).catch((e) => console.log(e));
   });
 })();
 
+//Transfer old mantles
+(async () => {
+  axios({
+    method: "get",
+    url:
+      "https://node.turtlenetwork.eu/addresses/data/" +
+      jeduckDapp +
+      "?matches=address_" +
+      cfAddress +
+      "_artefact_.%2A",
+  }).then(({ data: dataO }) => {
+    const newList = [];
+    for (let i = 0; i < dataO.length; i++) {
+      const item = {
+        key: dataO[i].key.replace(cfAddress, newCFAddress),
+        type: dataO[i].type,
+        value: dataO[i].value,
+      };
+      const oldItem = {
+        key: dataO[i].key,
+        value: null,
+      };
+      newList.push(item);
+      newList.push(oldItem);
+    }
+    console.log(newList);
+    const dataTx = data(
+      {
+        additionalFee: 400000,
+        data: newList,
+      },
+      jeduckSeed
+    );
+    broadcast(dataTx).catch((e) => console.log(e));
+  });
+})();
+
 //Send over NFT
 (async () => {
   axios({
@@ -113,7 +152,7 @@ broadcast(lockOldFarm).catch((e) => console.log(e));
       "/limit/1000",
   }).then(({ data }) => {
     for (let i = 0; i < data.length; i++) {
-      //console.log(data[i]);
+      console.log(data[i]);
       const massTx = massTransfer(
         {
           additionalFee: 400000,
@@ -283,7 +322,7 @@ async function getData() {
     newMasterSeed
   );
 
-  initCF.catch((e) => console.log(e));
+  broadcast(initCF).catch((e) => console.log(e));
 }
 
 getData();
