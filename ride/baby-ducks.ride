@@ -192,7 +192,7 @@ func fixLevels(ducklingIds: String) = {
       let totalFeed = tryGetInteger(kTotalFeed)
       let kNewLevel = keyDucklingLevel(id)
       let startingLevel = match getBoolean("duckling_" + id + "_issuedByFeedCall"){
-        case b: Boolean => 0.toBigInt()
+        case b: Boolean => if b == true then 0.toBigInt() else (20 * existingDuckPrecision).toBigInt()
         case _ => (20 * existingDuckPrecision).toBigInt()
       }
 
