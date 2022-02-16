@@ -4,6 +4,7 @@
 
 let breederContract = base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 let incubatorContract = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+let swopPromoContract = base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXWD'
 let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 let MANTLENAME = "mantle"
 
@@ -57,6 +58,37 @@ func keyPutOnArtefact(type: String, owner: String, duckId: String, artefactId: B
 
 func keyArtefactExists(type: String, artefactId: ByteVector) = {
   "artefact_" + type + "_artefactId_" + artefactId.toBase58String()
+}
+
+@Callable(i)
+func issueFreeMantle(address: String, type: String, level: Int, invested: Int) = {
+  if (i.caller != this && i.caller != Address(swopPromoContract)) then throw("Can be called only by admin") else
+  if (type != MANTLENAME) then throw("You can buy only mantles now")
+  else {
+
+      let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false)
+      let mantleNftId = issueMantleNFT.calculateAssetId()
+
+      let kMantleLevel = keyArtefactLevel(MANTLENAME, address, mantleNftId)
+      let kMantleExists = keyArtefactExists(MANTLENAME, mantleNftId)
+      let kMantleOwner = keyArtefactOwner(MANTLENAME, mantleNftId)
+      let kMantleStatus = keyArtefactStatus(MANTLENAME, mantleNftId)
+      let kArtefactType = keyArtefactType(mantleNftId)
+      let kMantleInvested = keyArtefactInvested(MANTLENAME, mantleNftId.toBase58String())
+      let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, address, mantleNftId)
+      let kOnlyArtefactLevel = keyOnlyArtefactLevel(mantleNftId)
+
+      [
+        IntegerEntry(kMantleLevel, level),
+        IntegerEntry(kMantleInvested, invested),
+        BooleanEntry(kMantleExists, true),
+        StringEntry(kMantleOwner, address),
+        StringEntry(kMantleStatus, STATUSFREE),
+        StringEntry(kArtefactType, MANTLENAME),
+        StringEntry(kArtefactOwnerAndStatus, STATUSFREE),
+        IntegerEntry(kOnlyArtefactLevel, level)
+      ]
+  }
 }
 
 @Callable(i)
@@ -132,6 +164,7 @@ func upgradeMantle(artefactId: String) = {
 func putOnArtefact(artefactId: String) = {
   let firstPayment = i.payments[0].value()
   let attachedAssetInfo = assetInfo(firstPayment.assetId.value()).value()
+  if (firstPayment.amount != 1) then throw("NFT is not attached") else
   if (attachedAssetInfo.issuer.bytes != incubatorContract && attachedAssetInfo.issuer.bytes != breederContract) then throw("You can attach only DUCKs issued by incubator or breeder ")
   else {
     let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
