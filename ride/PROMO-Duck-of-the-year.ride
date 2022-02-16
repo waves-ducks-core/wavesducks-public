@@ -1,0 +1,51 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+let devAddress = base58'3P44yqcpfhPF2iC1nptm2ZJCTaN7VYhz9og'
+let eggsNeeded = 3 * 1_000_000
+
+
+let candidates = [
+  "Rickycoin",
+  "Vova",
+  "MarvinFavis",
+  "BlackTurtle",
+  "TravelDubai",
+  "Rob/Gizmo",
+  "Inal",
+  "Eattheart/Eric",
+  "Anar",
+  "Dasha"
+]
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case a:Int => a
+        case _ => 0
+    }
+}
+
+@Callable(i)
+func voteFor(candidate: String) = {
+  let firstPayment = i.payments[0].value()
+  if (lastBlock.timestamp > 1639933200000) then throw("Voting is over!") else
+  if (candidates.containsElement(candidate) == false) then throw("Unknown candidate " + candidate)
+  else if (firstPayment.assetId != eggsAssetId) then 
+    throw("You can attach only EGG tokens with the following asset id: " + eggsAssetId.toBase58String())
+  else if (firstPayment.amount < eggsNeeded)  then 
+    throw("To vote you currently need at least the following amount of EGGlets: " + eggsNeeded.toString())
+  else {
+    let addressKey = "address_" + i.caller.bytes.toBase58String() + "_sum"
+    let currentSpentByUser = tryGetInteger(addressKey)
+
+    let addressCandidate = "candidate_" + candidate + "_sum"
+    let currentCandidateFor = tryGetInteger(addressCandidate)
+    [
+      IntegerEntry(addressCandidate, currentCandidateFor + firstPayment.amount),
+      IntegerEntry(addressKey, currentSpentByUser + firstPayment.amount),
+      IntegerEntry("candidate_" + candidate + "_stats_" + lastBlock.timestamp.toString(), firstPayment.amount)
+    ]
+  }
+}
