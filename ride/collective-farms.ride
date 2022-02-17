@@ -1,3 +1,6 @@
+#TODO: investByClashOfFarms
+# Should invest into CF by masteraccount
+
 {-# STDLIB_VERSION 5 #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 {-# CONTENT_TYPE DAPP #-}
@@ -22,8 +25,7 @@ let stakingAddress = valueOrErrorMessage(getString(mAccAddr, "f_" + this.toStrin
 let kTotalLiquidity = "total_liquidity"
 let kInitialized = "INITIALIZED"
 let kLiquidityThreshold = "LIQUIDITY_THRESHOLD"
-let kFarmParticipants = "farm_participants"
-let kTotalShareTokens = "total_share_tokens"
+let kTotalFarmingReward = "total_farming_reward"
 let kShareAssetId = "SHARE_ASSET_ID"
 let kIncubatorDapp = "INCUBATOR_DAPP"
 let kBreederDapp = "BREEDER_DAPP"
@@ -113,12 +115,9 @@ func calculateCompoundShareAndIssue(amount: Int) = {
       let totalStaked   = getIntA(stakingAddress,keyGlobalStaked)
       let totalLocked = totalStaked+totalCompound
       let amountForCompound = fraction(amount,totalCompound,totalLocked)
-      let totalShareTokens = getInt(kTotalShareTokens)
-
       (
         [
-          Reissue(shareAssetId, amountForCompound, true),
-          IntegerEntry(kTotalShareTokens, totalShareTokens + amountForCompound)
+          Reissue(shareAssetId, amountForCompound, true)
         ],
         amountForCompound
       )
@@ -129,29 +128,30 @@ func calculateCompoundShareAndIssue(amount: Int) = {
 }
 
 @Callable(i)
-func initCollectiveFarm(name: String, minimumThreshold: Int) = {
+func initCollectiveFarm(name: String, minimumThreshold: Int, migration: Boolean, totalFarmingReward: Int,totalLiquidity: Int, totalFarmToken: Int) = {
   if mAccPKeyString == "" then {
       throw("First initiatie a master public key!")
   }else if (i.callerPublicKey != mAccPKey) then {
       throw("_1")
   }else if (getBool(kInitialized) != unit) then {
       throw("_2")
-  } else if (i.payments[0].amount != 1000_0000 || i.payments[0].assetId != getEggId()) then {
+  } else if (migration==false && (i.payments[0].amount != 1000_0000 || i.payments[0].assetId != getEggId()) ) then {
       throw("_20")
   } else {
-      let shareTokens = 1000_0000
+      let shareTokens = if (migration) then totalFarmToken else 1000_0000
       let shareToken = Issue(name, "Team token for the \"" + name + "\" collective farm", shareTokens, 8, true)
+      let totLiquidity = if (migration) then totalLiquidity else 1000_0000
+      let totFarmingReward = if (migration) then [IntegerEntry(kTotalFarmingReward, totalFarmingReward)] else []
       
       [
         StringEntry(kShareAssetId, shareToken.calculateAssetId().toBase58String()),
         BooleanEntry(kInitialized, true),
-        IntegerEntry(kTotalLiquidity, 1000_0000),
-        IntegerEntry(kTotalShareTokens, shareTokens),
+        IntegerEntry(kTotalLiquidity, totLiquidity),
         shareToken,
         ScriptTransfer(i.caller, shareTokens, shareToken.calculateAssetId()),
         BooleanEntry(kLocked, false),
         IntegerEntry(kLiquidityThreshold, minimumThreshold)
-      ]
+      ]++totFarmingReward
   }
 }
 
@@ -198,22 +198,17 @@ func provideLiquidity() = {
   if (i.payments[0].amount < 100_0000) then throw("Min amount to invest is 0.01 EGG")
   else {
     let totalLiquidity = getInt(kTotalLiquidity)
-    let totalShareTokens = getInt(kTotalShareTokens)
     let shareTokensToGive = i.payments[0].amount # decimals difference
 
     let shareTokensId = getStr(kShareAssetId).fromBase58String()
 
     let reissue = Reissue(getShareAssetId(), shareTokensToGive, true)
-    let farmParticipants = getInt(kFarmParticipants)
     let kParticipated = "account_" + i.caller.toString() + "_participated"
     let alreadyParticipated = getBool(kParticipated)
-    let newFarmParticipants = if (alreadyParticipated == unit) then farmParticipants + 1 else farmParticipants
     ([
       reissue,
       ScriptTransfer(i.caller, shareTokensToGive, shareTokensId),
-      IntegerEntry(kTotalShareTokens, totalShareTokens + shareTokensToGive),
       IntegerEntry(kTotalLiquidity, totalLiquidity + i.payments[0].amount.value() ),
-      IntegerEntry(kFarmParticipants, newFarmParticipants),
       BooleanEntry(kParticipated, true)
     ],
     shareTokensToGive
@@ -244,6 +239,7 @@ func claimFarmingRewardProxy(ids: String) = {
       case int: Int => int
       case _ => throw("_6")
     }
+    let totalFarmingReward = getInt(kTotalFarmingReward)
     let farmCeoFeeSize = fraction(claimedReward, feePercent, 100)
     let currentCeoFee = getInt(kCeoCollectedFee)
     let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
@@ -255,6 +251,7 @@ func claimFarmingRewardProxy(ids: String) = {
                           AttachedPayment(shareAssetId,amountCompound)]
                           )
     [
+      IntegerEntry(kTotalFarmingReward, totalFarmingReward + amountToPay),
       IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
       IntegerEntry(kCeoCollectedFeeOverall, ceoFeeOverall + farmCeoFeeSize)
     ]
