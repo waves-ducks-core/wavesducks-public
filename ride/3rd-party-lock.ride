@@ -81,6 +81,7 @@ func buyBooster() = {
     let boosterItem = Issue("RACE-" + name, "[Booster] Metarace booster for the game, level = " + newLevel.toString(), 1, 0, false)
     let boosterItemAssetId = boosterItem.calculateAssetId()
     [
+      boosterItem,
       IntegerEntry(kBoughtLevel, newLevel),
       ScriptTransfer(i.caller, 1, boosterItemAssetId)
     ]
@@ -99,6 +100,7 @@ func buyAccessItem() = {
     let accessRaceAssetId = issueAccessItem.calculateAssetId().toBase58String()
     let kSpotsBought = keySpotsBought(addressStr)
     [
+      issueAccessItem,
       StringEntry("accessItem_" + accessRaceAssetId + "_owner", addressStr),
       StringEntry("address_" + addressStr + "_owning", accessRaceAssetId),
       IntegerEntry(kSpotsBought, tryGetInteger(kSpotsBought) + 1)
