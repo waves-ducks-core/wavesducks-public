@@ -192,7 +192,7 @@ func unlockInvestments() = {
 @Callable(i)
 func provideLiquidity() = {
   let eggAssetId = getEggId()
-  if (getBool(kLockedInvestments) == true) then throw("Contract is locked for investments by it's CEO. Please invest in another collective farm.") else
+  if (i.callerPublicKey != mAccPKey && getBool(kLockedInvestments) == true) then throw("Contract is locked for investments by it's CEO. Please invest in another collective farm.") else
   if (getBool(kLocked) == true) then throw("_22") else
   if (i.payments[0].assetId != eggAssetId) then throw("_4") else
   if (i.payments[0].amount < 100_0000) then throw("Min amount to invest is 0.01 EGG")

@@ -22,15 +22,15 @@ const cfAddress = "";
 //old CF
 const cfPublicKey = "";
 //new token name CF
-const name = "TEAM ";
+const name = "";
 const newCFAddress = "";
 const newCFStakeAddress = "";
 
 const masterSeed = "";
 const farmSeed = "";
-const farmDapp = "3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW";
+const farmDapp = "";
 const jeduckSeed = "";
-const jeduckDapp = "3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT";
+const jeduckDapp = "";
 const newMasterSeed = masterSeed;
 
 //Fail script if still ducks on perches
@@ -291,6 +291,11 @@ const dataTx = data(
         type: "boolean",
         key: "farm_" + newCFAddress,
         value: true,
+      },
+      {
+        type: "boolean",
+        key: "farm_" + cfAddress,
+        value: false,
       },
     ],
   },
