@@ -2,22 +2,26 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+func keyArtefactOwner(artefact: String, owner: String) = artefact+"_" + owner + "_owner"
+
 let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 let devAddress = base58'3P44yqcpfhPF2iC1nptm2ZJCTaN7VYhz9og'
 let eggsNeeded = 3 * 1_0000_0000
 let artefactsLimit = 301 + 600
-let artefacts = [
-  #"ART-LAKE",
-  #"ART-HOUSE",
-  #"ART-BIGHOUSE",
-  #"ART-FIXGENE",
-  #"ART-FREEGENE", 
-  #"ART-MIRROR", # +++
-  #"ART-POMP", # Pompadour
-  #"ART-CAPE", # Magic Cape
-  #"ART-HAT", # Quacker Hat
-  #"ART-CUSTOMDUCK"
+let oldArtefacts = [
+  "ART-LAKE",
+  "ART-HOUSE",
+  "ART-BIGHOUSE",
+  "ART-FIXGENE",
+  "ART-FREEGENE", 
+  "ART-MIRROR", # +++
+  "ART-POMP", # Pompadour
+  "ART-CAPE", # Magic Cape
+  "ART-HAT", # Quacker Hat
+  "ART-CUSTOMDUCK"
+]
 
+let artefacts = [
   "ART-XMISTL",
   "ART-XHAT",
   "ART-XSCARF",
@@ -25,6 +29,8 @@ let artefacts = [
   "ART-XSOCK", 
   "ART-XTREE"
 ]
+
+let allArtefact = artefacts++oldArtefacts
 
 func tryGetString(key: String) = {
     match getString(this, key) {
@@ -50,6 +56,53 @@ func getRandomArtefact(boxId: ByteVector, h: Int) = {
   let randomNumber = getRandomNumber(6, boxId, h, 0)
   artefacts[randomNumber]
 }
+
+func checkArtefactDetails(assetId: ByteVector) = {
+  let asset = assetInfo(assetId).value()
+  let assetName = asset.name.value()
+   if containsElement(allArtefact, assetName) && asset.issuer == this
+   then
+      assetName
+   else throw("Invalid artefact")
+}
+
+
+@Callable(i)
+func stakeItem() = {
+    if (size(i.payments) == 1) then {
+      let artefactName = checkArtefactDetails(i.payments[0].assetId.value()) 
+      if artefactName == "ART-XMISTL"
+      then  {
+        let invoker = i.caller.bytes.toBase58String()
+        let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
+        if artefactId == ""
+        then
+        [
+          StringEntry(keyArtefactOwner(artefactName,invoker), i.payments[0].assetId.value().toBase58String())
+        ]
+        else throw("You are already staking "+ artefactName)
+      }
+      else throw("You can't stake this artafect")
+    } else {
+        throw("Invalid payment")
+    }
+}
+
+@Callable(i)
+func unstakeItem(artefactName: String) = {
+    let invoker = i.caller.bytes.toBase58String()
+    let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
+    if artefactId == "" 
+    then throw("You didnt stake "+artefactName)
+    else{
+      [
+        ScriptTransfer(i.caller,1,artefactId.fromBase58String()),
+        DeleteEntry(keyArtefactOwner(artefactName,invoker))
+      ]
+    }
+      
+}
+
 
 @Callable(i)
 func preInit() = {
