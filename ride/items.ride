@@ -69,16 +69,17 @@ func checkArtefactDetails(assetId: ByteVector) = {
 
 @Callable(i)
 func stakeItem() = {
-    if (size(i.payments) == 1) then {
-      let artefactName = checkArtefactDetails(i.payments[0].assetId.value()) 
+    if (size(i.payments) == 1 && i.payments[0].amount==1) then {
+      let assetId = i.payments[0].assetId.value()
+      let artefactName = checkArtefactDetails(assetId) 
       if artefactName == "ART-XMISTL"
       then  {
-        let invoker = i.caller.bytes.toBase58String()
+        let invoker = i.caller.toString()
         let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
         if artefactId == ""
         then
         [
-          StringEntry(keyArtefactOwner(artefactName,invoker), i.payments[0].assetId.value().toBase58String())
+          StringEntry(keyArtefactOwner(artefactName,invoker), assetId.toBase58String())
         ]
         else throw("You are already staking "+ artefactName)
       }
@@ -90,7 +91,7 @@ func stakeItem() = {
 
 @Callable(i)
 func unstakeItem(artefactName: String) = {
-    let invoker = i.caller.bytes.toBase58String()
+    let invoker = i.caller.toString()
     let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
     if artefactId == "" 
     then throw("You didnt stake "+artefactName)
