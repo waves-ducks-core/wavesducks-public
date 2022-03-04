@@ -35,12 +35,18 @@ func tryGetInteger(key: String) = {
     }
 }
 
-func tryGetString(key: String) = {
-    match getString(this, key) {
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
         case a:String => a
         case _ => ""
     }
 }
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getItemsAddress() = tryGetString("static_itemsAddress").fromBase58String()
 
 func isUserBlacklisted(address: String) = {
   false
@@ -157,6 +163,16 @@ func getUnstakeResult(address: String, assetId: ByteVector, rewardDelta: Int, wi
   ]
 }
 
+func calculatePerchPrice(address: String)= {
+  let hasArtefactStaked = tryGetStringExternal(Address(getItemsAddress()),"ART-XMISTL_" + address + "_owner")
+  if hasArtefactStaked == ""
+  then
+    perchPrice
+  else
+    perchPrice/10*9
+
+}
+
 @Callable(i)
 func init() = {
   if (i.caller != this) then { throw("admin only") } else {
@@ -174,8 +190,9 @@ func buyPerch(color: String, refererAddress: String) = {
       throw("you need to set color properly")
     } else {
       let firstPayment = i.payments[0].value()
+      let exactPrice = calculatePerchPrice(i.caller.bytes.toBase58String())
       if (firstPayment.assetId != eggsAssetId) then throw("You can attach only EGG tokens with the following asset id: " + eggsAssetId.toBase58String())
-      else if (firstPayment.amount != perchPrice) then throw("To buy a perch you currently need the following amount of EGGlets: " + perchPrice.toString())
+      else if (firstPayment.amount != exactPrice) then throw("To buy a perch you currently need the following amount of EGGlets: " + exactPrice.toString())
       else {
         let refererRewardForPerch = fraction(firstPayment.amount, RefererReward, 100)
 
