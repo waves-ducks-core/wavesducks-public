@@ -91,16 +91,18 @@ func stakeItem() = {
 
 @Callable(i)
 func unstakeItem(artefactName: String) = {
-    let invoker = i.caller.toString()
-    let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
-    if artefactId == "" 
-    then throw("You didnt stake "+artefactName)
-    else{
-      [
-        ScriptTransfer(i.caller,1,artefactId.fromBase58String()),
-        DeleteEntry(keyArtefactOwner(artefactName,invoker))
-      ]
-    }
+    if containsElement(allArtefact, artefactName) then{
+      let invoker = i.caller.toString()
+      let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
+      if artefactId == "" 
+      then throw("You didnt stake "+artefactName)
+      else{
+        [
+          ScriptTransfer(i.caller,1,artefactId.fromBase58String()),
+          DeleteEntry(keyArtefactOwner(artefactName,invoker))
+        ]
+      }
+    }else throw("This artefact doesn't exist")
       
 }
 
