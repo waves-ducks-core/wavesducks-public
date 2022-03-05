@@ -175,7 +175,8 @@ func copyDuck()= {
   if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else{
     let nftInfo = assetInfo(firstPayment.assetId.value()).value()
     let asset1Gen = nftInfo.name.split("")        
-    if (asset1Gen[14] == "G" ) then  throw("you can only mirror non genesis ducks") else{
+    if (asset1Gen[14] == "G" ) then  throw("you can only mirror non genesis ducks") else
+    if (asset1Gen[14] == "J" ) then  throw("you can only mirror non jackpot ducks") else{  
       let txId = i.transactionId
       let duckGen = nftInfo.name
       let farmGen = getGen(duckGen)
@@ -194,6 +195,7 @@ func copyDuck()= {
         IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
         asset,
         ScriptTransfer(i.caller, 1, firstPayment.assetId),
+        Burn(secondPayment.assetId.value(),1),
         ScriptTransfer(i.caller, 1, assetId)
       ]
     }
