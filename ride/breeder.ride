@@ -183,15 +183,15 @@ func copyDuck()= {
       let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
       let asset = Issue(duckGen, description, 1, 0, false)
       let assetId = asset.calculateAssetId()
-      let amount = tryGetInteger(getDuckStatsKey(duckGen)) + 1
+      let amount = tryGetInteger(getDuckStatsKey(duckGen))
       let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let duckIdKey = getDuckIdKey(i.caller.toString(), txId)
       let children = tryGetInteger("asset_" + firstAssetId + "_children")
       [
         StringEntry(duckIdKey, assetId.toBase58String()),
         StringEntry(assetId.toBase58String(), duckIdKey),
-        IntegerEntry("asset_" + txId.toBase58String() + "_children", children),
-        IntegerEntry(getDuckStatsKey(duckGen), amount),
+        IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
+        IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
         IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
         asset,
         ScriptTransfer(i.caller, 1, firstPayment.assetId),
