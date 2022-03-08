@@ -67,8 +67,14 @@ func wasUniqueBorn(gen: String) = {
 
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
   let jackpotRandom = getRandomNumber(500, txId, hatchingFinishHeight, 0)
-  if (jackpotRandom < 5 && wasUniqueBorn("DUCK-WWWCUPID-JU") == 0) then {
-    ("DUCK-WWWCUPID-JU", "1C1D1I1P1U3W-J")
+  if (jackpotRandom < 5 && wasUniqueBorn("DUCK-WWZETKIN-JU") == 0) then {
+    ("DUCK-WWZETKIN-JU", "1E1I1K1N1T1U2W1Z-J")
+  } else
+  if (jackpotRandom < 10 && wasUniqueBorn("DUCK-WWWWMARG-JU") == 0) then {
+    ("DUCK-WWWWMARG-JU", "1A1G1M1R4W-J")
+  } else
+  if (jackpotRandom < 15 && wasUniqueBorn("DUCK-WWWDAISY-JU") == 0) then {
+    ("DUCK-WWWDAISY-JU", "1A1D1I1S3W1Y-J")
   } else {
     let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 0)
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
