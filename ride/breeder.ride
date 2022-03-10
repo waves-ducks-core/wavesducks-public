@@ -15,7 +15,10 @@ let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
 let breedArtefacts = [
   "ART-FIXGENE",
   "ART-FREEGENE", 
-  "ART-MIRROR"
+  "ART-MIRROR",
+  "ART-XHAT",
+  "ART-POMP" # Pompadour
+
 ]
 
 let rebirthAddress = base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
@@ -153,6 +156,12 @@ func getGen(assetName: String) = {
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I") + "-" + generation
 }
 
+func manipulateName(assetName: String, position: Int, char: String) = {
+  let firstPart = assetName.take(position-1)
+  let secondPart = assetName.takeRight(16-position)
+  firstPart+char+secondPart
+}
+
 func getItemsAddress() = tryGetString("static_itemsAddress").fromBase58String()
 
 func checkArtefactDetails(assetId: ByteVector) = {
@@ -202,6 +211,53 @@ func copyDuck()= {
   }
 }
 
+@Callable(i)
+func addArteFactToDuck()= {
+  let firstPayment = i.payments[0].value()
+  let secondPayment = i.payments[1].value()
+  let firstAssetId = firstPayment.assetId.value().toBase58String()
+  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
+  if (!checkAssetInIncubator(firstAssetId)) then throw("You need to attach a valid NFT-duck.") else
+  let artefact = checkArtefactDetails(secondPayment.assetId.value())
+  if artefact != "ART-XHAT" && artefact != "ART-POMP" then  throw("You need to attach a ART-XHAT or ART-POMP artefact") else
+  if tryGetInteger("asset_" + firstAssetId + "_children") >0 then throw("You can only pick a sterile NFT-duck") else{
+    let nftInfo = assetInfo(firstPayment.assetId.value()).value()
+    let asset1Gen = nftInfo.name.split("")        
+    if (asset1Gen[14] == "G" ) then  throw("you can only dress non genesis ducks") else
+    if (asset1Gen[14] == "J" ) then  throw("you can only dress non jackpot ducks") else{  
+      let oldDuckGen = assetInfo(firstPayment.assetId.value()).value().name
+      let oldFarmGen = getGen(oldDuckGen)
+
+      let char = if artefact == "ART-XHAT" then "T" else if artefact=="ART-POMP" then "S" else throw("No char defined")
+      #manipulate first genes 
+      let duckGen = manipulateName(nftInfo.name,5,char)
+
+      let txId = i.transactionId
+      let farmGen = getGen(duckGen)
+      let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+      let asset = Issue(duckGen, description, 1, 0, false)
+      let assetId = asset.calculateAssetId()
+      let amount = tryGetInteger(getDuckStatsKey(duckGen))
+      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+      let duckIdKey = getDuckIdKey(i.caller.toString(), txId)
+      let children = tryGetInteger("asset_" + firstAssetId + "_children")
+      [
+          StringEntry(duckIdKey, assetId.toBase58String()),
+          StringEntry(assetId.toBase58String(), duckIdKey),
+          IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
+          IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
+          IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+          asset,
+          Burn(firstPayment.assetId.value(),1),
+          Burn(secondPayment.assetId.value(),1),
+          ScriptTransfer(i.caller, 1, assetId),
+          #remove old ducks rarity
+          IntegerEntry(getDuckStatsKey(oldDuckGen), tryGetInteger(getDuckStatsKey(oldDuckGen)) - 1),
+          IntegerEntry("stats_"+oldFarmGen+"_quantity", tryGetInteger("stats_"+oldFarmGen+"_quantity") - 1)
+      ]
+    }
+  }
+}
 
 @Callable(i)
 func startDuckBreeding() = {
