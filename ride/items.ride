@@ -8,6 +8,7 @@ let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 let devAddress = base58'3P44yqcpfhPF2iC1nptm2ZJCTaN7VYhz9og'
 let eggsNeeded = 3 * 1_0000_0000
 let artefactsLimit = 301 + 600
+
 let oldArtefacts = [
   "ART-LAKE",
   "ART-HOUSE",
@@ -31,6 +32,7 @@ let artefacts = [
 ]
 
 let allArtefact = artefacts++oldArtefacts
+
 
 func tryGetString(key: String) = {
     match getString(this, key) {
@@ -66,6 +68,70 @@ func checkArtefactDetails(assetId: ByteVector) = {
    else throw("Invalid artefact")
 }
 
+func getBreederAddress() = Address(tryGetString("static_breederAddress").fromBase58String())
+
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("wrong type, expected: String")
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
+
+func manipulateName(assetName: String, position: Int, char: String) = {
+  assetName.take(position-1)+char+assetName.takeRight(16-position)
+}
+
+@Callable(i)
+func copyDuck()= {
+  let firstPayment = i.payments[0].value()
+  let secondPayment = i.payments[1].value()
+  let firstAssetId = firstPayment.assetId.value().toBase58String()
+  strict children = invoke(this,"validateAndGetChildren",[firstAssetId],[]).asInt()
+  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
+  let artefact = checkArtefactDetails(secondPayment.assetId.value())
+  if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
+  let nftInfo = assetInfo(firstPayment.assetId.value()).value()
+  let asset1Gen = nftInfo.name.split("")        
+  if (asset1Gen[14] == "G" || asset1Gen[14] == "J" ) then  throw("You can't mirror this duck") else
+    let duckGen = nftInfo.name
+    strict call = invoke(getBreederAddress(), "createDuckSpecialGenes", [i.caller.bytes, duckGen,children], [])
+    [
+      ScriptTransfer(i.caller, 1, firstPayment.assetId),
+      Burn(secondPayment.assetId.value(),1)
+    ]
+
+}
+
+@Callable(i)
+func addArteFactToDuck()= {
+  let firstPayment = i.payments[0].value()
+  let secondPayment = i.payments[1].value()
+  let firstAssetId = firstPayment.assetId.value().toBase58String()
+  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
+  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).asInt()
+  if children == 0 then throw("You can only pick a sterile NFT-duck") else
+  let artefact = checkArtefactDetails(secondPayment.assetId.value())
+  if artefact != "ART-XHAT" && artefact != "ART-POMP" then  throw("You need to attach a ART-XHAT or ART-POMP artefact") else
+  let nftInfo = assetInfo(firstPayment.assetId.value()).value()
+  let asset1Gen = nftInfo.name.split("")        
+  if (asset1Gen[14] == "G" || asset1Gen[14] == "J" ) then  throw("You can't mirror this duck") else
+  if (asset1Gen[5] == "S" || asset1Gen[5] == "T" ) then  throw("you already attached a artefact") else{
+
+    let char = if artefact == "ART-XHAT" then "T" else if artefact=="ART-POMP" then "S" else throw("No char defined")
+    let oldDuckGen = nftInfo.name
+    strict oldFarmGen = invoke(this,"getGenFromName",[oldDuckGen],[]).asString()
+    let duckGen = manipulateName(oldDuckGen,5,char)
+    strict call = invoke(getBreederAddress(), "createDuckSpecialGenes", [i.caller.bytes, duckGen,children], [])
+    strict callReduce = invoke(getBreederAddress(), "reduceRarity", [firstAssetId,oldFarmGen], [])
+    [
+      Burn(firstPayment.assetId.value(),1),
+      Burn(secondPayment.assetId.value(),1)
+    ]
+  }
+}
 
 @Callable(i)
 func stakeItem() = {
