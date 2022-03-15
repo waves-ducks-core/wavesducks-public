@@ -156,21 +156,6 @@ func asInt(value: Any) = match value {
   case _ => throw("wrong type, expected: Int")
 }
 
-func composeGenericData(duckGen: String, asset: Issue, assetId: ByteVector, duckIdKey: String) = {
-      strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
-      let amount = tryGetInteger(getDuckStatsKey(duckGen))
-      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
-      [
-        StringEntry(duckIdKey, assetId.toBase58String()),
-        StringEntry(assetId.toBase58String(), duckIdKey),
-        IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
-        IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
-        asset
-      ]
-}
-
-
-
 @Callable(i)
 func getGenFromName(assetName: String) = {
     let genotype = assetName.drop(5).dropRight(3).split("")
@@ -205,7 +190,21 @@ func createDuckSpecialGenes(address: ByteVector, duckGen: String, children: Int)
   let asset = Issue(duckGen, description, 1, 0, false)
   let assetId = asset.calculateAssetId()
   let duckIdKey = getDuckIdKey(i.caller.toString(), txId)
-  composeGenericData(duckGen,asset,assetId,duckIdKey)++
+
+  #TODO: work around for known issue dapp to dapp
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  let amount = tryGetInteger(getDuckStatsKey(duckGen))
+  let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+  let composeGenericData = [
+    StringEntry(duckIdKey, assetId.toBase58String()),
+    StringEntry(assetId.toBase58String(), duckIdKey),
+    IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
+    IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+    asset
+  ]
+  #end workaround
+
+  composeGenericData++
   [
     IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
     ScriptTransfer(Address(address), 1, assetId)
@@ -267,7 +266,20 @@ func finishDuckHatching(txIdStr: String) = {
 
       let parent1Id = tryGetString(getDuckParentKey(txId, 1))
       let parent2Id = tryGetString(getDuckParentKey(txId, 2))
-      composeGenericData(duckGen,asset,assetId,duckIdKey)++
+      #TODO: work around for known issue dapp to dapp
+      strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+      let amount = tryGetInteger(getDuckStatsKey(duckGen))
+      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+      let composeGenericData = [
+        StringEntry(duckIdKey, assetId.toBase58String()),
+        StringEntry(assetId.toBase58String(), duckIdKey),
+        IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
+        IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+        asset
+      ]
+      #end workaround
+
+      composeGenericData++
       [
         StringEntry(processStatusKey, HatchingFinished),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
