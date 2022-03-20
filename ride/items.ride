@@ -9,6 +9,14 @@ let devAddress = base58'3P44yqcpfhPF2iC1nptm2ZJCTaN7VYhz9og'
 let eggsNeeded = 3 * 1_0000_0000
 let artefactsLimit = 301 + 600
 
+let freeGenes = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E"
+]
+
 let oldArtefacts = [
   "ART-LAKE",
   "ART-HOUSE",
@@ -59,6 +67,11 @@ func getRandomArtefact(boxId: ByteVector, h: Int) = {
   artefacts[randomNumber]
 }
 
+func getRandomGenes(txId: ByteVector, h: Int) = {
+  let randomNumber = getRandomNumber(6, txId, h, 0)
+  freeGenes[randomNumber]
+}
+
 func checkArtefactDetails(assetId: ByteVector) = {
   let asset = assetInfo(assetId).value()
   let assetName = asset.name.value()
@@ -82,6 +95,46 @@ func asInt(value: Any) = match value {
 
 func manipulateName(assetName: String, position: Int, char: String) = {
   assetName.take(position-1)+char+assetName.takeRight(16-position)
+}
+
+@Callable(i)
+func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = {
+  let firstPayment = i.payments[0].value()
+  let firstAssetId = firstPayment.assetId.value().toBase58String()
+  if firstPayment.amount != 1 then throw("NFT is not attached") else
+  let artefact = checkArtefactDetails(firstPayment.assetId.value())
+  if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
+
+  strict processFinishHeight = invoke(getBreederAddress(),"processFinishHeight",[i.caller.toString(), txIdStr],[]).asInt()
+
+  strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txIdStr, processFinishHeight,parentFixedGene,positionFixedGene,"",0],[]).asString()
+  
+  strict call = invoke(getBreederAddress(), "finishDuckHatching", [txIdStr, duckGenesString], [])
+  [
+    Burn(firstPayment.assetId.value(),1)
+  ]
+}
+
+@Callable(i)
+func freeGene(txIdStr: String) = {
+  let firstPayment = i.payments[0].value()
+  let firstAssetId = firstPayment.assetId.value().toBase58String()
+  if firstPayment.amount != 1 then throw("NFT is not attached") else
+  let artefact = checkArtefactDetails(firstPayment.assetId.value())
+  if artefact != "ART-FREEGENE" then  throw("You need to attach a ART-FREEGENE artefact") else
+  
+
+  strict processFinishHeight = invoke(getBreederAddress(),"processFinishHeight",[i.caller.toString(), txIdStr],[]).asInt()
+
+  let selectedGene = getRandomGenes(i.transactionId,processFinishHeight)
+  let randomPosition = getRandomNumber(7, i.transactionId, processFinishHeight, 0)
+
+  strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txIdStr, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
+  
+  strict call = invoke(getBreederAddress(), "finishDuckHatching", [txIdStr, duckGenesString], [])
+  [
+    Burn(firstPayment.assetId.value(),1)
+  ]
 }
 
 @Callable(i)

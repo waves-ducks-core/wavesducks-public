@@ -9,7 +9,6 @@ let HatchingFinished = "BREEDING_FINISHED"
 
 let incubatorAddress = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
-let GENS = ["A", "B", "C", "D", "E", "F", "G", "H"]
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
 
@@ -67,37 +66,21 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
   randomHash.toInt(offset) % variants
 }
 
-func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int) = {
+func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int, 
+geneFromParent: Int, genePostion: Int,
+specifiqueGene: String, specifiqueGenePosition: Int) = {
+  if geneFromParent != 0 && genePostion==step then{ 
+    if geneFromParent == 1 then gen1 else 
+    if geneFromParent == 2 then gen2 else throw("Parent either needs to be 1 or 2")
+  }else if specifiqueGene != "" && specifiqueGenePosition==step then{
+    specifiqueGene
+  }else
   let randomNum = getRandomNumber(2, txId, hatchingFinishHeight, step)
   let gen = if (randomNum == 0) then gen1 else gen2
   gen
 }
 
-func generateDuck(txId: ByteVector, hatchingFinishHeight: Int) = {
-  let colorRandom = getRandomNumber(4, txId, hatchingFinishHeight, 11)
-  let color = if (colorRandom == 0) then "Y"
-    else if (colorRandom == 1) then "G" 
-    else if (colorRandom == 2) then "B" 
-    else "R"
 
-  let parent1Id = tryGetString(getDuckParentKey(txId, 1)).fromBase58String()
-  let parent2Id = tryGetString(getDuckParentKey(txId, 2)).fromBase58String()
-
-  let parent1Gen = assetInfo(parent1Id).value().name.split("")
-  let parent2Gen = assetInfo(parent2Id).value().name.split("")
-
-  let gen = "DUCK-" 
-            + getRandomGen(parent1Gen[5], parent2Gen[5], 0, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[6], parent2Gen[6], 1, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[7], parent2Gen[7], 2, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[8], parent2Gen[8], 3, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[9], parent2Gen[9], 4, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[10], parent2Gen[10], 5, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight)
-            + "-" + determineGeneration(parent1Gen[14], parent2Gen[14]) + color
-    gen
-}
 
 func checkAssetInIncubator(assetId: String) = {
   let result = match getString(Address(incubatorAddress), assetId) {
@@ -154,6 +137,39 @@ func asString(value: Any) = match value {
 func asInt(value: Any) = match value {
   case int: Int => int
   case _ => throw("wrong type, expected: Int")
+}
+
+@Callable(i)
+func generateDuck(txId: ByteVector, hatchingFinishHeight: Int, 
+geneFromParent: Int, genePostion: Int, 
+specifiqueGene: String, specifiqueGenePosition: Int) = {
+  let colorRandom = getRandomNumber(4, txId, hatchingFinishHeight, 11)
+  let color = if (colorRandom == 0) then "Y"
+    else if (colorRandom == 1) then "G" 
+    else if (colorRandom == 2) then "B" 
+    else "R"
+
+  let parent1Id = tryGetString(getDuckParentKey(txId, 1)).fromBase58String()
+  let parent2Id = tryGetString(getDuckParentKey(txId, 2)).fromBase58String()
+
+  let parent1Gen = assetInfo(parent1Id).value().name.split("")
+  let parent2Gen = assetInfo(parent2Id).value().name.split("")
+
+  let gen = "DUCK-" 
+            + getRandomGen(parent1Gen[5], parent2Gen[5], 0, txId, hatchingFinishHeight, geneFromParent, genePostion, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[6], parent2Gen[6], 1, txId, hatchingFinishHeight, geneFromParent, genePostion, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[7], parent2Gen[7], 2, txId, hatchingFinishHeight, geneFromParent, genePostion, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[8], parent2Gen[8], 3, txId, hatchingFinishHeight, geneFromParent, genePostion, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[9], parent2Gen[9], 4, txId, hatchingFinishHeight, geneFromParent, genePostion, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[10], parent2Gen[10], 5, txId, hatchingFinishHeight, geneFromParent, genePostion, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight, geneFromParent, genePostion, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight, geneFromParent, genePostion, specifiqueGene, specifiqueGenePosition)
+            + "-" + determineGeneration(parent1Gen[14], parent2Gen[14]) + color
+    (
+      [],
+      gen
+    )
+  
 }
 
 @Callable(i)
@@ -240,25 +256,37 @@ func startDuckBreeding() = {
     }
 }
 
-
 @Callable(i)
-func finishDuckHatching(txIdStr: String) = {
+func processFinishHeight(owner: String, txId: String ) = {
+  let finishHeightKey = getProcessFinishHeightKey(owner, fromBase58String(txId))
+  let processFinishHeight = getIntegerValue(this, finishHeightKey)
+  (
+    [],
+    processFinishHeight
+  )
+}
 
+#TODO: once node 1.4 create 2 seperate methods, for now impossible due to the invoke bug in ride with regards to callables
+@Callable(i)
+func finishDuckHatching(txIdStr: String, duckGenesString: String) = {
+  if (i.caller != getItemsAddress() && duckGenesString != "" ) then throw("Only items can cause fixed genes") else 
+  let owner = if i.caller == getItemsAddress() then i.originCaller.toString() else i.caller.toString()
   let txId = fromBase58String(txIdStr)
-  let processStatusKey = getProcessStatusKey(i.caller.toString(), txId)
-  let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txId)
-  let duckIdKey = getDuckIdKey(i.caller.toString(), txId)
+  let processStatusKey = getProcessStatusKey(owner, txId)
+  let duckIdKey = getDuckIdKey(owner, txId)
 
   let processTxStatus = getStringValue(this, processStatusKey)
-  let processFinishHeight = getIntegerValue(this, finishHeightKey)
+  let processFinishHeight = invoke(this,"processFinishHeight",[owner, txIdStr],[]).asInt()
   
   if (processTxStatus == HatchingFinished) then {
-    let duckId = getStringValue(this, getDuckIdKey(i.caller.toString(), txId))
+    let duckId = getStringValue(this, getDuckIdKey(owner, txId))
     throw("The duck was breeded and claimed already, here is the folowing: " + duckId)
   } else 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
-      let duckGen = generateDuck(txId, processFinishHeight)
+
+      strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).asString() else duckGenesString
+      
       let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
       let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
@@ -285,9 +313,9 @@ func finishDuckHatching(txIdStr: String) = {
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
         asset,
-        ScriptTransfer(i.caller, 1, assetId),
-        ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
-        ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
+        ScriptTransfer(addressFromStringValue(owner), 1, assetId),
+        ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
+        ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
       ]
     }
 }
