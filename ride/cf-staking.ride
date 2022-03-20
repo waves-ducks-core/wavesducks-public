@@ -68,9 +68,10 @@ func getEggId() = {
   getStringValue(mAccAddr, "EGG_ASSET_ID").fromBase58String()
 }
 
-func setCFAddress(address: String) = {
+func setCFAddressAndInitiate(address: String) = {
   [
-    StringEntry("CF_ADDRESS",address)
+    StringEntry("CF_ADDRESS",address),
+    IntegerEntry(keyGlobalLastInterest, 1)
   ]
 }
 
@@ -156,6 +157,10 @@ func topUpReward () = {
 #both
 @Callable(i)
 func withdrawFarmTokens (amount: Int, compound: Boolean) = {
+  if (i.payments.size() > 0) 
+  then {
+          throw("Please don't add payments")
+  } else
   let shareTokenId = getShareAssetId()
   if compound
   then {
@@ -209,6 +214,9 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
 @Callable(i)
 func stakeFarmTokens (compound: Boolean) = {
   let shareTokenId = getShareAssetId()
+  if (i.payments.size() > 1) then {
+          throw("To many payments added")
+        } else
   if (i.payments[0].assetId != shareTokenId)
   then throw("Wrong assetId")
   else{
@@ -259,12 +267,18 @@ func stakeFarmTokens (compound: Boolean) = {
 @Callable(i)
 func initiateDapp(address: String) = {
   if (i.caller != this) then throw("Can be called only by the dapp-account") else {
-    setCFAddress(address)
+    setCFAddressAndInitiate(address)
   }
 }
 
 #only staking
 @Callable(i)
-func claimReward () = claimStakingResult(i.caller)
+func claimReward () = {  
+  if (i.payments.size() > 0) 
+  then {
+          throw("Please don't add payments")
+  } else
+        claimStakingResult(i.caller)
+  }
 
         

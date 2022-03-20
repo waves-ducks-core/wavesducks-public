@@ -1,12 +1,12 @@
 import pywaves
 import requests
 
-oldCF = "3P2dfhgUswGVaJeseCj3kj7ZxXAYSv2e5Hj"
-newCF = "3P94jwfaQAm4BEWsBmHV96kBKTf7dp2FHJV"
+oldCF = ""
+newCF = ""
 
 
 
-masterSeed = "11"
+masterSeed = ""
 
 assetIdKey = "SHARE_ASSET_ID"
 

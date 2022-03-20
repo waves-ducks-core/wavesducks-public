@@ -18,19 +18,19 @@ const axios = require("axios");
 //8) check old cf is empty, check that all assets migrated (done by ducks team) (16th)
 //9) run airdrop script to airdorp new tokens(16th)
 
-const cfAddress = "3P2dfhgUswGVaJeseCj3kj7ZxXAYSv2e5Hj";
+const cfAddress = "";
 //old CF
-const cfPublicKey = "B3nAk9hER1sVM4CAFi7rfex69eZ4vKBhFLynWAejx49c";
+const cfPublicKey = "";
 //new token name CF
-const name = "CFMIGRATIONTEST";
-const newCFAddress = "3P94jwfaQAm4BEWsBmHV96kBKTf7dp2FHJV";
-const newCFStakeAddress = "3P69m61RVNDJdE11qT7CC5tquXT5XRQvbwy";
+const name = "";
+const newCFAddress = "";
+const newCFStakeAddress = "";
 
 const masterSeed = "";
 const farmSeed = "";
-const farmDapp = "3PH75p2rmMKCV2nyW4TsAdFgFtmc61mJaqA";
+const farmDapp = "";
 const jeduckSeed = "";
-const jeduckDapp = "3PCoF5ZnsQJKAJJCoSqUcVVqJ2Dm4fvn9ar";
+const jeduckDapp = "";
 const newMasterSeed = masterSeed;
 
 //Fail script if still ducks on perches
@@ -66,7 +66,7 @@ const lockOldFarm = invokeScript(
   masterSeed
 );
 
-broadcast(lockOldFarm).catch((e) => console.log(e));
+//broadcast(lockOldFarm).catch((e) => console.log(e));
 
 //Transfer old perches
 (async () => {
@@ -101,7 +101,7 @@ broadcast(lockOldFarm).catch((e) => console.log(e));
       },
       farmSeed
     );
-    broadcast(dataTx).catch((e) => console.log(e));
+    //broadcast(dataTx).catch((e) => console.log(e));
   });
 })();
 
@@ -117,6 +117,7 @@ broadcast(lockOldFarm).catch((e) => console.log(e));
       "_artefact_.%2A",
   }).then(({ data: dataO }) => {
     const newList = [];
+    const cleanOldList = [];
     for (let i = 0; i < dataO.length; i++) {
       const item = {
         key: dataO[i].key.replace(cfAddress, newCFAddress),
@@ -128,17 +129,56 @@ broadcast(lockOldFarm).catch((e) => console.log(e));
         value: null,
       };
       newList.push(item);
-      newList.push(oldItem);
+      cleanOldList.push(oldItem);
     }
-    console.log(newList);
     const dataTx = data(
       {
-        additionalFee: 400000,
+        additionalFee: 500000,
         data: newList,
       },
       jeduckSeed
     );
-    broadcast(dataTx).catch((e) => console.log(e));
+    //broadcast(dataTx).catch((e) => console.log(e));
+    const dataTxOld = data(
+      {
+        additionalFee: 500000,
+        data: cleanOldList,
+      },
+      jeduckSeed
+    );
+    //broadcast(dataTxOld).catch((e) => console.log(e));
+  });
+})();
+
+//Transfer old mantles ownership
+(async () => {
+  axios({
+    method: "get",
+    url:
+      "https://node.turtlenetwork.eu/addresses/data/" +
+      jeduckDapp +
+      "?matches=artefact_%20mantle_artefactId_.%2A_owner",
+  }).then(({ data: dataO }) => {
+    const newList = [];
+    for (let i = 0; i < dataO.length; i++) {
+      if (dataO[i].value == cfAddress) {
+        const item = {
+          key: dataO[i].key.replace(cfAddress, newCFAddress),
+          type: dataO[i].type,
+          value: newCFAddress,
+        };
+        newList.push(item);
+      }
+    }
+    console.log(newList);
+    const dataTx = data(
+      {
+        additionalFee: 500000,
+        data: newList,
+      },
+      jeduckSeed
+    );
+    //broadcast(dataTx).catch((e) => console.log(e));
   });
 })();
 
@@ -163,7 +203,7 @@ broadcast(lockOldFarm).catch((e) => console.log(e));
         null
       );
       let SignedTx = signTx(massTx, masterSeed);
-      broadcast(SignedTx).catch((e) => console.log(e));
+      //broadcast(SignedTx).catch((e) => console.log(e));
     }
   });
 })();
@@ -190,7 +230,7 @@ broadcast(lockOldFarm).catch((e) => console.log(e));
         null
       );
       let SignedTx = signTx(massTx, masterSeed);
-      broadcast(SignedTx).catch((e) => console.log(e));
+      //broadcast(SignedTx).catch((e) => console.log(e));
     }
   });
 })();
@@ -252,12 +292,17 @@ const dataTx = data(
         key: "farm_" + newCFAddress,
         value: true,
       },
+      {
+        type: "boolean",
+        key: "farm_" + cfAddress,
+        value: false,
+      },
     ],
   },
   newMasterSeed
 );
-broadcast(dataTx).catch((e) => console.log(e));
-
+//broadcast(dataTx).catch((e) => console.log(e));
+console.log("data + tokens");
 //move over data and create tokens
 async function getData() {
   try {
@@ -275,7 +320,7 @@ async function getData() {
       cfAddress,
       "total_farming_reward"
     );
-    this.totalFarmingReward = totalFarmingReward;
+    this.totalFarmingReward = totalFarmingReward.value;
   } catch (e) {
     this.totalFarmingReward = 0;
   }
@@ -322,7 +367,7 @@ async function getData() {
     newMasterSeed
   );
 
-  broadcast(initCF).catch((e) => console.log(e));
+  broadcast(initCF).catch((e) => console.log(JSON.stringify(e)));
 }
 
 getData();

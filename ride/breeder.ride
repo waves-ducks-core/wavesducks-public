@@ -13,6 +13,7 @@ let GENS = ["A", "B", "C", "D", "E", "F", "G", "H"]
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
 
+
 let rebirthAddress = base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 
 func getProcessStatusKey(address: String, txId: ByteVector) = {
@@ -134,19 +135,82 @@ func isSymbolF(accumulated: Int, sym: String) = { if (sym == "F") then {accumula
 func isSymbolG(accumulated: Int, sym: String) = { if (sym == "G") then {accumulated+1} else {accumulated+0} }
 func isSymbolH(accumulated: Int, sym: String) = { if (sym == "H") then {accumulated+1} else {accumulated+0} }
 func isSymbolI(accumulated: Int, sym: String) = { if (sym == "I") then {accumulated+1} else {accumulated+0} }
+func isSymbolS(accumulated: Int, sym: String) = { if (sym == "S") then {accumulated+1} else {accumulated+0} }
+func isSymbolT(accumulated: Int, sym: String) = { if (sym == "T") then {accumulated+1} else {accumulated+0} }
 
 func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
 }
 
-func getGen(assetName: String) = {
-  # getGen("DUCK-ABCDDCBA-GY") -> 2A2B2C2D-G
-  let genotype = assetName.drop(5).dropRight(3).split("")
-  let generation = assetName.split("")[14]
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I") + "-" + generation
+
+
+func getItemsAddress() = Address(tryGetString("static_itemsAddress").fromBase58String())
+
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("wrong type, expected: String")
 }
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
+
+@Callable(i)
+func getGenFromName(assetName: String) = {
+    let genotype = assetName.drop(5).dropRight(3).split("")
+    let generation = assetName.split("")[14]
+    let gen = getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
+    getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
+    getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I") +
+    getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolS)) + "S") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolT)) + "T") + "-" + generation
+    (
+    [],
+    gen
+    )
+  }
+
+@Callable(i)
+func validateAndGetChildren(assetId: String) = {
+  if (!checkAssetInIncubator(assetId)) then throw("You need to attach a valid NFT-duck. "+assetId+" is invalid!") else
+  let children = tryGetInteger("asset_" + assetId + "_children")
+  (
+    []
+    ,
+    children
+  )
+
+}
+
+@Callable(i)
+func createDuckSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
+  if (i.caller != getItemsAddress() && i.caller != this) then throw("admin or items only") else
+  let txId = i.transactionId
+  let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+  let asset = Issue(duckGen, description, 1, 0, false)
+  let assetId = asset.calculateAssetId()
+  let duckIdKey = getDuckIdKey(i.caller.toString(), txId)
+
+  #TODO: work around for known issue dapp to dapp
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  let amount = tryGetInteger(getDuckStatsKey(duckGen))
+  let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+  let composeGenericData = [
+    StringEntry(duckIdKey, assetId.toBase58String()),
+    StringEntry(assetId.toBase58String(), duckIdKey),
+    IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
+    IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+    asset
+  ]
+  #end workaround
+
+  composeGenericData++
+  [
+    IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
+    ScriptTransfer(Address(address), 1, assetId)
+  ]
+  
+ }
 
 @Callable(i)
 func startDuckBreeding() = {
@@ -157,10 +221,9 @@ func startDuckBreeding() = {
   let secondAssetId = secondPayment.assetId.value().toBase58String()
 
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
-  if (!(checkAssetInIncubator(firstAssetId) && checkAssetInIncubator(secondAssetId))) then {
-    throw("You need to attach 2 valid NFT-ducks.")
-  } else {
-    if (tryGetInteger("asset_" + firstAssetId + "_children") > 0 || tryGetInteger("asset_" + secondAssetId + "_children") > 0) then {
+  strict children1 = invoke(this,"validateAndGetChildren",[firstAssetId],[]).asInt()
+  strict children2 = invoke(this,"validateAndGetChildren",[secondAssetId],[]).asInt()
+    if ( children1 > 0 || children1 > 0) then {
       throw("One duck can be used for breeding only once in its lifetime.")
     } else {
       let breededStatus = canBeBreeded(firstAssetId.fromBase58String(), secondAssetId.fromBase58String())
@@ -175,7 +238,6 @@ func startDuckBreeding() = {
         ]
       }
     }
-  }
 }
 
 
@@ -197,23 +259,29 @@ func finishDuckHatching(txIdStr: String) = {
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
       let duckGen = generateDuck(txId, processFinishHeight)
-      let farmGen = getGen(duckGen)
       let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
       let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
-      let amount = tryGetInteger(getDuckStatsKey(duckGen)) + 1
-      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let parent1Id = tryGetString(getDuckParentKey(txId, 1))
       let parent2Id = tryGetString(getDuckParentKey(txId, 2))
-
-      [
-        StringEntry(processStatusKey, HatchingFinished),
+      #TODO: work around for known issue dapp to dapp
+      strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+      let amount = tryGetInteger(getDuckStatsKey(duckGen))
+      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+      let composeGenericData = [
         StringEntry(duckIdKey, assetId.toBase58String()),
         StringEntry(assetId.toBase58String(), duckIdKey),
-        IntegerEntry(getDuckStatsKey(duckGen), amount),
+        IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
         IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+        asset
+      ]
+      #end workaround
+
+      composeGenericData++
+      [
+        StringEntry(processStatusKey, HatchingFinished),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
         asset,
@@ -227,8 +295,8 @@ func finishDuckHatching(txIdStr: String) = {
 @Callable(i)
 func reduceRarity(assetId: String, farmGen: String) = {
   let asset = assetId.fromBase58String()
-  if (i.caller != Address(rebirthAddress) && i.caller != this) then {
-    throw("admin or rebirth only")
+  if (i.caller != getItemsAddress() && i.caller != Address(rebirthAddress) && i.caller != this) then {
+    throw("admin, items or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
     [
