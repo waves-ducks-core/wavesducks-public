@@ -139,6 +139,57 @@ func asInt(value: Any) = match value {
   case _ => throw("wrong type, expected: Int")
 }
 
+func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector, asset: Issue)= {
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  let amount = tryGetInteger(getDuckStatsKey(duckGen))
+  let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+  [
+    StringEntry(duckIdKey, assetId.toBase58String()),
+    StringEntry(assetId.toBase58String(), duckIdKey),
+    IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
+    IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+    asset
+    ]
+}
+
+func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = {
+  let txId = fromBase58String(txIdStr)
+  let processStatusKey = getProcessStatusKey(owner, txId)
+  let duckIdKey = getDuckIdKey(owner, txId)
+
+  let processTxStatus = getStringValue(this, processStatusKey)
+  let finishHeightKey = getProcessFinishHeightKey(owner, txId)
+  let processFinishHeight = getIntegerValue(this, finishHeightKey)
+  
+  if (processTxStatus == HatchingFinished) then {
+    let duckId = getStringValue(this, getDuckIdKey(owner, txId))
+    throw("The duck was breeded and claimed already, here is the folowing: " + duckId)
+  } else 
+    if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
+    else {
+
+      strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).asString() else duckGenesString
+      
+      let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+
+      let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
+      let assetId = asset.calculateAssetId()
+
+      let parent1Id = tryGetString(getDuckParentKey(txId, 1))
+      let parent2Id = tryGetString(getDuckParentKey(txId, 2))
+
+      composeGenericData(duckGen,duckIdKey,assetId,asset)++
+      [
+        StringEntry(processStatusKey, HatchingFinished),
+        IntegerEntry("asset_" + parent1Id + "_children", 1),
+        IntegerEntry("asset_" + parent2Id + "_children", 1),
+        asset,
+        ScriptTransfer(addressFromStringValue(owner), 1, assetId),
+        ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
+        ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
+      ]
+    }
+}
 @Callable(i)
 func generateDuck(txId: ByteVector, hatchingFinishHeight: Int, 
 geneFromParent: Int, genePostion: Int, 
@@ -209,18 +260,7 @@ func createDuckSpecialGenes(address: ByteVector, duckGen: String, children: Int)
 
   #TODO: work around for known issue dapp to dapp
   strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
-  let amount = tryGetInteger(getDuckStatsKey(duckGen))
-  let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
-  let composeGenericData = [
-    StringEntry(duckIdKey, assetId.toBase58String()),
-    StringEntry(assetId.toBase58String(), duckIdKey),
-    IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
-    IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
-    asset
-  ]
-  #end workaround
-
-  composeGenericData++
+  composeGenericData(duckGen,duckIdKey,assetId,asset)++
   [
     IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
     ScriptTransfer(Address(address), 1, assetId)
@@ -257,67 +297,15 @@ func startDuckBreeding() = {
 }
 
 @Callable(i)
-func processFinishHeight(owner: String, txId: String ) = {
-  let finishHeightKey = getProcessFinishHeightKey(owner, fromBase58String(txId))
-  let processFinishHeight = getIntegerValue(this, finishHeightKey)
-  (
-    [],
-    processFinishHeight
-  )
+func finishDuckHatchingItems(txIdStr: String, duckGenesString: String) = {
+  if (i.caller != getItemsAddress() && duckGenesString != "" ) then throw("Only items can create fixed genes") else 
+  let owner = i.originCaller.toString()
+  finishDuckHatch(txIdStr, owner, duckGenesString) 
 }
-
-#TODO: once node 1.4 create 2 seperate methods, for now impossible due to the invoke bug in ride with regards to callables
 @Callable(i)
-func finishDuckHatching(txIdStr: String, duckGenesString: String) = {
-  if (i.caller != getItemsAddress() && duckGenesString != "" ) then throw("Only items can cause fixed genes") else 
-  let owner = if i.caller == getItemsAddress() then i.originCaller.toString() else i.caller.toString()
-  let txId = fromBase58String(txIdStr)
-  let processStatusKey = getProcessStatusKey(owner, txId)
-  let duckIdKey = getDuckIdKey(owner, txId)
-
-  let processTxStatus = getStringValue(this, processStatusKey)
-  let processFinishHeight = invoke(this,"processFinishHeight",[owner, txIdStr],[]).asInt()
-  
-  if (processTxStatus == HatchingFinished) then {
-    let duckId = getStringValue(this, getDuckIdKey(owner, txId))
-    throw("The duck was breeded and claimed already, here is the folowing: " + duckId)
-  } else 
-    if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
-    else {
-
-      strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).asString() else duckGenesString
-      
-      let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
-
-      let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
-      let assetId = asset.calculateAssetId()
-
-      let parent1Id = tryGetString(getDuckParentKey(txId, 1))
-      let parent2Id = tryGetString(getDuckParentKey(txId, 2))
-      #TODO: work around for known issue dapp to dapp
-      strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
-      let amount = tryGetInteger(getDuckStatsKey(duckGen))
-      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
-      let composeGenericData = [
-        StringEntry(duckIdKey, assetId.toBase58String()),
-        StringEntry(assetId.toBase58String(), duckIdKey),
-        IntegerEntry(getDuckStatsKey(duckGen), amount + 1),
-        IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
-        asset
-      ]
-      #end workaround
-
-      composeGenericData++
-      [
-        StringEntry(processStatusKey, HatchingFinished),
-        IntegerEntry("asset_" + parent1Id + "_children", 1),
-        IntegerEntry("asset_" + parent2Id + "_children", 1),
-        asset,
-        ScriptTransfer(addressFromStringValue(owner), 1, assetId),
-        ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
-        ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
-      ]
-    }
+func finishDuckHatching(txIdStr: String) = {
+  let owner = i.caller.toString()
+  finishDuckHatch(txIdStr, owner, "") 
 }
 
 @Callable(i)
@@ -333,7 +321,4 @@ func reduceRarity(assetId: String, farmGen: String) = {
     ]
   }
 }
-
-@Verifier(tx)
-func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
         

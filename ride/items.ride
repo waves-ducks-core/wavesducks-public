@@ -4,6 +4,10 @@
 
 func keyArtefactOwner(artefact: String, owner: String) = artefact+"_" + owner + "_owner"
 
+func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
+  address + "_" + txId.toBase58String() +  "_fh"
+}
+
 let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 let devAddress = base58'3P44yqcpfhPF2iC1nptm2ZJCTaN7VYhz9og'
 let eggsNeeded = 3 * 1_0000_0000
@@ -105,11 +109,14 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
   let artefact = checkArtefactDetails(firstPayment.assetId.value())
   if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
 
-  strict processFinishHeight = invoke(getBreederAddress(),"processFinishHeight",[i.caller.toString(), txIdStr],[]).asInt()
+  let txId = fromBase58String(txIdStr)
+
+  let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txId)
+  let processFinishHeight = getIntegerValue(getBreederAddress(), finishHeightKey)
 
   strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txIdStr, processFinishHeight,parentFixedGene,positionFixedGene,"",0],[]).asString()
   
-  strict call = invoke(getBreederAddress(), "finishDuckHatching", [txIdStr, duckGenesString], [])
+  strict call = invoke(getBreederAddress(), "finishDuckHatchingItems", [txIdStr, duckGenesString], [])
   [
     Burn(firstPayment.assetId.value(),1)
   ]
@@ -123,15 +130,17 @@ func freeGene(txIdStr: String) = {
   let artefact = checkArtefactDetails(firstPayment.assetId.value())
   if artefact != "ART-FREEGENE" then  throw("You need to attach a ART-FREEGENE artefact") else
   
+  let txId = fromBase58String(txIdStr)
 
-  strict processFinishHeight = invoke(getBreederAddress(),"processFinishHeight",[i.caller.toString(), txIdStr],[]).asInt()
+  let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txId)
+  let processFinishHeight = getIntegerValue(getBreederAddress(), finishHeightKey)
 
-  let selectedGene = getRandomGenes(i.transactionId,processFinishHeight)
-  let randomPosition = getRandomNumber(7, i.transactionId, processFinishHeight, 0)
+  let selectedGene = getRandomGenes(txId,processFinishHeight)
+  let randomPosition = getRandomNumber(7, txId, processFinishHeight, 0)
 
   strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txIdStr, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
   
-  strict call = invoke(getBreederAddress(), "finishDuckHatching", [txIdStr, duckGenesString], [])
+  strict call = invoke(getBreederAddress(), "finishDuckHatchingItems", [txIdStr, duckGenesString], [])
   [
     Burn(firstPayment.assetId.value(),1)
   ]
@@ -171,7 +180,7 @@ func addArteFactToDuck()= {
   let nftInfo = assetInfo(firstPayment.assetId.value()).value()
   let asset1Gen = nftInfo.name.split("")        
   if (asset1Gen[14] == "G" || asset1Gen[14] == "J" ) then  throw("You can't mirror this duck") else
-  if (asset1Gen[6] == "S" || asset1Gen[6] == "T" ) then  throw("you already attached a artefact") else{
+  if (asset1Gen[5] == "S" || asset1Gen[5] == "T" ) then  throw("you already attached a artefact") else{
 
     let char = if artefact == "ART-XHAT" then "T" else if artefact=="ART-POMP" then "S" else throw("No char defined")
     let oldDuckGen = nftInfo.name
