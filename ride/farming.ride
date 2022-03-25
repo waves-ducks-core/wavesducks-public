@@ -78,7 +78,7 @@ func getAssetFarmingPower(assetId: ByteVector) = {
     let assetName = assetInfo(assetId).value().name
     let generation = assetName.takeRight(2).take(1)
     strict farmGen = invoke(Address(breederAddress),"getGenFromName",[assetName],[]).asString()
-    (farmGen, getAssetRarity(farmGen.take(8), generation))
+    (farmGen, getAssetRarity(farmGen.dropRight(2), generation))
   } else {
     throw("not valid NFT")
   }
