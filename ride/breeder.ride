@@ -183,7 +183,6 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
         StringEntry(processStatusKey, HatchingFinished),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
-        asset,
         ScriptTransfer(addressFromStringValue(owner), 1, assetId),
         ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
         ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
