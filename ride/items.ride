@@ -62,17 +62,17 @@ func tryGetInteger(key: String) = {
 
 func getRandomNumber(variants: Int, txId: ByteVector, finishHeight: Int, offset: Int) = {
   let randomSeedBlock = blockInfoByHeight(finishHeight-1).value()
-  let randomHash = sha256(txId + randomSeedBlock.vrf.value())
-  randomHash.toInt(offset*8) % variants
+  let randomHash = sha256(base58'items' + txId + randomSeedBlock.vrf.value())
+  randomHash.toInt(offset) % variants
 }
 
 func getRandomArtefact(boxId: ByteVector, h: Int) = {
-  let randomNumber = getRandomNumber(6, boxId, h, 0)
+  let randomNumber = getRandomNumber(6, boxId, h, 1)
   artefacts[randomNumber]
 }
 
 func getRandomGenes(txId: ByteVector, h: Int) = {
-  let randomNumber = getRandomNumber(6, txId, h, 0)
+  let randomNumber = getRandomNumber(6, txId, h, 2)
   freeGenes[randomNumber]
 }
 
@@ -136,7 +136,7 @@ func freeGene(txIdStr: String) = {
   let processFinishHeight = getIntegerValue(getBreederAddress(), finishHeightKey)
 
   let selectedGene = getRandomGenes(txId,processFinishHeight)
-  let randomPosition = getRandomNumber(7, txId, processFinishHeight, 0)
+  let randomPosition = getRandomNumber(7, txId, processFinishHeight, 3)
 
   strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txIdStr, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
   
