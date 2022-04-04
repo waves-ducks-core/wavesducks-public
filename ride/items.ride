@@ -2,7 +2,9 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-func keyArtefactOwner(artefact: String, owner: String) = artefact+"_" + owner + "_owner"
+func keyArtefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
+
+func keyUnstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"
 
 func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_fh"
@@ -42,6 +44,17 @@ let artefacts = [
   "ART-XSOCK", 
   "ART-XTREE"
 ]
+
+let stakeableWithLock = [
+  "ART-LAKE",
+  "ART-XTREE"
+]
+
+let stakeableWithoutLock = [
+  "ART-XMISTL"
+]
+
+let allStakeable = stakeableWithoutLock++stakeableWithLock
 
 let allArtefact = artefacts++oldArtefacts
 
@@ -85,7 +98,18 @@ func checkArtefactDetails(assetId: ByteVector) = {
    else throw("Invalid artefact")
 }
 
-func getBreederAddress() = Address(tryGetString("static_breederAddress").fromBase58String())
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -99,6 +123,35 @@ func asInt(value: Any) = match value {
 
 func manipulateName(assetName: String, position: Int, char: String) = {
   assetName.take(position-1)+char+assetName.takeRight(16-position)
+}
+
+func itemIsInCoolDown(artefactName: String, artefactId: String)={
+  let unstakeHeightLast = tryGetInteger(keyUnstakeHeight(artefactName,artefactId))
+  let cooldownPeriod = 240
+  if unstakeHeightLast+cooldownPeriod < height
+  then false
+  else true
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
+func calculateFarmingPowerBoost(duckId: String, address: String)={
+  #TODO: duckId will be used when sweater is added
+  let lakeBoost = if (tryGetString(keyArtefactOwner("ART-LAKE",address)) != "") then 2 else 0
+  let xmasTreeBoost = if (tryGetString(keyArtefactOwner("ART-XTREE",address)) != "") then 3 else 0
+  let totalBoost = lakeBoost+xmasTreeBoost
+  (
+    [],
+    totalBoost
+  )
 }
 
 @Callable(i)
@@ -200,8 +253,9 @@ func stakeItem() = {
     if (size(i.payments) == 1 && i.payments[0].amount==1) then {
       let assetId = i.payments[0].assetId.value()
       let artefactName = checkArtefactDetails(assetId) 
-      if artefactName == "ART-XMISTL"
+      if containsElement(allStakeable, artefactName)
       then  {
+        if containsElement(stakeableWithLock, artefactName) && itemIsInCoolDown(artefactName,assetId.toBase58String()) then throw("Item can't be staked yet, it's in cooldown") else
         let invoker = i.caller.toString()
         let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
         if artefactId == ""
@@ -226,6 +280,7 @@ func unstakeItem(artefactName: String) = {
       then throw("You didnt stake "+artefactName)
       else{
         [
+          IntegerEntry(keyUnstakeHeight(artefactName,artefactId),height),
           ScriptTransfer(i.caller,1,artefactId.fromBase58String()),
           DeleteEntry(keyArtefactOwner(artefactName,invoker))
         ]

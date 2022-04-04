@@ -1,3 +1,5 @@
+#TODO: make it cheaper to do rebirth
+
 {-# STDLIB_VERSION 5 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
