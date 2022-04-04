@@ -1,11 +1,8 @@
-#TODO: make it cheaper to do rebirth
-
 {-# STDLIB_VERSION 5 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
 let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-let feeAmount = 50
 let delayForHatching = 2
 
 let incubatorAddress = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -34,6 +31,8 @@ func tryGetString(key: String) = {
         case _ => ""
     }
 }
+
+let feeAmount = tryGetInteger("currentPrice")
 
 func isSymbolA(accumulated: Int, sym: String) = { if (sym == "A") then {accumulated+1} else {accumulated+0} }
 func isSymbolB(accumulated: Int, sym: String) = { if (sym == "B") then {accumulated+1} else {accumulated+0} }
@@ -162,7 +161,7 @@ func finishRebirth(initTx: String) = {
     } else {
       let win = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity)  
 
-      let txId = i.transactionId.toBase58String()
+      let txId = initTx
       let result = if (win.indexOf("perch") != unit) then {
         let color = win.takeRight(1)
         strict call = invoke(Address(farmingAddress), "addFreePerch", [address, color], []) 
