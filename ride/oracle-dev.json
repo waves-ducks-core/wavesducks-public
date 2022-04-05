@@ -71,14 +71,9 @@
             "key": "static_metaRaceAddress",
             "type": "string",
             "value": "3PAChhfAJB6CM3PgN1Gguz7HWGaGQeCZNuT"
-        },
-        {
-            "key": "static_itemsAddress",
-            "type": "string",
-            "value": "3PAChhfAJB6CM3PgN1Gguz7HWGaGQeCZNuT"
         }
     ],
-    "fee": 100000000,
+    "fee": 500000,
     "feeAssetId": "WAVES"
 }
 

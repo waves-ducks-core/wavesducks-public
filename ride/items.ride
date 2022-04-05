@@ -10,7 +10,6 @@ func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_fh"
 }
 
-let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 let devAddress = base58'3P44yqcpfhPF2iC1nptm2ZJCTaN7VYhz9og'
 let eggsNeeded = 3 * 1_0000_0000
 let artefactsLimit = 301 + 600
@@ -109,7 +108,7 @@ func tryGetStringExternal(address: Address, key: String) = {
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -342,7 +341,7 @@ func buyArtefact() = {
   } else if(lastBlock.timestamp < 1639605600000 && i.caller != Address(devAddress)) then throw("Too early...") else {
 
     let firstPayment = i.payments[0].value()
-    if (firstPayment.assetId != eggsAssetId) then throw("You can attach only EGG tokens with the following asset id: " + eggsAssetId.toBase58String())
+    if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
     else if (firstPayment.amount < eggsNeeded)  then throw("To hatch a duck you currently need the following amount of EGGlets: " + eggsNeeded.toString())
     else {
       [

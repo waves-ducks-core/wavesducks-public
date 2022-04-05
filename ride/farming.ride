@@ -78,14 +78,19 @@ func asString(value: Any) = match value {
   case _ => throw("wrong type, expected: String")
 }
 
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
 
 func getAssetFarmingPower(assetId: ByteVector, address: String) = {
   if (assetInfo(assetId).value().issuer == getBreederAddress() || assetInfo(assetId).value().issuer == getIncubatorAddress()) then {
     let assetName = assetInfo(assetId).value().name
     let generation = assetName.takeRight(2).take(1)
     strict farmGen = invoke(getBreederAddress(),"getGenFromName",[assetName],[]).asString()
-    strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId.toBase58String(),address],[]).asString()
-    let totalFarmingPower = getAssetRarity(farmGen, generation)
+    strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId.toBase58String(),address],[]).asInt()
+    let rarity = getAssetRarity(farmGen, generation)
+    let totalFarmingPower = rarity + fraction(rarity,farmBoost,100)
     (farmGen, totalFarmingPower )
   } else {
     throw("not valid NFT")
