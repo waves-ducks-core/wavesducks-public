@@ -6,6 +6,8 @@ func keyArtefactOwner(artefactName: String, owner: String) = artefactName+"_" + 
 
 func keyUnstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"
 
+func keyArtefactDuck(artefactName: String, duckId: String) = artefactName+"_"+duckId+"_duck"
+
 func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_fh"
 }
@@ -143,12 +145,14 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func calculateFarmingPowerBoost(duckId: String, address: String)={
-  #TODO: duckId will be used when sweater is added
   let lakeBoost = if (tryGetString(keyArtefactOwner("ART-LAKE",address)) != "") then 2 else 0
   let xmasTreeBoost = if (tryGetString(keyArtefactOwner("ART-XTREE",address)) != "") then 3 else 0
-  let totalBoost = lakeBoost+xmasTreeBoost
+  let scarfBoost = if (tryGetString(keyArtefactDuck("ART-XSCARF",duckId)) != "") then 69 else 0
+  let totalBoost = lakeBoost+xmasTreeBoost+scarfBoost
   (
-    [],
+    [
+      IntegerEntry(duckId+"_last_boost",totalBoost)
+    ],
     totalBoost
   )
 }
@@ -218,6 +222,28 @@ func copyDuck()= {
     ]
 
 }
+
+
+@Callable(i)
+func wearItemToDuck() = {
+  let firstPayment = i.payments[0].value()
+  let secondPayment = i.payments[1].value()
+  let duckId = firstPayment.assetId.value().toBase58String()
+  let secondAssetId = secondPayment.assetId.value().toBase58String()
+  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
+  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
+  let artefactName = checkArtefactDetails(secondPayment.assetId.value())
+  if artefactName != "ART-XSCARF"  then  throw("You need to attach a ART-XSCARF artefact") else
+    let artefactId = tryGetString(keyArtefactDuck(artefactName,duckId))
+    if artefactId == ""
+    then
+    [
+      StringEntry(keyArtefactDuck(artefactName,duckId), secondAssetId),
+      ScriptTransfer(i.caller, 1, firstPayment.assetId)
+    ]
+    else throw("Duck is already wearing a "+artefactName)
+}
+
 
 @Callable(i)
 func addArteFactToDuck()= {
