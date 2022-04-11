@@ -1,0 +1,58 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+
+let wearables = [
+  "ART-CAPE", # Magic Cape
+  "ART-HAT", # Quacker Hat
+  "ART-XSCARF",
+  "ART-XSWEATER"
+]
+
+func keyArtefactDuck(duckId: String, wearable: String) = duckId+"_"+wearable
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
+
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("wrong type, expected: String")
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
+
+
+@Callable(i)
+func wearItemToDuck() = {
+  let firstPayment = i.payments[0].value()
+  let secondPayment = i.payments[1].value()
+  let duckId = firstPayment.assetId.value().toBase58String()
+  let secondAssetId = secondPayment.assetId.value().toBase58String()
+  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
+  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
+  strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[secondAssetId],[]).asString()
+  if !containsElement(wearables, artefactName) then throw("Unsupported wearable") else
+    let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
+    strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],i.payments) else nil
+    if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
+      [
+        StringEntry(keyArtefactDuck(duckId,artefactName), secondAssetId),
+        ScriptTransfer(i.caller, 1, firstPayment.assetId)
+      ]
+}

@@ -71,6 +71,16 @@
             "key": "static_metaRaceAddress",
             "type": "string",
             "value": "3PAChhfAJB6CM3PgN1Gguz7HWGaGQeCZNuT"
+        },
+        {
+            "key": "static_accBoosterAddress",
+            "type": "string",
+            "value": "3PAChhfAJB6CM3PgN1Gguz7HWGaGQeCZNuT"
+        },
+        {
+            "key": "static_trustedContracts",
+            "type": "string",
+            "value": "3PKX8mjwxxJGmC6uUV7opAwMmFUN61JnmG9;"
         }
     ],
     "fee": 500000,

@@ -29,6 +29,9 @@ func getSwopPromoAddress() =  Address(tryGetStringExternal(getOracle(),"static_s
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
+func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),"static_accBoosterAddress").fromBase58String())
+func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
+
 
 let RefererReward = 5 #percentage
 
@@ -50,6 +53,13 @@ func tryGetInteger(key: String) = {
     match getInteger(this, key) {
         case b:Int => b
         case _ => 0
+    }
+}
+
+func tryGetBoolean(key: String) = {
+    match getBoolean(this, key) {
+        case b:Boolean => b
+        case _ => false
     }
 }
 
@@ -161,7 +171,7 @@ func getUnstakeResult(address: String, assetId: ByteVector, rewardDelta: Int, wi
 }
 
 func calculatePerchPrice(address: String)= {
-  let hasArtefactStaked = tryGetStringExternal(getItemsAddress(),"ART-XMISTL_" + address + "_owner")
+  let hasArtefactStaked = tryGetStringExternal(getAccBoosterAddress(),"ART-XMISTL_" + address + "_owner")
   if hasArtefactStaked == ""
   then
     perchPrice
@@ -248,12 +258,35 @@ func stakeNFT() = {
       throw("no perches available for the color " + color)
     } else {
       let (assetGen, assetFarmingPower) = getAssetFarmingPower(assetId,address)
-      let assetRewardDelta = calcAssetRewardDelta(address, assetId.toBase58String(), assetFarmingPower)
 
       getStakeResult(address, assetId, assetFarmingPower) ++ [
         IntegerEntry("address_"+i.caller.toString()+"_perchesAvailable_"+color, availablePerches - 1)
       ]
     }
+  }  
+}
+
+@Callable(i)
+func stakeNFTWithoutPerch() = {
+  let allowedContracts = getTrustedContracts()
+  let allowedContractsList = allowedContracts.split(";")
+  let dappToCall = i.caller.toString()
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("Only trusted smart contracts can stake without a perch!") else
+  if (isLocked() > 0) then {
+    throw("EGG operations are temporarily locked")
+  } else {
+    let pmt = i.payments[0].value()
+    let assetId = i.payments[0].value().assetId.value()
+    let address = i.caller.toString()
+
+    let color = assetInfo(assetId).value().name.takeRight(1)
+    if (pmt.amount != 1) then throw("NFT is not attached") else
+    let (assetGen, assetFarmingPower) = getAssetFarmingPower(assetId,address)
+    let asset = assetId.toBase58String()
+
+    getStakeResult(address, assetId, assetFarmingPower) ++ [
+      BooleanEntry("address_"+address+"_asset_"+asset+"_without_perch", true)
+      ]
   }  
 }
 
@@ -285,11 +318,12 @@ func unstakeNFT(asset: String) = {
       } else {
 
         let result = getUnstakeResult(address, assetId, assetRewardDelta, reward, assetFarmingPower)
+        let isWithoutPerch = tryGetBoolean("address_"+address+"_asset_"+asset+"_without_perch")
+        let appendPerches = if isWithoutPerch then [DeleteEntry("address_"+address+"_asset_"+asset+"_without_perch")] else [IntegerEntry("address_"+i.caller.toString()+"_perchesAvailable_"+color, tryGetInteger("address_"+i.caller.toString()+"_perchesAvailable_"+color) + 1)]
         (result ++ [
-          IntegerEntry("address_"+i.caller.toString()+"_perchesAvailable_"+color, tryGetInteger("address_"+i.caller.toString()+"_perchesAvailable_"+color) + 1),
           ScriptTransfer(i.caller, reward * 1000000, getEggAssetId()),
           ScriptTransfer(i.caller, 1, assetId)
-        ], reward * 1000000)
+        ]++appendPerches, reward * 1000000)
 
       }
     }

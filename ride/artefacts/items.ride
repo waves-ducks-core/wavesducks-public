@@ -6,7 +6,9 @@ func keyArtefactOwner(artefactName: String, owner: String) = artefactName+"_" + 
 
 func keyUnstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"
 
-func keyArtefactDuck(artefactName: String, duckId: String) = artefactName+"_"+duckId+"_duck"
+func keyExternalBoostDuck(duckId: String) = duckId+"_duck_external_boost"
+
+func keyExternalBoostAddress(address: String) = address+"_user_external_boost"
 
 func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_fh"
@@ -46,17 +48,6 @@ let artefacts = [
   "ART-XTREE"
 ]
 
-let stakeableWithLock = [
-  "ART-LAKE",
-  "ART-XTREE"
-]
-
-let stakeableWithoutLock = [
-  "ART-XMISTL"
-]
-
-let allStakeable = stakeableWithoutLock++stakeableWithLock
-
 let allArtefact = artefacts++oldArtefacts
 
 
@@ -90,14 +81,7 @@ func getRandomGenes(txId: ByteVector, h: Int) = {
   freeGenes[randomNumber]
 }
 
-func checkArtefactDetails(assetId: ByteVector) = {
-  let asset = assetInfo(assetId).value()
-  let assetName = asset.name.value()
-   if containsElement(allArtefact, assetName) && asset.issuer == this
-   then
-      assetName
-   else throw("Invalid artefact")
-}
+
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -111,6 +95,7 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -135,6 +120,49 @@ func itemIsInCoolDown(artefactName: String, artefactId: String)={
 }
 
 @Callable(i)
+func manipulateBoost(boost: Int, duckId: String)= {
+  let allowedContracts = getTrustedContracts()
+  let allowedContractsList = allowedContracts.split(";")
+  let dappToCall = i.caller.toString()
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("This smart contract can't manipulate the boost!") else
+  let key = keyExternalBoostDuck(duckId)
+  let activeBoost = tryGetInteger(key)
+  let newBoost = activeBoost+boost
+  if newBoost <0 then throw("Something went wrong with boost, please contact the admins!") else
+  [
+    IntegerEntry(key,newBoost)
+  ]
+}
+
+@Callable(i)
+func manipulateBoostAccount(boost: Int, address: String)= {
+  let allowedContracts = getTrustedContracts()
+  let allowedContractsList = allowedContracts.split(";")
+  let dappToCall = i.caller.toString()
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("This smart contract can't manipulate the boost!") else
+  let key = keyExternalBoostAddress(address)
+  let activeBoost = tryGetInteger(key)
+  let newBoost = activeBoost+boost
+  if newBoost <0 then throw("Something went wrong with boost, please contact the admins!") else
+  [
+    IntegerEntry(key,newBoost)
+  ]
+}
+
+@Callable(i)
+func checkArtefactDetails(assetId: String) = {
+  let asset = assetInfo(assetId.fromBase58String()).value()
+  let assetName = asset.name.value()
+   if containsElement(allArtefact, assetName) && asset.issuer == this
+   then
+      (
+        [],
+      assetName
+      )
+   else throw("Invalid artefact")
+}
+
+@Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("admin only") else 
   [
@@ -145,10 +173,9 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func calculateFarmingPowerBoost(duckId: String, address: String)={
-  let lakeBoost = if (tryGetString(keyArtefactOwner("ART-LAKE",address)) != "") then 2 else 0
-  let xmasTreeBoost = if (tryGetString(keyArtefactOwner("ART-XTREE",address)) != "") then 3 else 0
-  let scarfBoost = if (tryGetString(keyArtefactDuck("ART-XSCARF",duckId)) != "") then 69 else 0
-  let totalBoost = lakeBoost+xmasTreeBoost+scarfBoost
+  let externalBoostDuck = tryGetInteger(keyExternalBoostDuck(duckId))
+  let externalBoostAddress = tryGetInteger(keyExternalBoostAddress(address))
+  let totalBoost = externalBoostDuck+externalBoostAddress
   (
     [
       IntegerEntry(duckId+"_last_boost",totalBoost)
@@ -162,7 +189,7 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
   let firstPayment = i.payments[0].value()
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  let artefact = checkArtefactDetails(firstPayment.assetId.value())
+  strict artefact = invoke(this,"checkArtefactDetails",[firstAssetId],[]).asString()
   if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
 
   let txId = fromBase58String(txIdStr)
@@ -183,7 +210,7 @@ func freeGene(txIdStr: String) = {
   let firstPayment = i.payments[0].value()
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  let artefact = checkArtefactDetails(firstPayment.assetId.value())
+  strict artefact = invoke(this,"checkArtefactDetails",[firstAssetId],[]).asString()
   if artefact != "ART-FREEGENE" then  throw("You need to attach a ART-FREEGENE artefact") else
   
   let txId = fromBase58String(txIdStr)
@@ -209,7 +236,7 @@ func copyDuck()= {
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).asInt()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
-  let artefact = checkArtefactDetails(secondPayment.assetId.value())
+  strict artefact = invoke(this,"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
   if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
   let nftInfo = assetInfo(firstPayment.assetId.value()).value()
   let asset1Gen = nftInfo.name.split("")        
@@ -223,28 +250,6 @@ func copyDuck()= {
 
 }
 
-
-@Callable(i)
-func wearItemToDuck() = {
-  let firstPayment = i.payments[0].value()
-  let secondPayment = i.payments[1].value()
-  let duckId = firstPayment.assetId.value().toBase58String()
-  let secondAssetId = secondPayment.assetId.value().toBase58String()
-  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-  let artefactName = checkArtefactDetails(secondPayment.assetId.value())
-  if artefactName != "ART-XSCARF"  then  throw("You need to attach a ART-XSCARF artefact") else
-    let artefactId = tryGetString(keyArtefactDuck(artefactName,duckId))
-    if artefactId == ""
-    then
-    [
-      StringEntry(keyArtefactDuck(artefactName,duckId), secondAssetId),
-      ScriptTransfer(i.caller, 1, firstPayment.assetId)
-    ]
-    else throw("Duck is already wearing a "+artefactName)
-}
-
-
 @Callable(i)
 func addArteFactToDuck()= {
   let firstPayment = i.payments[0].value()
@@ -253,7 +258,7 @@ func addArteFactToDuck()= {
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
   strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).asInt()
   if children == 0 then throw("You can only pick a sterile NFT-duck") else
-  let artefact = checkArtefactDetails(secondPayment.assetId.value())
+  strict artefact = invoke(this,"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
   if artefact != "ART-XHAT" && artefact != "ART-POMP" then  throw("You need to attach a ART-XHAT or ART-POMP artefact") else
   let nftInfo = assetInfo(firstPayment.assetId.value()).value()
   let asset1Gen = nftInfo.name.split("")        
@@ -272,48 +277,6 @@ func addArteFactToDuck()= {
     ]
   }
 }
-
-@Callable(i)
-func stakeItem() = {
-    if (size(i.payments) == 1 && i.payments[0].amount==1) then {
-      let assetId = i.payments[0].assetId.value()
-      let artefactName = checkArtefactDetails(assetId) 
-      if containsElement(allStakeable, artefactName)
-      then  {
-        if containsElement(stakeableWithLock, artefactName) && itemIsInCoolDown(artefactName,assetId.toBase58String()) then throw("Item can't be staked yet, it's in cooldown") else
-        let invoker = i.caller.toString()
-        let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
-        if artefactId == ""
-        then
-        [
-          StringEntry(keyArtefactOwner(artefactName,invoker), assetId.toBase58String())
-        ]
-        else throw("You are already staking "+ artefactName)
-      }
-      else throw("You can't stake this artafect")
-    } else {
-        throw("Invalid payment")
-    }
-}
-
-@Callable(i)
-func unstakeItem(artefactName: String) = {
-    if containsElement(allArtefact, artefactName) then{
-      let invoker = i.caller.toString()
-      let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
-      if artefactId == "" 
-      then throw("You didnt stake "+artefactName)
-      else{
-        [
-          IntegerEntry(keyUnstakeHeight(artefactName,artefactId),height),
-          ScriptTransfer(i.caller,1,artefactId.fromBase58String()),
-          DeleteEntry(keyArtefactOwner(artefactName,invoker))
-        ]
-      }
-    }else throw("This artefact doesn't exist")
-      
-}
-
 
 @Callable(i)
 func preInit() = {

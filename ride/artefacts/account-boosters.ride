@@ -1,0 +1,105 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func keyUnstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"
+func keyArtefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
+
+let stakeable = [
+  "ART-LAKE",
+  "ART-XTREE",
+  "ART-XSOCK",
+  "ART-XMISTL"
+]
+
+func tryGetString(key: String) = {
+    match getString(this, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case a:Int => a
+        case _ => 0
+    }
+}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
+
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("wrong type, expected: String")
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
+
+
+
+func itemIsInCoolDown(artefactName: String, artefactId: String)={
+  let unstakeHeightLast = tryGetInteger(keyUnstakeHeight(artefactName,artefactId))
+  let cooldownPeriod = 240
+  if unstakeHeightLast+cooldownPeriod < height
+  then false
+  else true
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
+func stakeItem() = {
+    if !(size(i.payments) == 1 && i.payments[0].amount==1) then throw("Invalid payment") else 
+      let assetId = i.payments[0].assetId.value()
+      strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+      if !containsElement(stakeable, artefactName) then throw("You can't stake this artafect") else 
+        if itemIsInCoolDown(artefactName,assetId.toBase58String()) then throw("Item can't be staked yet, it's in cooldown") else
+          let invoker = i.caller.toString()
+          let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
+          if artefactId != "" then throw("You are already staking "+ artefactName) else 
+            strict boostDuck = 
+            if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[2,invoker],i.payments) else
+            if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[3,invoker],i.payments) else nil
+            [
+              StringEntry(keyArtefactOwner(artefactName,invoker), assetId.toBase58String())
+            ]
+}
+
+@Callable(i)
+func unstakeItem(artefactName: String) = {
+    if ! containsElement(stakeable, artefactName) then throw("This artefact doesn't exist") else 
+      let invoker = i.caller.toString()
+      let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
+      if artefactId == "" then throw("You didnt stake "+artefactName) else
+        strict boostDuck = 
+        if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],i.payments) else
+        if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[-3,invoker],i.payments) else nil
+        [
+          IntegerEntry(keyUnstakeHeight(artefactName,artefactId),height),
+          ScriptTransfer(i.caller,1,artefactId.fromBase58String()),
+          DeleteEntry(keyArtefactOwner(artefactName,invoker))
+        ] 
+}
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+
+
