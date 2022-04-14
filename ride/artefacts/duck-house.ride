@@ -49,12 +49,13 @@ func maxDucks() = tryGetInteger("static_maxDucks")
 func stakeCall() = tryGetString("static_stakeCall")
 func type()= tryGetString("static_type")
 
+func boost() = tryGetInteger("static_boost")
 
 @Callable(i)
 func configureOracle(oracle: String, type: String) = {
   if i.caller != this then throw("admin only") else 
-  let setup = if type == "ART-BIGHOUSE" then [ IntegerEntry("static_maxDucks",10), StringEntry("static_stakeCall","stakeNFTWithoutPerch"),StringEntry("static_type","ART-BIGHOUSE")] else 
-              if type == "ART-HOUSE" then [IntegerEntry("static_maxDucks",4),StringEntry("static_stakeCall","stakeNFT"),StringEntry("static_type","ART-HOUSE")] else throw("Unknown type!")
+  let setup = if type == "ART-BIGHOUSE" then [ IntegerEntry("static_boost",15), IntegerEntry("static_maxDucks",10), StringEntry("static_stakeCall","stakeNFTWithoutPerch"),StringEntry("static_type","ART-BIGHOUSE")] else 
+              if type == "ART-HOUSE" then [ IntegerEntry("static_boost",30),IntegerEntry("static_maxDucks",4),StringEntry("static_stakeCall","stakeNFT"),StringEntry("static_type","ART-HOUSE")] else throw("Unknown type!")
   [
     StringEntry("static_oracleAddress",oracle)
   ]++setup
@@ -98,7 +99,7 @@ func stakeDuck(duckHouseId: String)={
     if duckHouseOwner != address then throw("This duckhouse is not yours!") else
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
     if filledSpots <maxDucks() then throw("No space in duck house left!") else
-    strict boostDuck = invoke(getItemsAddress(),"manipulateBoost",[15,assetId.toBase58String()],i.payments)
+    strict boostDuck = invoke(getItemsAddress(),"manipulateBoost",[boost(),assetId.toBase58String()],i.payments)
     strict stakeDuck = invoke(getFarmingAddress(),stakeCall(),[],i.payments)
     [
         StringEntry(keyDuckOwner(assetId.toBase58String()),address),
@@ -116,7 +117,7 @@ func unstakeDuck(asset: String)={
     let duckHouseId = tryGetString(keyDuckHouse(asset))
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
     if filledSpots == 0 then throw("You aren't staking any ducks!") else
-    strict unboostDuck = invoke(getItemsAddress(),"manipulateBoost",[-15,asset],i.payments)
+    strict unboostDuck = invoke(getItemsAddress(),"manipulateBoost",[-boost(),asset],i.payments)
     [
         ScriptTransfer(i.caller, unstakeDuckReward, getEggAssetId()),
         ScriptTransfer(i.caller, 1, asset.fromBase58String()),
