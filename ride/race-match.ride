@@ -1,0 +1,154 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetInteger(key: String) = {
+  match getInteger(this, key) {
+      case b:Int => b
+      case _ => 0
+  }
+}
+
+func tryGetString(key: String) = {
+  match getString(this, key) {
+      case a:String => a
+      case _ => ""
+  }
+}
+
+let kBackendPublicKey = "static_backendPublicKey"
+let kAssetId = "static_assetId"
+let kAssetAmount = "static_assetAmount"
+let STARTEDSTATUS = "STARTED"
+let FINISHEDSTATUS = "FINISHED"
+
+let JOINEDSTATUS = "JOINED"
+let INACTIVESTATUS = "INACTIVE"
+let WINNERSTATUS = "WINNER"
+
+
+func keyUserInMatch(address: String, matchId: String) = "match_" + matchId + "_address_" + address + "_status"
+func keyLastMatchForPlayer(address: String) = "address_" + address + "_last_match"
+func keyMatchStatus(matchId: String) = "match_" + matchId + "_status"
+func keyMatchPlayers(matchId: String) = "match_" + matchId + "_players"
+func keyMatchFinishedTs(matchId: String) = "match_" + matchId + "_finished"
+func keyMatchRewardSum(matchId: String) = "match_" + matchId + "_reward"
+func keyPlayerPayedForMatch(address: String, matchId: String) = "match_" + matchId + "_address_" + address + "_payed"
+func keyWinner(matchId: String) = "match_" + matchId + "_winner"
+func keyRewardPayedForMatch(matchId: String) = "match_" + matchId + "_reward"
+
+
+@Callable(i)
+func updateSetting(key: String, value: String) = {
+  if (i.caller != this) then throw("Only administrator can call this method") else {
+    match (value) {
+        # case int: Int => [IntegerEntry(key, int)]
+        case s: String => [StringEntry(key, s)]
+        # case b: Boolean => [BooleanEntry(key, b)]
+        # case bv: ByteVector => [BinaryEntry(key, bv)]
+        case _ => throw("Bad value type")
+      }
+  }
+}
+
+@Callable(i)
+func updateIntegerSetting(key: String, value: Int) = {
+  if (i.caller != this) then throw("Only administrator can call this method") else {
+    match (value) {
+        case int: Int => [IntegerEntry(key, int)]
+        case _ => throw("Bad value type")
+      }
+  }
+}
+
+@Callable(i)
+func deleteSetting(key: String) = {
+    if (i.caller != this) then throw("Only administrator can call this method")
+    else [DeleteEntry(key)]
+}
+
+@Callable(i)
+func joinMatch(matchId: String) = {
+  let caller = i.caller.toString()
+
+  let kLastMatchForPlayer = keyLastMatchForPlayer(caller)
+  let lastMatchIdForPlayer = tryGetString(kLastMatchForPlayer)
+  
+  let kMatchStatus = keyMatchStatus(lastMatchIdForPlayer)
+  let matchStatus = tryGetString(kMatchStatus)
+
+  let kPlayersNumber = keyMatchPlayers(matchId)
+  let playersNumber = tryGetInteger(kPlayersNumber)
+
+  let pmt = i.payments[0].value()
+
+  let kCurrentRewards = keyMatchRewardSum(matchId)
+  let currentRewards = tryGetInteger(kCurrentRewards)
+
+  let kPlayerPayedForMatch = keyPlayerPayedForMatch(caller, matchId)
+
+  let neededAmount = tryGetInteger(kAssetAmount)
+  let currentMatchStatus = keyMatchStatus(matchId)
+  
+  if (pmt.assetId != tryGetString(kAssetId).fromBase58String()) then throw("Bad asset attached") else
+  if (pmt.amount.value() != neededAmount) then throw("Bad amount attached: " + pmt.amount.value().toString() + ", needed: " + neededAmount.toString()) else
+  if (matchStatus != "" && matchStatus != FINISHEDSTATUS) then throw("The last match you've played is not finished yet") else
+  if (playersNumber >= 10) then throw("Only up to 10 players can join the game") else
+  if (currentMatchStatus == FINISHEDSTATUS) then throw("The match you want to join is finished already") else 
+
+  if (lastMatchIdForPlayer == "" || matchStatus == FINISHEDSTATUS) then {
+    [
+      IntegerEntry(kPlayersNumber, playersNumber + 1),
+      StringEntry(keyUserInMatch(caller, matchId), JOINEDSTATUS),
+      StringEntry(kLastMatchForPlayer, matchId),
+      IntegerEntry(kCurrentRewards, currentRewards + pmt.amount),
+      IntegerEntry(kPlayerPayedForMatch, pmt.amount),
+      StringEntry(keyMatchStatus(matchId), STARTEDSTATUS)
+    ]
+  } else {
+    throw("User already joined non-finished match: " + matchId)
+  }
+}
+
+
+@Callable(i)
+func finishMatch(matchId: String, winnerAddress: String, nonActivePlayers: String) = {
+  let caller = i.caller.toString()
+  let kMatchStatus = keyMatchStatus(matchId)
+  let currentMatchStatus = tryGetString(kMatchStatus)
+  if (i.callerPublicKey != tryGetString(kBackendPublicKey).fromBase58String()) then throw("Only backend can call this function") else
+  if (currentMatchStatus != STARTEDSTATUS) then throw("Match is not in the status state, current state is: " + currentMatchStatus) else 
+  {
+    let kCurrentRewards = keyMatchRewardSum(matchId)
+    let currentRewards = tryGetInteger(kCurrentRewards)
+
+    let nonActivePlayersList = nonActivePlayers.split(";").value()
+    let assetId = tryGetString(kAssetId).fromBase58String()
+
+    func processNonActive(accum: (Int, List[IntegerEntry | ScriptTransfer | StringEntry]), address: String ) = {
+      let kPlayerPayedForMatch = keyPlayerPayedForMatch(address, matchId)
+      let playerPayment = tryGetInteger(kPlayerPayedForMatch)
+
+
+      (accum._1 + playerPayment, accum._2 ++ [
+        ScriptTransfer(address.addressFromStringValue(), playerPayment, assetId),
+        StringEntry(keyUserInMatch(address, matchId), INACTIVESTATUS)
+      ])
+    }
+    let nonActiveStateChanges = FOLD<10>(nonActivePlayersList, (0, []), processNonActive)
+    
+
+    let totalPayments = tryGetInteger(keyMatchRewardSum(matchId))
+
+    let payedReward = totalPayments - nonActiveStateChanges._1
+
+    nonActiveStateChanges._2 ++ [
+      StringEntry(kMatchStatus, FINISHEDSTATUS),
+      IntegerEntry(keyMatchFinishedTs(matchId), lastBlock.timestamp),
+      ScriptTransfer(winnerAddress.addressFromStringValue(), payedReward, assetId),
+      StringEntry(keyWinner(matchId), winnerAddress),
+      IntegerEntry(keyRewardPayedForMatch(matchId), payedReward),
+      StringEntry(keyUserInMatch(winnerAddress, matchId), WINNERSTATUS)
+    ]
+  }
+}
