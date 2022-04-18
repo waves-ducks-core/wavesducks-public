@@ -279,7 +279,6 @@ func stakeNFTWithoutPerch() = {
     let assetId = i.payments[0].value().assetId.value()
     let address = i.caller.toString()
 
-    let color = assetInfo(assetId).value().name.takeRight(1)
     if (pmt.amount != 1) then throw("NFT is not attached") else
     let (assetGen, assetFarmingPower) = getAssetFarmingPower(assetId,address)
     let asset = assetId.toBase58String()
@@ -313,12 +312,12 @@ func unstakeNFT(asset: String) = {
     if (assetFarmingPower <= 0) then {
       throw("asset not available")
     } else {
-      if (color == "U") then {
+      let isWithoutPerch = tryGetBoolean("address_"+address+"_asset_"+asset+"_without_perch")
+      if (color == "U" && !isWithoutPerch) then {
         throw("use another function to unstake Jackpot NFT")
       } else {
 
         let result = getUnstakeResult(address, assetId, assetRewardDelta, reward, assetFarmingPower)
-        let isWithoutPerch = tryGetBoolean("address_"+address+"_asset_"+asset+"_without_perch")
         let appendPerches = if isWithoutPerch then [DeleteEntry("address_"+address+"_asset_"+asset+"_without_perch")] else [IntegerEntry("address_"+i.caller.toString()+"_perchesAvailable_"+color, tryGetInteger("address_"+i.caller.toString()+"_perchesAvailable_"+color) + 1)]
         (result ++ [
           ScriptTransfer(i.caller, reward * 1000000, getEggAssetId()),
