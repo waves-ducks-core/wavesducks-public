@@ -4,8 +4,6 @@
 
 func keyOwner(duckHouseId: String) = duckHouseId+"_owner"
 
-func keyDuckOwner(duckId: String) = duckId+"_duck_owner"
-
 func keyDuckHouse(duckId: String) = duckId+"_duck_house"
 
 func occupiedSpotsDucksHouse(duckHouseId: String) = duckHouseId+"_filled_spots"
@@ -98,11 +96,10 @@ func stakeDuck(duckHouseId: String)={
     if duckHouseOwner == "" then throw("This duckhouse is not staked!") else
     if duckHouseOwner != address then throw("This duckhouse is not yours!") else
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
-    if filledSpots <maxDucks() then throw("No space in duck house left!") else
+    if filledSpots == maxDucks() then throw("No space in duck house left!") else
     strict boostDuck = invoke(getItemsAddress(),"manipulateBoost",[boost(),assetId.toBase58String()],[])
     strict stakeDuck = invoke(getFarmingAddress(),stakeCall(),[],i.payments)
     [
-        StringEntry(keyDuckOwner(assetId.toBase58String()),address),
         IntegerEntry(occupiedSpotsDucksHouse(duckHouseId),filledSpots+1),
         StringEntry(keyDuckHouse(assetId.toBase58String()),duckHouseId)
     ]
@@ -110,18 +107,18 @@ func stakeDuck(duckHouseId: String)={
 
 @Callable(i)
 func unstakeDuck(asset: String)={
-    let owner = tryGetString(keyDuckOwner(asset))
+    let duckHouseId = tryGetString(keyDuckHouse(asset))
+    let owner = tryGetString(keyOwner(duckHouseId))
     let address = i.caller.toString()
     if owner != address then throw("Don't try to steal someone duck!") else
     strict unstakeDuckReward = invoke(getFarmingAddress(),"unstakeNFT",[asset],[]).asInt()
-    let duckHouseId = tryGetString(keyDuckHouse(asset))
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
     if filledSpots == 0 then throw("You aren't staking any ducks!") else
     strict unboostDuck = invoke(getItemsAddress(),"manipulateBoost",[-boost(),asset],[])
     [
         ScriptTransfer(i.caller, unstakeDuckReward, getEggAssetId()),
         ScriptTransfer(i.caller, 1, asset.fromBase58String()),
-        DeleteEntry(keyDuckOwner(asset)),
+        DeleteEntry(keyDuckHouse(asset)),
         IntegerEntry(occupiedSpotsDucksHouse(duckHouseId),filledSpots-1)
     ]
 
@@ -129,7 +126,8 @@ func unstakeDuck(asset: String)={
 
 @Callable(i)
 func claimDuckRewards(asset: String)={
-    let owner = tryGetString(keyDuckOwner(asset))
+    let duckHouseId = tryGetString(keyDuckHouse(asset))
+    let owner = tryGetString(keyOwner(duckHouseId))
     let address = i.caller.toString()
     if owner != address then throw("Don't try to steal someone eggs!") else
     strict claimRewards = invoke(getFarmingAddress(),"claimReward",[asset],[]).asInt()
