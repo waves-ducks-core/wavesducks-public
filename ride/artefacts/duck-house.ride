@@ -99,7 +99,7 @@ func stakeDuck(duckHouseId: String)={
     if duckHouseOwner != address then throw("This duckhouse is not yours!") else
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
     if filledSpots <maxDucks() then throw("No space in duck house left!") else
-    strict boostDuck = invoke(getItemsAddress(),"manipulateBoost",[boost(),assetId.toBase58String()],i.payments)
+    strict boostDuck = invoke(getItemsAddress(),"manipulateBoost",[boost(),assetId.toBase58String()],[])
     strict stakeDuck = invoke(getFarmingAddress(),stakeCall(),[],i.payments)
     [
         StringEntry(keyDuckOwner(assetId.toBase58String()),address),
@@ -117,7 +117,7 @@ func unstakeDuck(asset: String)={
     let duckHouseId = tryGetString(keyDuckHouse(asset))
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
     if filledSpots == 0 then throw("You aren't staking any ducks!") else
-    strict unboostDuck = invoke(getItemsAddress(),"manipulateBoost",[-boost(),asset],i.payments)
+    strict unboostDuck = invoke(getItemsAddress(),"manipulateBoost",[-boost(),asset],[])
     [
         ScriptTransfer(i.caller, unstakeDuckReward, getEggAssetId()),
         ScriptTransfer(i.caller, 1, asset.fromBase58String()),

@@ -76,8 +76,8 @@ func stakeItem() = {
           let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
           if artefactId != "" then throw("You are already staking "+ artefactName) else 
             strict boostDuck = 
-            if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[2,invoker],i.payments) else
-            if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[3,invoker],i.payments) else nil
+            if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[2,invoker],[]) else
+            if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[3,invoker],[]) else nil
             [
               StringEntry(keyArtefactOwner(artefactName,invoker), assetId.toBase58String())
             ]
@@ -90,8 +90,8 @@ func unstakeItem(artefactName: String) = {
       let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
       if artefactId == "" then throw("You didnt stake "+artefactName) else
         strict boostDuck = 
-        if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],i.payments) else
-        if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[-3,invoker],i.payments) else nil
+        if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],[]) else
+        if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[-3,invoker],[]) else nil
         [
           IntegerEntry(keyUnstakeHeight(artefactName,artefactId),height),
           ScriptTransfer(i.caller,1,artefactId.fromBase58String()),
