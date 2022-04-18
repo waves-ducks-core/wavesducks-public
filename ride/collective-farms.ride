@@ -6,6 +6,7 @@
 {-# CONTENT_TYPE DAPP #-}
 
 let keyMAccPKey = "master_pk"
+let warsPKey = "wars_pk"
 
 func getStr(key: String) = {
   match getString(this, key) {
@@ -21,6 +22,8 @@ let mAccAddr = addressFromPublicKey(mAccPKey)
 
 let feePercent = getIntegerValue(mAccAddr, "f_" + this.toString() + "_fee")
 let stakingAddress = valueOrErrorMessage(getString(mAccAddr, "f_" + this.toString() + "_stake_address"),"f_" + this.toString() + "_stake_address not defined").addressFromStringValue()
+
+let wAccPKey = valueOrErrorMessage(getString(mAccAddr, warsPKey),warsPKey + " not defined").fromBase58String()
 
 let kTotalLiquidity = "total_liquidity"
 let kInitialized = "INITIALIZED"
@@ -192,7 +195,7 @@ func unlockInvestments() = {
 @Callable(i)
 func provideLiquidity() = {
   let eggAssetId = getEggId()
-  if (i.callerPublicKey != mAccPKey && getBool(kLockedInvestments) == true) then throw("Contract is locked for investments by it's CEO. Please invest in another collective farm.") else
+  if (i.callerPublicKey != wAccPKey && i.callerPublicKey != mAccPKey && getBool(kLockedInvestments) == true) then throw("Contract is locked for investments by it's CEO. Please invest in another collective farm.") else
   if (getBool(kLocked) == true) then throw("_22") else
   if (i.payments[0].assetId != eggAssetId) then throw("_4") else
   if (i.payments[0].amount < 100_0000) then throw("Min amount to invest is 0.01 EGG")
