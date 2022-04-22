@@ -101,7 +101,7 @@ func calculateNewDucklingLevel(ducklingId: String, paymentAmount: Int) = {
   let currentTs = lastBlock.timestamp
   let lastFedTimestampChecked = getLastFedTimestamp(ducklingId)
   let fedDiff = currentTs - lastFedTimestampChecked
-  let penalty = 0 # if fedDiff == 0 || fedDiff <= (MSINDAY * 2) then 0.toBigInt() else (fedDiff / MSINDAY).toBigInt() * (existingDuckPrecision / 10).toBigInt()
+  let penalty = 0.toBigInt() # if fedDiff == 0 || fedDiff <= (MSINDAY * 2) then 0.toBigInt() else (fedDiff / MSINDAY).toBigInt() * (existingDuckPrecision / 10).toBigInt()
 
   let growth = fraction(paymentAmount.toBigInt(), percentGrowthPrecision.toBigInt(), DUCKLINGPRICE.toBigInt())
   # throw("currentLevel: " + getCurrentLevelBigInt(ducklingId).toString() + " penalty: " + penalty.toString() + "growth: " + growth.toString())
