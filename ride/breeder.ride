@@ -23,6 +23,7 @@ func tryGetString(key: String) = {
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
+func getItemsAddress() = Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
@@ -132,7 +133,6 @@ func getAmountOrClear(amount: String) = {
 
 
 
-func getItemsAddress() = Address(tryGetString("static_itemsAddress").fromBase58String())
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -194,6 +194,16 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
       ]
     }
 }
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
 @Callable(i)
 func generateDuck(txId: ByteVector, hatchingFinishHeight: Int, 
 geneFromParent: Int, genePostion: Int, 
