@@ -1,0 +1,94 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_breederAddress",
+            "type": "string",
+            "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
+        },
+        {
+            "key": "static_eggAssetId",
+            "type": "string",
+            "value": "JCGDtrVy64cCJ1wCKfCaiNQMnyYwii71TbE5QeAHfxgF"
+        },
+        {
+            "key": "static_incubatorAddress",
+            "type": "string",
+            "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+        },
+        {
+            "key": "static_rebirthAddress",
+            "type": "string",
+            "value": "3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ"
+        },
+        {
+            "key": "static_swopPromoAddress",
+            "type": "string",
+            "value": "3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXWD"
+        },
+        {
+            "key": "static_refContractAddress",
+            "type": "string",
+            "value": "3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe"
+        },
+        {
+            "key": "static_itemsAddress",
+            "type": "string",
+            "value": "3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR"
+        },
+        {
+            "key": "static_auctionsAddress",
+            "type": "string",
+            "value": "3PEBtiSVLrqyYxGd76vXKu8FFWWsD1c5uYG"
+        },
+        {
+            "key": "static_farmingAddress",
+            "type": "string",
+            "value": "3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW"
+        },
+        {
+            "key": "static_babyDuckAddress",
+            "type": "string",
+            "value": "3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg"
+        },
+        {
+            "key": "static_cfMasterAddress",
+            "type": "string",
+            "value": "3PDktsxDVEcoobpEBJcausnKo4enhcWUDEF"
+        },
+        {
+            "key": "static_marketPlaceProxyAddress",
+            "type": "string",
+            "value": "3PL1tnAkQUP3jQNGUu2NvfAuWuz5kqrhctt"
+        },
+        {
+            "key": "static_gameDappAddress",
+            "type": "string",
+            "value": "3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT"
+        },
+        {
+            "key": "static_metaRaceAddress",
+            "type": "string",
+            "value": "3P4QfR6fewW85epUg68fjgeFt3XBVpgLxmd"
+        },
+        {
+            "key": "static_accBoosterAddress",
+            "type": "string",
+            "value": "3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD"
+        },
+        {
+            "key": "static_wearablesAddress",
+            "type": "string",
+            "value": "3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw"
+        },
+        {
+            "key": "static_trustedContracts",
+            "type": "string",
+            "value": "3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw;3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD"
+        }
+    ],
+    "fee": 500000,
+    "feeAssetId": "WAVES"
+}
+
