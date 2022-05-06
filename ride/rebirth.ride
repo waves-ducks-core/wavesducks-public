@@ -32,20 +32,8 @@ func tryGetString(key: String) = {
     }
 }
 
-<<<<<<< HEAD
-=======
-let feeAmount = tryGetInteger("currentPrice")
 
-func isSymbolA(accumulated: Int, sym: String) = { if (sym == "A") then {accumulated+1} else {accumulated+0} }
-func isSymbolB(accumulated: Int, sym: String) = { if (sym == "B") then {accumulated+1} else {accumulated+0} }
-func isSymbolC(accumulated: Int, sym: String) = { if (sym == "C") then {accumulated+1} else {accumulated+0} }
-func isSymbolD(accumulated: Int, sym: String) = { if (sym == "D") then {accumulated+1} else {accumulated+0} }
-func isSymbolE(accumulated: Int, sym: String) = { if (sym == "E") then {accumulated+1} else {accumulated+0} }
-func isSymbolF(accumulated: Int, sym: String) = { if (sym == "F") then {accumulated+1} else {accumulated+0} }
-func isSymbolG(accumulated: Int, sym: String) = { if (sym == "G") then {accumulated+1} else {accumulated+0} }
-func isSymbolH(accumulated: Int, sym: String) = { if (sym == "H") then {accumulated+1} else {accumulated+0} }
-func isSymbolI(accumulated: Int, sym: String) = { if (sym == "I") then {accumulated+1} else {accumulated+0} }
->>>>>>> main
+let feeAmount = tryGetInteger("currentPrice")
 
 func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
@@ -182,7 +170,3 @@ func finishRebirth(initTx: String) = {
   }
 }
 
-
-@Verifier(tx)
-func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-        
