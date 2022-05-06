@@ -35,7 +35,6 @@ func tryGetString(key: String) = {
 
 let feeAmount = tryGetInteger("currentPrice")
 
-
 func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
 }
