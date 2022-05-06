@@ -32,6 +32,8 @@ func tryGetString(key: String) = {
     }
 }
 
+<<<<<<< HEAD
+=======
 let feeAmount = tryGetInteger("currentPrice")
 
 func isSymbolA(accumulated: Int, sym: String) = { if (sym == "A") then {accumulated+1} else {accumulated+0} }
@@ -43,17 +45,10 @@ func isSymbolF(accumulated: Int, sym: String) = { if (sym == "F") then {accumula
 func isSymbolG(accumulated: Int, sym: String) = { if (sym == "G") then {accumulated+1} else {accumulated+0} }
 func isSymbolH(accumulated: Int, sym: String) = { if (sym == "H") then {accumulated+1} else {accumulated+0} }
 func isSymbolI(accumulated: Int, sym: String) = { if (sym == "I") then {accumulated+1} else {accumulated+0} }
+>>>>>>> main
 
 func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
-}
-
-func getGen(assetName: String) = {
-  # getGen("DUCK-ABCDDCBA-GY") -> 2A2B2C2D-G
-  let genotype = assetName.drop(5).dropRight(3).split("")
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I")
 }
 
 func getAssetOrigin(generation: String) = {
@@ -70,8 +65,8 @@ func getAssetFarmingPower(assetId: ByteVector) = {
   if (assetInfo(assetId).value().issuer == Address(breederAddress) || assetInfo(assetId).value().issuer == Address(incubatorAddress)) then {
     let assetName = assetInfo(assetId).value().name
     let generation = assetName.takeRight(2).take(1)
-    let gen = getGen(assetName) + "-" + generation
-    (gen, getAssetRarity(gen, generation))
+    strict farmGen = invoke(Address(breederAddress),"getGenFromName",[assetName],[]).asString()
+    (farmGen, getAssetRarity(farmGen, generation))
   } else {
     throw("not valid NFT")
   }
