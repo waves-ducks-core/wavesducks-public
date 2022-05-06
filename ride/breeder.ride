@@ -118,6 +118,7 @@ func isSymbolF(accumulated: Int, sym: String) = { if (sym == "F") then {accumula
 func isSymbolG(accumulated: Int, sym: String) = { if (sym == "G") then {accumulated+1} else {accumulated+0} }
 func isSymbolH(accumulated: Int, sym: String) = { if (sym == "H") then {accumulated+1} else {accumulated+0} }
 func isSymbolI(accumulated: Int, sym: String) = { if (sym == "I") then {accumulated+1} else {accumulated+0} }
+func isSymbolK(accumulated: Int, sym: String) = { if (sym == "K") then {accumulated+1} else {accumulated+0} }
 func isSymbolS(accumulated: Int, sym: String) = { if (sym == "S") then {accumulated+1} else {accumulated+0} }
 func isSymbolT(accumulated: Int, sym: String) = { if (sym == "T") then {accumulated+1} else {accumulated+0} }
 
@@ -229,6 +230,7 @@ func getGenFromName(assetName: String) = {
     let gen = getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
     getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
     getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I") +
+    getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolK)) + "K") +
     getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolS)) + "S") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolT)) + "T") + "-" + generation
     (
     [],
