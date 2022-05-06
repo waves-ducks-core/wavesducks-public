@@ -5,7 +5,7 @@
 let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 let delayForHatching = 2
 
-let typesAmount = 9
+let typesAmount = 10
 
 let refContractAddress = base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 let RefererReward = 5 #percentage
