@@ -7,13 +7,26 @@ let delayForHatching = 2
 let HatchingStarted = "BREEDING_STARTED"
 let HatchingFinished = "BREEDING_FINISHED"
 
-let incubatorAddress = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String())
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
+func getItemsAddress() = Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
-
-
-let rebirthAddress = base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 
 func getProcessStatusKey(address: String, txId: ByteVector) = {
   # stores the fact of hatching, 
@@ -47,13 +60,6 @@ func tryGetInteger(key: String) = {
     val
 }
 
-func tryGetString(key: String) = {
-    let val = match getString(this, key) {
-        case b:String => b
-        case _ => ""
-    }
-    val
-}
 
 func determineGeneration(g1: String, g2: String) = {
   let gIndex = max([Generations.indexOf(g1).value(), Generations.indexOf(g2).value()])
@@ -83,7 +89,7 @@ specifiqueGene: String, specifiqueGenePosition: Int) = {
 
 
 func checkAssetInIncubator(assetId: String) = {
-  let result = match getString(Address(incubatorAddress), assetId) {
+  let result = match getString(getIncubatorAddress(), assetId) {
     case b:String => true
     case _ => false
   }
@@ -128,7 +134,6 @@ func getAmountOrClear(amount: String) = {
 
 
 
-func getItemsAddress() = Address(tryGetString("static_itemsAddress").fromBase58String())
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -190,6 +195,16 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
       ]
     }
 }
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
 @Callable(i)
 func generateDuck(txId: ByteVector, hatchingFinishHeight: Int, 
 geneFromParent: Int, genePostion: Int, 
@@ -312,7 +327,7 @@ func finishDuckHatching(txIdStr: String) = {
 @Callable(i)
 func reduceRarity(assetId: String, farmGen: String) = {
   let asset = assetId.fromBase58String()
-  if (i.caller != getItemsAddress() && i.caller != Address(rebirthAddress) && i.caller != this) then {
+  if (i.caller != getItemsAddress() && i.caller != getRebirthAddress() && i.caller != this) then {
     throw("admin, items or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
