@@ -18,7 +18,8 @@ let freeGenes = [
   "B",
   "C",
   "D",
-  "E"
+  "E",
+  "F"
 ]
 
 let oldArtefacts = [
