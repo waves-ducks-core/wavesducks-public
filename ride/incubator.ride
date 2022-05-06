@@ -55,6 +55,8 @@ func tryGetInteger(key: String) = {
 
 let discountCoefficient = tryGetInteger("discountCoefficient")	
 
+let saleCoefficient = tryGetInteger("saleCoefficient")	
+
 func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int, offset: Int) = {
   let randomSeedBlock = blockInfoByHeight(hatchingFinishHeight-1).value()
   let randomHash = sha256(txId + randomSeedBlock.vrf.value())
@@ -83,19 +85,24 @@ func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
       else if (colorRandom == 2) then "B" 
       else "R"
 
-    if (typeRandom == 0) then ("DUCK-FFFFFFFF-G" + color, "8F-G")
-      else if (typeRandom == 1) then ("DUCK-HHHHHHHH-G" + color, "8H-G")
-      else if (typeRandom == 2) then ("DUCK-GGGGGGGG-G" + color, "8G-G")
-      else ("DUCK-IIIIIIII-G" + color, "8I-G")
+    if (typeRandom == 0) then ("DUCK-HHHHHHHH-G" + color, "8H-G")
+      else if (typeRandom == 1) then ("DUCK-GGGGGGGG-G" + color, "8G-G")
+      else if (typeRandom == 2) then ("DUCK-IIIIIIII-G" + color, "8I-G")
+      else ("DUCK-KKKKKKKK-G" + color, "8K-G")
     }
 }
 
 func countEggsNeededAmount(totalDucksAmount: Int) = {
   let n = totalDucksAmount
   let g = discountCoefficient
+  let s = saleCoefficient
   let t = typesAmount
   let price = pow((100 + (n*g)/(10*t)), 2, 5, 1, 2, DOWN)
-  price * 1000000
+  if saleCoefficient  == 0
+  then
+    price * 1000000
+  else
+    price *1000000 /100*(100-saleCoefficient)
 }
 
 		
@@ -105,6 +112,15 @@ func setDiscount(val: Int) = {
     throw("admin_only")	
   } else {	
     [IntegerEntry("discountCoefficient", val)]	
+  }	
+}
+
+@Callable(i)	
+func setSale(val: Int) = {	
+  if (i.caller != this) then {	
+    throw("admin_only")	
+  } else {	
+    [IntegerEntry("saleCoefficient", val)]	
   }	
 }
 

@@ -119,6 +119,7 @@ func getBackendProof(maxFeedAmount: Int, userNonce: Int, address: String) = {
 
 @Callable(i)
 func issueFreeDuckling(address: String, txIdStr: String) = {
+  if i.caller != this && i.caller.bytes != rebirthAddress then throw("You can't issue free duckling") else
   let asset = Issue("BABY-11111111-GZ", "", 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
     ([

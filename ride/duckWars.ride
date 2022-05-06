@@ -2,10 +2,30 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let breederContract = base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-let incubatorContract = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-let swopPromoContract = base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXWD'
-let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func tryGetString(key: String) = {
+    match getString(this, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getSwopPromoAddress() =  Address(tryGetStringExternal(getOracle(),"static_swopPromoAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXWD'
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getWearablesAddress() = Address(tryGetStringExternal(getOracle(),"static_wearablesAddress").fromBase58String())
+func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
+
 let MANTLENAME = "mantle"
 
 let STATUSFREE = "FREE"
@@ -60,9 +80,20 @@ func keyArtefactExists(type: String, artefactId: ByteVector) = {
   "artefact_" + type + "_artefactId_" + artefactId.toBase58String()
 }
 
+func isJackpot(assetId: ByteVector ) = assetInfo(assetId).value().name.value().takeRight(1) == "U"
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
 @Callable(i)
 func issueFreeMantle(address: String, type: String, level: Int, invested: Int) = {
-  if (i.caller != this && i.caller != Address(swopPromoContract)) then throw("Can be called only by admin") else
+  if (i.caller != this && i.caller != getSwopPromoAddress()) then throw("Can be called only by admin") else
   if (type != MANTLENAME) then throw("You can buy only mantles now")
   else {
 
@@ -97,7 +128,7 @@ func buyArtefact(type: String) = {
   else {
     let MANTLEPRICE = 1_000_000
     let firstPayment = i.payments[0].value()
-    if (firstPayment.assetId != eggAssetId) then throw("You can attach only EGG tokens with the following asset id: " + eggAssetId.toBase58String())
+    if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
     else if (firstPayment.amount != MANTLEPRICE) then throw("To buy a mantle you currently need the following amount of EGGlets: " + MANTLEPRICE.toString())
     else {
 
@@ -131,7 +162,7 @@ func buyArtefact(type: String) = {
 func upgradeMantle(artefactId: String) = {
   let upgradePointPrice = 1_000_000
   let firstPayment = i.payments[0].value()
-  if (firstPayment.assetId != eggAssetId) then throw("You can attach only EGG tokens with the following asset id: " + eggAssetId.toBase58String())
+  if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
   else if (firstPayment.amount < upgradePointPrice) then throw("Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
   else {
     let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
@@ -160,13 +191,16 @@ func upgradeMantle(artefactId: String) = {
   }
 }
 
+#TODO: check if duck wears sweater, if so stake the duck automatically
+
 @Callable(i)
 func putOnArtefact(artefactId: String) = {
   let firstPayment = i.payments[0].value()
   let attachedAssetInfo = assetInfo(firstPayment.assetId.value()).value()
   if (firstPayment.amount != 1) then throw("NFT is not attached") else
-  if (attachedAssetInfo.issuer.bytes != incubatorContract && attachedAssetInfo.issuer.bytes != breederContract) then throw("You can attach only DUCKs issued by incubator or breeder ")
+  if (attachedAssetInfo.issuer != getIncubatorAddress() && attachedAssetInfo.issuer != getBreederAddress()) then throw("You can attach only DUCKs issued by incubator or breeder ")
   else {
+    let hasSweater = tryGetStringExternal(getWearablesAddress(),firstPayment.assetId.value().toBase58String()+"_ART-XSWEATER")
     let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
     let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
     let kMantleStatus = keyArtefactStatus(MANTLENAME, artefactId.fromBase58String())
@@ -182,6 +216,10 @@ func putOnArtefact(artefactId: String) = {
     if (mantleOwner != i.originCaller.toString()) then throw("You're not an owner of the mantle") else 
     if (mantleStatus != STATUSFREE) then throw("Mantle is already used!")
     else {
+      strict stakeDuck = if hasSweater != "" then 
+                            if isJackpot(firstPayment.assetId.value()) then invoke(getFarmingAddress(),"stakeNFT",[],i.payments) else invoke(getFarmingAddress(),"stakeJackpot",[],i.payments) 
+                          else []
+
       let kPutOnArtefact = keyPutOnArtefact(MANTLENAME, i.originCaller.toString(), firstPayment.assetId.value().toBase58String(), artefactId.fromBase58String())
       [
         BooleanEntry(kPutOnArtefact, true),
@@ -194,6 +232,7 @@ func putOnArtefact(artefactId: String) = {
   }
 }
 
+#TODO: check if duck wears sweater, if so unstake the duck automatically
 @Callable(i)
 func takeOffArtefact(duckId:String, artefactType: String) = {
   
@@ -209,6 +248,10 @@ func takeOffArtefact(duckId:String, artefactType: String) = {
   let kMantleStatus = keyArtefactStatus(artefactType, artefactId.fromBase58String())
   if (kPutOnArtefactStatus != true) then throw("There is no duck with such parameteres")
   else {
+    let hasSweater = tryGetStringExternal(getWearablesAddress(),duckId+"_ART-XSWEATER")
+    strict unstakeDuck = if hasSweater != "" then 
+                            if isJackpot(duckId.fromBase58String()) then invoke(getFarmingAddress(),"unstakeNFT",[duckId],[]) else invoke(getFarmingAddress(),"unstakeJackpot",[duckId],[]) 
+                         else []
     [
       DeleteEntry(kPutOnArtefact),
       DeleteEntry(kArtefactIdByTypeAndDuck),
