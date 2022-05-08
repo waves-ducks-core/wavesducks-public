@@ -2,20 +2,35 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getSwopPromoAddress() =  Address(tryGetStringExternal(getOracle(),"static_swopPromoAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
+func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+
+
 let delayForHatching = 2
 
 let typesAmount = 10
 
-let refContractAddress = base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 let RefererReward = 5 #percentage
 
 let HatchingStarted = "HATCHING_STARTED"
 let HatchingFinished = "HATCHING_FINISHED"
 
-let rebirthAddress = base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
-let babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
-let swopPromoAddress = base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXWD'
 
 func isLocked() = {
   let masterAddress = Address(base58'3PEPftf2kWZDmAaWBjs6BUJa9957kiA2PkU')
@@ -105,6 +120,14 @@ func countEggsNeededAmount(totalDucksAmount: Int) = {
     price *1000000 /100*(100-saleCoefficient)
 }
 
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
 		
 @Callable(i)	
 func setDiscount(val: Int) = {	
@@ -141,18 +164,18 @@ func startDuckHatching(refererAddress: String) = {
         IntegerEntry("ducks_last_price", eggsNeeded / 1000000)
       ]
 
-    if (i.caller == Address(babyDucksAddress)) then {
+    if (i.caller == getBabyDuckAddress()) then {
       results ++ [
         BooleanEntry("hatching_" + i.transactionId.toBase58String() + "_babyDuck", true)
       ]
     }
-    else if (firstPayment.assetId != eggsAssetId) then throw("You can attach only EGG tokens with the following asset id: " + eggsAssetId.toBase58String())
+    else if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
     else if (firstPayment.amount < eggsNeeded)  then throw("To hatch a duck you currently need the following amount of EGGlets: " + eggsNeeded.toString())
     else {
         let refererReward = fraction(eggsNeeded, RefererReward, 100)
-        strict refCall = invoke(Address(refContractAddress), "refPayment",
-        [refererAddress], [AttachedPayment(eggsAssetId, refererReward)])
-        results ++ [ScriptTransfer(i.caller, firstPayment.amount - eggsNeeded, eggsAssetId)]
+        strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererReward)])
+        results ++ [ScriptTransfer(i.caller, firstPayment.amount - eggsNeeded, getEggAssetId())]
     }
   }
 }
@@ -163,7 +186,7 @@ func startDuckHatching(refererAddress: String) = {
 func startDuckHatchingForAddress(address: String) = {
   if (isLocked() > 0) then 
     throw("EGG operations are temporarily locked")
-   else if (i.caller != Address(swopPromoAddress)) then throw("Pernission denied") else {
+   else if (i.caller != getSwopPromoAddress()) then throw("Pernission denied") else {
     let totalDucksAmount = tryGetInteger("ducks_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
 
@@ -223,7 +246,7 @@ func finishDuckHatching(txIdStr: String) = {
 
 @Callable(i)
 func issueFreeDuck(address: String, txIdStr: String) = {
-  if (i.caller != Address(rebirthAddress)) then {
+  if (i.caller != getRebirthAddress()) then {
     throw("rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
@@ -260,7 +283,7 @@ func issueFreeDuck(address: String, txIdStr: String) = {
 
 @Callable(i)
 func issueJackpot(address: String, txIdStr: String, gen: String) = {
-  if (i.caller != Address(rebirthAddress) && i.caller != this) then {
+  if (i.caller != getRebirthAddress() && i.caller != this) then {
     throw("admin or rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
@@ -296,7 +319,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 @Callable(i)
 func reduceRarity(assetId: String, fGen: String) = {
   let asset = assetId.fromBase58String()
-  if (i.caller != Address(rebirthAddress) && i.caller != this) then {
+  if (i.caller != getRebirthAddress() && i.caller != this) then {
     throw("admin or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
