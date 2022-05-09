@@ -198,13 +198,16 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
   let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txId)
   let processFinishHeight = getIntegerValue(getBreederAddress(), finishHeightKey)
 
-  strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txIdStr, processFinishHeight,parentFixedGene,positionFixedGene,"",0],[]).asString()
+  strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txId, processFinishHeight,parentFixedGene,positionFixedGene,"",0],[]).asString()
   
   strict call = invoke(getBreederAddress(), "finishDuckHatchingItems", [txIdStr, duckGenesString], [])
   [
     Burn(firstPayment.assetId.value(),1)
   ]
+
 }
+
+
 
 @Callable(i)
 func freeGene(txIdStr: String) = {
@@ -222,7 +225,7 @@ func freeGene(txIdStr: String) = {
   let selectedGene = getRandomGenes(txId,processFinishHeight)
   let randomPosition = getRandomNumber(7, txId, processFinishHeight, 3)
 
-  strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txIdStr, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
+  strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txId, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
   
   strict call = invoke(getBreederAddress(), "finishDuckHatchingItems", [txIdStr, duckGenesString], [])
   [

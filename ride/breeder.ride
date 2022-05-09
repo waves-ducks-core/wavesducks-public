@@ -318,6 +318,7 @@ func finishDuckHatchingItems(txIdStr: String, duckGenesString: String) = {
   let owner = i.originCaller.toString()
   finishDuckHatch(txIdStr, owner, duckGenesString) 
 }
+
 @Callable(i)
 func finishDuckHatching(txIdStr: String) = {
   let owner = i.caller.toString()
