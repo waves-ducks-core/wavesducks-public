@@ -317,7 +317,7 @@ func unstakeNFT(asset: String) = {
     let color = assetInfo(assetId).value().name.takeRight(1)
     let unstaker = tryGetString("address_"+address+"_asset_"+asset+"_unstaker")
     let realCaller = i.caller.toString()
-    if unstaker != realCaller then throw("It seems duck was staked throuh a dapp, not directly, please unstake through dapp!") else 
+    if unstaker != "" &&  unstaker != realCaller then throw("It seems duck was staked throuh a dapp, not directly, please unstake through dapp!") else 
     if (assetFarmingPower <= 0) then {
       throw("asset not available")
     } else {
@@ -393,7 +393,7 @@ func unstakeJackpot(asset: String) = {
 
     let reward = (farmedAmount - withdrawnAmount) / (scale * 100)
     let unstaker = tryGetString("address_"+address+"_asset_"+asset+"_unstaker")
-    if unstaker != realCaller then throw("It seems duck was staked throuh a dapp, not directly, please unstake through dapp!") else 
+    if unstaker != "" && unstaker != realCaller then throw("It seems duck was staked throuh a dapp, not directly, please unstake through dapp!") else 
     if (assetInfo(assetId).value().name.value().takeRight(1) != "U") then {
       throw("jackpot only")
     } else {
