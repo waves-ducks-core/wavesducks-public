@@ -250,7 +250,7 @@ func issueFreeDuck(address: String, txIdStr: String) = {
     let totalDucksAmount = tryGetInteger("ducks_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
 
-    let (duckGen, farmGen) = getRandomName(txId, transactionHeightById(txId).value() + 1)
+    let (duckGen, farmGen) = getRandomName(txId, valueOrErrorMessage(transactionHeightById(txId),txIdStr+ " not found "+toBase58String(txId)) + 1)
     let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
     let asset = Issue(duckGen, description, 1, 0, false, unit, height)
