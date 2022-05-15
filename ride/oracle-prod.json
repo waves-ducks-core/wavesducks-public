@@ -86,6 +86,12 @@
             "key": "static_trustedContracts",
             "type": "string",
             "value": "3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw;3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD"
+        },
+        {
+            "key": "static_maintenance",
+            "type": "string",
+            "value": ""
+            
         }
     ],
     "fee": 500000,

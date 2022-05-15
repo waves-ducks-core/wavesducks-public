@@ -32,22 +32,16 @@ func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_items
 func getMetaraceAddress() =  Address(tryGetStringExternal(getOracle(),"static_metaRaceAddress").fromBase58String())
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),"static_accBoosterAddress").fromBase58String())
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
-
+func getMaintenance() =  tryGetStringExternal(getOracle(),"static_maintenance")
 
 let RefererReward = 5 #percentage
-
-
 
 func getRewardPerBlock() = {
   684 # 0.0684 EGGs per block
 }
 
 func isLocked() = {
-  let masterAddress = Address(base58'3PEPftf2kWZDmAaWBjs6BUJa9957kiA2PkU')
-  match getInteger(masterAddress, "egglock") {
-        case b:Int => b
-        case _ => 0
-    }
+    if getMaintenance() != "" then throw(getMaintenance()) else 0
 }
 
 func tryGetInteger(key: String) = {
@@ -200,10 +194,7 @@ func init() = {
 
 @Callable(i)
 func buyPerch(color: String, refererAddress: String) = {
-  # throw("under maintence")
-  if (isLocked() > 0) then {
-    throw("EGG operations are temporarily locked")
-  } else {
+    strict locked =  isLocked()
     if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
       throw("you need to set color properly")
     } else {
@@ -224,11 +215,12 @@ func buyPerch(color: String, refererAddress: String) = {
         ]
       }
     }
-  }
+  
 }
 
 @Callable(i)
 func addFreePerch(address: String, color: String) = {
+  strict locked =  isLocked()
   if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
     throw("you need to set color properly")
   } else if (i.caller != getRebirthAddress() && i.caller != this && i.caller != getSwopPromoAddress()) then {
@@ -244,42 +236,36 @@ func addFreePerch(address: String, color: String) = {
 
 @Callable(i)
 func stakeNFT() = {
-  # throw("under maintence")
-  if (isLocked() > 0) then {
-    throw("EGG operations are temporarily locked")
-  } else {
-    let pmt = i.payments[0].value()
-    let assetId = i.payments[0].value().assetId.value()
-    let realCaller = i.caller.toString()
-    let address = if getMetaraceAddress() == i.caller then realCaller else i.originCaller.toString()
+  strict locked = isLocked()
+  let pmt = i.payments[0].value()
+  let assetId = i.payments[0].value().assetId.value()
+  let realCaller = i.caller.toString()
+  let address = if getMetaraceAddress() == i.caller then realCaller else i.originCaller.toString()
+  let color = assetInfo(assetId).value().name.takeRight(1)
+  let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
 
-    let color = assetInfo(assetId).value().name.takeRight(1)
-    let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
-
-    if (pmt.amount != 1) then throw("NFT is not attached") else
-    if (availablePerches <= 0) then {
+  if (pmt.amount != 1) then throw("NFT is not attached") else
+  if (availablePerches <= 0) then {
       throw("no perches available for the color " + color)
-    } else {
-      let (assetGen, assetFarmingPower) = getAssetFarmingPower(assetId,address)
+  } else {
+    let (assetGen, assetFarmingPower) = getAssetFarmingPower(assetId,address)
 
       
 
-      getStakeResult(address, assetId, assetFarmingPower, realCaller) ++ [
-        IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1)
-      ]
-    }
-  }  
+    getStakeResult(address, assetId, assetFarmingPower, realCaller) ++ [
+      IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1)
+    ]
+  }
+    
 }
 
 @Callable(i)
 func stakeNFTWithoutPerch() = {
+  strict locked = isLocked()
   let allowedContracts = getTrustedContracts()
   let allowedContractsList = allowedContracts.split(";")
   let dappToCall = i.caller.toString()
   if allowedContractsList.indexOf(dappToCall) == unit then throw("Only trusted smart contracts can stake without a perch!") else
-  if (isLocked() > 0) then {
-    throw("EGG operations are temporarily locked")
-  } else {
     let pmt = i.payments[0].value()
     let assetId = i.payments[0].value().assetId.value()
     let address = i.originCaller.toString()
@@ -293,20 +279,17 @@ func stakeNFTWithoutPerch() = {
     getStakeResult(address, assetId, assetFarmingPower, realCaller) ++ [
       BooleanEntry("address_"+address+"_asset_"+asset+"_without_perch", true)
       ]
-  }  
+  
 }
 
 @Callable(i)
 func unstakeNFT(asset: String) = {
-  # throw("under maintence")
+  strict locked = isLocked()
   let add = i.originCaller.toString()
   if (isUserBlacklisted(add)) then {
     throw("Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
-  } else if (isLocked() > 0) then {
-    throw("EGG operations are temporarily locked")
   } else {
     let assetId = asset.fromBase58String()
-
     let unstaker = tryGetString("address_"+add+"_asset_"+asset+"_unstaker")
     let address = if unstaker == "" && getMetaraceAddress() == i.caller then i.caller.toString() else add
 
@@ -344,9 +327,7 @@ func unstakeNFT(asset: String) = {
 
 @Callable(i)
 func stakeJackpot(color: String) = {
-  if (isLocked() > 0) then {
-    throw("EGG operations are temporarily locked")
-  } else {
+    strict locked = isLocked()
     let pmt = i.payments[0].value()
     let assetId = pmt.assetId.value()
     let realCaller = i.caller.toString()
@@ -373,17 +354,16 @@ func stakeJackpot(color: String) = {
     } else {
         throw("asset is not valid")
     }
-  }
+  
 }
 
 @Callable(i)
 func unstakeJackpot(asset: String) = {
+  strict locked = isLocked()
   let realCaller = i.caller.toString()
   let address = if getMetaraceAddress() == i.caller then realCaller else i.originCaller.toString()
   if (isUserBlacklisted(address)) then {
     throw("Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
-  } else if (isLocked() > 0) then {
-    throw("EGG operations are temporarily locked")
   } else {
     let assetId = asset.fromBase58String()
    
@@ -419,12 +399,10 @@ func unstakeJackpot(asset: String) = {
 
 @Callable(i)
 func claimReward(asset: String) = {
-  # throw("under maintence")
+  strict locked = isLocked()
   let address = i.originCaller.toString()
   if (isUserBlacklisted(address)) then {
     throw("Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
-  } else if (isLocked() > 0) then {
-    throw("EGG operations are temporarily locked")
   } else {
     let assetId = asset.fromBase58String()
 
