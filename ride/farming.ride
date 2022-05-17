@@ -33,6 +33,8 @@ func getMetaraceAddress() =  Address(tryGetStringExternal(getOracle(),"static_me
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),"static_accBoosterAddress").fromBase58String())
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
 func getMaintenance() =  tryGetStringExternal(getOracle(),"static_maintenance")
+func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
+
 
 let RefererReward = 5 #percentage
 
@@ -291,7 +293,7 @@ func unstakeNFT(asset: String) = {
   } else {
     let assetId = asset.fromBase58String()
     let unstaker = tryGetString("address_"+add+"_asset_"+asset+"_unstaker")
-    let address = if unstaker == "" && getMetaraceAddress() == i.caller then i.caller.toString() else add
+    let address = if getMetaraceAddress() == i.caller then i.caller.toString() else add
 
     let assetFarmingPower = getLastKnownAssetFarmingPower(address, asset)
     let assetRewardDelta = calcAssetRewardDelta(address, asset, assetFarmingPower)
@@ -379,9 +381,7 @@ func unstakeJackpot(asset: String) = {
     let reward = (farmedAmount - withdrawnAmount) / (scale * 100)
     let unstaker = tryGetString("address_"+address+"_asset_"+asset+"_unstaker")
     if unstaker != "" && unstaker != realCaller then throw("It seems duck was staked throuh a dapp, not directly, please unstake through dapp!") else 
-    if (assetInfo(assetId).value().name.value().takeRight(1) != "U") then {
-      throw("jackpot only")
-    } else {
+    if (assetInfo(assetId).value().name.value().takeRight(1) != "U") then throw("jackpot only") else 
       if (assetFarmingPower > 0) then {
         let result = getUnstakeResult(address, assetId, assetRewardDelta, reward, assetFarmingPower)
         let isWithoutPerch = tryGetBoolean("address_"+address+"_asset_"+asset+"_without_perch")
@@ -393,14 +393,14 @@ func unstakeJackpot(asset: String) = {
       } else {
         throw("")
       }
-    }
+    
   }
 }
 
 @Callable(i)
 func claimReward(asset: String) = {
   strict locked = isLocked()
-  let address = i.originCaller.toString()
+  let address = if i.originCaller == getCfMasterAddress() then i.caller.toString() else i.originCaller.toString()
   if (isUserBlacklisted(address)) then {
     throw("Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
   } else {
@@ -414,14 +414,15 @@ func claimReward(asset: String) = {
 
     let reward = (farmedAmount - withdrawnAmount) / (scale * 100)
 
-    if (reward <= 0) then {
-      throw("you have no EGGs to withdraw")
-    } else {
-      ([
+    if (reward <= 0) then throw("you have no EGGs to withdraw") else 
+      (
+        [
         IntegerEntry("address_"+address+"_asset_"+asset+"_withdrawnAmount", tryGetInteger("address_"+address+"_asset_"+asset+"_withdrawnAmount") + reward * scale2),
         ScriptTransfer(Address(address.fromBase58String()), reward * 1000000, getEggAssetId())
-      ], reward * 1000000)
-    }
+        ],
+        reward * 1000000
+      )
+    
   }
 }
 
