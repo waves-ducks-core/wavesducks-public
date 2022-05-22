@@ -83,6 +83,16 @@
             "value": "3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw"
         },
         {
+            "key": "static_duckWrapper",
+            "type": "string",
+            "value": "3P3pDosq4GCwfJkvq4yqKvvoTwmoqc9qPmo"
+        },
+        {
+            "key": "static_seaGateway",
+            "type": "string",
+            "value": "3PPfDHC6hNqDMxRArJvJRkYfC8y6S3rSnYb"
+        },
+        {
             "key": "static_trustedContracts",
             "type": "string",
             "value": "3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw;3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD"
