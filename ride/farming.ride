@@ -34,7 +34,7 @@ func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),"static_
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
 func getMaintenance() =  tryGetStringExternal(getOracle(),"static_maintenance")
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
-
+func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),"static_duckWrapper").fromBase58String())
 
 let RefererReward = 5 #percentage
 
@@ -242,7 +242,7 @@ func stakeNFT() = {
   let pmt = i.payments[0].value()
   let assetId = i.payments[0].value().assetId.value()
   let realCaller = i.caller.toString()
-  let address = if getMetaraceAddress() == i.caller then realCaller else i.originCaller.toString()
+  let address = if getMetaraceAddress() == i.caller || getDuckWrapperSc() == i.caller then realCaller else i.originCaller.toString()
   let color = assetInfo(assetId).value().name.takeRight(1)
   let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
 
@@ -293,7 +293,7 @@ func unstakeNFT(asset: String) = {
   } else {
     let assetId = asset.fromBase58String()
     let unstaker = tryGetString("address_"+add+"_asset_"+asset+"_unstaker")
-    let address = if getMetaraceAddress() == i.caller then i.caller.toString() else add
+    let address = if getMetaraceAddress() == i.caller || getDuckWrapperSc() == i.caller  then i.caller.toString() else add
 
     let assetFarmingPower = getLastKnownAssetFarmingPower(address, asset)
     let assetRewardDelta = calcAssetRewardDelta(address, asset, assetFarmingPower)
@@ -333,7 +333,7 @@ func stakeJackpot(color: String) = {
     let pmt = i.payments[0].value()
     let assetId = pmt.assetId.value()
     let realCaller = i.caller.toString()
-    let address = if getMetaraceAddress() == i.caller then realCaller else i.originCaller.toString()
+    let address = if getMetaraceAddress() == i.caller || getDuckWrapperSc() == i.caller  then realCaller else i.originCaller.toString()
     let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
 
     let assetIssuer = assetInfo(assetId).value().issuer
@@ -363,7 +363,7 @@ func stakeJackpot(color: String) = {
 func unstakeJackpot(asset: String) = {
   strict locked = isLocked()
   let realCaller = i.caller.toString()
-  let address = if getMetaraceAddress() == i.caller then realCaller else i.originCaller.toString()
+  let address = if getMetaraceAddress() == i.caller || getDuckWrapperSc() == i.caller  then realCaller else i.originCaller.toString()
   if (isUserBlacklisted(address)) then {
     throw("Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
   } else {
