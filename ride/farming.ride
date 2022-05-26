@@ -91,12 +91,20 @@ func asInt(value: Any) = match value {
 }
 
 func getAssetFarmingPower(assetId: ByteVector, address: String) = {
-  if (assetInfo(assetId).value().issuer == getBreederAddress() || assetInfo(assetId).value().issuer == getIncubatorAddress()) then {
-    let assetName = assetInfo(assetId).value().name
-    let generation = assetName.takeRight(2).take(1)
-    strict farmGen = invoke(getBreederAddress(),"getGenFromName",[assetName],[]).asString()
+  if (assetInfo(assetId).value().issuer == getBreederAddress() || assetInfo(assetId).value().issuer == getIncubatorAddress()) then {  
     strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId.toBase58String(),address],[]).asInt()
-    let rarity = getAssetRarity(farmGen, generation)
+    let assetName = assetInfo(assetId).value().name
+    let isJackpot = assetName.value().takeRight(1) == "U"
+
+    strict farmGen = if isJackpot then "" else invoke(getBreederAddress(),"getGenFromName",[assetName],[]).asString()
+    let rarity = if isJackpot then 100 else{
+      
+      let generation = assetName.takeRight(2).take(1)
+    
+      getAssetRarity(farmGen, generation)
+    }
+
+
     let totalFarmingPower = rarity + fraction(rarity,farmBoost,100)
     (farmGen, totalFarmingPower )
   } else {
@@ -346,8 +354,8 @@ func stakeJackpot(color: String) = {
         if (availablePerches <= 0) then {
           throw("no perches available for the color " + color)
         } else {
-          
-          getStakeResult(address, assetId, 100,realCaller) ++ [
+          let farmingPower = getAssetFarmingPower(assetId,address)
+          getStakeResult(address, assetId, farmingPower._2,realCaller) ++ [
             IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1),
             StringEntry("address_"+address+"_asset_"+assetId.toBase58String()+"_perchColor", color)
           ]

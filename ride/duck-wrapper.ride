@@ -2,19 +2,11 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let nftCreationAddressGateway = base58'3P8LVqVKhTViMJau96KNir6FhHr4WnfoW57'
-let nftCreationAddressPuzzle = base58'3PFQjjDMiZKQZdu5JqTHD7HwgSXyp9Rw9By'
-
-let incubatorAddress = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-let breederAddress = base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-let farmingAddress = base58'3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW'
-let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-
-func tryGetInteger(key: String) = {
-  match getInteger(this, key) {
-      case b:Int => b
-      case _ => 0
-  }
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
 }
 
 func tryGetString(key: String) = {
@@ -24,58 +16,81 @@ func tryGetString(key: String) = {
   }
 }
 
-let accessItemAssetId = tryGetString("static_accessItemAssetId").fromBase58String()
-let accessItemPrice = tryGetInteger("static_accessItemPrice")
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
+func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+
+#TODO: get those in the oracle
+#TODO2: how to deal with testnet deployment but no puzzle sc available
+let nftCreationAddressGateway = base58'3P8LVqVKhTViMJau96KNir6FhHr4WnfoW57'
+let nftCreationAddressPuzzle = base58'3PFQjjDMiZKQZdu5JqTHD7HwgSXyp9Rw9By'
+
+
+
+func tryGetInteger(key: String) = {
+  match getInteger(this, key) {
+      case b:Int => b
+      case _ => 0
+  }
+}
+
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("wrong type, expected: String")
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
 
 func isJackpotDuck(assetNameParts: List[String]) = { assetNameParts[assetNameParts.size() - 2] == "J" }
-
-func isSymbolA(accumulated: Int, sym: String) = { if (sym == "A") then {accumulated+1} else {accumulated+0} }
-func isSymbolB(accumulated: Int, sym: String) = { if (sym == "B") then {accumulated+1} else {accumulated+0} }
-func isSymbolC(accumulated: Int, sym: String) = { if (sym == "C") then {accumulated+1} else {accumulated+0} }
-func isSymbolD(accumulated: Int, sym: String) = { if (sym == "D") then {accumulated+1} else {accumulated+0} }
-func isSymbolE(accumulated: Int, sym: String) = { if (sym == "E") then {accumulated+1} else {accumulated+0} }
-func isSymbolF(accumulated: Int, sym: String) = { if (sym == "F") then {accumulated+1} else {accumulated+0} }
-func isSymbolG(accumulated: Int, sym: String) = { if (sym == "G") then {accumulated+1} else {accumulated+0} }
-func isSymbolH(accumulated: Int, sym: String) = { if (sym == "H") then {accumulated+1} else {accumulated+0} }
-func isSymbolI(accumulated: Int, sym: String) = { if (sym == "I") then {accumulated+1} else {accumulated+0} }
-func isSymbolK(accumulated: Int, sym: String) = { if (sym == "K") then {accumulated+1} else {accumulated+0} }
-func isSymbolS(accumulated: Int, sym: String) = { if (sym == "S") then {accumulated+1} else {accumulated+0} }
-func isSymbolT(accumulated: Int, sym: String) = { if (sym == "T") then {accumulated+1} else {accumulated+0} }
 
 func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
 }
 
-func getGen(assetName: String) = {
-  # getGen("DUCK-ABCDDCBA-GY") -> 2A2B2C2D-G
-  let genotype = assetName.drop(5).dropRight(3).split("")
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolK)) + "K") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolS)) + "S") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolT)) + "T")
-}
-
 func getAssetOrigin(generation: String) = {
-  if (generation == "G") then {incubatorAddress} else {breederAddress}
+  if (generation == "G") then {getIncubatorAddress()} else {getBreederAddress()}
 }
 
 func getAssetRarity(genotype: String, generation: String) = {
-  let quantity = getIntegerValue(Address(getAssetOrigin(generation)), "stats_"+genotype+"_quantity")
+  let quantity = getIntegerValue(getAssetOrigin(generation), "stats_"+genotype+"_quantity")
   let power = pow(10000 / quantity, 4, 5, 1, 2, FLOOR)
   if (power > 0) then {power} else {2}
 }
 
 func getAssetFarmingPower(assetId: ByteVector) = {
-  if (assetInfo(assetId).value().issuer == Address(breederAddress) || assetInfo(assetId).value().issuer == Address(incubatorAddress)) then {
+  if (assetInfo(assetId).value().issuer == getBreederAddress() || assetInfo(assetId).value().issuer == getIncubatorAddress()) then {  
+    strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId.toBase58String(),"UnusedAddress"],[]).asInt()
     let assetName = assetInfo(assetId).value().name
-    let generation = assetName.takeRight(2).take(1)
-    let gen = getGen(assetName) + "-" + generation
-    (gen, getAssetRarity(gen, generation))
+    let isJackpot = assetName.value().takeRight(1) == "U"
+
+    strict farmGen = if isJackpot then "" else invoke(getBreederAddress(),"getGenFromName",[assetName],[]).asString()
+    let rarity = if isJackpot then 100 else{
+      let generation = assetName.takeRight(2).take(1)
+      getAssetRarity(farmGen, generation)
+    }
+
+
+    let totalFarmingPower = rarity + fraction(rarity,farmBoost,100)
+    (farmGen, totalFarmingPower )
   } else {
     throw("not valid NFT")
   }
 }
 
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
 
 @Callable(i)
 func lock() = {
@@ -83,35 +98,35 @@ func lock() = {
 
   let addressStr = i.caller.toString()
   let assetId = i.payments[0].value().assetId.value()
-  let assetIssuer = assetInfo(assetId).value().issuer.bytes
+  let assetIssuer = assetInfo(assetId).value().issuer
   let assetName = assetInfo(assetId).value().name.value()
   let assetNameParts = assetName.split("")
   let isJackpot = isJackpotDuck(assetNameParts)
   let assetColor = if (isJackpot) then {"G"} else {assetName.split("")[size(assetName.split(""))-1]}
-  let assetRarity = if (isJackpot) then {100} else {getAssetFarmingPower(assetId)._2}
+  let assetRarity = getAssetFarmingPower(assetId)._2
 
-  if (assetIssuer != incubatorAddress && assetIssuer != breederAddress) then { throw("invalid NFT attached") } 
+  if (assetIssuer != getIncubatorAddress() && assetIssuer != getBreederAddress()) then { throw("invalid NFT attached") } 
   else {
-    strict perchesAvailable = match getInteger(Address(farmingAddress), "address_" + this.toString() + "_perchesAvailable_" + assetColor) {
+    strict perchesAvailable = match getInteger(getFarmingAddress(), "address_" + this.toString() + "_perchesAvailable_" + assetColor) {
       case b:Int => b
       case _ => 0
     }
-    let eggBalance = assetBalance(this, eggAssetId)
+    let eggBalance = assetBalance(this, getEggAssetId())
     
     strict isOnPerch = if (assetRarity < 50 || (perchesAvailable == 0 && eggBalance < 1_0000_0000)) then {false} else {
       strict inv1 = if (perchesAvailable > 0) then { unit } else {
-        invoke(Address(farmingAddress), "buyPerch", [assetColor, ""], [AttachedPayment(eggAssetId, 1_0000_0000)])
+        invoke(getFarmingAddress(), "buyPerch", [assetColor, ""], [AttachedPayment(getEggAssetId(), 1_0000_0000)])
       }
       strict inv2 = if (perchesAvailable > 0) then { unit } else 
       if (isJackpot == false) then {
-        invoke(Address(farmingAddress), "stakeNFT", [], [AttachedPayment(assetId, 1)])
+        invoke(getFarmingAddress(), "stakeNFT", [], [AttachedPayment(assetId, 1)])
       } else {
-        invoke(Address(farmingAddress), "stakeJackpot", [assetColor], [AttachedPayment(assetId, 1)])
+        invoke(getFarmingAddress(), "stakeJackpot", [assetColor], [AttachedPayment(assetId, 1)])
       }
       true
     }
 
-    let sterileStr = match getInteger(Address(breederAddress), "asset_"+assetId.toBase58String()+"_children") {
+    let sterileStr = match getInteger(getBreederAddress(), "asset_"+assetId.toBase58String()+"_children") {
       case x: Int => "Sterile"
       case _ => "Fertile"
     }
@@ -150,15 +165,15 @@ func unlock() = {
 
   if (tryGetString("duck_" + assetIdStr + "_owner") != addressStr) then {throw("duck is not yours")} 
   else {
-    strict assetBalanceBefore = assetBalance(this, eggAssetId)
-    strict inv1 = if (assetBalance(this, assetId) > 0) then {unit} else {invoke(Address(farmingAddress), unstakeFuncName, [assetIdStr], [])}
-    strict eggEarned = assetBalance(this, eggAssetId) - assetBalanceBefore
+    strict assetBalanceBefore = assetBalance(this, getEggAssetId())
+    strict inv1 = if (assetBalance(this, assetId) > 0) then {unit} else {invoke(getFarmingAddress(), unstakeFuncName, [assetIdStr], [])}
+    strict eggEarned = assetBalance(this, getEggAssetId()) - assetBalanceBefore
 
     strict inv2 = invoke(Address(nftCreationAddress), "burnNFT", [], i.payments)
 
     ([
       ScriptTransfer(i.caller, 1, assetId),
-      ScriptTransfer(i.caller, eggEarned, eggAssetId),
+      ScriptTransfer(i.caller, eggEarned, getEggAssetId()),
       DeleteEntry("address_" + addressStr + "_lockedDuck_" + assetIdStr), 
       DeleteEntry("nft_" + stakedNFTIdStr + "_duckId"),
       DeleteEntry("duck_" + assetIdStr + "_sduckId"),
