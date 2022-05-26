@@ -1,0 +1,86 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+
+#SC THAT CAN USE COUPONS
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+
+let scCanUseCoupons = [getRebirthAddress(),getIncubatorAddress()]
+
+func couponsUserSpend(user:String) = user+"_spend"
+func couponsUserActive(user:String) = user+"_active"
+func couponsUserActiveOld(user:String) = couponsUserActive(user)+"_old"
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
+func addCoupons(user:String,amount:Int) = {
+    if i.caller != this then throw("admin only") else 
+    let keyOld = couponsUserActiveOld(user)
+    let key = couponsUserActive(user)
+    let couponsOld = tryGetInteger(key)
+    let coupons = couponsOld+amount
+    [
+        IntegerEntry(keyOld,couponsOld),
+        IntegerEntry(key,coupons)
+    ]
+
+}
+
+
+
+@Callable(i)
+func useCoupons(amountTryingToPay:Int)= {
+    let invokingSc = i.caller
+    if amountTryingToPay < 0  then throw("Only positive amount of money can be paid!") else
+    if !containsElement(scCanUseCoupons, invokingSc) then throw("Only certain smart contracts can use this coupon module!") else #prevents outsider to implement our coupons
+    let user = i.originCaller.toString()
+    let keyActive = couponsUserActive(user)
+    let availableCoupons = tryGetInteger(keyActive)
+    let leftToPay = if amountTryingToPay > availableCoupons then amountTryingToPay-availableCoupons else 0
+    let amountPaid = amountTryingToPay-leftToPay
+    let availableCouponsLeft = availableCoupons-amountPaid
+
+    let keySpend = couponsUserSpend(user)
+    let keyOld = couponsUserActiveOld(user)
+
+
+    let totalSpend = tryGetInteger(keySpend)+amountPaid
+    (
+        [
+            IntegerEntry(keySpend,totalSpend),
+            IntegerEntry(keyOld,availableCoupons),
+            IntegerEntry(keyActive,availableCouponsLeft)
+        ],
+        amountPaid #Amount paid is the amount a user paid in coupons, so we can reduce this from the actual payment.
+    )
+}
