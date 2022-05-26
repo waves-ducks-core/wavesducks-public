@@ -93,6 +93,11 @@
             "value": "3PMbHWvG3Sbcxm6bhpXm7nK9f1MoYBJD6EH"
         },
         {
+            "key": "static_couponsAddress",
+            "type": "string",
+            "value": ""
+        },
+        {
             "key": "static_trustedContracts",
             "type": "string",
             "value": "3PKX8mjwxxJGmC6uUV7opAwMmFUN61JnmG9;3PG7U7XXBt4yLq3toAtcxmXjYZNergS29uQ;3PHUMZkr66B38WxHV1boULaEjjF7giGgVy7;3P7GafyRyfQu58o6iQk5fHbkgVkQwVNPJoQ"

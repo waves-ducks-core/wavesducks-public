@@ -35,6 +35,7 @@ func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedCo
 func getMaintenance() =  tryGetStringExternal(getOracle(),"static_maintenance")
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
 func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),"static_duckWrapper").fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 
 let RefererReward = 5 #percentage
 
@@ -210,22 +211,28 @@ func buyPerch(color: String, refererAddress: String) = {
     if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
       throw("you need to set color properly")
     } else {
-      let firstPayment = i.payments[0].value()
       let exactPrice = calculatePerchPrice(i.caller.toString())
-      if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
-      else if (firstPayment.amount != exactPrice) then throw("To buy a perch you currently need the following amount of EGGlets: " + exactPrice.toString())
-      else {
-        let refererRewardForPerch = fraction(firstPayment.amount, RefererReward, 100)
+      strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+      let leftToPay = exactPrice-amountPaidByCoupons
 
+      strict payment = if leftToPay!=0 then {
+        let firstPayment = i.payments[0].value()
+
+        if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+        if (firstPayment.amount != leftToPay) then throw("To buy a perch you currently need the following amount of EGGlets: " + exactPrice.toString()) else
+        let refererRewardForPerch = fraction(leftToPay, RefererReward, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
         [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
+        leftToPay
+      }else 0
+      
 
-        let perchAmountKey = "address_" + i.caller.toString() + "_perchesAvailable_" + color
-        let perchAmount = tryGetInteger(perchAmountKey)
-        [
-          IntegerEntry(perchAmountKey, perchAmount + 1)
-        ]
-      }
+      let perchAmountKey = "address_" + i.caller.toString() + "_perchesAvailable_" + color
+      let perchAmount = tryGetInteger(perchAmountKey)
+      [
+        IntegerEntry(perchAmountKey, perchAmount + 1)
+      ]
+      
     }
   
 }
