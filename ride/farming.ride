@@ -433,4 +433,3 @@ func claimReward(asset: String) = {
     
   }
 }
-
