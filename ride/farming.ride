@@ -157,6 +157,7 @@ func getStakeResult(address: String, assetId: ByteVector, assetFarmingPower: Int
     IntegerEntry("total_farmingPower", tryGetInteger("total_farmingPower") + assetFarmingPower),
     IntegerEntry("total_lastCheckInterest", getCurrentInterest()),
     IntegerEntry("total_lastCheckInterestHeight", height),
+    StringEntry("asset_"+asset+"_owner", address),
     IntegerEntry("address_"+address+"_asset_"+asset+"_farmingPower", assetFarmingPower),
     IntegerEntry("address_"+address+"_asset_"+asset+"_lastCheckInterest", getCurrentInterest()),
     StringEntry("address_"+address+"_asset_"+asset+"_unstaker",unstaker)
@@ -169,6 +170,7 @@ func getUnstakeResult(address: String, assetId: ByteVector, rewardDelta: Int, wi
     IntegerEntry("total_farmingPower", tryGetInteger("total_farmingPower") - assetFarmingPower),
     IntegerEntry("total_lastCheckInterest", getCurrentInterest()),
     IntegerEntry("total_lastCheckInterestHeight", height),
+    DeleteEntry("asset_"+asset+"_owner"),
     IntegerEntry("address_"+address+"_asset_"+asset+"_farmingPower", 0),
     IntegerEntry("address_"+address+"_asset_"+asset+"_lastCheckInterest", getCurrentInterest()),
     IntegerEntry("address_"+address+"_asset_"+asset+"_withdrawnAmount", tryGetInteger("address_"+address+"_asset_"+asset+"_withdrawnAmount") + withdrawnAmount * scale2),
