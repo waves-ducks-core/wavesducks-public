@@ -294,6 +294,8 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
     let assetId = asset.calculateAssetId()
 
     let duckIdKey = getDuckIdKey(address, txId)
+    let valueDuckIdKeyExits = tryGetString(duckIdKey)
+    if valueDuckIdKeyExits != "" then throw("You will override following duckId :"+duckIdKey+" make sure that your txId is unique!") else
     ([
       IntegerEntry(getHatchingFinishHeightKey(address, txId), height),
       IntegerEntry("ducks_amount", totalDucksAmount + 1),
