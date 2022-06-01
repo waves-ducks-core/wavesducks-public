@@ -158,15 +158,15 @@ func issueFreeMantle(address: String, type: String, level: Int, invested: Int) =
 
 @Callable(i)
 func buyArtefact(type: String) = {
-  if (type != MANTLENAME) then throw("You can buy only mantles now") 
+  if (type != MANTLENAME) then throw("WBA: You can buy only mantles now") 
   else {
     let MANTLEPRICE = 1_000_000
     strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[MANTLEPRICE],[]).asInt()
     let leftToPay = MANTLEPRICE-amountPaidByCoupons
     strict payment = if leftToPay!=0 then {
       let firstPayment = i.payments[0].value()
-      if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-      if (firstPayment.amount != leftToPay) then throw("To buy a mantle you currently need the following amount of EGGlets: " + MANTLEPRICE.toString()) else
+      if (firstPayment.assetId != getEggAssetId()) then throw("WBA: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+      if (firstPayment.amount != leftToPay) then throw("WBA: To buy a mantle you currently need the following amount of EGGlets: " + MANTLEPRICE.toString()) else
       leftToPay
     }else 0
     
@@ -202,8 +202,8 @@ func upgradeMantle(artefactId: String) = {
   let upgradePointPrice = 1_000_000
   let firstPayment = i.payments[0].value()
   let amount = firstPayment.amount
-  if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
-  else if (firstPayment.amount < upgradePointPrice) then throw("Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
+  if (firstPayment.assetId != getEggAssetId()) then throw("WUM: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
+  else if (firstPayment.amount < upgradePointPrice) then throw("WUM: Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
   else {
       upgradeMantleFunc(i,artefactId,amount)
   }
@@ -213,10 +213,10 @@ func upgradeMantle(artefactId: String) = {
 func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
   let upgradePointPrice = 1_000_000
   let firstPayment = i.payments[0].value()
-  if (couponsAmount < upgradePointPrice) then throw("Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
+  if (couponsAmount < upgradePointPrice) then throw("WUMBC: Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
   else {
       strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[couponsAmount],[]).asInt()
-      if couponsAmount != amountPaidByCoupons then throw("Not enough coupons! Please make sure to pick lower coupon amount!") else
+      if couponsAmount != amountPaidByCoupons then throw("WUMBC: Not enough coupons! Please make sure to pick lower coupon amount!") else
 
       upgradeMantleFunc(i,artefactId,couponsAmount)
   }
@@ -229,8 +229,8 @@ func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
 func putOnArtefact(artefactId: String) = {
   let firstPayment = i.payments[0].value()
   let attachedAssetInfo = assetInfo(firstPayment.assetId.value()).value()
-  if (firstPayment.amount != 1) then throw("NFT is not attached") else
-  if (attachedAssetInfo.issuer != getIncubatorAddress() && attachedAssetInfo.issuer != getBreederAddress()) then throw("You can attach only DUCKs issued by incubator or breeder ")
+  if (firstPayment.amount != 1) then throw("WPOA: NFT is not attached") else
+  if (attachedAssetInfo.issuer != getIncubatorAddress() && attachedAssetInfo.issuer != getBreederAddress()) then throw("WPOA: You can attach only DUCKs issued by incubator or breeder ")
   else {
     let hasSweater = tryGetStringExternal(getWearablesAddress(),firstPayment.assetId.value().toBase58String()+"_ART-XSWEATER")
     let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
@@ -244,9 +244,9 @@ func putOnArtefact(artefactId: String) = {
 
     let kArtefactIdByType = keyArtefactIdByDuckAndType(MANTLENAME, firstPayment.assetId.value())
 
-    if (!mantleExists) then throw("Mantle with such an ID does not exist") else
-    if (mantleOwner != i.originCaller.toString()) then throw("You're not an owner of the mantle") else 
-    if (mantleStatus != STATUSFREE) then throw("Mantle is already used!")
+    if (!mantleExists) then throw("WPOA: Mantle with such an ID does not exist") else
+    if (mantleOwner != i.originCaller.toString()) then throw("WPOA: You're not an owner of the mantle") else 
+    if (mantleStatus != STATUSFREE) then throw("WPOA: Mantle is already used!")
     else {
       strict stakeDuck = if hasSweater != "" then 
                             if isJackpot(firstPayment.assetId.value()) then invoke(getFarmingAddress(),"stakeNFT",[],i.payments) else invoke(getFarmingAddress(),"stakeJackpot",[],i.payments) 
@@ -278,7 +278,7 @@ func takeOffArtefact(duckId:String, artefactType: String) = {
   let kDuckLock = keyDuckLock(i.originCaller.toString(), duckId)
 
   let kMantleStatus = keyArtefactStatus(artefactType, artefactId.fromBase58String())
-  if (kPutOnArtefactStatus != true) then throw("There is no duck with such parameteres")
+  if (kPutOnArtefactStatus != true) then throw("WTOA: There is no duck with such parameteres")
   else {
     let hasSweater = tryGetStringExternal(getWearablesAddress(),duckId+"_ART-XSWEATER")
     strict unstakeDuck = if hasSweater != "" then 

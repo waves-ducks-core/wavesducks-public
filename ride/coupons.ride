@@ -29,7 +29,7 @@ func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_i
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
 func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String()) 
 
-let scCanUseCoupons = [getRebirthAddress(),getIncubatorAddress(),getFarmingAddress()]
+let scCanUseCoupons = [getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),getGameDappAddress()]
 
 func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
@@ -37,7 +37,7 @@ func couponsUserActiveOld(user:String) = couponsUserActive(user)+"_old"
 
 @Callable(i)
 func configureOracle(oracle: String) = {
-  if i.caller != this then throw("admin only") else 
+  if i.caller != this then throw("CCO: admin only") else 
   [
     StringEntry("static_oracleAddress",oracle)
   ]
@@ -46,7 +46,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func addCoupons(user:String,amount:Int) = {
-    if i.caller != this then throw("admin only") else 
+    if i.caller != this then throw("CAC: admin only") else 
     let keyOld = couponsUserActiveOld(user)
     let key = couponsUserActive(user)
     let couponsOld = tryGetInteger(key)
@@ -63,8 +63,8 @@ func addCoupons(user:String,amount:Int) = {
 @Callable(i)
 func useCoupons(amountTryingToPay:Int)= {
     let invokingSc = i.caller
-    if amountTryingToPay < 0  then throw("Only positive amount of money can be paid!") else
-    if !containsElement(scCanUseCoupons, invokingSc) then throw("Only certain smart contracts can use this coupon module!") else #prevents outsider to implement our coupons
+    if amountTryingToPay < 0  then throw("CUC: Only positive amount of money can be paid!") else
+    if !containsElement(scCanUseCoupons, invokingSc) then throw("CUC: Only certain smart contracts can use this coupon module!") else #prevents outsider to implement our coupons
     let user = i.originCaller.toString()
     let keyActive = couponsUserActive(user)
     let availableCoupons = tryGetInteger(keyActive)
