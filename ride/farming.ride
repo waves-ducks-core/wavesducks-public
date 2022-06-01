@@ -408,7 +408,7 @@ func unstakeJackpot(asset: String) = {
           ScriptTransfer(i.caller, 1, assetId)
         ], reward * 1000000)
       } else {
-        throw("")
+        throw("Asset farming power not bigger then 0")
       }
     
   }
