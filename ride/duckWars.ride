@@ -25,6 +25,8 @@ func getSwopPromoAddress() =  Address(tryGetStringExternal(getOracle(),"static_s
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getWearablesAddress() = Address(tryGetStringExternal(getOracle(),"static_wearablesAddress").fromBase58String())
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
+
 
 let MANTLENAME = "mantle"
 
@@ -82,9 +84,41 @@ func keyArtefactExists(type: String, artefactId: ByteVector) = {
 
 func isJackpot(assetId: ByteVector ) = assetInfo(assetId).value().name.value().takeRight(1) == "U"
 
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("WAI: wrong type, expected: Int")
+}
+
+
+func upgradeMantleFunc(i: Invocation, artefactId: String, amount: Int) = {
+    let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
+    let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
+
+    let mantleExists = getBooleanValue(kMantleExists)
+    let mantleOwner = getStringValue(kMantleOwner)
+    if (!mantleExists) then throw("WUPM: Mantle with such an ID does not exist") else
+    if (mantleOwner != i.originCaller.toString()) then throw("WUPM: You're not an owner of the mantle")
+    else {
+
+      let kMantleInvested = keyArtefactInvested(MANTLENAME, artefactId)
+      let mantleAlreadyInvested = getIntegerValue(kMantleInvested)
+
+      let kMantleLevel = keyArtefactLevel(MANTLENAME, i.originCaller.toString(), artefactId.fromBase58String())
+      let kOnlyArtefactLevel = keyOnlyArtefactLevel(artefactId.fromBase58String())
+
+      let totalInvested = mantleAlreadyInvested + amount
+      let newLevel = (10 * pow(totalInvested, 8, 6, 1, 8, HALFUP) + 100000000) / 100000000
+      [
+        IntegerEntry(kMantleLevel, newLevel),
+        IntegerEntry(kMantleInvested, totalInvested),
+        IntegerEntry(kOnlyArtefactLevel, newLevel)
+      ]
+    }
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
-  if i.caller != this then throw("admin only") else 
+  if i.caller != this then throw("WCO: admin only") else 
   [
     StringEntry("static_oracleAddress",oracle)
   ]
@@ -93,8 +127,8 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func issueFreeMantle(address: String, type: String, level: Int, invested: Int) = {
-  if (i.caller != this && i.caller != getSwopPromoAddress()) then throw("Can be called only by admin") else
-  if (type != MANTLENAME) then throw("You can buy only mantles now")
+  if (i.caller != this && i.caller != getSwopPromoAddress()) then throw("WIFM: Can be called only by admin") else
+  if (type != MANTLENAME) then throw("WIFM: You can buy only mantles now")
   else {
 
       let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false)
@@ -127,10 +161,15 @@ func buyArtefact(type: String) = {
   if (type != MANTLENAME) then throw("You can buy only mantles now") 
   else {
     let MANTLEPRICE = 1_000_000
-    let firstPayment = i.payments[0].value()
-    if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
-    else if (firstPayment.amount != MANTLEPRICE) then throw("To buy a mantle you currently need the following amount of EGGlets: " + MANTLEPRICE.toString())
-    else {
+    strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[MANTLEPRICE],[]).asInt()
+    let leftToPay = MANTLEPRICE-amountPaidByCoupons
+    strict payment = if leftToPay!=0 then {
+      let firstPayment = i.payments[0].value()
+      if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+      if (firstPayment.amount != leftToPay) then throw("To buy a mantle you currently need the following amount of EGGlets: " + MANTLEPRICE.toString()) else
+      leftToPay
+    }else 0
+    
 
       let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false)
       let mantleNftId = issueMantleNFT.calculateAssetId()
@@ -154,7 +193,7 @@ func buyArtefact(type: String) = {
         StringEntry(kArtefactOwnerAndStatus, STATUSFREE),
         IntegerEntry(kOnlyArtefactLevel, 1)
       ]
-    }
+    
   } 
 }
 
@@ -162,34 +201,27 @@ func buyArtefact(type: String) = {
 func upgradeMantle(artefactId: String) = {
   let upgradePointPrice = 1_000_000
   let firstPayment = i.payments[0].value()
+  let amount = firstPayment.amount
   if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
   else if (firstPayment.amount < upgradePointPrice) then throw("Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
   else {
-    let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
-    let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
-
-    let mantleExists = getBooleanValue(kMantleExists)
-    let mantleOwner = getStringValue(kMantleOwner)
-    if (!mantleExists) then throw("Mantle with such an ID does not exist") else
-    if (mantleOwner != i.originCaller.toString()) then throw("You're not an owner of the mantle")
-    else {
-
-      let kMantleInvested = keyArtefactInvested(MANTLENAME, artefactId)
-      let mantleAlreadyInvested = getIntegerValue(kMantleInvested)
-
-      let kMantleLevel = keyArtefactLevel(MANTLENAME, i.originCaller.toString(), artefactId.fromBase58String())
-      let kOnlyArtefactLevel = keyOnlyArtefactLevel(artefactId.fromBase58String())
-
-      let totalInvested = mantleAlreadyInvested + firstPayment.amount
-      let newLevel = (10 * pow(totalInvested, 8, 6, 1, 8, HALFUP) + 100000000) / 100000000
-      [
-        IntegerEntry(kMantleLevel, newLevel),
-        IntegerEntry(kMantleInvested, totalInvested),
-        IntegerEntry(kOnlyArtefactLevel, newLevel)
-      ]
-    }
+      upgradeMantleFunc(i,artefactId,amount)
   }
 }
+
+@Callable(i)
+func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
+  let upgradePointPrice = 1_000_000
+  let firstPayment = i.payments[0].value()
+  if (couponsAmount < upgradePointPrice) then throw("Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
+  else {
+      strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[couponsAmount],[]).asInt()
+      if couponsAmount != amountPaidByCoupons then throw("Not enough coupons! Please make sure to pick lower coupon amount!") else
+
+      upgradeMantleFunc(i,artefactId,couponsAmount)
+  }
+}
+
 
 #TODO: check if duck wears sweater, if so stake the duck automatically
 
