@@ -83,12 +83,12 @@ func getAssetRarity(genotype: String, generation: String) = {
 
 func asString(value: Any) = match value {
   case string: String => string
-  case _ => throw("wrong type, expected: String")
+  case _ => throw("FAS: wrong type, expected: String")
 }
 
 func asInt(value: Any) = match value {
   case int: Int => int
-  case _ => throw("wrong type, expected: Int")
+  case _ => throw("FAI: wrong type, expected: Int")
 }
 
 func getAssetFarmingPower(assetId: ByteVector, address: String) = {
@@ -191,7 +191,7 @@ func calculatePerchPrice(address: String)= {
 
 @Callable(i)
 func configureOracle(oracle: String) = {
-  if i.caller != this then throw("admin only") else 
+  if i.caller != this then throw("FCO: admin only") else 
   [
     StringEntry("static_oracleAddress",oracle)
   ]
@@ -200,7 +200,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func init() = {
-  if (i.caller != this) then { throw("admin only") } else {
+  if (i.caller != this) then throw("FI: admin only") else {
     [ IntegerEntry("total_startHeight", height) ]
   }
 }
@@ -218,8 +218,8 @@ func buyPerch(color: String, refererAddress: String) = {
       strict payment = if leftToPay!=0 then {
         let firstPayment = i.payments[0].value()
 
-        if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-        if (firstPayment.amount != leftToPay) then throw("To buy a perch you currently need the following amount of EGGlets: " + exactPrice.toString()) else
+        if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+        if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()) else
         let refererRewardForPerch = fraction(leftToPay, RefererReward, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
         [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
@@ -284,7 +284,7 @@ func stakeNFTWithoutPerch() = {
   let allowedContracts = getTrustedContracts()
   let allowedContractsList = allowedContracts.split(";")
   let dappToCall = i.caller.toString()
-  if allowedContractsList.indexOf(dappToCall) == unit then throw("Only trusted smart contracts can stake without a perch!") else
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("FSNWP: Only trusted smart contracts can stake without a perch!") else
     let pmt = i.payments[0].value()
     let assetId = i.payments[0].value().assetId.value()
     let address = i.originCaller.toString()
@@ -306,7 +306,7 @@ func unstakeNFT(asset: String) = {
   strict locked = isLocked()
   let add = i.originCaller.toString()
   if (isUserBlacklisted(add)) then {
-    throw("Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
+    throw("FUN: Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
   } else {
     let assetId = asset.fromBase58String()
     let unstaker = tryGetString("address_"+add+"_asset_"+asset+"_unstaker")
@@ -323,13 +323,13 @@ func unstakeNFT(asset: String) = {
     let color = assetInfo(assetId).value().name.takeRight(1)
     
     let realCaller = i.caller.toString()
-    if unstaker != "" &&  unstaker != realCaller then throw("It seems duck was staked throuh a dapp, not directly, please unstake through dapp!") else 
+    if unstaker != "" &&  unstaker != realCaller then throw("FUN: It seems duck was staked throuh a dapp, not directly, please unstake through dapp!") else 
     if (assetFarmingPower <= 0) then {
-      throw("asset not available")
+      throw("FUN: asset not available")
     } else {
       let isWithoutPerch = tryGetBoolean("address_"+address+"_asset_"+asset+"_without_perch")
       if (color == "U") then {
-        throw("use another function to unstake Jackpot NFT")
+        throw("FUN: use another function to unstake Jackpot NFT")
       } else {
 
         let result = getUnstakeResult(address, assetId, assetRewardDelta, reward, assetFarmingPower)
@@ -361,7 +361,7 @@ func stakeJackpot(color: String) = {
         throw("jackpot only")
       } else {
         if (availablePerches <= 0) then {
-          throw("no perches available for the color " + color)
+          throw("FSJ: no perches available for the color " + color)
         } else {
           let farmingPower = getAssetFarmingPower(assetId,address)
           getStakeResult(address, assetId, farmingPower._2,realCaller) ++ [
@@ -382,7 +382,7 @@ func unstakeJackpot(asset: String) = {
   let realCaller = i.caller.toString()
   let address = if getMetaraceAddress() == i.caller || getDuckWrapperSc() == i.caller  then realCaller else i.originCaller.toString()
   if (isUserBlacklisted(address)) then {
-    throw("Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
+    throw("FUJ: Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
   } else {
     let assetId = asset.fromBase58String()
    
@@ -397,7 +397,7 @@ func unstakeJackpot(asset: String) = {
 
     let reward = (farmedAmount - withdrawnAmount) / (scale * 100)
     let unstaker = tryGetString("address_"+address+"_asset_"+asset+"_unstaker")
-    if unstaker != "" && unstaker != realCaller then throw("It seems duck was staked throuh a dapp, not directly, please unstake through dapp!") else 
+    if unstaker != "" && unstaker != realCaller then throw("FUJ: It seems duck was staked throuh a dapp, not directly, please unstake through dapp!") else 
     if (assetInfo(assetId).value().name.value().takeRight(1) != "U") then throw("jackpot only") else 
       if (assetFarmingPower > 0) then {
         let result = getUnstakeResult(address, assetId, assetRewardDelta, reward, assetFarmingPower)
@@ -408,7 +408,7 @@ func unstakeJackpot(asset: String) = {
           ScriptTransfer(i.caller, 1, assetId)
         ], reward * 1000000)
       } else {
-        throw("Asset farming power not bigger then 0")
+        throw("FUJ: Asset farming power not bigger then 0")
       }
     
   }
@@ -419,7 +419,7 @@ func claimReward(asset: String) = {
   strict locked = isLocked()
   let address = if i.originCaller == getCfMasterAddress() then i.caller.toString() else i.originCaller.toString()
   if (isUserBlacklisted(address)) then {
-    throw("Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
+    throw("FCR: Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
   } else {
     let assetId = asset.fromBase58String()
 
@@ -431,7 +431,7 @@ func claimReward(asset: String) = {
 
     let reward = (farmedAmount - withdrawnAmount) / (scale * 100)
 
-    if (reward <= 0) then throw("you have no EGGs to withdraw") else 
+    if (reward <= 0) then throw("FCR: you have no EGGs to withdraw") else 
       (
         [
         IntegerEntry("address_"+address+"_asset_"+asset+"_withdrawnAmount", tryGetInteger("address_"+address+"_asset_"+asset+"_withdrawnAmount") + reward * scale2),

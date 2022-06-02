@@ -166,7 +166,7 @@ func buyArtefact(type: String) = {
     strict payment = if leftToPay!=0 then {
       let firstPayment = i.payments[0].value()
       if (firstPayment.assetId != getEggAssetId()) then throw("WBA: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-      if (firstPayment.amount != leftToPay) then throw("WBA: To buy a mantle you currently need the following amount of EGGlets: " + MANTLEPRICE.toString()) else
+      if (firstPayment.amount != leftToPay) then throw("WBA: To buy a mantle you currently need the following amount of EGGlets: " + leftToPay.toString()) else
       leftToPay
     }else 0
     
