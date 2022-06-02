@@ -2,14 +2,28 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
 let delayForHatching = 2
 
-let incubatorAddress = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-let breederAddress = base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-let farmingAddress = base58'3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW'
-let ducklingAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
+func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
 
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 let PHOENIXBASEOPTIONS = 1000  # base chance to get a phoenix: 1 / (1000 - 1000/2 * rarity)
 
 
@@ -25,14 +39,6 @@ func asString(value: Any) = match value {
   case _ => throw("wrong type, expected: String")
 }
 
-func tryGetString(key: String) = {
-    match getString(this, key) {
-        case a:String => a
-        case _ => ""
-    }
-}
-
-
 let feeAmount = tryGetInteger("currentPrice")
 
 func getAmountOrClear(amount: String) = {
@@ -40,20 +46,20 @@ func getAmountOrClear(amount: String) = {
 }
 
 func getAssetOrigin(generation: String) = {
-  if (generation == "G") then {incubatorAddress} else {breederAddress}
+  if (generation == "G") then {getIncubatorAddress()} else {getBreederAddress()}
 }
 
 func getAssetRarity(genotype: String, generation: String) = {
-  let quantity = getIntegerValue(Address(getAssetOrigin(generation)), "stats_"+genotype+"_quantity")
+  let quantity = getIntegerValue(getAssetOrigin(generation), "stats_"+genotype+"_quantity")
   let power = pow(10000 / quantity, 4, 5, 1, 2, FLOOR)
   if (power > 0) then {power} else {2}
 }
 
 func getAssetFarmingPower(assetId: ByteVector) = {
-  if (assetInfo(assetId).value().issuer == Address(breederAddress) || assetInfo(assetId).value().issuer == Address(incubatorAddress)) then {
+  if (assetInfo(assetId).value().issuer == getBreederAddress() || assetInfo(assetId).value().issuer ==getIncubatorAddress()) then {
     let assetName = assetInfo(assetId).value().name
     let generation = assetName.takeRight(2).take(1)
-    strict farmGen = invoke(Address(breederAddress),"getGenFromName",[assetName],[]).asString()
+    strict farmGen = invoke(getBreederAddress(),"getGenFromName",[assetName],[]).asString()
     (farmGen, getAssetRarity(farmGen, generation))
   } else {
     throw("not valid NFT")
@@ -94,12 +100,25 @@ func getOrigin(assetId: ByteVector) = {
   let assetName = assetInfo(assetId).value().name
   let generation = assetName.takeRight(2).take(1)
   if (generation == "G" || generation == "J") then {
-    incubatorAddress
+    getIncubatorAddress()
   } else {
-    breederAddress
+    getBreederAddress()
   }
 }
 
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("FAI: wrong type, expected: Int")
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("RCU: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
 
 @Callable(i)
 func initRebirth() = {
@@ -107,25 +126,31 @@ func initRebirth() = {
   let assetId = pmt.assetId.value()
   let initTx = i.transactionId.toBase58String()
   let address = i.caller.toString()
-
-  let feePayment = i.payments[1].value()
   if (pmt.amount != 1) then throw("NFT is not attached") else
-  if (feePayment.assetId != eggsAssetId) then throw("You need to attach EGG tokens as fee")
-  else if (feePayment.amount < feeAmount)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + feeAmount.toString())
-  else {
+
+
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[feeAmount],[]).asInt()
+  let leftToPay = feeAmount-amountPaidByCoupons
+
+  strict payment = if leftToPay!=0 then {
+    let feePayment = i.payments[1].value()
+    if (feePayment.assetId != getEggAssetId()) then throw("You need to attach EGG tokens as fee")
+    else if (feePayment.amount < leftToPay)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + leftToPay.toString())
+    else leftToPay
+  } else 0
    
-    let (gen, rarity) = getAssetFarmingPower(assetId)
+  let (gen, rarity) = getAssetFarmingPower(assetId)
 
-    strict call = invoke(Address(getOrigin(assetId)), "reduceRarity", [assetId.toBase58String(), gen], [])
+  strict call = invoke(getOrigin(assetId), "reduceRarity", [assetId.toBase58String(), gen], [])
     
-    [
-      IntegerEntry("address_" + address + "_initTx_" + initTx + "_finishBlock", height+delayForHatching),
-      StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
-      IntegerEntry("address_" + address + "_initTx_" + initTx + "_assetRarity", rarity),
-      StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String())
-    ]
+  [
+    IntegerEntry("address_" + address + "_initTx_" + initTx + "_finishBlock", height+delayForHatching),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
+    IntegerEntry("address_" + address + "_initTx_" + initTx + "_assetRarity", rarity),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String())
+  ]
 
-  }
+  
 }
 
 
@@ -147,16 +172,16 @@ func finishRebirth(initTx: String) = {
       let txId = initTx
       let result = if (win.indexOf("perch") != unit) then {
         let color = win.takeRight(1)
-        strict call = invoke(Address(farmingAddress), "addFreePerch", [address, color], []) 
+        strict call = invoke(getFarmingAddress(), "addFreePerch", [address, color], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
       } else if (win == "incubator") then {
-        strict call = invoke(Address(incubatorAddress), "issueFreeDuck", [address, txId], [])
+        strict call = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
       } else if (win == "phoenix") then {
-        strict call = invoke(Address(incubatorAddress), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
+        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
       } else if (win == "duckling") then {
-        strict call = invoke(Address(ducklingAddress), "issueFreeDuckling", [address, txId], []) 
+        strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
       } else {
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", "")]
