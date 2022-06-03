@@ -1,7 +1,7 @@
 {-# STDLIB_VERSION 5 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
-
+#TODO: make sure to allow coupons contract when we release new items
 func keyArtefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
 
 func keyUnstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"

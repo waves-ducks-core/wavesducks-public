@@ -20,6 +20,7 @@ func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_reb
 func getSwopPromoAddress() =  Address(tryGetStringExternal(getOracle(),"static_swopPromoAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
 func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 
 
 let delayForHatching = 2
@@ -114,9 +115,14 @@ func countEggsNeededAmount(totalDucksAmount: Int) = {
     price *1000000 /100*(100-saleCoefficient)
 }
 
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("FAI: wrong type, expected: Int")
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
-  if i.caller != this then throw("admin only") else 
+  if i.caller != this then throw("ICU: admin only") else 
   [
     StringEntry("static_oracleAddress",oracle)
   ]
@@ -126,7 +132,7 @@ func configureOracle(oracle: String) = {
 @Callable(i)	
 func setDiscount(val: Int) = {	
   if (i.caller != this) then {	
-    throw("admin_only")	
+    throw("ISD: admin_only")	
   } else {	
     [IntegerEntry("discountCoefficient", val)]	
   }	
@@ -135,7 +141,7 @@ func setDiscount(val: Int) = {
 @Callable(i)	
 func setSale(val: Int) = {	
   if (i.caller != this) then {	
-    throw("admin_only")	
+    throw("ISS: admin_only")	
   } else {	
     [IntegerEntry("saleCoefficient", val)]	
   }	
@@ -144,12 +150,10 @@ func setSale(val: Int) = {
 @Callable(i)
 func startDuckHatching(refererAddress: String) = {
   if (isLocked() > 0) then {
-    throw("EGG operations are temporarily locked")
+    throw("ISDH: EGG operations are temporarily locked")
   } else {
     let totalDucksAmount = tryGetInteger("ducks_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
-
-    let firstPayment = i.payments[0].value()
 
     let results = [
         StringEntry(getHatchingStatusKey(i.originCaller.toString(), i.transactionId), HatchingStarted),
@@ -158,19 +162,26 @@ func startDuckHatching(refererAddress: String) = {
         IntegerEntry("ducks_last_price", eggsNeeded / 1000000)
       ]
 
-    if (i.caller == getBabyDuckAddress()) then {
-      results ++ [
-        BooleanEntry("hatching_" + i.transactionId.toBase58String() + "_babyDuck", true)
-      ]
-    }
-    else if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
-    else if (firstPayment.amount < eggsNeeded)  then throw("To hatch a duck you currently need the following amount of EGGlets: " + eggsNeeded.toString())
-    else {
-        let refererReward = fraction(eggsNeeded, RefererReward, 100)
-        strict refCall = invoke(getRefContractAddress(), "refPayment",
-        [refererAddress], [AttachedPayment(getEggAssetId(), refererReward)])
-        results ++ [ScriptTransfer(i.caller, firstPayment.amount - eggsNeeded, getEggAssetId())]
-    }
+
+    strict entry = if (i.caller == getBabyDuckAddress()) then [BooleanEntry("hatching_" + i.transactionId.toBase58String() + "_babyDuck", true)] else
+      strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[eggsNeeded],[]).asInt()
+      let leftToPay = eggsNeeded-amountPaidByCoupons 
+      if leftToPay!=0 then {
+        let firstPayment = i.payments[0].value()
+
+        if (firstPayment.assetId != getEggAssetId()) then throw("ISDH: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+        if (firstPayment.amount < leftToPay) then throw("ISDH: To hatch a duck you currently need the following amount of EGGlets: " + leftToPay.toString()) else
+        
+        let refererReward = fraction(leftToPay, RefererReward, 100)
+        strict refCall = invoke(getRefContractAddress(), "refPayment", [refererAddress], [AttachedPayment(getEggAssetId(), refererReward)])
+        
+        let payback = firstPayment.amount - leftToPay
+        if payback > 0 then [ScriptTransfer(i.caller, payback , getEggAssetId())] else []
+      
+      }else []
+      
+    results ++ entry
+    
   }
 }
 
@@ -179,8 +190,8 @@ func startDuckHatching(refererAddress: String) = {
 @Callable(i)
 func startDuckHatchingForAddress(address: String) = {
   if (isLocked() > 0) then 
-    throw("EGG operations are temporarily locked")
-   else if (i.caller != getSwopPromoAddress()) then throw("Pernission denied") else {
+    throw("ISDHFA: EGG operations are temporarily locked")
+   else if (i.caller != getSwopPromoAddress()) then throw("ISDHFA: Permission denied") else {
     let totalDucksAmount = tryGetInteger("ducks_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
 
@@ -213,7 +224,7 @@ func finishDuckHatching(txIdStr: String) = {
   
   if (hatchingTxStatus == HatchingFinished) then {
     let duckId = getStringValue(this, getDuckIdKey(i.caller.toString(), txId))
-    throw("The duck was hatched and claimed already, here is the folowing: " + duckId)
+    throw("IFDH: The duck was hatched and claimed already, here is the folowing: " + duckId)
   } else 
     if (hatchingFinishHeight > height) then throw("Hatching is not finished yet " + (hatchingFinishHeight - height).toString() + " blocks remaining, it will take around " +  (hatchingFinishHeight - height).toString() + " minutes")
     else {
@@ -241,7 +252,7 @@ func finishDuckHatching(txIdStr: String) = {
 @Callable(i)
 func issueFreeDuck(address: String, txIdStr: String) = {
   if (i.caller != getRebirthAddress()) then {
-    throw("rebirth only")
+    throw("ISFD: rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
     let hatchingStatusKey = getHatchingStatusKey(address, txId)
@@ -278,7 +289,7 @@ func issueFreeDuck(address: String, txIdStr: String) = {
 @Callable(i)
 func issueJackpot(address: String, txIdStr: String, gen: String) = {
   if (i.caller != getRebirthAddress() && i.caller != this) then {
-    throw("admin or rebirth only")
+    throw("ISJ: admin or rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
     let hatchingStatusKey = getHatchingStatusKey(address, txId)
@@ -295,7 +306,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 
     let duckIdKey = getDuckIdKey(address, txId)
     let valueDuckIdKeyExits = tryGetString(duckIdKey)
-    if valueDuckIdKeyExits != "" then throw("You will override following duckId :"+duckIdKey+" make sure that your txId is unique!") else
+    if valueDuckIdKeyExits != "" then throw("ISJ: You will override following duckId :"+duckIdKey+" make sure that your txId is unique!") else
     ([
       IntegerEntry(getHatchingFinishHeightKey(address, txId), height),
       IntegerEntry("ducks_amount", totalDucksAmount + 1),
@@ -316,7 +327,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 func reduceRarity(assetId: String, fGen: String) = {
   let asset = assetId.fromBase58String()
   if (i.caller != getRebirthAddress() && i.caller != this) then {
-    throw("admin or rebirth only")
+    throw("IRR: admin or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
     let letter = duckGen.take(6).takeRight(1)
