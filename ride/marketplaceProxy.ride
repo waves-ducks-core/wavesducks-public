@@ -6,8 +6,6 @@
 let mAccPKey = base58'23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T'
 let mAccAddr = mAccPKey.addressFromPublicKey()
 let redeployPubKey = base58''
-let feePercent = 10
-
 
 let kTotalLiquidity = "total_liquidity"
 let kInitialized = "INITIALIZED"
