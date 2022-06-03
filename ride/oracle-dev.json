@@ -102,6 +102,24 @@
             "type": "string",
             "value": ""
             
+        },
+        {
+            "key": "static_marketPlaceFee",
+            "type": "integer",
+            "value": 15
+            
+        },
+        {
+            "key": "static_marketPlaceFeeArtefacts",
+            "type": "integer",
+            "value": 20
+            
+        },
+        {
+            "key": "static_feeAggregator",
+            "type": "string",
+            "value": "3P6AobNbcQ3ZjcRY37mJPKN8PP9Giz8kgeY"
+            
         }
     ],
     "fee": 500000,
