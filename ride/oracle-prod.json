@@ -110,10 +110,10 @@
             
         },
         {
-            "key": "static_marketPlaceFee",
+            "key": "static_marketPlaceFeeArtefacts",
             "type": "integer",
-            "value": 15
-            
+            "value": 20
+
         },
         {
             "key": "static_feeAggregator",
