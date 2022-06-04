@@ -75,8 +75,8 @@ let saleCoefficient = tryGetInteger("saleCoefficient")
 
 func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int, offset: Int) = {
   let randomSeedBlock = blockInfoByHeight(hatchingFinishHeight-1).value()
-  let randomHash = sha256(txId + randomSeedBlock.vrf.value())
-  randomHash.toInt(offset*8) % variants
+  let randomHash = sha256(base58'incubator' + txId + randomSeedBlock.vrf.value())
+  randomHash.toInt(offset) % variants
 }
 
 func wasUniqueBorn(gen: String) = {
@@ -84,12 +84,12 @@ func wasUniqueBorn(gen: String) = {
 }
 
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
-  let jackpotRandom = getRandomNumber(500, txId, hatchingFinishHeight, 0)
-  if (jackpotRandom < 5 && wasUniqueBorn("DUCK-WWGRANJA-JU") == 0) then {
+  let jackpotRandom = getRandomNumber(500, txId, hatchingFinishHeight, 4)
+  if (jackpotRandom > 495 && wasUniqueBorn("DUCK-WWGRANJA-JU") == 0) then {
     ("DUCK-WWGRANJA-JU", "2A1G1J1N1R2W-J")
   } else {
-    let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 0)
-    let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
+    let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 5)
+    let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 6)
     let color = if (colorRandom == 0) then "Y"
       else if (colorRandom == 1) then "G" 
       else if (colorRandom == 2) then "B" 
