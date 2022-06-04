@@ -84,9 +84,9 @@ func wasUniqueBorn(gen: String) = {
 }
 
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
-  let jackpotRandom = getRandomNumber(500, txId, hatchingFinishHeight, 4)
+  let jackpotRandom = getRandomNumber(1000, txId, hatchingFinishHeight, 4)
   let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
-  if (jackpotRandom > 495 && wasUniqueBorn("DUCK-WWGRANJA-JU") == 0) then {
+  if (jackpotRandom > 495 && jackpotRandom < 505 && wasUniqueBorn("DUCK-WWGRANJA-JU") == 0) then {
     ("DUCK-WWGRANJA-JU", "2A1G1J1N1R2W-J", entry)
   } else {
     let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 5)
