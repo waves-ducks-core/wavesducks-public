@@ -86,7 +86,7 @@ func wasUniqueBorn(gen: String) = {
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
   let jackpotRandom = getRandomNumber(500, txId, hatchingFinishHeight, 4)
   if (jackpotRandom > 495 && wasUniqueBorn("DUCK-WWGRANJA-JU") == 0) then {
-    ("DUCK-WWGRANJA-JU", "2A1G1J1N1R2W-J")
+    ("DUCK-WWGRANJA-JU", "2A1G1J1N1R2W-J", jackpotRandom)
   } else {
     let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 5)
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 6)
@@ -95,10 +95,10 @@ func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
       else if (colorRandom == 2) then "B" 
       else "R"
 
-    if (typeRandom == 0) then ("DUCK-HHHHHHHH-G" + color, "8H-G")
-      else if (typeRandom == 1) then ("DUCK-GGGGGGGG-G" + color, "8G-G")
-      else if (typeRandom == 2) then ("DUCK-IIIIIIII-G" + color, "8I-G")
-      else ("DUCK-KKKKKKKK-G" + color, "8K-G")
+    if (typeRandom == 0) then ("DUCK-HHHHHHHH-G" + color, "8H-G", jackpotRandom)
+      else if (typeRandom == 1) then ("DUCK-GGGGGGGG-G" + color, "8G-G", jackpotRandom)
+      else if (typeRandom == 2) then ("DUCK-IIIIIIII-G" + color, "8I-G", jackpotRandom)
+      else ("DUCK-KKKKKKKK-G" + color, "8K-G", jackpotRandom)
   }
 }
 
@@ -228,7 +228,7 @@ func finishDuckHatching(txIdStr: String) = {
   } else 
     if (hatchingFinishHeight > height) then throw("Hatching is not finished yet " + (hatchingFinishHeight - height).toString() + " blocks remaining, it will take around " +  (hatchingFinishHeight - height).toString() + " minutes")
     else {
-      let (duckGen, farmGen) = getRandomName(txId, hatchingFinishHeight)
+      let (duckGen, farmGen, jackpotRandom) = getRandomName(txId, hatchingFinishHeight)
       let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
       let asset = Issue(duckGen, description, 1, 0, false, unit, hatchingFinishHeight)
@@ -242,6 +242,7 @@ func finishDuckHatching(txIdStr: String) = {
         StringEntry(assetId.toBase58String(), duckIdKey),
         BooleanEntry("duck_" + assetId.toBase58String() + "_grown", duckFromBaby),
         IntegerEntry(getDuckStatsKey(duckGen), amount),
+        IntegerEntry("last_jackpot_random", jackpotRandom),
         IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
         asset,
         ScriptTransfer(i.caller, 1, assetId)
@@ -261,7 +262,7 @@ func issueFreeDuck(address: String, txIdStr: String) = {
     let totalDucksAmount = tryGetInteger("ducks_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
 
-    let (duckGen, farmGen) = getRandomName(txId, valueOrErrorMessage(transactionHeightById(txId),txIdStr+ " not found "+toBase58String(txId)) + 1)
+    let (duckGen, farmGen, jackpotRandom) = getRandomName(txId, valueOrErrorMessage(transactionHeightById(txId),txIdStr+ " not found "+toBase58String(txId)) + 1)
     let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
     let asset = Issue(duckGen, description, 1, 0, false, unit, height)
@@ -274,7 +275,7 @@ func issueFreeDuck(address: String, txIdStr: String) = {
       IntegerEntry(getHatchingFinishHeightKey(address, txId), height),
       IntegerEntry("ducks_amount", totalDucksAmount + 1),
       IntegerEntry("ducks_last_price", eggsNeeded / 1000000),
-    
+      IntegerEntry("last_jackpot_random", jackpotRandom),
       StringEntry(hatchingStatusKey, HatchingFinished),
       StringEntry(duckIdKey, assetId.toBase58String()),
       StringEntry(assetId.toBase58String(), duckIdKey),
