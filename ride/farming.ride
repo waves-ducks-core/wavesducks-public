@@ -192,7 +192,7 @@ func calculatePerchPrice(address: String)= {
 func isTrustedSc(address: String)={
   let allowedContracts = getTrustedContracts()
   let allowedContractsList = allowedContracts.split(";")
-  allowedContractsList.indexOf(address) ==unit
+  allowedContractsList.indexOf(address) !=unit
 }
 
 @Callable(i)
