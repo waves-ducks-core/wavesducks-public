@@ -189,6 +189,12 @@ func calculatePerchPrice(address: String)= {
 
 }
 
+func isTrustedSc(address: String)={
+  let allowedContracts = getTrustedContracts()
+  let allowedContractsList = allowedContracts.split(";")
+  allowedContractsList.indexOf(address) ==unit
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("FCO: admin only") else 
@@ -259,8 +265,8 @@ func stakeNFT() = {
   let pmt = i.payments[0].value()
   let assetId = i.payments[0].value().assetId.value()
   let realCaller = i.caller.toString()
-  #TODO: invert logic, default stake sc's in normal way, unless it's duckhouses we want to use the realCaller
-  let address = if getMetaraceAddress() == i.caller || getDuckWrapperSc() == i.caller then realCaller else i.originCaller.toString()
+  let address = if isTrustedSc(i.caller.toString())  then i.originCaller.toString() else realCaller
+
   let color = assetInfo(assetId).value().name.takeRight(1)
   let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
 
@@ -282,10 +288,8 @@ func stakeNFT() = {
 @Callable(i)
 func stakeNFTWithoutPerch() = {
   strict locked = isLocked()
-  let allowedContracts = getTrustedContracts()
-  let allowedContractsList = allowedContracts.split(";")
   let dappToCall = i.caller.toString()
-  if allowedContractsList.indexOf(dappToCall) == unit then throw("FSNWP: Only trusted smart contracts can stake without a perch!") else
+  if isTrustedSc(dappToCall) then throw("FSNWP: Only trusted smart contracts can stake without a perch!") else
     let pmt = i.payments[0].value()
     let assetId = i.payments[0].value().assetId.value()
     let address = i.originCaller.toString()
@@ -311,8 +315,7 @@ func unstakeNFT(asset: String) = {
   } else {
     let assetId = asset.fromBase58String()
     let unstaker = tryGetString("address_"+add+"_asset_"+asset+"_unstaker")
-    #TODO: invert logic, default stake sc's in normal way, unless it's duckhouses we want to use the realCaller
-    let address = if getMetaraceAddress() == i.caller || getDuckWrapperSc() == i.caller  then i.caller.toString() else add
+    let address = if isTrustedSc(i.caller.toString())  then add else i.caller.toString()
 
     let assetFarmingPower = getLastKnownAssetFarmingPower(address, asset)
     let assetRewardDelta = calcAssetRewardDelta(address, asset, assetFarmingPower)
@@ -352,8 +355,7 @@ func stakeJackpot(color: String) = {
     let pmt = i.payments[0].value()
     let assetId = pmt.assetId.value()
     let realCaller = i.caller.toString()
-    #TODO: invert logic, default stake sc's in normal way, unless it's duckhouses we want to use the realCaller
-    let address = if getMetaraceAddress() == i.caller || getDuckWrapperSc() == i.caller  then realCaller else i.originCaller.toString()
+    let address = if isTrustedSc(i.caller.toString())  then i.originCaller.toString() else realCaller
     let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
 
     let assetIssuer = assetInfo(assetId).value().issuer
@@ -383,8 +385,7 @@ func stakeJackpot(color: String) = {
 func unstakeJackpot(asset: String) = {
   strict locked = isLocked()
   let realCaller = i.caller.toString()
-  #TODO: invert logic, default stake sc's in normal way, unless it's duckhouses we want to use the realCaller
-  let address = if getMetaraceAddress() == i.caller || getDuckWrapperSc() == i.caller  then realCaller else i.originCaller.toString()
+  let address = if isTrustedSc(i.caller.toString())  then i.originCaller.toString() else realCaller
   if (isUserBlacklisted(address)) then {
     throw("FUJ: Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
   } else {
