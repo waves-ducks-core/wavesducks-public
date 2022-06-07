@@ -79,19 +79,22 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
   if (phoenixRandom == 1) then {
     "phoenix"
   } else {
-    let n = getRandomNumber(10, tx, finishHeight, 0)
-    if (n < 3) then {
-      "gone"
-    } else if (n < 5) then {
-      "duckling"
-    }
-    else if (n == 5) then { "perch_Y" }
-    else if (n == 6) then { "perch_G" }
-    else if (n == 7) then { "perch_B" }
-    else if (n == 8) then { "perch_R" }
-    else {
-      "incubator"
-    }
+    #Every % means 10 numbers
+    let n = getRandomNumber(1000, tx, finishHeight, 0)
+    if (n==1) then { "item_ART-FREEGENE" } else 
+    if(n < 145) then { "duckling_20" } else 
+    if(n < 195) then { "duckling_40" } else 
+    if(n < 200) then { "duckling_80" } else 
+    if(n < 300) then { "incubator" } else 
+    if (n<400) then { "perch_Y" } else 
+    if (n<500) then { "perch_G" } else 
+    if (n<600) then { "perch_B" } else 
+    if (n<700) then { "perch_R" } else
+    if (n<849) then { "mantle_1" } else
+    if (n<850) then { "mantle_40" } else
+    if (n<930) then { "mantle_3" } else
+    if (n<980) then { "mantle_5" } else
+    { "mantle_10" }
   }
 }
 
@@ -170,21 +173,40 @@ func finishRebirth(initTx: String) = {
       let win = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity)  
 
       let txId = initTx
+
       let result = if (win.indexOf("perch") != unit) then {
         let color = win.takeRight(1)
         strict call = invoke(getFarmingAddress(), "addFreePerch", [address, color], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
       } else if (win == "incubator") then {
         strict call = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
       } else if (win == "phoenix") then {
         strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-      } else if (win == "duckling") then {
-        strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId], []) 
+
+        #TODO: make sure duckling can have different levels
+      } else if (win.indexOf("duckling") !=unit) then {
+        let level = win.split("_")[1].asInt()
+        strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,level], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-      } else {
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", "")]
+
+      } else if (win.indexOf("mantle") !=unit) then {
+        #TODO: make issuing from mantles here
+        let level = win.split("_")[1].asInt()
+        let call = "mantleissue"
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else if (win.indexOf("item") !=unit) then {
+        #TODO: make issuing from item
+        let itemName = win.split("_")[1].asString()
+        let call = "itemissue"
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else{
+        throw("RFB: Some error occured, please contact the admins!")
       }
 
       result ++ [

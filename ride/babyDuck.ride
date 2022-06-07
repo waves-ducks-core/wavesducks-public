@@ -118,7 +118,7 @@ func getBackendProof(maxFeedAmount: Int, userNonce: Int, address: String) = {
 }
 
 @Callable(i)
-func issueFreeDuckling(address: String, txIdStr: String) = {
+func issueFreeDuckling(address: String, txIdStr: String, percentage: Int) = {
   if i.caller != this && i.caller.bytes != rebirthAddress then throw("You can't issue free duckling") else
   let asset = Issue("BABY-11111111-GZ", "", 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
@@ -126,6 +126,7 @@ func issueFreeDuckling(address: String, txIdStr: String) = {
       StringEntry(address + "_" + txIdStr + "_di", assetId.toBase58String()),
       IntegerEntry("stats_amount", tryGetInteger("stats_amount") + 1),
       BooleanEntry("duckling_" + assetId.toBase58String() + "_issuedByFeedCall", i.caller == this),
+      IntegerEntry("duckling_" + assetId.toBase58String() + "_startPercentage", percentage),
       asset,
       ScriptTransfer(addressFromString(address).value(), 1, assetId)
     ], assetId.toBase58String())
@@ -145,7 +146,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
     if (getBool(keyDucklingGrown(ducklingId))) then throw("Duckling is already grown") else 
     if (userNonce != currentNonce + 1) then throw("User Nonce should be " + currentNonce.toString() + " + 1, while received " + userNonce.toString()) else {
       if (ducklingId == "") then {
-        strict ducklingAssetId = invoke(this, "issueFreeDuckling", [i.originCaller.toString(), i.transactionId.toBase58String()], [])
+        strict ducklingAssetId = invoke(this, "issueFreeDuckling", [i.originCaller.toString(), i.transactionId.toBase58String(),0], [])
         let id = match ducklingAssetId {
           case v: String => v
           case _ => throw("Can't generate NFT")
