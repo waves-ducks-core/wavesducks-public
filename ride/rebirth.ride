@@ -22,6 +22,8 @@ func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_i
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
 func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
+func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String())
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 let PHOENIXBASEOPTIONS = 1000  # base chance to get a phoenix: 1 / (1000 - 1000/2 * rarity)
@@ -90,7 +92,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
     if (n<500) then { "perch_G" } else 
     if (n<600) then { "perch_B" } else 
     if (n<700) then { "perch_R" } else
-    if (n<849) then { "mantle_1" } else
+    if (n<849) then { "mantle_2" } else
     if (n<850) then { "mantle_40" } else
     if (n<930) then { "mantle_3" } else
     if (n<980) then { "mantle_5" } else
@@ -187,7 +189,6 @@ func finishRebirth(initTx: String) = {
         strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
-        #TODO: make sure duckling can have different levels
       } else if (win.indexOf("duckling") !=unit) then {
         let level = win.split("_")[1].asInt()
         strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,level], []) 
@@ -196,13 +197,12 @@ func finishRebirth(initTx: String) = {
       } else if (win.indexOf("mantle") !=unit) then {
         #TODO: make issuing from mantles here
         let level = win.split("_")[1].asInt()
-        let call = "mantleissue"
+        strict call = invoke(getGameDappAddress(), "issueFreeMantle", [address, txId,level], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else if (win.indexOf("item") !=unit) then {
-        #TODO: make issuing from item
         let itemName = win.split("_")[1].asString()
-        let call = "itemissue"
+        strict call = invoke(getItemsAddress(), "issueArtefact", [itemName, address], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else{
