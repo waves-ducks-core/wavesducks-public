@@ -61,7 +61,7 @@ func claimMantle(choise: String, collectiveFarmAssetId: String) = {
       BooleanEntry("reward_" + callerAddress + "_claimed", true)
     ]
     if (choise == "mantle") then {
-      strict freeMantleIssue = invoke(Address(gameContract), "issueFreeMantle", [i.caller.toString(), "mantle", 2, 2000000], [])
+      strict freeMantleIssue = invoke(Address(gameContract), "issueFreeMantle", [i.caller.toString(), "mantle", 2], [])
       res
     }else {
       res ++ [ScriptTransfer(i.caller, 4000000, collectiveFarmAssetId.fromBase58String())]
