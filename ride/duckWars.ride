@@ -142,9 +142,10 @@ func issueFreeMantle(address: String, type: String, level: Int) = {
       let kMantleInvested = keyArtefactInvested(MANTLENAME, mantleNftId.toBase58String())
       let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, address, mantleNftId)
       let kOnlyArtefactLevel = keyOnlyArtefactLevel(mantleNftId)
-      #TODO: calculate dynamiccaly
-      let invested = 0
-
+      #let newLevel = (10 * pow(totalInvested, 8, 6, 1, 8, HALFUP) + 100000000) / 100000000
+      #let part1 =(level*100000000-100000000)/10
+      #let invested = log(part1, 8, 6, 1, 8, HALFUP)
+      let invested = pow(level - 1, 1, (1000000000/6), 8, 8, HALFUP)
       [
         IntegerEntry(kMantleLevel, level),
         IntegerEntry(kMantleInvested, invested),
