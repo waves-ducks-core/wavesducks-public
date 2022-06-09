@@ -1,0 +1,28 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+@Callable(i)
+func makePayment() = {
+  let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+  let farmingContractAddress = base58'3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW'
+  let klastRefillHeight = "lastRefillHeight"
+
+  let lastRefillHeight = match getInteger(klastRefillHeight) {
+    case int: Int => int
+    case _ => 0
+  }
+  
+  if (height - lastRefillHeight < 1440) then throw("Cannot refill yet, needs " + (1440 - (height - lastRefillHeight)).toString() + " blocks")
+  else {
+    [
+      IntegerEntry(klastRefillHeight, height),
+      ScriptTransfer(Address(farmingContractAddress), 70_00000000, eggAssetId),
+      ScriptTransfer(i.caller, 1_000000, eggAssetId)
+    ]
+  }
+}
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        
