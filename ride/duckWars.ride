@@ -147,7 +147,7 @@ func issueFreeMantle(address: String, type: String, level: Int) = {
       #let part1 =(level*100000000-100000000)/10
       #let invested = log(part1, 8, 6, 1, 8, HALFUP)
       let invested = pow(level - 1, 1, (1000000000/6), 8, 8, HALFUP)
-      [
+      ([
         IntegerEntry(kMantleLevel, level),
         IntegerEntry(kMantleInvested, invested),
         BooleanEntry(kMantleExists, true),
@@ -156,7 +156,7 @@ func issueFreeMantle(address: String, type: String, level: Int) = {
         StringEntry(kArtefactType, MANTLENAME),
         StringEntry(kArtefactOwnerAndStatus, STATUSFREE),
         IntegerEntry(kOnlyArtefactLevel, level)
-      ]
+      ],mantleNftId.toBase58String())
   }
 }
 

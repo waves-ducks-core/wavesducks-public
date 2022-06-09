@@ -118,7 +118,7 @@ func countEggsNeededAmount(totalDucksAmount: Int) = {
 
 func asInt(value: Any) = match value {
   case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
+  case _ => throw("IAI: wrong type, expected: Int")
 }
 
 @Callable(i)

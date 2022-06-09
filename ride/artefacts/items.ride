@@ -304,11 +304,11 @@ func issueArtefact(type: String, receiver: String) = {
     let artefact = Issue(type, "NFT artefact of Waves Ducks game. Drop #2.", 1, 0, false, unit, 0)
     let artefactId = artefact.calculateAssetId()
 
-    [
+    ([
       artefact,
       StringEntry("artefact_" + artefactId.toBase58String() + "_type", type),
       ScriptTransfer(address, 1, artefactId)
-    ]
+    ],artefactId.toBase58String())
   
 }
 
