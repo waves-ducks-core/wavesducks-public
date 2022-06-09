@@ -26,6 +26,7 @@ func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fro
 func getWearablesAddress() = Address(tryGetStringExternal(getOracle(),"static_wearablesAddress").fromBase58String())
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
 
 
 let MANTLENAME = "mantle"
@@ -127,7 +128,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func issueFreeMantle(address: String, type: String, level: Int) = {
-  if (i.caller != this && i.caller != getSwopPromoAddress()) then throw("WIFM: Can be called only by admin") else
+  if (i.caller != this && i.caller != getSwopPromoAddress()  && i.caller != getRebirthAddress()) then throw("WIFM: Can be called only by admin") else
   if (type != MANTLENAME) then throw("WIFM: You can buy only mantles now")
   else {
 
