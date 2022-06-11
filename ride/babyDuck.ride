@@ -2,12 +2,25 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let rebirthAddress = base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
-let incubatorAddress = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 let backendPubKey = base58'BmKAXRQy7jZm44fa1YxNQDTcAwNSb74EpQwP5CT7UHdV'
 let STARTTIMESTAMP = 1_632_474_000_000
 let LAPLENGTH = 21_600_000
-let EGGASSETID = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 let DUCKLINGPRICE = 8_0_000_000
 let percentGrowthPrecision = 1_000_000_000_000_000_0
 let existingDuckPrecision = 1_000_000_000_000_00
@@ -118,8 +131,17 @@ func getBackendProof(maxFeedAmount: Int, userNonce: Int, address: String) = {
 }
 
 @Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
 func issueFreeDuckling(address: String, txIdStr: String, percentage: Int) = {
-  if i.caller != this && i.caller.bytes != rebirthAddress then throw("You can't issue free duckling") else
+  if i.caller != this && i.caller != getRebirthAddress() then throw("You can't issue free duckling") else
   let asset = Issue("BABY-11111111-GZ", "", 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
     ([
@@ -142,7 +164,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
   let currentNonce = tryGetInteger(kAddressNonce)
 
   let realDucklingId = if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), backendPubKey)) then throw("Invalid proof from backend") else 
-    if (i.payments.size() != 1 || i.payments[0].value().assetId != EGGASSETID) then throw("Bad payment attached (asset[s] or amount)") else 
+    if (i.payments.size() != 1 || i.payments[0].value().assetId != getEggAssetId()) then throw("Bad payment attached (asset[s] or amount)") else 
     if (getBool(keyDucklingGrown(ducklingId))) then throw("Duckling is already grown") else 
     if (userNonce != currentNonce + 1) then throw("User Nonce should be " + currentNonce.toString() + " + 1, while received " + userNonce.toString()) else {
       if (ducklingId == "") then {
@@ -223,7 +245,7 @@ func turnDucklingIntoDuck() = {
     let pmt = assetInfo(i.payments[0].value().assetId.value()).value()
     if (getCurrentLevelBigInt(pmt.id.toBase58String()) < 100.toBigInt()) then throw("Duckling is not grown yet...") else
     if (pmt.issuer != this) then throw("Can use only ducklings from this dApp") else {
-      strict call = invoke(Address(incubatorAddress), "startDuckHatching", [""], [])
+      strict call = invoke(getIncubatorAddress(), "startDuckHatching", [""], [])
       let kDucklingGrown = keyDucklingGrown(pmt.id.toBase58String())
       [
         BooleanEntry(kDucklingGrown, true),
