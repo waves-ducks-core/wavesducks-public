@@ -78,11 +78,20 @@ func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, 
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
   let phoenixOptions = PHOENIXBASEOPTIONS - fraction(PHOENIXBASEOPTIONS / 2, assetRarity, 100)  # chance = 0.1% + 0.1% * rarity (from 0.02 to 1)
-  
-  let phoenixRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
+
+  let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
   let itemRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 2)
   
-  if (phoenixRandom == 1) then { "phoenix"} else 
+  
+  if (jackpotRandom == 1) then {
+    let chance = getRandomNumber(100, tx, finishHeight, 6)
+    if (chance>=50) then {
+        "fine"
+    }else {
+        "phoenix"
+    }     
+  
+  } else 
   if (itemRandom == 1) then {"item_ART-FREEGENE" } else {  
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
@@ -190,6 +199,10 @@ func finishRebirth(initTx: String) = {
 
       } else if (win == "phoenix") then {
         strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else if (win == "fine") then {
+        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWFINE"], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       } else if (win.indexOf("duckling") !=unit) then {
