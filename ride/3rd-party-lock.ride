@@ -33,6 +33,7 @@ func getDuckDetails(assetId: ByteVector) = {
   )
 }
 
+#TODO: read values from centralized oracle
 func getIncubatorAddress() = tryGetString("static_incubatorAddress").fromBase58String() #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress() = tryGetString("static_breederAddress").fromBase58String() #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getFarmingAddress() = tryGetString("static_farmingAddress").fromBase58String() #base58'3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW'
@@ -108,6 +109,7 @@ func buyAccessItem() = {
   }
 }
 
+#TODO: allow locking ducks without spending this egg on perches, using the stakenftwithoutperch method
 @Callable(i)
 func lockDuck() = {
   let addressStr = i.caller.toString()

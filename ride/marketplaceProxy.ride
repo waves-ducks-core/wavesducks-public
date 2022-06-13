@@ -73,24 +73,6 @@ func amountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
 }
 
-func isSymbolA(acc: Int, sym: String) = { if (sym == "A") then {acc+1} else {acc+0} }
-func isSymbolB(acc: Int, sym: String) = { if (sym == "B") then {acc+1} else {acc+0} }
-func isSymbolC(acc: Int, sym: String) = { if (sym == "C") then {acc+1} else {acc+0} }
-func isSymbolD(acc: Int, sym: String) = { if (sym == "D") then {acc+1} else {acc+0} }
-func isSymbolE(acc: Int, sym: String) = { if (sym == "E") then {acc+1} else {acc+0} }
-func isSymbolF(acc: Int, sym: String) = { if (sym == "F") then {acc+1} else {acc+0} }
-func isSymbolG(acc: Int, sym: String) = { if (sym == "G") then {acc+1} else {acc+0} }
-func isSymbolH(acc: Int, sym: String) = { if (sym == "H") then {acc+1} else {acc+0} }
-
-func getGen(assetName: String) = {
-  # getGen("DUCK-ABCDDCBA-GY") -> 2A2B2C2D-G
-  let geno = assetName.drop(5).dropRight(3).split("")
-  amountOrClear(toString(FOLD<8>(geno, 0, isSymbolA)) + "A") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolB)) + "B") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolC)) + "C") +
-  amountOrClear(toString(FOLD<8>(geno, 0, isSymbolD)) + "D") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolE)) + "E") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolF)) + "F") +
-  amountOrClear(toString(FOLD<8>(geno, 0, isSymbolG)) + "G") + amountOrClear(toString(FOLD<8>(geno, 0, isSymbolH)) + "H")
-}
-
-
 func getAssetOrigin(generation: String) = {
   let incubatorAddress = getStrA(mAccAddr, kIncubatorDapp)
   let breederAddress = getStrA(mAccAddr, kBreederDapp)
@@ -104,6 +86,11 @@ func getAssetRarity(geno: String, generation: String) = {
   if (power > 0) then {power} else {2}
 }
 
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("wrong type, expected: String")
+}
+
 func getAssetFarmingPower(assetId: ByteVector) = {
   let breederAddress = getStrA(mAccAddr, kBreederDapp).fromBase58String()
   let incubatorAddress = getStrA(mAccAddr, kIncubatorDapp).fromBase58String()
@@ -111,8 +98,8 @@ func getAssetFarmingPower(assetId: ByteVector) = {
   if (assetInfo(assetId).value().issuer == Address(breederAddress) || assetInfo(assetId).value().issuer == Address(incubatorAddress)) then {
     let assetName = assetInfo(assetId).value().name
     let generation = assetName.takeRight(2).take(1)
-    let gen = getGen(assetName) + "-" + generation
-    getAssetRarity(gen, generation)
+    strict farmGen = invoke(Address(breederAddress),"getGenFromName",[assetName],[]).asString()
+    getAssetRarity(farmGen, generation)
   } else {
     throw("_20")
   }
@@ -225,5 +212,3 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
   } else throw("_13")
 }
 
-@Verifier(tx)
-func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
