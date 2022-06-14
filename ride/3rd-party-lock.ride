@@ -33,7 +33,6 @@ func getDuckDetails(assetId: ByteVector) = {
   )
 }
 
-#TODO: read values from centralized oracle
 func getIncubatorAddress() = tryGetString("static_incubatorAddress").fromBase58String() #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress() = tryGetString("static_breederAddress").fromBase58String() #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getFarmingAddress() = tryGetString("static_farmingAddress").fromBase58String() #base58'3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW'
@@ -43,10 +42,13 @@ func getAccessItemAssetId() = tryGetString("static_accessItemAssetId").fromBase5
 func getAccessItemPrice() = tryGetInteger("static_accessItemPrice")
 func getMinLockDuration() = tryGetInteger("static_minLockDuration")
 func getBosterBuyAssetId() = tryGetString("static_boosterBuyAssetId").fromBase58String()
+func getGameName() = getString("static_shortGameName").valueOrErrorMessage("3GGN: There is no game name defined!")
+func getLongGameName() = getString("static_longGameName").valueOrErrorMessage("3GLGN: There is no long game name defined!")
+
 
 # DON'T USE tryGetInteger because it can return 0 as price for booster
-func getBosterPriceForLevel(level: Int) = getInteger("static_boosterPriceLevel_" + level.toString()).valueOrErrorMessage("There is no price value for this level of booster")
-func getBosterNameForLevel(level: Int) = getString("static_boosterName_" + level.toString()).valueOrErrorMessage("There is no suck booster")
+func getBosterPriceForLevel(level: Int) = getInteger("static_boosterPriceLevel_" + level.toString()).valueOrErrorMessage("3GBPFL: There is no price value for this level of booster")
+func getBosterNameForLevel(level: Int) = getString("static_boosterName_" + level.toString()).valueOrErrorMessage("3GBNFL: There is no such booster")
 
 @Callable(i)
 func updateSetting(key: String, value: Int | String | Boolean | ByteVector) = {
@@ -63,7 +65,7 @@ func updateSetting(key: String, value: Int | String | Boolean | ByteVector) = {
 
 @Callable(i)
 func deleteSetting(key: String) = {
-    if (i.caller != this) then throw("Only administrator can call this method")
+    if (i.caller != this) then throw("3DS: Only administrator can call this method")
     else [DeleteEntry(key)]
 }
 
@@ -75,11 +77,11 @@ func buyBooster() = {
   let pmt = i.payments[0].value()
   let price = getBosterPriceForLevel(newLevel)
   let expectedAssetId = getBosterBuyAssetId()
-  if (pmt.amount != price) then throw("Bad price, it should be: " + price.toString()) else 
-  if (pmt.assetId != expectedAssetId) then throw("Bad payment attached, it shoule be: " + expectedAssetId.toBase58String())
+  if (pmt.amount != price) then throw("3BB: Bad price, it should be: " + price.toString()) else 
+  if (pmt.assetId != expectedAssetId) then throw("3BB: Bad payment attached, it should be: " + expectedAssetId.toBase58String())
   else {
     let name = getBosterNameForLevel(newLevel)
-    let boosterItem = Issue("RACE-" + name, "[Booster] Metarace booster for the game, level = " + newLevel.toString(), 1, 0, false)
+    let boosterItem = Issue(getGameName()+"-" + name, "[Booster] "+getLongGameName()+" booster for the game, level = " + newLevel.toString(), 1, 0, false)
     let boosterItemAssetId = boosterItem.calculateAssetId()
     [
       boosterItem,
@@ -94,10 +96,10 @@ func buyBooster() = {
 func buyAccessItem() = {
   let pmt = i.payments[0].value()
   let addressStr = i.caller.toString()
-  if (pmt.assetId != getAccessItemAssetId()) then {throw("Wrong asset attached")}
-  else if (pmt.amount != getAccessItemPrice()) then {throw("Wrong amount of assets attached")}
+  if (pmt.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")}
+  else if (pmt.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")}
   else {
-    let issueAccessItem = Issue("ACCESS-RACE", "[Access] Metarace access NFT for Duckracer", 1, 0, false)
+    let issueAccessItem = Issue("ACCESS-"+getGameName(), "[Access] "+getLongGameName()+" access NFT for Duckracer", 1, 0, false)
     let accessRaceAssetId = issueAccessItem.calculateAssetId().toBase58String()
     let kSpotsBought = keySpotsBought(addressStr)
     [
@@ -109,7 +111,6 @@ func buyAccessItem() = {
   }
 }
 
-#TODO: allow locking ducks without spending this egg on perches, using the stakenftwithoutperch method
 @Callable(i)
 func lockDuck() = {
   let addressStr = i.caller.toString()
@@ -170,8 +171,8 @@ func unlockDuck(assetIdStr: String) = {
 
   let remainingForUnlock = tryGetInteger(keyDuckUnlockTime(assetId)) - lastBlock.timestamp
 
-  if (tryGetString(kDuckOwner) != addressStr) then {throw("The duck is not yours")} 
-  else if (remainingForUnlock > 0) then {throw("you need to wait to unlock " + (remainingForUnlock / 1000).toString() + " seconds")}
+  if (tryGetString(kDuckOwner) != addressStr) then {throw("3UL: The duck is not yours")} 
+  else if (remainingForUnlock > 0) then {throw("3UL: You need to wait to unlock " + (remainingForUnlock / 1000).toString() + " seconds")}
   else {
     let unstakeFuncName = if isJackpot == true then "unstakeJackpot" else "unstakeNFT" 
     strict inv1 = invoke(Address(getFarmingAddress()), unstakeFuncName, [assetIdStr], [])  # TODO: jackpot unstaking
