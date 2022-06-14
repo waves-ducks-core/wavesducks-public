@@ -9,13 +9,6 @@ func tryGetInteger(key: String) = {
   }
 }
 
-func tryGetString(key: String) = {
-  match getString(this, key) {
-      case a:String => a
-      case _ => ""
-  }
-}
-
 func keyBoughtBoosterLevel(addressStr: String) = "address_" + addressStr + "_boughtBoosterLevel"
 func keyDuckUnlockTime(assetId: ByteVector) = "duck_" + assetId.toBase58String() + "_unlockTime"
 func keyDuckOwner(assetId: ByteVector) = "duck_" + assetId.toBase58String() + "_owner"
@@ -33,22 +26,53 @@ func getDuckDetails(assetId: ByteVector) = {
   )
 }
 
-func getIncubatorAddress() = tryGetString("static_incubatorAddress").fromBase58String() #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getBreederAddress() = tryGetString("static_breederAddress").fromBase58String() #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getFarmingAddress() = tryGetString("static_farmingAddress").fromBase58String() #base58'3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW'
-func getEggAssetId() = tryGetString("static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
 
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+#CUSTOM SETTINGS CONFIGURED BY ORACLE SETUP
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getGameName() = getString("static_shortGameName").valueOrErrorMessage("3GGN: There is no game name defined!")
+func getLongGameName() = getString("static_longGameName").valueOrErrorMessage("3GLGN: There is no long game name defined!")
+func getNFTName() = getString("static_nftName").valueOrErrorMessage("3GLGN: There is no nft name defined!")
+
+#GENERIC SETTINGS READ FROM ORACLE
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+
+#GENERIC SETTINGS THAT NEED TO BE CONFIGURED MANUALLY
 func getAccessItemAssetId() = tryGetString("static_accessItemAssetId").fromBase58String()
 func getAccessItemPrice() = tryGetInteger("static_accessItemPrice")
 func getMinLockDuration() = tryGetInteger("static_minLockDuration")
 func getBosterBuyAssetId() = tryGetString("static_boosterBuyAssetId").fromBase58String()
-func getGameName() = getString("static_shortGameName").valueOrErrorMessage("3GGN: There is no game name defined!")
-func getLongGameName() = getString("static_longGameName").valueOrErrorMessage("3GLGN: There is no long game name defined!")
+
 
 
 # DON'T USE tryGetInteger because it can return 0 as price for booster
 func getBosterPriceForLevel(level: Int) = getInteger("static_boosterPriceLevel_" + level.toString()).valueOrErrorMessage("3GBPFL: There is no price value for this level of booster")
 func getBosterNameForLevel(level: Int) = getString("static_boosterName_" + level.toString()).valueOrErrorMessage("3GBNFL: There is no such booster")
+
+@Callable(i)
+func configureOracle(oracle: String, shortname: String, longname: String, nftName: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle),
+    StringEntry("static_shortGameName",shortname),
+    StringEntry("static_longGameName",longname),
+    StringEntry("static_nftName",nftName)
+  ]
+
+}
 
 @Callable(i)
 func updateSetting(key: String, value: Int | String | Boolean | ByteVector) = {
@@ -99,7 +123,7 @@ func buyAccessItem() = {
   if (pmt.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")}
   else if (pmt.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")}
   else {
-    let issueAccessItem = Issue("ACCESS-"+getGameName(), "[Access] "+getLongGameName()+" access NFT for Duckracer", 1, 0, false)
+    let issueAccessItem = Issue("ACCESS-"+getGameName(), "[Access] "+getLongGameName()+" access NFT for "+getNFTName(), 1, 0, false)
     let accessRaceAssetId = issueAccessItem.calculateAssetId().toBase58String()
     let kSpotsBought = keySpotsBought(addressStr)
     [
@@ -116,7 +140,7 @@ func lockDuck() = {
   let addressStr = i.caller.toString()
   let pmt = i.payments[0].value()
   let assetId = pmt.assetId.value()
-  let assetIssuer = assetInfo(assetId).value().issuer.bytes
+  let assetIssuer = assetInfo(assetId).value().issuer
   let tDuckDetails = getDuckDetails(assetId)
   let assetColor = tDuckDetails._1
   let isJackpot = tDuckDetails._2
@@ -133,7 +157,7 @@ func lockDuck() = {
   else if (addressSpotsAvailable <= 0) then { throw("No spots available") }
   else {
     let kPerchesAvailable = "address_" + this.toString() + "_perchesAvailable_" + assetColor
-    strict perchesAvailable = match getInteger(Address(getFarmingAddress()), kPerchesAvailable) {
+    strict perchesAvailable = match getInteger(getFarmingAddress(), kPerchesAvailable) {
       case b:Int => b
       case _ => 0
     }
@@ -141,12 +165,12 @@ func lockDuck() = {
     let eggAssetId = getEggAssetId()
 
     strict inv1 = if (perchesAvailable > 0) then { unit } else {
-      invoke(Address(getFarmingAddress()), "buyPerch", [assetColor, ""], [AttachedPayment(eggAssetId, 1_0000_0000)])
+      invoke(getFarmingAddress(), "buyPerch", [assetColor, ""], [AttachedPayment(eggAssetId, 1_0000_0000)])
     }
 
     strict inv2 = if isJackpot == false then 
-      invoke(Address(getFarmingAddress()), "stakeNFT", [], [AttachedPayment(assetId, 1)])  else
-      invoke(Address(getFarmingAddress()), "stakeJackpot", [assetColor], [AttachedPayment(assetId, 1)])
+      invoke(getFarmingAddress(), "stakeNFT", [], [AttachedPayment(assetId, 1)])  else
+      invoke(getFarmingAddress(), "stakeJackpot", [assetColor], [AttachedPayment(assetId, 1)])
 
     [
       IntegerEntry(kSpotsBusy, spotsBusy + 1),
@@ -175,7 +199,7 @@ func unlockDuck(assetIdStr: String) = {
   else if (remainingForUnlock > 0) then {throw("3UL: You need to wait to unlock " + (remainingForUnlock / 1000).toString() + " seconds")}
   else {
     let unstakeFuncName = if isJackpot == true then "unstakeJackpot" else "unstakeNFT" 
-    strict inv1 = invoke(Address(getFarmingAddress()), unstakeFuncName, [assetIdStr], [])  # TODO: jackpot unstaking
+    strict inv1 = invoke(getFarmingAddress(), unstakeFuncName, [assetIdStr], [])  # TODO: jackpot unstaking
     [
       ScriptTransfer(i.caller, 1, assetId),
       DeleteEntry(keyLockedDuckStatus(addressStr, assetIdStr)), 
