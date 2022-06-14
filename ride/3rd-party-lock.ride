@@ -64,7 +64,7 @@ func getBosterNameForLevel(level: Int) = getString("static_boosterName_" + level
 
 @Callable(i)
 func configureOracle(oracle: String, shortname: String, longname: String, nftName: String) = {
-  if i.caller != this then throw("admin only") else 
+  if i.caller != this then throw("3CO: admin only") else 
   [
     StringEntry("static_oracleAddress",oracle),
     StringEntry("static_shortGameName",shortname),
