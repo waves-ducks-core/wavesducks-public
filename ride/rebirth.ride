@@ -22,8 +22,10 @@ func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_i
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
 func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
+func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String())
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String())
 
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 let PHOENIXBASEOPTIONS = 1000  # base chance to get a phoenix: 1 / (1000 - 1000/2 * rarity)
 
 
@@ -36,6 +38,8 @@ func tryGetInteger(key: String) = {
 
 func asString(value: Any) = match value {
   case s: String => s
+  case s: Int => throw("wrong type, expected: String, got: Int")
+  case s: Unit => throw("wrong type, expected: String, got: Unit")
   case _ => throw("wrong type, expected: String")
 }
 
@@ -74,24 +78,28 @@ func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, 
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
   let phoenixOptions = PHOENIXBASEOPTIONS - fraction(PHOENIXBASEOPTIONS / 2, assetRarity, 100)  # chance = 0.1% + 0.1% * rarity (from 0.02 to 1)
-  let phoenixRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
+
+  let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
+  let itemRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 2)
   
-  if (phoenixRandom == 1) then {
-    "phoenix"
-  } else {
-    let n = getRandomNumber(10, tx, finishHeight, 0)
-    if (n < 3) then {
-      "gone"
-    } else if (n < 5) then {
-      "duckling"
-    }
-    else if (n == 5) then { "perch_Y" }
-    else if (n == 6) then { "perch_G" }
-    else if (n == 7) then { "perch_B" }
-    else if (n == 8) then { "perch_R" }
-    else {
-      "incubator"
-    }
+  
+  if (jackpotRandom == 1) then { "phoenix" } else 
+  if (itemRandom == 1) then {"item_ART-FREEGENE" } else {  
+    #Every % means 10 numbers
+    let n = getRandomNumber(1000, tx, finishHeight, 0)
+    if (n<145) then { "duckling_20" } else 
+    if (n<195) then { "duckling_40" } else 
+    if (n<200) then { "duckling_80" } else 
+    if (n<300) then { "incubator" } else 
+    if (n<400) then { "perch_Y" } else 
+    if (n<500) then { "perch_G" } else 
+    if (n<600) then { "perch_B" } else 
+    if (n<700) then { "perch_R" } else
+    if (n<849) then { "mantle_2" } else
+    if (n<850) then { "mantle_40" } else
+    if (n<930) then { "mantle_3" } else
+    if (n<980) then { "mantle_5" } else
+    { "mantle_10" }
   }
 }
 
@@ -108,7 +116,8 @@ func getOrigin(assetId: ByteVector) = {
 
 func asInt(value: Any) = match value {
   case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
+  case string: String => throw("RAI: wrong type, expected: Int, but got: "+string)
+  case _ => throw("RAI: wrong type, expected: Int")
 }
 
 @Callable(i)
@@ -170,21 +179,37 @@ func finishRebirth(initTx: String) = {
       let win = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity)  
 
       let txId = initTx
+
       let result = if (win.indexOf("perch") != unit) then {
         let color = win.takeRight(1)
         strict call = invoke(getFarmingAddress(), "addFreePerch", [address, color], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
       } else if (win == "incubator") then {
         strict call = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
       } else if (win == "phoenix") then {
         strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-      } else if (win == "duckling") then {
-        strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId], []) 
+
+      } else if (win.indexOf("duckling") !=unit) then {
+        let level = parseIntValue(win.split("_")[1])
+        strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,level], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-      } else {
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", "")]
+
+      } else if (win.indexOf("mantle") !=unit) then {
+        let level = parseIntValue(win.split("_")[1])
+        strict call = invoke(getGameDappAddress(), "issueFreeMantle", [address,"mantle", level], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else if (win.indexOf("item") !=unit) then {
+        let itemName = win.split("_")[1]
+        strict call = invoke(getItemsAddress(), "issueArtefact", [itemName, address], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else{
+        throw("RFB: Some error occured, please contact the admins!")
       }
 
       result ++ [

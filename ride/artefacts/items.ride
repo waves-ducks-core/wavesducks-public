@@ -97,6 +97,7 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -296,21 +297,19 @@ func preInit() = {
 
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
-  if (i.caller == this) then {
+  if (i.caller != this && i.caller != getRebirthAddress()) then throw("admin only") else 
     let txIdStr = i.transactionId.toBase58String()
     let address = Address(fromBase58String(receiver))
 
     let artefact = Issue(type, "NFT artefact of Waves Ducks game. Drop #2.", 1, 0, false, unit, 0)
     let artefactId = artefact.calculateAssetId()
 
-    [
+    ([
       artefact,
       StringEntry("artefact_" + artefactId.toBase58String() + "_type", type),
       ScriptTransfer(address, 1, artefactId)
-    ]
-  } else {
-    throw("admin only")
-  }
+    ],artefactId.toBase58String())
+  
 }
 
 @Callable(i)
