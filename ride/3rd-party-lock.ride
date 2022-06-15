@@ -109,7 +109,6 @@ func buyAccessItem() = {
   }
 }
 
-#TODO: allow locking ducks without spending this egg on perches, using the stakenftwithoutperch method
 @Callable(i)
 func lockDuck() = {
   let addressStr = i.caller.toString()

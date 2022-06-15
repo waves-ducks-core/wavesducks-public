@@ -127,7 +127,9 @@
             
         }
     ],
-    "fee": 500000,
-    "feeAssetId": "WAVES"
+    "fee": 600000,
+    "feeAssetId": "WAVES",
+    "sender":"3P4vXL8gU27PhQv8sMT9jmoQY3oFqJNRWT9",
+    "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
 }
 
