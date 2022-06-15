@@ -42,7 +42,7 @@ func tryGetString(key: String) = {
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getGameName() = getString("static_shortGameName").valueOrErrorMessage("3GGN: There is no game name defined!")
 func getLongGameName() = getString("static_longGameName").valueOrErrorMessage("3GLGN: There is no long game name defined!")
-func getNFTName() = getString("static_nftName").valueOrErrorMessage("3GLGN: There is no nft name defined!")
+func getNFTName() = getString("static_nftName").valueOrErrorMessage("3GNN: There is no nft name defined!")
 
 #GENERIC SETTINGS READ FROM ORACLE
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
