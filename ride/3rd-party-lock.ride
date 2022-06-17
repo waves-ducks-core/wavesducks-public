@@ -62,6 +62,66 @@ func getBosterBuyAssetId() = tryGetString("static_boosterBuyAssetId").fromBase58
 func getBosterPriceForLevel(level: Int) = getInteger("static_boosterPriceLevel_" + level.toString()).valueOrErrorMessage("3GBPFL: There is no price value for this level of booster")
 func getBosterNameForLevel(level: Int) = getString("static_boosterName_" + level.toString()).valueOrErrorMessage("3GBNFL: There is no such booster")
 
+
+func buyAccessItemInternal(addressStr:String, pmt: AttachedPayment)= {
+  if (pmt.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")}
+  else if (pmt.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")}
+  else {
+    let issueAccessItem = Issue("ACCESS-"+getGameName(), "[Access] "+getLongGameName()+" access NFT for "+getNFTName(), 1, 0, false)
+    let accessRaceAssetId = issueAccessItem.calculateAssetId().toBase58String()
+    let kSpotsBought = keySpotsBought(addressStr)
+    [
+      issueAccessItem,
+      StringEntry("accessItem_" + accessRaceAssetId + "_owner", addressStr),
+      StringEntry("address_" + addressStr + "_owning", accessRaceAssetId),
+      IntegerEntry(kSpotsBought, tryGetInteger(kSpotsBought) + 1)
+    ]
+  }
+}
+
+func lockDuckInternal(addressStr:String, pmt: AttachedPayment)={
+  let assetId = pmt.assetId.value()
+  let assetIssuer = assetInfo(assetId).value().issuer
+  let tDuckDetails = getDuckDetails(assetId)
+  let assetColor = tDuckDetails._1
+  let isJackpot = tDuckDetails._2
+  # let assetRarity = getAssetFarmingPower(assetId)._2
+
+  let kSpotsBusy = keySpotsBusy(addressStr)
+  let spotsBusy = tryGetInteger(kSpotsBusy)
+  let kSpotsBought = keySpotsBought(addressStr)
+
+  let addressSpotsAvailable = tryGetInteger(kSpotsBought) - spotsBusy
+
+  if (pmt.amount != 1) then throw("NFT is not attached") else 
+  if (assetIssuer != getIncubatorAddress() && assetIssuer != getBreederAddress()) then { throw("ivalid NFT attached") } 
+  else if (addressSpotsAvailable <= 0) then { throw("No spots available") }
+  else {
+    let kPerchesAvailable = "address_" + this.toString() + "_perchesAvailable_" + assetColor
+    strict perchesAvailable = match getInteger(getFarmingAddress(), kPerchesAvailable) {
+      case b:Int => b
+      case _ => 0
+    }
+
+    let eggAssetId = getEggAssetId()
+
+    strict inv1 = if (perchesAvailable > 0) then { unit } else {
+      invoke(getFarmingAddress(), "buyPerch", [assetColor, ""], [AttachedPayment(eggAssetId, 1_0000_0000)])
+    }
+
+    strict inv2 = if isJackpot == false then 
+      invoke(getFarmingAddress(), "stakeNFT", [], [AttachedPayment(assetId, 1)])  else
+      invoke(getFarmingAddress(), "stakeJackpot", [assetColor], [AttachedPayment(assetId, 1)])
+
+    [
+      IntegerEntry(kSpotsBusy, spotsBusy + 1),
+      StringEntry(keyDuckOwner(assetId), addressStr),
+      BooleanEntry(keyLockedDuckStatus(addressStr, assetId.toBase58String()), true),
+      IntegerEntry(keyDuckUnlockTime(assetId), lastBlock.timestamp + getMinLockDuration())
+    ]
+  }
+}
+
 @Callable(i)
 func configureOracle(oracle: String, shortname: String, longname: String, nftName: String) = {
   if i.caller != this then throw("3CO: admin only") else 
@@ -117,68 +177,29 @@ func buyBooster() = {
 }
 
 @Callable(i)
-func buyAccessItem() = {
-  let pmt = i.payments[0].value()
+func buyAccessItemAndLockDuck()={
+  let eggPayment = i.payments[0].value()
+  let duckPayment = i.payments[1].value()
   let addressStr = i.caller.toString()
-  if (pmt.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")}
-  else if (pmt.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")}
-  else {
-    let issueAccessItem = Issue("ACCESS-"+getGameName(), "[Access] "+getLongGameName()+" access NFT for "+getNFTName(), 1, 0, false)
-    let accessRaceAssetId = issueAccessItem.calculateAssetId().toBase58String()
-    let kSpotsBought = keySpotsBought(addressStr)
-    [
-      issueAccessItem,
-      StringEntry("accessItem_" + accessRaceAssetId + "_owner", addressStr),
-      StringEntry("address_" + addressStr + "_owning", accessRaceAssetId),
-      IntegerEntry(kSpotsBought, tryGetInteger(kSpotsBought) + 1)
-    ]
-  }
+  let accessItemData = buyAccessItemInternal(addressStr,eggPayment)
+  let lockData = lockDuckInternal(addressStr,duckPayment)
+
+  lockData++accessItemData
+}
+
+@Callable(i)
+func buyAccessItem() = {
+  let addressStr = i.caller.toString()
+  let eggPayment = i.payments[0].value()
+  buyAccessItemInternal(addressStr,eggPayment)
+
 }
 
 @Callable(i)
 func lockDuck() = {
   let addressStr = i.caller.toString()
-  let pmt = i.payments[0].value()
-  let assetId = pmt.assetId.value()
-  let assetIssuer = assetInfo(assetId).value().issuer
-  let tDuckDetails = getDuckDetails(assetId)
-  let assetColor = tDuckDetails._1
-  let isJackpot = tDuckDetails._2
-  # let assetRarity = getAssetFarmingPower(assetId)._2
-
-  let kSpotsBusy = keySpotsBusy(addressStr)
-  let spotsBusy = tryGetInteger(kSpotsBusy)
-  let kSpotsBought = keySpotsBought(addressStr)
-
-  let addressSpotsAvailable = tryGetInteger(kSpotsBought) - spotsBusy
-
-  if (pmt.amount != 1) then throw("NFT is not attached") else 
-  if (assetIssuer != getIncubatorAddress() && assetIssuer != getBreederAddress()) then { throw("ivalid NFT attached") } 
-  else if (addressSpotsAvailable <= 0) then { throw("No spots available") }
-  else {
-    let kPerchesAvailable = "address_" + this.toString() + "_perchesAvailable_" + assetColor
-    strict perchesAvailable = match getInteger(getFarmingAddress(), kPerchesAvailable) {
-      case b:Int => b
-      case _ => 0
-    }
-
-    let eggAssetId = getEggAssetId()
-
-    strict inv1 = if (perchesAvailable > 0) then { unit } else {
-      invoke(getFarmingAddress(), "buyPerch", [assetColor, ""], [AttachedPayment(eggAssetId, 1_0000_0000)])
-    }
-
-    strict inv2 = if isJackpot == false then 
-      invoke(getFarmingAddress(), "stakeNFT", [], [AttachedPayment(assetId, 1)])  else
-      invoke(getFarmingAddress(), "stakeJackpot", [assetColor], [AttachedPayment(assetId, 1)])
-
-    [
-      IntegerEntry(kSpotsBusy, spotsBusy + 1),
-      StringEntry(keyDuckOwner(assetId), addressStr),
-      BooleanEntry(keyLockedDuckStatus(addressStr, assetId.toBase58String()), true),
-      IntegerEntry(keyDuckUnlockTime(assetId), lastBlock.timestamp + getMinLockDuration())
-    ]
-  }
+  let duckPayment = i.payments[0].value()
+  lockDuckInternal(addressStr,duckPayment)
 }
 
 @Callable(i)
