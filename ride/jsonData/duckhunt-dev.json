@@ -1,0 +1,27 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_accessItemAssetId",
+            "type": "string",
+            "value": "3v7zGkeHS6KrsvmTRzEzvCxm5cdzkCtM7z5cM6efcjCB"
+            
+        },
+        {
+            "key": "static_accessItemPrice",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+        {
+            "key": "static_minLockDuration",
+            "type": "integer",
+            "value": 604800000
+            
+        }
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}
+
