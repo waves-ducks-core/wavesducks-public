@@ -62,14 +62,10 @@ func getBosterBuyAssetId() = tryGetString("static_boosterBuyAssetId").fromBase58
 func getBosterPriceForLevel(level: Int) = getInteger("static_boosterPriceLevel_" + level.toString()).valueOrErrorMessage("3GBPFL: There is no price value for this level of booster")
 func getBosterNameForLevel(level: Int) = getString("static_boosterName_" + level.toString()).valueOrErrorMessage("3GBNFL: There is no such booster")
 
-
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case string: String => throw("3AI: wrong type, expected: Int, but got string: "+string)
-  case _ => throw("3AI: wrong type, expected: Int")
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("wrong type, expected: String")
 }
-
-
 
 func lockDuckInternal(addressStr:String, pmt: AttachedPayment)={
   let assetId = pmt.assetId.value()
@@ -192,7 +188,7 @@ func buyAccessItemAndLockDuck()={
   let addressStr = i.caller.toString()
   if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
-  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).asInt()
+  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).asString()
   let lockData = lockDuckInternal(addressStr,duckPayment)
 
   (lockData, accessItemData)
@@ -204,7 +200,7 @@ func buyAccessItem() = {
   let eggPayment = i.payments[0].value()
   if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
-  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).asInt()
+  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).asString()
   ([], accessItemData)
 
 }
@@ -214,7 +210,7 @@ func buyAccessItemOther(addressOther: String) = {
   let eggPayment = i.payments[0].value()
   if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
-  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressOther], [])
+  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressOther], []).asString()
   ([], accessItemData)
 
 }
