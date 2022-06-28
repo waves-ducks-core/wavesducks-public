@@ -25,6 +25,9 @@ func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_ba
 func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String())
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String())
+func getMetaraceAddress() = Address(tryGetStringExternal(getOracle(),"static_metaRaceAddress").fromBase58String())
+func getHuntAddress() = Address(tryGetStringExternal(getOracle(),"static_huntAddress").fromBase58String())
+
 
 let PHOENIXBASEOPTIONS = 1000  # base chance to get a phoenix: 1 / (1000 - 1000/2 * rarity)
 
@@ -87,19 +90,16 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
   if (itemRandom == 1) then {"item_ART-FREEGENE" } else {  
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
-    if (n<145) then { "duckling_20" } else 
-    if (n<195) then { "duckling_40" } else 
-    if (n<200) then { "duckling_80" } else 
-    if (n<300) then { "incubator" } else 
-    if (n<400) then { "perch_Y" } else 
-    if (n<500) then { "perch_G" } else 
-    if (n<600) then { "perch_B" } else 
-    if (n<700) then { "perch_R" } else
-    if (n<849) then { "mantle_2" } else
-    if (n<850) then { "mantle_40" } else
-    if (n<930) then { "mantle_3" } else
-    if (n<980) then { "mantle_5" } else
-    { "mantle_10" }
+    if (n<195) then { "duckling_20" } else 
+    if (n<295) then { "duckling_40" } else 
+    if (n<300) then { "duckling_80" } else 
+    if (n<400) then { "incubator" } else 
+    if (n<500) then { "perch_Y" } else 
+    if (n<600) then { "perch_G" } else 
+    if (n<700) then { "perch_B" } else 
+    if (n<800) then { "perch_R" } else
+    if (n<900) then { "ar" } else
+    { "meta" }
   }
 }
 
@@ -189,7 +189,15 @@ func finishRebirth(initTx: String) = {
         strict call = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
-      } else if (win == "phoenix") then {
+      } else if (win == "ar") then {
+        strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address, txId], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else if (win == "meta") then {
+        strict call = invoke(getMetaraceAddress(), "buyAccessItemOther", [address, txId], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else if (win == "phoenix") then {
         strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
@@ -198,12 +206,7 @@ func finishRebirth(initTx: String) = {
         strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,level], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
-      } else if (win.indexOf("mantle") !=unit) then {
-        let level = parseIntValue(win.split("_")[1])
-        strict call = invoke(getGameDappAddress(), "issueFreeMantle", [address,"mantle", level], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      }else if (win.indexOf("item") !=unit) then {
+      } else if (win.indexOf("item") !=unit) then {
         let itemName = win.split("_")[1]
         strict call = invoke(getItemsAddress(), "issueArtefact", [itemName, address], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]

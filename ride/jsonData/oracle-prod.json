@@ -73,6 +73,11 @@
             "value": "3P4QfR6fewW85epUg68fjgeFt3XBVpgLxmd"
         },
         {
+            "key": "static_huntAddress",
+            "type": "string",
+            "value": "3PAHWHrKToiirbcQpggaf7xX582wEJHH1s4"
+        },
+        {
             "key": "static_accBoosterAddress",
             "type": "string",
             "value": "3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD"
