@@ -70,6 +70,9 @@ func keyStartHatchingId(ducklingId: String) = {
   "duckling_" + ducklingId + "_grown"
 }
 
+func keyStartPercentage(ducklingId: String) = {
+  "duckling_" + ducklingId + "_startPercentage"
+}
 
 func tryGetInteger(key: String) = {
     let val = match getInteger(this, key) {
@@ -86,6 +89,12 @@ func getBool(key: String) = {
   }
 }
 
+func getDucklingPercentage(ducklingId: String)={
+          let percentageDuckling = tryGetInteger(keyStartPercentage(ducklingId))
+          let base = if percentageDuckling != 0 then percentageDuckling else 20 
+          (base * existingDuckPrecision).toBigInt() # duckling from rebirth
+}
+
 func getCurrentLevelBigInt(ducklingId: String) = {
   let kDuckLevel = keyDucklingLevel(ducklingId)
   match (getString(kDuckLevel)){
@@ -93,11 +102,13 @@ func getCurrentLevelBigInt(ducklingId: String) = {
     case _ => {
       match getBoolean("duckling_" + ducklingId + "_issuedByFeedCall") {
         case b:Boolean => 0.toBigInt()
-        case _ => (20 * existingDuckPrecision).toBigInt() # duckling from rebirth
+        case _ => getDucklingPercentage(ducklingId)
       }
     }
   }
 }
+
+
 
 func getCurrentLap() = {
   ((lastBlock.timestamp - STARTTIMESTAMP) / LAPLENGTH) + 1
@@ -148,7 +159,7 @@ func issueFreeDuckling(address: String, txIdStr: String, percentage: Int) = {
       StringEntry(address + "_" + txIdStr + "_di", assetId.toBase58String()),
       IntegerEntry("stats_amount", tryGetInteger("stats_amount") + 1),
       BooleanEntry("duckling_" + assetId.toBase58String() + "_issuedByFeedCall", i.caller == this),
-      IntegerEntry("duckling_" + assetId.toBase58String() + "_startPercentage", percentage),
+      IntegerEntry(keyStartPercentage(assetId.toBase58String()), percentage),
       asset,
       ScriptTransfer(addressFromString(address).value(), 1, assetId)
     ], assetId.toBase58String())
@@ -222,8 +233,8 @@ func fixLevels(ducklingIds: String) = {
       let totalFeed = tryGetInteger(kTotalFeed)
       let kNewLevel = keyDucklingLevel(id)
       let startingLevel = match getBoolean("duckling_" + id + "_issuedByFeedCall"){
-        case b: Boolean => if b == true then 0.toBigInt() else (20 * existingDuckPrecision).toBigInt()
-        case _ => (20 * existingDuckPrecision).toBigInt()
+        case b: Boolean => if b == true then 0.toBigInt() else getDucklingPercentage(id)
+        case _ => getDucklingPercentage(id)
       }
 
       let growth = fraction(totalFeed.toBigInt(), percentGrowthPrecision.toBigInt(), DUCKLINGPRICE.toBigInt())
