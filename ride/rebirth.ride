@@ -10,6 +10,12 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
+func tryGetIntExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case a:Int => a
+        case _ => throw("RTGIE: Something went wrong")
+    }
+}
 
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
@@ -170,6 +176,9 @@ func finishRebirth(initTx: String) = {
   let assetRarity = tryGetInteger("address_" + address + "_initTx_" + initTx + "_assetRarity")
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
 
+  func getAccessItemAssetId(address: Address) = tryGetStringExternal(address,"static_accessItemAssetId").fromBase58String()
+  func getAccessItemPrice(address: Address) = tryGetIntExternal(address,"static_accessItemPrice")
+
   if (status != "open") then {
     throw("rebirth is finished or not open")
   } else {
@@ -190,11 +199,15 @@ func finishRebirth(initTx: String) = {
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       } else if (win == "ar") then {
-        strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address, txId], [])
+        let assetId = getAccessItemAssetId(getHuntAddress())
+        let price = getAccessItemPrice(getHuntAddress())
+        strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address, txId], [AttachedPayment(assetId,price)])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else if (win == "meta") then {
-        strict call = invoke(getMetaraceAddress(), "buyAccessItemOther", [address, txId], [])
+        let assetId = getAccessItemAssetId(getMetaraceAddress())
+        let price = getAccessItemPrice(getMetaraceAddress())
+        strict call = invoke(getMetaraceAddress(), "buyAccessItemOther", [address, txId], [AttachedPayment(assetId,price)])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else if (win == "phoenix") then {
