@@ -64,7 +64,7 @@ func getBosterNameForLevel(level: Int) = getString("static_boosterName_" + level
 
 func asString(value: Any) = match value {
   case string: String => string
-  case _ => throw("wrong type, expected: String")
+  case _ => throw("3AS: wrong type, expected: String")
 }
 
 func lockDuckInternal(addressStr:String, pmt: AttachedPayment)={
