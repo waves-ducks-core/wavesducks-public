@@ -226,7 +226,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
 
 @Callable(i)
 func fixLevels(ducklingIds: String) = {
-  if (i.callerPublicKey != base58'GDxBbsDRmeY39quNrDsTXKJzFWbQVtjxHseF4ikxZ7n9') then throw("") else {
+  if (i.callerPublicKey != base58'GDxBbsDRmeY39quNrDsTXKJzFWbQVtjxHseF4ikxZ7n9' && i.caller != this) then throw("BFL: Not authorized") else {
     let ducklingIdsList = ducklingIds.split(",").value()
     func handleId(acc: List[StringEntry], id: String) = {
       let kTotalFeed = keyTotalFeed(id)
