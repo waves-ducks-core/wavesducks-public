@@ -244,7 +244,7 @@ func putOnArtefact(artefactId: String) = {
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
   let attachedAssetInfo = assetInfo(firstPayment.assetId.value()).value()
-  let secondAttachedAssetInfo = assetInfo(firstPayment.assetId.value()).value()
+  let secondAttachedAssetInfo = assetInfo(secondPayment.assetId.value()).value()
   if (firstPayment.amount != 1) then throw("WPOA: DUCK NFT is not attached") else
   if (secondPayment.amount != 1) then throw("WPOA: MANTLE NFT is not attached") else
   if (attachedAssetInfo.issuer != getIncubatorAddress() && attachedAssetInfo.issuer != getBreederAddress()) then throw("WPOA: You can attach only DUCKs issued by incubator or breeder ") else
@@ -324,13 +324,13 @@ func exportMantles(ids: String)={
   let nftIds = ids.split(";")
   func handleId(acc: List[StringEntry|ScriptTransfer|DeleteEntry], id: String) = {
     let kMantleOwner = keyArtefactOwner(MANTLENAME, id.fromBase58String())
-    let mantleOwner = getStringValue(kMantleOwner)
+    let mantleOwner = valueOrErrorMessage(tryGetString(kMantleOwner), kMantleOwner)
     let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, mantleOwner, id.fromBase58String())
     let kMantleStatus = keyArtefactStatus(MANTLENAME, id.fromBase58String())
-    let mantleStatus = getStringValue(kMantleStatus)
+    let mantleStatus = valueOrErrorMessage(getString(kMantleStatus), kMantleStatus)
     let linkedNftId = getStringValue(keyArtefactNftId(id.fromBase58String()))
 
-    if (mantleStatus == STATUSFREE) then
+    if (mantleOwner != "" && mantleStatus == STATUSFREE && Address(mantleOwner.fromBase58String()) != this ) then
       acc ++ [
         ScriptTransfer(Address(mantleOwner.fromBase58String()), 1, linkedNftId.fromBase58String()),
         DeleteEntry(kMantleOwner),
@@ -350,11 +350,11 @@ func issueNftForMantles(ids: String)={
   let nftIds = ids.split(";")
   func handleId(acc: List[ScriptTransfer|StringEntry], id: String) = {
     let kMantleOwner = keyArtefactOwner(MANTLENAME, id.fromBase58String())
-    let mantleOwner = getStringValue(kMantleOwner)
-    if mantleOwner == "" then throw("DINFM: Something went wrong with mantle "+id) else 
-      let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false)
+    let kArtefactNftId = keyArtefactNftId(id.fromBase58String())
+    let mantleOwner = valueOrErrorMessage(tryGetString(kMantleOwner), kMantleOwner+" "+id+" "+MANTLENAME)
+    if mantleOwner == "" || tryGetString(kArtefactNftId) != "" then acc++[] else 
+      let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false, unit, size(acc))
       let mantleNftId = issueMantleNFT.calculateAssetId()
-      let kArtefactNftId = keyArtefactNftId(id.fromBase58String())
       acc ++ [
         issueMantleNFT,
         StringEntry(kArtefactNftId,mantleNftId.toBase58String())
