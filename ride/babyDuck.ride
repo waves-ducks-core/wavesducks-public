@@ -101,7 +101,7 @@ func getCurrentLevelBigInt(ducklingId: String) = {
     case s: String => s.parseBigIntValue()
     case _ => {
       match getBoolean("duckling_" + ducklingId + "_issuedByFeedCall") {
-        case b:Boolean => if b==false then 0.toBigInt() else getDucklingPercentage(ducklingId)
+        case b:Boolean => if b==true then 0.toBigInt() else getDucklingPercentage(ducklingId)
         case _ => getDucklingPercentage(ducklingId)
       }
     }
