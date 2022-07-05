@@ -101,7 +101,7 @@ func getCurrentLevelBigInt(ducklingId: String) = {
     case s: String => s.parseBigIntValue()
     case _ => {
       match getBoolean("duckling_" + ducklingId + "_issuedByFeedCall") {
-        case b:Boolean => 0.toBigInt()
+        case b:Boolean => if b==true then 0.toBigInt() else getDucklingPercentage(ducklingId)
         case _ => getDucklingPercentage(ducklingId)
       }
     }
@@ -226,7 +226,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
 
 @Callable(i)
 func fixLevels(ducklingIds: String) = {
-  if (i.callerPublicKey != base58'GDxBbsDRmeY39quNrDsTXKJzFWbQVtjxHseF4ikxZ7n9') then throw("") else {
+  if (i.callerPublicKey != base58'GDxBbsDRmeY39quNrDsTXKJzFWbQVtjxHseF4ikxZ7n9' && i.caller != this) then throw("BFL: Not authorized") else {
     let ducklingIdsList = ducklingIds.split(",").value()
     func handleId(acc: List[StringEntry], id: String) = {
       let kTotalFeed = keyTotalFeed(id)
