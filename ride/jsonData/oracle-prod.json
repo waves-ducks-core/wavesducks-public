@@ -108,6 +108,11 @@
             "value": "3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw;3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD"
         },
         {
+            "key": "static_proxyStakingContracts",
+            "type": "string",
+            "value": "3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT;3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL"
+        },
+        {
             "key": "static_maintenance",
             "type": "string",
             "value": ""
