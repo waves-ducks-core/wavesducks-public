@@ -2,3 +2,4 @@ node_modules/
 .history/
 package-lock.json
 scripts.js
+.vscode
