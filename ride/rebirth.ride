@@ -201,13 +201,13 @@ func finishRebirth(initTx: String) = {
       } else if (win == "ar") then {
         let assetId = getAccessItemAssetId(getHuntAddress())
         let price = getAccessItemPrice(getHuntAddress())
-        strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address, txId], [AttachedPayment(assetId,price)])
+        strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address], [AttachedPayment(assetId,price)])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else if (win == "meta") then {
         let assetId = getAccessItemAssetId(getMetaraceAddress())
         let price = getAccessItemPrice(getMetaraceAddress())
-        strict call = invoke(getMetaraceAddress(), "buyAccessItemOther", [address, txId], [AttachedPayment(assetId,price)])
+        strict call = invoke(getMetaraceAddress(), "buyAccessItemOther", [address], [AttachedPayment(assetId,price)])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else if (win == "phoenix") then {

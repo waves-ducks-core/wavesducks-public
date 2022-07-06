@@ -267,7 +267,7 @@ func putOnArtefact(artefactId: String) = {
       if (mantleStatus != STATUSFREE) then throw("WPOA: Mantle is already used!")
       else {
         strict stakeDuck = if hasSweater != "" then 
-                              if isJackpot(firstPayment.assetId.value()) then invoke(getFarmingAddress(),"stakeJackpot",[],i.payments) else invoke(getFarmingAddress(),"stakeNFT",[],i.payments)
+                              if isJackpot(firstPayment.assetId.value()) then invoke(getFarmingAddress(),"stakeNFTWithoutPerch",[],i.payments) else invoke(getFarmingAddress(),"stakeNFT",[],i.payments)
                             else []
 
         let kPutOnArtefact = keyPutOnArtefact(MANTLENAME, i.originCaller.toString(), firstPayment.assetId.value().toBase58String(), artefactId.fromBase58String())
@@ -303,9 +303,11 @@ func takeOffArtefact(duckId:String, artefactType: String) = {
   else {
     let hasSweater = tryGetStringExternal(getWearablesAddress(),duckId+"_ART-XSWEATER")
     let kMantleOwner = keyArtefactOwner(artefactType, artefactId.fromBase58String())
-    strict unstakeDuck = if hasSweater != "" then 
-                            if isJackpot(duckId.fromBase58String()) then invoke(getFarmingAddress(),"unstakeJackpot",[duckId],[]) else invoke(getFarmingAddress(),"unstakeNFT",[duckId],[])
-                         else []
+    let isStaked = if tryGetStringExternal(getFarmingAddress(),"address_"+i.originCaller.toString()+"_asset_"+duckId+"_unstaker") == "" then false else true
+    strict unstakeDuck = if hasSweater != "" && isStaked then
+                            if isJackpot(duckId.fromBase58String()) then invoke(getFarmingAddress(),"unstakeJackpot",[duckId],[]).asInt() else invoke(getFarmingAddress(),"unstakeNFT",[duckId],[]).asInt()
+                         else 0
+    let sendRewards = if unstakeDuck > 0 then [ScriptTransfer(i.originCaller, unstakeDuck, getEggAssetId())] else []
     [
       DeleteEntry(kPutOnArtefact),
       DeleteEntry(kArtefactIdByTypeAndDuck),
@@ -315,7 +317,7 @@ func takeOffArtefact(duckId:String, artefactType: String) = {
       DeleteEntry(kMantleOwner),
       ScriptTransfer(i.originCaller, 1, duckId.fromBase58String()),
       ScriptTransfer(i.originCaller, 1, linkedNftId.fromBase58String())
-    ]
+    ]++sendRewards
   }
 }
 
