@@ -31,7 +31,7 @@ func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 func getMetaraceAddress() =  Address(tryGetStringExternal(getOracle(),"static_metaRaceAddress").fromBase58String())
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),"static_accBoosterAddress").fromBase58String())
-func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
+func getProxyStaking() =  tryGetStringExternal(getOracle(),"static_proxyStakingContracts")
 func getMaintenance() =  tryGetStringExternal(getOracle(),"static_maintenance")
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
 func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),"static_duckWrapper").fromBase58String())
@@ -190,8 +190,8 @@ func calculatePerchPrice(address: String)= {
 
 }
 
-func isTrustedSc(address: String)={
-  let allowedContracts = getTrustedContracts()
+func isProxyStakingSc(address: String)={
+  let allowedContracts = getProxyStaking()
   let allowedContractsList = allowedContracts.split(";")
   allowedContractsList.indexOf(address) !=unit
 }
@@ -266,7 +266,7 @@ func stakeNFT() = {
   let pmt = i.payments[0].value()
   let assetId = i.payments[0].value().assetId.value()
   let realCaller = i.caller.toString()
-  let address = if isTrustedSc(i.caller.toString())  then i.originCaller.toString() else realCaller
+  let address = if isProxyStakingSc(i.caller.toString())  then i.originCaller.toString() else realCaller
 
   let color = assetInfo(assetId).value().name.takeRight(1)
   let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
@@ -290,7 +290,7 @@ func stakeNFT() = {
 func stakeNFTWithoutPerch() = {
   strict locked = isLocked()
   let dappToCall = i.caller.toString()
-  if !isTrustedSc(dappToCall) then throw("FSNWP: Only trusted smart contracts can stake without a perch!") else
+  if !isProxyStakingSc(dappToCall) then throw("FSNWP: Only trusted smart contracts can stake without a perch!") else
     let pmt = i.payments[0].value()
     let assetId = i.payments[0].value().assetId.value()
     let address = i.originCaller.toString()
@@ -315,7 +315,7 @@ func unstakeNFT(asset: String) = {
     throw("FUN: Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
   } else {
     let assetId = asset.fromBase58String()
-    let address = if isTrustedSc(i.caller.toString())  then add else i.caller.toString()
+    let address = if isProxyStakingSc(i.caller.toString())  then add else i.caller.toString()
     let unstaker = tryGetString("address_"+address+"_asset_"+asset+"_unstaker")
 
     let assetFarmingPower = getLastKnownAssetFarmingPower(address, asset)
@@ -356,7 +356,7 @@ func stakeJackpot(color: String) = {
     let pmt = i.payments[0].value()
     let assetId = pmt.assetId.value()
     let realCaller = i.caller.toString()
-    let address = if isTrustedSc(i.caller.toString())  then i.originCaller.toString() else realCaller
+    let address = if isProxyStakingSc(i.caller.toString())  then i.originCaller.toString() else realCaller
     let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
 
     let assetIssuer = assetInfo(assetId).value().issuer
@@ -386,7 +386,7 @@ func stakeJackpot(color: String) = {
 func unstakeJackpot(asset: String) = {
   strict locked = isLocked()
   let realCaller = i.caller.toString()
-  let address = if isTrustedSc(i.caller.toString())  then i.originCaller.toString() else realCaller
+  let address = if isProxyStakingSc(i.caller.toString())  then i.originCaller.toString() else realCaller
   if (isUserBlacklisted(address)) then {
     throw("FUJ: Ooops, looks like you lost in one of the Ducksquid games! As you already know, any loss has its consequences, so you will be not able to claim your farming rewards till the end of DuckSquid game. Quack in peace!")
   } else {
