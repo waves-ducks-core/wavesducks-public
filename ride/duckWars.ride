@@ -165,7 +165,8 @@ func buyArtefact(type: String) = {
   if (type != MANTLENAME) then throw("WBA: You can buy only mantles now") 
   else {
     let MANTLEPRICE = 1_000_000
-    strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[MANTLEPRICE],[]).asInt()
+    #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[MANTLEPRICE],[]).asInt()
+    strict amountPaidByCoupons = 0    
     let leftToPay = MANTLEPRICE-amountPaidByCoupons
     strict payment = if leftToPay!=0 then {
       let firstPayment = i.payments[0].value()
