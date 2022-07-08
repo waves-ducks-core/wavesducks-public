@@ -217,13 +217,18 @@ func upgradeMantle(artefactId: String) = {
 @Callable(i)
 func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
   let upgradePointPrice = 1_000_000
-  let firstPayment = i.payments[0].value()
-  if (couponsAmount < upgradePointPrice) then throw("WUMBC: Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
+  let amount = if size(i.payments)==1 then {
+      let firstPayment = i.payments[0].value()
+      if (firstPayment.assetId != getEggAssetId()) then throw("WUMBC: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+      firstPayment.amount 
+    }
+    else 0
+  if (couponsAmount+amount < upgradePointPrice) then throw("WUMBC: Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
   else {
       strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[couponsAmount],[]).asInt()
       if couponsAmount != amountPaidByCoupons then throw("WUMBC: Not enough coupons! Please make sure to pick lower coupon amount!") else
 
-      upgradeMantleFunc(i,artefactId,couponsAmount)
+      upgradeMantleFunc(i,artefactId,couponsAmount+amount)
   }
 }
 
