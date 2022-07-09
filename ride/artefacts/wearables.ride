@@ -19,6 +19,7 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
+
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
@@ -36,6 +37,14 @@ func asString(value: Any) = match value {
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
+
+func tryGetCosmeticItem(item:String)= {
+  let key = "direct_cosmetic_"+item
+    match getInteger(getItemsAddress(), key) {
+      case a:Int => a
+      case _ => unit
+    }
+}
 
 @Callable(i)
 func configureOracle(oracle: String) = {
@@ -55,7 +64,7 @@ func wearItemToDuck() = {
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
   strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
   strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[secondAssetId],[]).asString()
-  if !containsElement(wearables, artefactName) then throw("Unsupported wearable") else
+  if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("Unsupported wearable") else
     let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
     strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
     if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
