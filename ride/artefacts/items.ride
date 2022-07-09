@@ -154,7 +154,7 @@ func directBuyItem(itemName:String)={
   if !tryGetBoolean(sale(itemName)) then throw("IDBI: Item not for sale anymore") else
   let maxSalesValue = tryGetInteger(maxSales(itemName))
   let soldValue = tryGetInteger(sold(itemName))
-  if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("Max editions sold!") else
+  if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("IDBI: Max editions sold!") else
 
 
   let basePrice = tryGetCosmeticItemPrice(itemName)
