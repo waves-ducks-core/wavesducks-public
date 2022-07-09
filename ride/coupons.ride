@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -29,11 +29,26 @@ func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_i
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
 func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String()) 
 
+let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
+
 let scCanUseCoupons = [getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),getGameDappAddress()]
 
 func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
 func couponsUserActiveOld(user:String) = couponsUserActive(user)+"_old"
+
+func addCouponsInternal(user:String,amount:Int)={
+    let keyOld = couponsUserActiveOld(user)
+    let key = couponsUserActive(user)
+    let couponsOld = tryGetInteger(key)
+    let coupons = couponsOld+amount
+    [
+        IntegerEntry(keyOld,couponsOld),
+        IntegerEntry(key,coupons)
+    ]
+}
+
+
 
 @Callable(i)
 func configureOracle(oracle: String) = {
@@ -46,16 +61,24 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func addCoupons(user:String,amount:Int) = {
-    if i.caller != this then throw("CAC: admin only") else 
-    let keyOld = couponsUserActiveOld(user)
-    let key = couponsUserActive(user)
-    let couponsOld = tryGetInteger(key)
-    let coupons = couponsOld+amount
-    [
-        IntegerEntry(keyOld,couponsOld),
-        IntegerEntry(key,coupons)
-    ]
+    if i.caller != this && i.callerPublicKey != wAccPKey then throw("CAC: admin only") else 
+    addCouponsInternal(user,amount)
 
+}
+
+@Callable(i)
+func addCouponsBatch(batch:String) = {
+    if i.caller != this && i.callerPublicKey != wAccPKey then throw("CAC: admin only") else
+    let couponsList = batch.split(";")
+    func handleCoupon(acc: List[IntegerEntry], coupon: String) = {
+        let splitArray = split(coupon,":")
+        let user = splitArray[0]
+        let amount = parseIntValue(splitArray[1])
+        acc++addCouponsInternal(user,amount)
+
+    }
+    FOLD<20>(couponsList, [], handleCoupon)
+    
 }
 
 
