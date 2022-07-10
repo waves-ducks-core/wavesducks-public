@@ -107,6 +107,7 @@ func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_bre
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 
 func priceKey(item:String)= "direct_cosmetic_"+item
 func maxSales(item:String)= "direct_cosmetic_"+item+"_max_sales"
@@ -148,21 +149,25 @@ func itemIsInCoolDown(artefactName: String, artefactId: String)={
 
 @Callable(i)
 func directBuyItem(itemName:String)={
-  let firstPayment = i.payments[0].value()
-  let amount = firstPayment.amount
-  if (firstPayment.assetId != getEggAssetId()) then throw("IDBI: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+  let basePrice = tryGetCosmeticItemPrice(itemName)
+  let grow = tryGetInteger(growPercentage(itemName))
+  let price = if grow == 0 then basePrice else pow(basePrice,0,(100+grow),2,0, CEILING)
   if !tryGetBoolean(sale(itemName)) then throw("IDBI: Item not for sale anymore") else
   let maxSalesValue = tryGetInteger(maxSales(itemName))
   let soldValue = tryGetInteger(sold(itemName))
   if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("IDBI: Max editions sold!") else
 
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[price],[]).asInt()
+  let leftToPay = price-amountPaidByCoupons
 
-  let basePrice = tryGetCosmeticItemPrice(itemName)
-  let grow = tryGetInteger(growPercentage(itemName))
-  let price = if grow == 0 then basePrice else pow(basePrice,0,(100+grow),2,0, CEILING)
-
-  if amount != price then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
-
+  strict payment = if leftToPay!=0 then {
+      let firstPayment = i.payments[0].value()
+      let amount = firstPayment.amount
+      if (firstPayment.assetId != getEggAssetId()) then throw("IDBI: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+      if amount != leftToPay then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
+      leftToPay
+  }else 0
+  
     let txIdStr = i.transactionId.toBase58String()
     let address = i.originCaller
 
