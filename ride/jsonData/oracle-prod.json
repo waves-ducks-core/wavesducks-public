@@ -135,6 +135,12 @@
             "type": "string",
             "value": "3P6AobNbcQ3ZjcRY37mJPKN8PP9Giz8kgeY"
             
+        },
+        {
+            "key": "static_warsPKey",
+            "type": "string",
+            "value": "BmKAXRQy7jZm44fa1YxNQDTcAwNSb74EpQwP5CT7UHdV"
+            
         }
     ],
     "fee": 600000,
