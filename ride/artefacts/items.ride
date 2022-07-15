@@ -107,7 +107,6 @@ func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_bre
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 
 func priceKey(item:String)= "direct_cosmetic_"+item
 func maxSales(item:String)= "direct_cosmetic_"+item+"_max_sales"
@@ -157,7 +156,8 @@ func directBuyItem(itemName:String)={
   let soldValue = tryGetInteger(sold(itemName))
   if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("IDBI: Max editions sold!") else
 
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[price],[]).asInt()
+  #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[price],[]).asInt()
+  let amountPaidByCoupons = 0
   let leftToPay = price-amountPaidByCoupons
 
   strict payment = if leftToPay!=0 then {
