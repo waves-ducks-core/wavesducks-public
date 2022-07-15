@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 #TODO: make sure to allow coupons contract when we release new items
@@ -49,8 +49,17 @@ let artefacts = [
   "ART-XTREE"
 ]
 
+
+
 let allArtefact = artefacts++oldArtefacts
 
+
+func tryGetBoolean(key: String) = {
+    match getBoolean(this, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
 
 func tryGetString(key: String) = {
     match getString(this, key) {
@@ -98,6 +107,22 @@ func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_bre
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),"static_trustedContracts")
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
+
+func priceKey(item:String)= "direct_cosmetic_"+item
+func maxSales(item:String)= "direct_cosmetic_"+item+"_max_sales"
+func sale(item:String)= "direct_cosmetic_"+item+"_sale"
+func growPercentage(item:String)= "direct_cosmetic_"+item+"_growing_percentage"
+func sold(item:String)= "direct_cosmetic_"+item+"_sold"
+func lastPrice(item:String)= "direct_cosmetic_"+item+"_last_price"
+
+func tryGetCosmeticItemPrice(item:String)= {
+  let key = priceKey(item)
+    match getInteger(this, key) {
+      case a:Int => a
+      case _ => throw("ITGCIP: This item is not available in the store!")
+    }
+}
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -121,16 +146,55 @@ func itemIsInCoolDown(artefactName: String, artefactId: String)={
   else true
 }
 
+
+@Callable(i)
+func directBuyItem(itemName:String)={
+  let basePrice = tryGetCosmeticItemPrice(itemName)
+  let grow = tryGetInteger(growPercentage(itemName))
+  let price = if grow == 0 then basePrice else pow(basePrice,0,(100+grow),2,0, CEILING)
+  if !tryGetBoolean(sale(itemName)) then throw("IDBI: Item not for sale anymore") else
+  let maxSalesValue = tryGetInteger(maxSales(itemName))
+  let soldValue = tryGetInteger(sold(itemName))
+  if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("IDBI: Max editions sold!") else
+
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[price],[]).asInt()
+  let leftToPay = price-amountPaidByCoupons
+
+  strict payment = if leftToPay!=0 then {
+      let firstPayment = i.payments[0].value()
+      let amount = firstPayment.amount
+      if (firstPayment.assetId != getEggAssetId()) then throw("IDBI: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+      if amount != leftToPay then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
+      leftToPay
+  }else 0
+  
+    let txIdStr = i.transactionId.toBase58String()
+    let address = i.originCaller
+
+    let artefact = Issue(itemName, "NFT artefact of Waves Ducks game: "+itemName, 1, 0, false, unit, 0)
+    let artefactId = artefact.calculateAssetId()
+
+    ([
+      artefact,
+      StringEntry("artefact_" + artefactId.toBase58String() + "_type", itemName),
+      IntegerEntry(lastPrice(itemName), price),
+      IntegerEntry(sold(itemName), soldValue+1),
+      ScriptTransfer(address, 1, artefactId)
+    ],artefactId.toBase58String())
+
+
+}
+
 @Callable(i)
 func manipulateBoost(boost: Int, duckId: String)= {
   let allowedContracts = getTrustedContracts()
   let allowedContractsList = allowedContracts.split(";")
   let dappToCall = i.caller.toString()
-  if allowedContractsList.indexOf(dappToCall) == unit then throw("This smart contract can't manipulate the boost!") else
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("IMB: This smart contract can't manipulate the boost!") else
   let key = keyExternalBoostDuck(duckId)
   let activeBoost = tryGetInteger(key)
   let newBoost = activeBoost+boost
-  if newBoost <0 then throw("Something went wrong with boost, please contact the admins!") else
+  if newBoost <0 then throw("IMB: Something went wrong with boost, please contact the admins!") else
   [
     IntegerEntry(key,newBoost)
   ]
@@ -141,11 +205,11 @@ func manipulateBoostAccount(boost: Int, address: String)= {
   let allowedContracts = getTrustedContracts()
   let allowedContractsList = allowedContracts.split(";")
   let dappToCall = i.caller.toString()
-  if allowedContractsList.indexOf(dappToCall) == unit then throw("This smart contract can't manipulate the boost!") else
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("IMBA: This smart contract can't manipulate the boost!") else
   let key = keyExternalBoostAddress(address)
   let activeBoost = tryGetInteger(key)
   let newBoost = activeBoost+boost
-  if newBoost <0 then throw("Something went wrong with boost, please contact the admins!") else
+  if newBoost <0 then throw("IMBA: Something went wrong with boost, please contact the admins!") else
   [
     IntegerEntry(key,newBoost)
   ]
@@ -155,7 +219,7 @@ func manipulateBoostAccount(boost: Int, address: String)= {
 func checkArtefactDetails(assetId: String) = {
   let asset = assetInfo(assetId.fromBase58String()).value()
   let assetName = asset.name.value()
-   if containsElement(allArtefact, assetName) && asset.issuer == this
+   if (containsElement(allArtefact, assetName) || isDefined(tryGetCosmeticItemPrice(assetName))) && asset.issuer == this   
    then
       (
         [],

@@ -1,0 +1,50 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "direct_cosmetic_ITEM1",
+            "type": "integer",
+            "value": 5000000
+        },
+        {
+            "key": "direct_cosmetic_ITEM1_max_sales",
+            "type": "integer",
+            "value": 10
+        },
+        {
+            "key": "direct_cosmetic_ITEM1_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ITEM1_growing_percentage",
+            "type": "integer",
+            "value": 10
+        },
+        {
+            "key": "direct_cosmetic_ITEM2",
+            "type": "integer",
+            "value": 5000000
+        }
+        ,
+        {
+            "key": "direct_cosmetic_ITEM2_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ITEM2_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ITEM2_sale",
+            "type": "boolean",
+            "value": true
+        }
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}
+
