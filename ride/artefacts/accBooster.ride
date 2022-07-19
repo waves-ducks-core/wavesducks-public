@@ -88,6 +88,7 @@ func unstakeItem(artefactName: String) = {
     if ! containsElement(stakeable, artefactName) then throw("This artefact doesn't exist") else 
       let invoker = i.caller.toString()
       let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
+      if artefactId == "ART-XSOCK" then throw("You can not unstake ART-XSOCK anymore") else
       if artefactId == "" then throw("You didnt stake "+artefactName) else
         strict boostDuck = 
         if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],[]) else
