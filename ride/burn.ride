@@ -52,7 +52,7 @@ func burnAttachedPayments()={
     let payments = i.payments
     if size(payments) != 1 then throw("BAP: Please make sure to attach only 1 payment!") else
     let paymentEgg = payments[0].value()
-    if paymentEgg.assetId == getEggAssetId() then throw("BAP: You can only burn $EGG!") else
+    if paymentEgg.assetId != getEggAssetId() then throw("BAP: You can only burn $EGG!") else
     let burner = i.originCaller.toString()
     let amount = paymentEgg.amount
     let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
