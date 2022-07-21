@@ -295,7 +295,7 @@ func startDuckBreeding() = {
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
   strict children1 = invoke(this,"validateAndGetChildren",[firstAssetId],[]).asInt()
   strict children2 = invoke(this,"validateAndGetChildren",[secondAssetId],[]).asInt()
-    if ( children1 > 0 || children1 > 0) then {
+    if ( children1 > 0 || children2 > 0) then {
       throw("One duck can be used for breeding only once in its lifetime.")
     } else {
       let breededStatus = canBeBreeded(firstAssetId.fromBase58String(), secondAssetId.fromBase58String())
