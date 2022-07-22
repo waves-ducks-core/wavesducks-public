@@ -1,0 +1,118 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetString(key: String) = {
+    match getString(this, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case a:Int => a
+        case _ => 0
+    }
+}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getBabyduckAddress()= Address(tryGetString("static_babyDuckAddress").fromBase58String())
+
+func getTotalBurnKey() = "BURN_TOTAL_AMOUNT_NEW"
+func getTotalBurnKeyOld() = "BURN_TOTAL_AMOUNT_OLD"
+func getLastBurnKey() = "BURN_LAST_AMOUNT"
+func getUserBurnKey(address: String) = "BURN_"+address+"_AMOUNT_NEW"
+func getUserBurnKeyOld(address: String) = "BURN_"+address+"_AMOUNT_OLD"
+
+func totalDucklingsBurned() = "BURN_TOTAL_AMOUNT_DUCKLING_NEW"
+func totalDucklingsBurnedOld() = "BURN_TOTAL_AMOUNT_DUCKLING_OLD"
+func getUserBurnDucklingKey(address: String) = "BURN_"+address+"_AMOUNT_DUCKLING_NEW"
+func getUserBurnDucklingKeyOld(address: String) = "BURN_"+address+"_AMOUNT_DUCKLING_OLD"
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
+func burnAttachedPayments()={
+    let payments = i.payments
+    if size(payments) != 1 then throw("BAP: Please make sure to attach only 1 payment!") else
+    let paymentEgg = payments[0].value()
+    if paymentEgg.assetId != getEggAssetId() then throw("BAP: You can only burn $EGG!") else
+    let burner = i.originCaller.toString()
+    let amount = paymentEgg.amount
+    let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
+    let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(burner))
+    [
+        Burn(getEggAssetId(),amount),
+        IntegerEntry(getTotalBurnKeyOld(),totalBurnTillDate),
+        IntegerEntry(getUserBurnKeyOld(burner), totalBurnTillDateByUser),
+        IntegerEntry(getTotalBurnKey(), totalBurnTillDate+amount),
+        IntegerEntry(getUserBurnKey(burner), totalBurnTillDateByUser+amount),
+        IntegerEntry(getLastBurnKey(), amount)
+
+    ]
+}
+
+@Callable(i)
+func burnDuckling()={
+    let payments = i.payments
+    if size(payments) != 1 then throw("BBD: Please make sure to attach only 1 payment!") else
+    let payment = payments[0].value()
+    if payment.amount != 1 then throw("BBD: Please make sure to attach the NFT!") else
+    if (assetInfo(payment.assetId.value()).value().issuer != getBabyduckAddress()) then throw("BBD: This is no duckling!") else
+    let amount=2000000
+
+    let burner = i.originCaller.toString()
+    let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
+    let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(burner))
+    let totalDucklingBurned = tryGetInteger(totalDucklingsBurned())
+    let totalDucklingBurnedByUser = tryGetInteger(getUserBurnDucklingKey(burner))
+
+    [
+        Burn(getEggAssetId(),amount),
+        IntegerEntry(getTotalBurnKeyOld(),totalBurnTillDate),
+        IntegerEntry(getUserBurnKeyOld(burner), totalBurnTillDateByUser),
+        IntegerEntry(totalDucklingsBurnedOld(),totalDucklingBurned ),
+        IntegerEntry(getUserBurnDucklingKeyOld(burner),totalDucklingBurnedByUser ),
+
+        IntegerEntry(getTotalBurnKey(), totalBurnTillDate+amount),
+        IntegerEntry(getUserBurnKey(burner), totalBurnTillDateByUser+amount),
+        IntegerEntry(totalDucklingsBurned(),totalDucklingBurned ),
+        IntegerEntry(getUserBurnDucklingKey(burner),totalDucklingBurnedByUser ),
+
+        IntegerEntry(getLastBurnKey(), amount)
+
+    ]
+}
+
+@Callable(i)
+func burnByInvoke(amount: Int)={
+    if (i.caller != this) then throw("BBI: Admin feature only!") else
+    let burner = i.originCaller.toString()
+    let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
+    let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(burner))
+    [
+        Burn(getEggAssetId(),amount),
+        IntegerEntry(getTotalBurnKeyOld(),totalBurnTillDate),
+        IntegerEntry(getUserBurnKeyOld(burner), totalBurnTillDateByUser),
+        IntegerEntry(getTotalBurnKey(), totalBurnTillDate+amount),
+        IntegerEntry(getUserBurnKey(burner), totalBurnTillDateByUser+amount),
+        IntegerEntry(getLastBurnKey(), amount)
+
+    ]
+}

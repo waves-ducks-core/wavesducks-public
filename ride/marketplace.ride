@@ -28,6 +28,8 @@ func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_i
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+
 let kGlobalCounter = "GLOBAL_COUNTER"
 
 func getFeePercent() = tryGetIntegerExternal(getOracle(),"static_marketPlaceFee")
@@ -173,7 +175,7 @@ func instantBuy(auctionId: String) = {
         let auctionOwner = tryGetString("auction_" + auctionId + "_owner")
         let recordPrice = tryGetInteger(assetId+"_recordPrice")
         let newRecordPrice = max([recordPrice, amount])
-
+        strict burnCall = if isEggSell then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 100))]) else []
         [
           StringEntry("auction_" + auctionId + "_status", "finished"),
           IntegerEntry("auction_" + auctionId + "_finalPrice", amount),
@@ -181,8 +183,7 @@ func instantBuy(auctionId: String) = {
           StringEntry("assetId_" + assetId + "_bid_" + bidId + "_data", "{\"auctionId\": \"" + auctionId + "\", \"author\": \"" + i.originCaller.toString() + "\", \"amount\": \"" + amount.toString() + "\", \"status\": \"finished\"}"),
           DeleteEntry("address_" + auctionOwner + "_auction_" + auctionId + "_lockedNFT"),
           ScriptTransfer(i.originCaller, 1, this.getStringValue("auction_" + auctionId + "_assetId").fromBase58String()),
-          ScriptTransfer(addressFromStringValue(auctionOwner), fraction(amount, 100 - finalFee, 100), paymentAssetId),
-          ScriptTransfer(getFeeAggregatorAddress(), fraction(amount, finalFee, 100), paymentAssetId)
+          ScriptTransfer(addressFromStringValue(auctionOwner), fraction(amount, 100 - finalFee, 100), paymentAssetId)
         ]
       }
     }
@@ -273,6 +274,7 @@ func acceptBid(auctionId: String, bidId: String) = {
     } else {
       let recordPrice = tryGetInteger(assetId+"_recordPrice")
       let newRecordPrice = max([recordPrice, bidAmount])
+      strict burnCall = if isEggSell then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(bidAmount, finalFee, 100))]) else []
       [
         StringEntry("auction_" + auctionId + "_bid_" + bidId + "_status", "finished"),
         StringEntry("auction_" + auctionId + "_status", "finished"),
@@ -282,7 +284,6 @@ func acceptBid(auctionId: String, bidId: String) = {
         DeleteEntry("address_" + bidAuthor + "_auction_" + auctionId + "_bid_" + bidId),
         DeleteEntry("address_" + auctionOwner + "_auction_" + auctionId + "_lockedNFT"),
         ScriptTransfer(i.originCaller, fraction(bidAmount, 100 - finalFee, 100), paymentAssetId),
-        ScriptTransfer(getFeeAggregatorAddress(), fraction(bidAmount, finalFee, 100), paymentAssetId),
         ScriptTransfer(addressFromStringValue(bidAuthor), 1, assetId.fromBase58String())
       ]
     }

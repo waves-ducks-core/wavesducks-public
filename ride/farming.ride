@@ -36,6 +36,7 @@ func getMaintenance() =  tryGetStringExternal(getOracle(),"static_maintenance")
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
 func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),"static_duckWrapper").fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 
 let RefererReward = 5 #percentage
 
@@ -230,12 +231,16 @@ func buyPerch(color: String, refererAddress: String) = {
         let refererRewardForPerch = fraction(leftToPay, RefererReward, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
         [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay-refererRewardForPerch)])
+        
         leftToPay
       }else 0
       
 
       let perchAmountKey = "address_" + i.caller.toString() + "_perchesAvailable_" + color
       let perchAmount = tryGetInteger(perchAmountKey)
+
       [
         IntegerEntry(perchAmountKey, perchAmount + 1)
       ]

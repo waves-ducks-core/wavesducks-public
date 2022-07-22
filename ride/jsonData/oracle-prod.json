@@ -141,6 +141,11 @@
             "type": "string",
             "value": "BmKAXRQy7jZm44fa1YxNQDTcAwNSb74EpQwP5CT7UHdV"
             
+        },
+        {
+            "key": "static_burnAddress",
+            "type": "string",
+            "value": "3PFq5vswexHUS15BXYaKMXtTDVhkUfPXoG2"
         }
     ],
     "fee": 600000,
