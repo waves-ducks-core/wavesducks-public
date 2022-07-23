@@ -85,6 +85,7 @@ func burnDuckling()={
 
     [
         Burn(getEggAssetId(),amount),
+        Burn(payment.assetId.value(), payment.amount),
         IntegerEntry(getTotalBurnKeyOld(),totalBurnTillDate),
         IntegerEntry(getUserBurnKeyOld(burner), totalBurnTillDateByUser),
         IntegerEntry(totalDucklingsBurnedOld(),totalDucklingBurned ),
