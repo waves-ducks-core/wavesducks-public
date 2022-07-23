@@ -28,6 +28,7 @@ func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_reb
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
 func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String()) 
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
@@ -74,6 +75,8 @@ func addCouponsBatch(batch:String) = {
         let splitArray = split(coupon,":")
         let user = splitArray[0]
         let amount = parseIntValue(splitArray[1])
+        strict burnCall = invoke(getBurnAddress(), "burnByInvoke", [amount],[])
+
         acc++addCouponsInternal(user,amount)
 
     }
