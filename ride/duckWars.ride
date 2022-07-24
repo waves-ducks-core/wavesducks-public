@@ -27,6 +27,7 @@ func getWearablesAddress() = Address(tryGetStringExternal(getOracle(),"static_we
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 
 
 let MANTLENAME = "mantle"
@@ -220,6 +221,8 @@ func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
   let amount = if size(i.payments)==1 then {
       let firstPayment = i.payments[0].value()
       if (firstPayment.assetId != getEggAssetId()) then throw("WUMBC: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+      strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),firstPayment.amount)])
+
       firstPayment.amount 
     }
     else 0
@@ -227,7 +230,6 @@ func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
   else {
       strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[couponsAmount],[]).asInt()
       if couponsAmount != amountPaidByCoupons then throw("WUMBC: Not enough coupons! Please make sure to pick lower coupon amount!") else
-
       upgradeMantleFunc(i,artefactId,couponsAmount+amount)
   }
 }
