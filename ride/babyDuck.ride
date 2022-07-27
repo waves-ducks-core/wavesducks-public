@@ -16,6 +16,7 @@ func tryGetString(key: String) = {
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),"static_spiceAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
@@ -206,7 +207,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
   let currentNonce = tryGetInteger(kAddressNonce)
 
   let realDucklingId = if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), backendPubKey)) then throw("BFD: Invalid proof from backend") else 
-    if (i.payments.size() != 1 || i.payments[0].value().assetId != getEggAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else 
+    if (i.payments.size() != 1 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else 
     if (getBool(keyDucklingGrown(ducklingId))) then throw("BFD: Duckling is already grown") else 
     if (userNonce != currentNonce + 1) then throw("BFD: User Nonce should be " + currentNonce.toString() + " + 1, while received " + userNonce.toString()) else {
       if (ducklingId == "") then throw("BFD: Please buy a duckling first!") else {
