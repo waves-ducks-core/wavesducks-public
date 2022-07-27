@@ -151,42 +151,19 @@ func setSale(val: Int) = {
 
 @Callable(i)
 func startDuckHatching(refererAddress: String) = {
+  if getBabyDuckAddress() != this then throw("ISDHFA: From now on this is only possible through ducklings!") else
   if (isLocked() > 0) then {
     throw("ISDH: EGG operations are temporarily locked")
   } else {
     let totalDucksAmount = tryGetInteger("ducks_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
-
-    let results = [
+      [
         StringEntry(getHatchingStatusKey(i.originCaller.toString(), i.transactionId), HatchingStarted),
         IntegerEntry(getHatchingFinishHeightKey(i.originCaller.toString(), i.transactionId), height + delayForHatching),
         IntegerEntry("ducks_amount", totalDucksAmount + 1),
-        IntegerEntry("ducks_last_price", eggsNeeded / 1000000)
+        IntegerEntry("ducks_last_price", eggsNeeded / 1000000),
+        BooleanEntry("hatching_" + i.transactionId.toBase58String() + "_babyDuck", true)
       ]
-
-
-    strict entry = if (i.caller == getBabyDuckAddress()) then [BooleanEntry("hatching_" + i.transactionId.toBase58String() + "_babyDuck", true)] else
-      strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[eggsNeeded],[]).asInt()
-      let leftToPay = eggsNeeded-amountPaidByCoupons 
-      if leftToPay!=0 then {
-        let firstPayment = i.payments[0].value()
-
-        if (firstPayment.assetId != getEggAssetId()) then throw("ISDH: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-        if (firstPayment.amount < leftToPay) then throw("ISDH: To hatch a duck you currently need the following amount of EGGlets: " + leftToPay.toString()) else
-        
-
-        let refererReward = fraction(leftToPay, RefererReward, 100)
-        
-        strict refCall = invoke(getRefContractAddress(), "refPayment", [refererAddress], [AttachedPayment(getEggAssetId(), refererReward)])
-        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay-refererReward)])
-
-
-        let payback = firstPayment.amount - leftToPay
-        if payback > 0 then [ScriptTransfer(i.caller, payback , getEggAssetId())] else []
-        
-      }else []
-    results ++ entry
-    
   }
 }
 
