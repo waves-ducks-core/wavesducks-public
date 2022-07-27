@@ -251,7 +251,7 @@ func turnDucklingIntoDuck() = {
   let txId = i.transactionId.toBase58String()
   let lastIssuedDucklingTs = tryGetInteger(KGlobalIssuedTimestamp)
   let fiveMinInMs = 5 * 60 * 1000
-  let timeDiff = fiveMinInMs - (lastBlock.timestamp - lastIssuedDucklingTs);
+  let timeDiff = lastBlock.timestamp - (lastIssuedDucklingTs+fiveMinInMs);
   if (lastIssuedDucklingTs > 0 && timeDiff < 0) then throw("Can issue ducklings only once per 5 minutes, please wait for " + fraction(timeDiff, 1, 1000).toString() + " sec.") else 
   if (i.payments.size() != 1) then throw("Bad payment attached (asset[s] or amount)") else {
     let pmt = assetInfo(i.payments[0].value().assetId.value()).value()
