@@ -233,7 +233,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
   let kDucklingFedLap = keyDucklingFedLap(realDucklingId)
 
   if (maxFeedAmount < currentPayment) then throw("BFD: Cannot feed duckling for such amount, max feed amount is: " + maxFeedAmount.toString()) else {
-    let calculateResults = calculateNewDucklingLevel(realDucklingId, currentPayment)
+    let calculateResults = calculateNewDucklingLevel(realDucklingId, currentPayment/100)
     [
       IntegerEntry(kAddressNonce, currentNonce + 1),
       IntegerEntry(kDucklingLastFedTs, lastBlock.timestamp),
