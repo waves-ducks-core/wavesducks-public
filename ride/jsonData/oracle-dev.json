@@ -151,6 +151,11 @@
             "key": "static_spiceAssetId",
             "type": "string",
             "value": "HSHP7YmvCX9vtKYfoTfcEd9hr8bnFm1PzoBrQRNy8q1q"
+        },
+        {
+            "key": "static_ducklingPrice",
+            "type": "integer",
+            "value": 100000000
         }
     ],
     "fee": 600000,

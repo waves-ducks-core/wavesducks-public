@@ -9,12 +9,20 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
 
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getDucklingPrice() = tryGetIntegerExternal(getOracle(),"static_ducklingPrice")
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),"static_spiceAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
@@ -163,7 +171,8 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func buyDuckling()={
-  let exactPrice = 1_0000_0000
+  let exactPrice = getDucklingPrice()
+  if exactPrice < 50000000 then throw("BBD: Invalid price from oracle!") else
   strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
   let leftToPay = exactPrice-amountPaidByCoupons
 
