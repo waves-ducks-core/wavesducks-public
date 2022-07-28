@@ -86,6 +86,10 @@ func keyStartPercentage(ducklingId: String) = {
   "duckling_" + ducklingId + "_startPercentage"
 }
 
+func keyOwner(ducklingId: String) ={
+  "duckling_" + ducklingId + "_owner"
+}
+
 func tryGetInteger(key: String) = {
     let val = match getInteger(this, key) {
         case b:Int => b
@@ -201,6 +205,7 @@ func issueFreeDuckling(address: String, txIdStr: String, percentage: Int) = {
       IntegerEntry("stats_amount", tryGetInteger("stats_amount") + 1),
       BooleanEntry("duckling_" + assetId.toBase58String() + "_issuedByFeedCall", i.caller == this),
       IntegerEntry(keyStartPercentage(assetId.toBase58String()), percentage),
+      StringEntry(keyOwner(assetId.toBase58String()),address ),
       asset,
       ScriptTransfer(addressFromString(address).value(), 1, assetId)
     ], assetId.toBase58String())
@@ -215,13 +220,16 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
   let kAddressNonce = keyAddressNonce(addressString)
   let currentNonce = tryGetInteger(kAddressNonce)
 
+
   let realDucklingId = if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), backendPubKey)) then throw("BFD: Invalid proof from backend") else 
     if (i.payments.size() != 1 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else 
     if (getBool(keyDucklingGrown(ducklingId))) then throw("BFD: Duckling is already grown") else 
     if (userNonce != currentNonce + 1) then throw("BFD: User Nonce should be " + currentNonce.toString() + " + 1, while received " + userNonce.toString()) else {
       if (ducklingId == "") then throw("BFD: Please buy a duckling first!") else {
+        let ducklingOwner = tryGetString(keyOwner(ducklingId))
         let ducklingIdCheck = assetInfo(ducklingId.fromBase58String()).value()
         if (assetBalance(i.caller, ducklingIdCheck.id) != 1) then throw("BFD: You're not the owner of the duckling") else
+        if ducklingOwner != i.caller.toString() then throw("BFD: You can only feed ducklings that you won/bought yourself!") else
         if (ducklingIdCheck.issuer != this) then throw("BFD: Cant find duckling with such id") 
         else {
           let ducklingIdString = ducklingIdCheck.id.toBase58String()
