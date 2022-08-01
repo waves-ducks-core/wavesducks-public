@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -8,6 +8,8 @@ let keyMAccPKey = "master_pk"
 func getCFAddress() = {
   getStringValue(this, "CF_ADDRESS").addressFromStringValue()
 }
+
+
 
 let mAccPKey = getStringValue(getCFAddress(),keyMAccPKey).fromBase58String()
 
@@ -79,6 +81,8 @@ func getShareAssetId()={
   getStringValue(getCFAddress(), "SHARE_ASSET_ID").fromBase58String()
 }
 
+
+
 func tryGetInteger (key: String) = match getInteger(this, key) {
     case b: Int => 
         b
@@ -92,6 +96,15 @@ func tryGetString (key: String) = match getString(this, key) {
     case _ => 
         ""
 }
+
+
+func getVoteHeightKey() = "VOTE_HEIGHT_START"
+func getDuration() = 10000
+func getVoteByUserKey(user: String, height: String) = "VOTE_"+user+"_"+height
+func getTotalVoteByTypeKey(type: String, height: String) = "VOTE_TOTAL_"+type+"_"+height
+func getTotalVoteKey(height: String) = "VOTE_TOTAL_"+height
+func resultVoteKey(height: String) = "LIQUIDATED_"+height
+func quorumVoteKey(height: String) = "QUORUM_"+height
 
 func claimStakingResult (address: Address) = {
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
@@ -131,16 +144,94 @@ func handleStakingTopUp (amount: Int) = {
     ]
 }
 
+
+
+func addVotePower(caller: String, h: Int, vote: String, votePower: Int)={
+  if h == 0 && vote != "" then [] else 
+  if h+getDuration() < height then throw("CV: Voting is finished, please finalize the vote!") else
+  let voteTotalByType = tryGetInteger(getTotalVoteByTypeKey(vote, h.toString()))
+  let totalVote = tryGetInteger(getTotalVoteKey(h.toString()))
+  [
+      StringEntry(getVoteByUserKey(caller,h.toString()),vote),
+      IntegerEntry(getTotalVoteByTypeKey(vote, h.toString()),voteTotalByType+votePower),
+      IntegerEntry(getTotalVoteKey(h.toString()), totalVote+votePower)
+  ] 
+
+}
+
+func adaptVotePowerStake(caller: String,votePower: Int)={
+  let voteHeight = tryGetInteger(getVoteHeightKey())
+  let voteByUserString = tryGetString(getVoteByUserKey(caller,voteHeight.toString()))
+  addVotePower(caller,voteHeight,voteByUserString,votePower)
+}
+
+func isLiquidated()={
+  let voteHeight = tryGetInteger(getVoteHeightKey())
+  if voteHeight ==0 then false else
+  getBooleanValue(resultVoteKey(voteHeight.toString()))
+}
+
+func claimRefund()={
+  throw("TODO: Not yet implemented!")
+}
+
+
+
+@Callable(i)
+func startVote() ={
+    if(i.caller!=mAccAddr) then throw("CSV: Only the admin can start a liquidation vote for now!") else
+    if(tryGetInteger(getVoteHeightKey())!=0) then throw("CSV: There is already a vote running!") else
+    [
+      IntegerEntry("VOTE_HEIGHT_START",height)
+    ]
+}
+
+@Callable(i)
+func voteToLiquidate(vote: Boolean)={
+  let votePower = tryGetInteger(keyStakedAmount(i.caller))
+  if votePower == 0 then throw("CV: Please stake some tokens before you can vote!") else
+  let voteAsString = vote.toString()
+  let voteHeight = tryGetInteger(getVoteHeightKey())
+  if voteHeight+getDuration() < height then throw("CV: Voting is finished, please finalize the vote!") else
+  let voteByUserString = tryGetString(getVoteByUserKey(i.caller.toString(),voteHeight.toString()))
+
+  if voteByUserString !="" then throw("CV: You can not change your vote!") else 
+  addVotePower(i.caller.toString(),voteHeight,voteAsString,votePower)
+
+}
+
+@Callable(i)
+func finalizeVote()={
+  let voteHeight = tryGetInteger(getVoteHeightKey())
+  if voteHeight+getDuration() > height then throw("CV: Voting is not finished!") else
+  let totalStakedAmount = tryGetInteger(keyGlobalStaked)
+  let totalVote = tryGetInteger(getTotalVoteKey(voteHeight.toString()))
+  let quorum = totalVote/totalStakedAmount*100
+  let voteTotalByYes = tryGetInteger(getTotalVoteByTypeKey("true", voteHeight.toString()))
+  let voteTotalByNo = tryGetInteger(getTotalVoteByTypeKey("false", voteHeight.toString()))
+
+  let liquidated = if quorum < 20 then true else if voteTotalByYes > voteTotalByNo then true else false
+  let resetKey = if liquidated then [] else [IntegerEntry(getVoteHeightKey(),0)]
+  
+  [
+    IntegerEntry(quorumVoteKey(voteHeight.toString()),quorum),
+    BooleanEntry(resultVoteKey(voteHeight.toString()),liquidated)
+
+  ]++resetKey
+
+}
+
 #both
 @Callable(i)
 func topUpReward () = {
+    if isLiquidated() then throw("CTUR: CF is liquidated!") else
     let eggAssetId = getEggId()
     let shareTokenId = getShareAssetId()
     if (i.payments[0].assetId != eggAssetId)
-    then throw("Wrong assetId, first payment should be EGG")
+    then throw("CTUP: Wrong assetId, first payment should be EGG")
     else { 
       if (i.payments[1].assetId != shareTokenId)
-      then throw("Wrong assetId, second payment should be farm tokens")
+      then throw("CTUP: Wrong assetId, second payment should be farm tokens")
       else {
         let resHandleStaking = handleStakingTopUp(i.payments[0].amount) 
         let resHandleCompound = handleCompoundTopUp(i.payments[1].amount)
@@ -157,9 +248,10 @@ func topUpReward () = {
 #both
 @Callable(i)
 func withdrawFarmTokens (amount: Int, compound: Boolean) = {
+  if isLiquidated() then throw("CTUR: CF is liquidated!") else
   if (i.payments.size() > 0) 
   then {
-          throw("Please don't add payments")
+          throw("CWFT: Please don't add payments")
   } else
   let shareTokenId = getShareAssetId()
   if compound
@@ -178,7 +270,7 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
     let amountWd =  if (amount == -1) then fraction(virtualWd,vp,VPScale)else amount
 
     if virtualWd > personalStaked
-    then throw("You don't have so much funds to withdraw")
+    then throw("CWFT: You don't have so much funds to withdraw")
     else{
       [
           IntegerEntry(keyStakedCompoundU, personalStaked-virtualWd),
@@ -197,14 +289,16 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
     let wdAmount = if (amount == -1) then stakedAmount else amount
     if ((wdAmount > stakedAmount))
         then throw("you don't have tokens available")
-        else (
+        else
+        let votePower = adaptVotePowerStake(i.caller.toString(),-wdAmount) 
+        (
           claimStakingResult(i.caller) ++ 
           [
             IntegerEntry(keyStakedAmount(i.caller), (stakedAmount - wdAmount)), 
             IntegerEntry(keyGlobalStaked, (tryGetInteger(keyGlobalStaked) - wdAmount)), 
             ScriptTransfer(i.caller, wdAmount, shareTokenId),
             IntegerEntry("last_staking_wd",wdAmount)
-          ]
+          ]++votePower
         )
   }
 
@@ -213,18 +307,19 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
 #both
 @Callable(i)
 func stakeFarmTokens (compound: Boolean) = {
+  if isLiquidated() then throw("CTUR: CF is liquidated!") else
   let shareTokenId = getShareAssetId()
   if (i.payments.size() > 1) then {
-          throw("To many payments added")
+          throw("CSFT: To many payments added")
         } else
   if (i.payments[0].assetId != shareTokenId)
-  then throw("Wrong assetId")
+  then throw("CSFT: Wrong assetId")
   else{
     if compound
     then {
       let isLocked = isCollectiveFarmLocked()
       if isLocked 
-      then throw("The farm is closed for investments, it can't compound")
+      then throw("CSFT: The farm is closed for investments, it can't compound")
       else {
         #get amount of already staked funds
         let keyStakedCompoundU = keyStakedCompoundUser(i.caller)
@@ -252,13 +347,15 @@ func stakeFarmTokens (compound: Boolean) = {
         let addressStr = toString(i.caller)
         let totalStakedAmount = tryGetInteger(keyGlobalStaked)
         if ((i.payments[0].assetId != shareTokenId))
-        then throw("wrong asset attached")
+        then throw("CSFT: wrong asset attached")
         else (
+          let votePower = adaptVotePowerStake(i.caller.toString(),amount) 
+
           claimStakingResult(i.caller) ++ 
           [
             IntegerEntry(keyGlobalStaked, (totalStakedAmount + amount)), 
             IntegerEntry(keyStakedAmount(i.caller), (tryGetInteger(keyStakedAmount(i.caller)) + amount))
-          ]
+          ]++votePower
         )
     }
     }
@@ -266,7 +363,8 @@ func stakeFarmTokens (compound: Boolean) = {
 
 @Callable(i)
 func initiateDapp(address: String) = {
-  if (i.caller != this) then throw("Can be called only by the dapp-account") else {
+  if isLiquidated() then throw("CTUR: CF is liquidated!") else
+  if (i.caller != this) then throw("CID: Can be called only by the dapp-account") else {
     setCFAddressAndInitiate(address)
   }
 }
@@ -274,9 +372,10 @@ func initiateDapp(address: String) = {
 #only staking
 @Callable(i)
 func claimReward () = {  
+  if isLiquidated() then throw("CTUR: CF is liquidated!") else
   if (i.payments.size() > 0) 
   then {
-          throw("Please don't add payments")
+          throw("CCR: Please don't add payments")
   } else
         claimStakingResult(i.caller)
   }
