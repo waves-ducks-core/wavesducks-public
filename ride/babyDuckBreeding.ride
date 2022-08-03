@@ -1,0 +1,207 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),"static_spiceAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+
+let DUCKLINGPRICE = 1_00_0000_0000
+let percentGrowthPrecision = 1_000_000_000_000_000_0
+let existingDuckPrecision = 1_000_000_000_000_00
+let KGlobalIssuedTimestamp = "global_issued_timestamp"
+
+func keyTotalFeed(ducklingId: String) = {
+  "duckling_" + ducklingId + "_feed"
+}
+
+
+func keyDucklingFedLastTimestamp(ducklingId: String) = {
+  "duckling_" + ducklingId + "_fedLastTs"
+}
+
+func keyDucklingLevel(ducklingId: String) = {
+  "duckling_" + ducklingId + "_level"
+}
+
+
+func keyDucklingGrown(ducklingId: String) = {
+  "duckling_" + ducklingId + "_grown"
+}
+
+
+func keyStartPercentage(ducklingId: String) = {
+  "duckling_" + ducklingId + "_startPercentage"
+}
+
+func keyOwner(ducklingId: String) ={
+  "duckling_" + ducklingId + "_owner"
+}
+
+func tryGetInteger(key: String) = {
+    let val = match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+    val
+}
+
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func getDucklingPercentage(ducklingId: String)={
+          let percentageDuckling = tryGetInteger(keyStartPercentage(ducklingId))
+          let base = if percentageDuckling != 0 then percentageDuckling else 20 
+          (base * existingDuckPrecision).toBigInt() # duckling from rebirth
+}
+
+func getCurrentLevelBigInt(ducklingId: String) = {
+  let kDuckLevel = keyDucklingLevel(ducklingId)
+  match (getString(kDuckLevel)){
+    case s: String => s.parseBigIntValue()
+    case _ => {
+      match getBoolean("duckling_" + ducklingId + "_issuedByFeedCall") {
+        case b:Boolean => if b==true then 0.toBigInt() else getDucklingPercentage(ducklingId)
+        case _ => getDucklingPercentage(ducklingId)
+      }
+    }
+  }
+}
+
+func getLastFedTimestamp(ducklingId: String) = {
+  let lastFedTimestamp = tryGetInteger(keyDucklingFedLastTimestamp(ducklingId))
+  if lastFedTimestamp > 0 then lastFedTimestamp else lastBlock.timestamp
+}
+
+# ducklingGrowthLevel counted with precision BigInt
+func calculateNewDucklingLevel(ducklingId: String, paymentAmount: Int) = {
+
+  let currentTs = lastBlock.timestamp
+  let lastFedTimestampChecked = getLastFedTimestamp(ducklingId)
+  let fedDiff = currentTs - lastFedTimestampChecked
+  let penalty = 0.toBigInt()
+
+  let growth = fraction(paymentAmount.toBigInt(), percentGrowthPrecision.toBigInt(), DUCKLINGPRICE.toBigInt())
+
+  let currentLevel = getCurrentLevelBigInt(ducklingId)
+  let newLevel = ((currentLevel - penalty) + growth)
+  let result = if (newLevel < 0.toBigInt()) then growth.toString() else newLevel.toString()
+  (result, ["currentLevel=" + currentLevel.toString(), "newLevel=" + newLevel.toString(), "growth=" + growth.toString(), "penalty=" + penalty.toString(), "lastFedTs=" + lastFedTimestampChecked.toString(), "fedDiff=" + fedDiff.toString()])
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("BAI: wrong type, expected: Int")
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("BCO: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
+func issueDuckling(address: String, txIdStr: String) = {
+  if i.caller != getIncubatorAddress() then throw("BIFD: You can't issue free duckling") else
+  let asset = Issue("BABY-11111111-HZ", "", 1, 0, false, unit, height)
+    let assetId = asset.calculateAssetId()
+    ([
+      StringEntry(address + "_" + txIdStr + "_di", assetId.toBase58String()),
+      IntegerEntry("stats_amount", tryGetInteger("stats_amount") + 1),
+      BooleanEntry("duckling_" + assetId.toBase58String() + "_issuedByFeedCall", i.caller == this),
+      IntegerEntry(keyStartPercentage(assetId.toBase58String()), 0),
+      StringEntry(keyOwner(assetId.toBase58String()),address ),
+      asset,
+      ScriptTransfer(addressFromString(address).value(), 1, assetId)
+    ], assetId.toBase58String())
+}
+
+
+@Callable(i)
+func feedDuckling(ducklingId: String, maxFeedAmount: Int) = {
+  let addressString = i.caller.toString()
+  let realDucklingId = if (i.payments.size() != 1 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else 
+    if (getBool(keyDucklingGrown(ducklingId))) then throw("BFD: Duckling is already grown") else 
+      if (ducklingId == "") then throw("BFD: Please hatch a duckling first!") else {
+        let ducklingOwner = tryGetString(keyOwner(ducklingId))
+        let ducklingIdCheck = assetInfo(ducklingId.fromBase58String()).value()
+        if (assetBalance(i.caller, ducklingIdCheck.id) != 1) then throw("BFD: You're not the owner of the duckling") else
+        if ducklingOwner != i.caller.toString() then throw("BFD: You can only feed ducklings that you won/bought yourself!") else
+        if (ducklingIdCheck.issuer != this) then throw("BFD: Cant find duckling with such id") 
+        else {
+          let ducklingIdString = ducklingIdCheck.id.toBase58String()
+          ducklingIdString
+        }
+      }
+
+  let kDucklingLastFedTs = keyDucklingFedLastTimestamp(ducklingId)
+  let currentPayment = i.payments[0].value().amount
+  let kNewLevel = keyDucklingLevel(realDucklingId)
+  let kTotalFeed = keyTotalFeed(realDucklingId)
+  let totalFeed = tryGetInteger(kTotalFeed)
+  let kFeedTxStats = "duckling_" + realDucklingId + "_stat_" + lastBlock.timestamp.toString()
+
+  if (maxFeedAmount < currentPayment) then throw("BFD: Cannot feed duckling for such amount, max feed amount is: " + maxFeedAmount.toString()) else {
+    let calculateResults = calculateNewDucklingLevel(realDucklingId, currentPayment)
+    [
+      IntegerEntry(kDucklingLastFedTs, lastBlock.timestamp),
+      IntegerEntry(kTotalFeed, totalFeed + currentPayment),
+      IntegerEntry(kFeedTxStats, currentPayment),
+      StringEntry(kNewLevel, calculateResults._1),
+      StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";"))
+    ]
+  }
+}
+
+
+@Callable(i)
+func turnDucklingIntoDuck() = {
+  if i.caller != getIncubatorAddress() then throw("BIFD: You can't turn duckling") else
+  let address = i.caller.toString()
+  let txId = i.transactionId.toBase58String()
+  let lastIssuedDucklingTs = tryGetInteger(KGlobalIssuedTimestamp)
+  let fiveMinInMs = 1 * 60 * 1000
+  let timeDiff = lastBlock.timestamp - (lastIssuedDucklingTs+fiveMinInMs);
+  if (lastIssuedDucklingTs > 0 && timeDiff < 0) then throw("BTD: Can issue ducklings only once per 1 minutes, please wait for " + fraction(timeDiff, 1, 1000).toString() + " sec.") else 
+  if (i.payments.size() != 1) then throw("BTD: Bad payment attached (asset[s] or amount)") else {
+    let pmt = assetInfo(i.payments[0].value().assetId.value()).value()
+    if (getCurrentLevelBigInt(pmt.id.toBase58String()) < 100.toBigInt()) then throw("BTD: Duckling is not grown yet...") else
+    if (pmt.issuer != this) then throw("BTD: Can use only ducklings from this dApp") else {
+      let kDucklingGrown = keyDucklingGrown(pmt.id.toBase58String())
+      [
+        BooleanEntry(kDucklingGrown, true),
+        IntegerEntry(KGlobalIssuedTimestamp, lastBlock.timestamp)
+      ]
+    }
+  }
+}
+
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
