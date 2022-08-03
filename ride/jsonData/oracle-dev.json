@@ -156,6 +156,11 @@
             "key": "static_ducklingPrice",
             "type": "integer",
             "value": 100000000
+        },
+        {
+            "key": "static_babyDuckBreedingAddress",
+            "type": "string",
+            "value": "3P36HH7i6BBuuNp7FHQd6WX8gzfogi778i6"
         }
     ],
     "fee": 600000,

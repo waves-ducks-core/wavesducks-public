@@ -146,6 +146,16 @@
             "key": "static_burnAddress",
             "type": "string",
             "value": "3PFq5vswexHUS15BXYaKMXtTDVhkUfPXoG2"
+        },
+        {
+            "key": "static_ducklingPrice",
+            "type": "integer",
+            "value": 100000000
+        },
+        {
+            "key": "static_babyDuckBreedingAddress",
+            "type": "string",
+            "value": "3PKdgEHMR7HzTQdXkHqTPRUWtBXhYF1NihS"
         }
     ],
     "fee": 600000,
