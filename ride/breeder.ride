@@ -174,8 +174,9 @@ func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector,
 }
 
 func finishDuckHatch(payments: List[AttachedPayment], txIdStr: String, owner: String, duckGenesString: String) = {
-  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],payments)
-
+  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],payments).asString()
+  let ducklingLinked = getDucklingKey(owner, txIdStr.fromBase58String())
+  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
   let txId = fromBase58String(txIdStr)
   let processStatusKey = getProcessStatusKey(owner, txId)
   let duckIdKey = getDuckIdKey(owner, txId)

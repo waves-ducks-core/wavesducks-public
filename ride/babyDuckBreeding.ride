@@ -23,7 +23,7 @@ func tryGetString(key: String) = {
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),"static_spiceAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 let DUCKLINGPRICE = 1_00_0000_0000
 let percentGrowthPrecision = 1_000_000_000_000_000_0
@@ -73,8 +73,7 @@ func getBool(key: String) = {
 }
 
 func getDucklingPercentage(ducklingId: String)={
-          let percentageDuckling = tryGetInteger(keyStartPercentage(ducklingId))
-          let base = if percentageDuckling != 0 then percentageDuckling else 20 
+          let base = tryGetInteger(keyStartPercentage(ducklingId))
           (base * existingDuckPrecision).toBigInt() # duckling from rebirth
 }
 
@@ -128,7 +127,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func issueDuckling(address: String, txIdStr: String) = {
-  if i.caller != getIncubatorAddress() then throw("BIFD: You can't issue free duckling") else
+  if i.caller != getBreederAddress() then throw("BIFD: You can't issue free duckling") else
   let asset = Issue("BABY-11111111-HZ", "", 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
     ([
@@ -144,7 +143,7 @@ func issueDuckling(address: String, txIdStr: String) = {
 
 
 @Callable(i)
-func feedDuckling(ducklingId: String, maxFeedAmount: Int) = {
+func feedDuckling(ducklingId: String) = {
   let addressString = i.caller.toString()
   let realDucklingId = if (i.payments.size() != 1 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else 
     if (getBool(keyDucklingGrown(ducklingId))) then throw("BFD: Duckling is already grown") else 
@@ -167,7 +166,6 @@ func feedDuckling(ducklingId: String, maxFeedAmount: Int) = {
   let totalFeed = tryGetInteger(kTotalFeed)
   let kFeedTxStats = "duckling_" + realDucklingId + "_stat_" + lastBlock.timestamp.toString()
 
-  if (maxFeedAmount < currentPayment) then throw("BFD: Cannot feed duckling for such amount, max feed amount is: " + maxFeedAmount.toString()) else {
     let calculateResults = calculateNewDucklingLevel(realDucklingId, currentPayment)
     [
       IntegerEntry(kDucklingLastFedTs, lastBlock.timestamp),
@@ -176,13 +174,13 @@ func feedDuckling(ducklingId: String, maxFeedAmount: Int) = {
       StringEntry(kNewLevel, calculateResults._1),
       StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";"))
     ]
-  }
+  
 }
 
 
 @Callable(i)
 func turnDucklingIntoDuck() = {
-  if i.caller != getIncubatorAddress() then throw("BIFD: You can't turn duckling") else
+  if i.caller != getBreederAddress() then throw("BIFD: You can't turn duckling") else
   let address = i.caller.toString()
   let txId = i.transactionId.toBase58String()
   let lastIssuedDucklingTs = tryGetInteger(KGlobalIssuedTimestamp)
@@ -194,10 +192,10 @@ func turnDucklingIntoDuck() = {
     if (getCurrentLevelBigInt(pmt.id.toBase58String()) < 100.toBigInt()) then throw("BTD: Duckling is not grown yet...") else
     if (pmt.issuer != this) then throw("BTD: Can use only ducklings from this dApp") else {
       let kDucklingGrown = keyDucklingGrown(pmt.id.toBase58String())
-      [
+      ([
         BooleanEntry(kDucklingGrown, true),
         IntegerEntry(KGlobalIssuedTimestamp, lastBlock.timestamp)
-      ]
+      ],pmt.id.toBase58String())
     }
   }
 }
