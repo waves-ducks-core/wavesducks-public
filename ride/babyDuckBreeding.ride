@@ -25,9 +25,7 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),"static_spiceAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
-let DUCKLINGPRICE = 1_00_0000_0000
-let percentGrowthPrecision = 1_000_000_000_000_000_0
-let existingDuckPrecision = 1_000_000_000_000_00
+let DUCKLINGPRICE = 100_00_0000_0000
 let KGlobalIssuedTimestamp = "global_issued_timestamp"
 
 func keyTotalFeed(ducklingId: String) = {
@@ -72,21 +70,12 @@ func getBool(key: String) = {
   }
 }
 
-func getDucklingPercentage(ducklingId: String)={
-          let base = tryGetInteger(keyStartPercentage(ducklingId))
-          (base * existingDuckPrecision).toBigInt() # duckling from rebirth
-}
-
-func getCurrentLevelBigInt(ducklingId: String) = {
+func getCurrentLevelInt(ducklingId: String) = {
   let kDuckLevel = keyDucklingLevel(ducklingId)
   match (getString(kDuckLevel)){
-    case s: String => s.parseBigIntValue()
-    case _ => {
-      match getBoolean("duckling_" + ducklingId + "_issuedByFeedCall") {
-        case b:Boolean => if b==true then 0.toBigInt() else getDucklingPercentage(ducklingId)
-        case _ => getDucklingPercentage(ducklingId)
-      }
-    }
+    case s: String => s.parseIntValue()
+    case _ => throw("BGCLBI: Weird value detected!")
+    
   }
 }
 
@@ -95,20 +84,19 @@ func getLastFedTimestamp(ducklingId: String) = {
   if lastFedTimestamp > 0 then lastFedTimestamp else lastBlock.timestamp
 }
 
-# ducklingGrowthLevel counted with precision BigInt
 func calculateNewDucklingLevel(ducklingId: String, paymentAmount: Int) = {
 
   let currentTs = lastBlock.timestamp
   let lastFedTimestampChecked = getLastFedTimestamp(ducklingId)
   let fedDiff = currentTs - lastFedTimestampChecked
-  let penalty = 0.toBigInt()
 
-  let growth = fraction(paymentAmount.toBigInt(), percentGrowthPrecision.toBigInt(), DUCKLINGPRICE.toBigInt())
+  let growth = paymentAmount
 
-  let currentLevel = getCurrentLevelBigInt(ducklingId)
-  let newLevel = ((currentLevel - penalty) + growth)
-  let result = if (newLevel < 0.toBigInt()) then growth.toString() else newLevel.toString()
-  (result, ["currentLevel=" + currentLevel.toString(), "newLevel=" + newLevel.toString(), "growth=" + growth.toString(), "penalty=" + penalty.toString(), "lastFedTs=" + lastFedTimestampChecked.toString(), "fedDiff=" + fedDiff.toString()])
+  let currentLevel = getCurrentLevelInt(ducklingId)
+  let newLevel = (currentLevel+ paymentAmount)
+  if newLevel >= DUCKLINGPRICE then throw("CBDB: You are feeding your duckling to much! Only "+ (DUCKLINGPRICE-currentLevel).toString()+ "needed!") else
+  let result = newLevel.toString()
+  (result, ["currentLevel=" + currentLevel.toString(), "newLevel=" + newLevel.toString(), "growth=" + growth.toString(), "lastFedTs=" + lastFedTimestampChecked.toString(), "fedDiff=" + fedDiff.toString()])
 }
 
 func asInt(value: Any) = match value {
@@ -189,7 +177,7 @@ func turnDucklingIntoDuck() = {
   if (lastIssuedDucklingTs > 0 && timeDiff < 0) then throw("BTD: Can issue ducklings only once per 1 minutes, please wait for " + fraction(timeDiff, 1, 1000).toString() + " sec.") else 
   if (i.payments.size() != 1) then throw("BTD: Bad payment attached (asset[s] or amount)") else {
     let pmt = assetInfo(i.payments[0].value().assetId.value()).value()
-    if (getCurrentLevelBigInt(pmt.id.toBase58String()) < 100.toBigInt()) then throw("BTD: Duckling is not grown yet...") else
+    if (getCurrentLevelInt(pmt.id.toBase58String()) < DUCKLINGPRICE ) then throw("BTD: Duckling is not grown yet...") else
     if (pmt.issuer != this) then throw("BTD: Can use only ducklings from this dApp") else {
       let kDucklingGrown = keyDucklingGrown(pmt.id.toBase58String())
       ([
