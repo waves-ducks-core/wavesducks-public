@@ -90,21 +90,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
 
   let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
   let itemRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 2)
-  
-  #TODO:
-#   duckling 20% => duckling 2%
-# duckling 40% => duckling 10%
-# duckling 80% => duckling 20%
 
-# chances drop for incubator from 10 => 5%
-#  duckling 20 => 19.5 to 15.5%
-# duckling 40 => 10 => 5
-# duckling 80 => 5 => 1
-
-# 15% we need to respread 
-# I propose we add 2.5% to each perch, ar and hunt item
-
-# Maybe slight price increase to 0.7 egg
   if (jackpotRandom == 1) then { "phoenix" } else 
   if (itemRandom == 1) then {"item_ART-FREEGENE" } else {  
     #Every % means 10 numbers
