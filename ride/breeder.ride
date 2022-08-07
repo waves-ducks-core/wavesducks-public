@@ -173,10 +173,7 @@ func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector,
     ]
 }
 
-func finishDuckHatch(payments: List[AttachedPayment], txIdStr: String, owner: String, duckGenesString: String) = {
-  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],payments).asString()
-  let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
-  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
+func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = {
   let txId = fromBase58String(txIdStr)
   let processStatusKey = getProcessStatusKey(owner, txId)
   let duckIdKey = getDuckIdKey(owner, txId)
@@ -338,13 +335,25 @@ func startDuckBreeding() = {
 func finishDuckHatchingItems(txIdStr: String, duckGenesString: String) = {
   if (i.caller != getItemsAddress() && duckGenesString != "" ) then throw("Only items can create fixed genes") else 
   let owner = i.originCaller.toString()
-  finishDuckHatch(i.payments,txIdStr, owner, duckGenesString) 
+  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
+  let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
+  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
+  finishDuckHatch(txIdStr, owner, duckGenesString) 
 }
 
 @Callable(i)
 func finishDuckHatching(txIdStr: String) = {
   let owner = i.caller.toString()
-  finishDuckHatch(i.payments,txIdStr, owner, "") 
+  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
+  let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
+  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
+  finishDuckHatch(txIdStr, owner, "") 
+}
+
+@Callable(i)
+func finishDuckHatchingAdmin(txIdStr: String, owner: String) = {
+  if i.caller != this then throw("BFDH: Only admins can run this!") else 
+      finishDuckHatch(txIdStr, owner, "") 
 }
 
 @Callable(i)
