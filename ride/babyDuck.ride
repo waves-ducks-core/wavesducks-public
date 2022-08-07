@@ -42,8 +42,8 @@ let backendPubKey = base58'BmKAXRQy7jZm44fa1YxNQDTcAwNSb74EpQwP5CT7UHdV'
 let STARTTIMESTAMP = 1_632_474_000_000
 let LAPLENGTH = 21_600_000
 let DUCKLINGPRICE = 1_0000_0000
-let percentGrowthPrecision = 1_000_000_000_000_000_0
-let existingDuckPrecision = 1_000_000_000_000_00
+let percentGrowthPrecision = 1_0000_0000_0000_0000
+let existingDuckPrecision = 1_00_0000_0000_0000
 let KGlobalIssuedTimestamp = "global_issued_timestamp"
 let MSINDAY = 86_400_000
 
@@ -160,8 +160,10 @@ func calculateNewDucklingLevel(ducklingId: String, paymentAmount: Int) = {
   #if true == true then throw("Current: " + getCurrentLevelBigInt(ducklingId).toString() + " Pen: " + penalty.toString() + ", growth: " + growth.toString() + ", currentlap: " + currentlap.toString() + " lastFedLapNumber: " + lastFedLapNumber.toString()) else {
   #}
   let currentLevel = getCurrentLevelBigInt(ducklingId)
-  let newLevel = ((currentLevel - penalty) + growth)
-  let result = if (newLevel < 0.toBigInt()) then growth.toString() else newLevel.toString()
+  #let newLevel = ((currentLevel - penalty) + growth)
+  #let result = if (newLevel < 0.toBigInt()) then growth.toString() else newLevel.toString()
+  let newLevel = currentLevel+growth
+  let result = newLevel.toString()
   (result, ["currentLevel=" + currentLevel.toString(), "newLevel=" + newLevel.toString(), "growth=" + growth.toString(), "penalty=" + penalty.toString(), "lastFedTs=" + lastFedTimestampChecked.toString(), "fedDiff=" + fedDiff.toString()])
 }
 
@@ -313,7 +315,7 @@ func turnDucklingIntoDuck() = {
     let pmt = assetInfo(i.payments[0].value().assetId.value()).value()
     let blackListed = tryGetBoolean(keyBlacklisted(pmt.id.toBase58String()))
     if blackListed then throw("BTD: Can not convert blacklisted duckling!") else 
-    if (getCurrentLevelBigInt(pmt.id.toBase58String()) < 100.toBigInt()) then throw("BTD: Duckling is not grown yet...") else
+    if (getCurrentLevelBigInt(pmt.id.toBase58String()) < percentGrowthPrecision.toBigInt()) then throw("BTD: Duckling is not grown yet...") else
     if (pmt.issuer != this) then throw("BTD: Can use only ducklings from this dApp") else {
       strict call = invoke(getIncubatorAddress(), "startDuckHatching", [""], [])
       let kDucklingGrown = keyDucklingGrown(pmt.id.toBase58String())
