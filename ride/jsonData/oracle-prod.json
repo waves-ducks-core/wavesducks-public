@@ -156,6 +156,11 @@
             "key": "static_babyDuckBreedingAddress",
             "type": "string",
             "value": "3PKdgEHMR7HzTQdXkHqTPRUWtBXhYF1NihS"
+        },
+        {
+            "key": "static_spiceAssetId",
+            "type": "string",
+            "value": "XYZ"
         }
     ],
     "fee": 600000,
