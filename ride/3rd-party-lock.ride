@@ -250,7 +250,7 @@ func lockDuck() = {
 @Callable(i)
 func unlockDuckOther(assetIdStr: String)={
   if i.caller != this then throw("3UDO: Admin only!") else
-  let ownerKey = keyDuckOwner(assetIdStr.fromBase58String())
+  let ownerKey = tryGetString(keyDuckOwner(assetIdStr.fromBase58String()))
   unstakeDuck(assetIdStr, ownerKey)
 
 
