@@ -122,6 +122,49 @@ func asInt(value: Any) = match value {
   case _ => throw("IAI: wrong type, expected: Int")
 }
 
+
+func finishHatchingInternal(txIdStr: String, owner: String)={
+  let txId = fromBase58String(txIdStr)
+  let hatchingStatusKey = getHatchingStatusKey(owner, txId)
+  let finishHeightKey = getHatchingFinishHeightKey(owner, txId)
+  let duckIdKey = getDuckIdKey(owner, txId)
+
+  let duckFromBaby = match (getBoolean("hatching_" + txIdStr + "_babyDuck")) {
+      case t:Boolean => t
+      case _ => false
+    }
+
+  let hatchingTxStatus = getStringValue(this, hatchingStatusKey)
+  let hatchingFinishHeight = getIntegerValue(this, finishHeightKey)
+  
+  if (hatchingTxStatus == HatchingFinished) then {
+    let duckId = getStringValue(this, getDuckIdKey(owner, txId))
+    throw("IFDH: The duck was hatched and claimed already, here is the folowing: " + duckId)
+  } else 
+    if (hatchingFinishHeight > height) then throw("Hatching is not finished yet " + (hatchingFinishHeight - height).toString() + " blocks remaining, it will take around " +  (hatchingFinishHeight - height).toString() + " minutes")
+    else {
+      let (duckGen, farmGen, jackpotRandomEntry) = getRandomName(txId, hatchingFinishHeight)
+      let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+
+      let asset = Issue(duckGen, description, 1, 0, false, unit, hatchingFinishHeight)
+      let assetId = asset.calculateAssetId()
+
+      let amount = tryGetInteger(getDuckStatsKey(duckGen)) + 1
+
+      [
+        StringEntry(hatchingStatusKey, HatchingFinished),
+        StringEntry(duckIdKey, assetId.toBase58String()),
+        StringEntry(assetId.toBase58String(), duckIdKey),
+        BooleanEntry("duck_" + assetId.toBase58String() + "_grown", duckFromBaby),
+        IntegerEntry(getDuckStatsKey(duckGen), amount),
+        jackpotRandomEntry,
+        IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
+        asset,
+        ScriptTransfer(Address(owner.fromBase58String()), 1, assetId)
+      ]
+    }
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("ICU: admin only") else 
@@ -190,46 +233,10 @@ func startDuckHatchingForAddress(address: String) = {
 
 @Callable(i)
 func finishDuckHatching(txIdStr: String) = {
+  let owner = i.originCaller.toString()
+  finishHatchingInternal(txIdStr,owner)
 
-  let txId = fromBase58String(txIdStr)
-  let hatchingStatusKey = getHatchingStatusKey(i.caller.toString(), txId)
-  let finishHeightKey = getHatchingFinishHeightKey(i.caller.toString(), txId)
-  let duckIdKey = getDuckIdKey(i.caller.toString(), txId)
 
-  let duckFromBaby = match (getBoolean("hatching_" + txIdStr + "_babyDuck")) {
-      case t:Boolean => t
-      case _ => false
-    }
-
-  let hatchingTxStatus = getStringValue(this, hatchingStatusKey)
-  let hatchingFinishHeight = getIntegerValue(this, finishHeightKey)
-  
-  if (hatchingTxStatus == HatchingFinished) then {
-    let duckId = getStringValue(this, getDuckIdKey(i.caller.toString(), txId))
-    throw("IFDH: The duck was hatched and claimed already, here is the folowing: " + duckId)
-  } else 
-    if (hatchingFinishHeight > height) then throw("Hatching is not finished yet " + (hatchingFinishHeight - height).toString() + " blocks remaining, it will take around " +  (hatchingFinishHeight - height).toString() + " minutes")
-    else {
-      let (duckGen, farmGen, jackpotRandomEntry) = getRandomName(txId, hatchingFinishHeight)
-      let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
-
-      let asset = Issue(duckGen, description, 1, 0, false, unit, hatchingFinishHeight)
-      let assetId = asset.calculateAssetId()
-
-      let amount = tryGetInteger(getDuckStatsKey(duckGen)) + 1
-
-      [
-        StringEntry(hatchingStatusKey, HatchingFinished),
-        StringEntry(duckIdKey, assetId.toBase58String()),
-        StringEntry(assetId.toBase58String(), duckIdKey),
-        BooleanEntry("duck_" + assetId.toBase58String() + "_grown", duckFromBaby),
-        IntegerEntry(getDuckStatsKey(duckGen), amount),
-        jackpotRandomEntry,
-        IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
-        asset,
-        ScriptTransfer(i.caller, 1, assetId)
-      ]
-    }
 }
 
 @Callable(i)
@@ -320,6 +327,12 @@ func reduceRarity(assetId: String, fGen: String) = {
       IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
     ]
   }
+}
+
+@Callable(i)
+func finishDuckHatchingAdmin(txIdStr: String, owner: String) = {
+  if i.caller != this then throw("IFDHA: Only admins can run this!") else 
+      finishHatchingInternal(txIdStr, owner) 
 }
 
 @Verifier(tx)
