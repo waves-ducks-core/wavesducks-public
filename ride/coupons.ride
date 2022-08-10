@@ -29,10 +29,12 @@ func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_i
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
 func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(),"3PKwLVb8jYk58oYbfXxs2dUjD3YEKeqGWrX").fromBase58String())
+func getBreedingAddress() = Address(tryGetStringExternal(getOracle(),"static_babyDuckBreedingAddress").fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
-let scCanUseCoupons = [getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),getGameDappAddress()]
+let scCanUseCoupons = [getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),getGameDappAddress(), getBabyduckAddress(),getBreedingAddress() ]
 
 func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
