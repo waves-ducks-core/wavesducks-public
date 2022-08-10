@@ -196,17 +196,10 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
       let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
-      let parent1Id = tryGetString(getDuckParentKey(txId, 1))
-      let parent2Id = tryGetString(getDuckParentKey(txId, 2))
-
       composeGenericData(duckGen,duckIdKey,assetId,asset)++
       [
         StringEntry(processStatusKey, HatchingFinished),
-        IntegerEntry("asset_" + parent1Id + "_children", 1),
-        IntegerEntry("asset_" + parent2Id + "_children", 1),
-        ScriptTransfer(addressFromStringValue(owner), 1, assetId),
-        ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
-        ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
+        ScriptTransfer(addressFromStringValue(owner), 1, assetId)
       ]
     }
 }
@@ -324,7 +317,12 @@ func startDuckBreeding() = {
           StringEntry(getDuckParentKey(i.transactionId, 2), secondAssetId),
           StringEntry(getProcessStatusKey(i.caller.toString(), i.transactionId), HatchingStarted),
           IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId), height + delayForHatching),
-          StringEntry(getDucklingKey(i.caller.toString(), i.transactionId),ducklingGen)
+          StringEntry(getDucklingKey(i.caller.toString(), i.transactionId),ducklingGen),
+
+          IntegerEntry("asset_" + firstAssetId + "_children", 1),
+          IntegerEntry("asset_" + secondAssetId + "_children", 1),
+          ScriptTransfer(i.caller, 1, firstPayment.assetId.value()),
+          ScriptTransfer(i.caller, 1, secondPayment.assetId.value())
         ]
       
       
