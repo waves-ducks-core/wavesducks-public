@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -15,6 +15,14 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
 
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
@@ -24,6 +32,9 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getBabyDuckBreedingAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckBreedingAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getDucklingPrice() = tryGetIntegerExternal(getOracle(),"static_ducklingPrice")
 
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
@@ -34,6 +45,10 @@ func getProcessStatusKey(address: String, txId: ByteVector) = {
   # if false = not claimed
   # if true = claimed and nft id will be in the key of getDuckIdKey
   address + "_" + txId.toBase58String() +  "_status"
+}
+
+func getDucklingKey(address: String, txId: ByteVector) = {
+  address + "_" + txId.toBase58String() +  "_duckling"
 }
 
 func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
@@ -181,17 +196,10 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
       let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
-      let parent1Id = tryGetString(getDuckParentKey(txId, 1))
-      let parent2Id = tryGetString(getDuckParentKey(txId, 2))
-
       composeGenericData(duckGen,duckIdKey,assetId,asset)++
       [
         StringEntry(processStatusKey, HatchingFinished),
-        IntegerEntry("asset_" + parent1Id + "_children", 1),
-        IntegerEntry("asset_" + parent2Id + "_children", 1),
-        ScriptTransfer(addressFromStringValue(owner), 1, assetId),
-        ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
-        ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
+        ScriptTransfer(addressFromStringValue(owner), 1, assetId)
       ]
     }
 }
@@ -289,40 +297,61 @@ func startDuckBreeding() = {
 
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
+  let thirdPayment = i.payments[2].value()
+
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
+  let thirdAssetId = thirdPayment.assetId.value()
 
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
+  if thirdAssetId != getEggAssetId() then throw("BSDB: wrong payment added!") else
+  if thirdPayment.amount != getDucklingPrice() then throw("BSDB: not enough payment added!") else
   strict children1 = invoke(this,"validateAndGetChildren",[firstAssetId],[]).asInt()
   strict children2 = invoke(this,"validateAndGetChildren",[secondAssetId],[]).asInt()
-    if ( children1 > 0 || children2 > 0) then {
-      throw("One duck can be used for breeding only once in its lifetime.")
-    } else {
+    if ( children1 > 0 || children2 > 0) then throw("One duck can be used for breeding only once in its lifetime.") else 
       let breededStatus = canBeBreeded(firstAssetId.fromBase58String(), secondAssetId.fromBase58String())
-      if (breededStatus != "true") then {
-        throw("These ducks cannot be breeded: " + breededStatus)
-      } else {
+      if (breededStatus != "true") then throw("These ducks cannot be breeded: " + breededStatus) else
+        strict ducklingGen = invoke(getBabyDuckBreedingAddress(),"issueDuckling",[i.caller.toString(),i.transactionId.toBase58String()],[]).asString()
         [
           StringEntry(getDuckParentKey(i.transactionId, 1), firstAssetId),
           StringEntry(getDuckParentKey(i.transactionId, 2), secondAssetId),
           StringEntry(getProcessStatusKey(i.caller.toString(), i.transactionId), HatchingStarted),
-          IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId), height + delayForHatching)
+          IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId), height + delayForHatching),
+          StringEntry(getDucklingKey(i.caller.toString(), i.transactionId),ducklingGen),
+
+          IntegerEntry("asset_" + firstAssetId + "_children", 1),
+          IntegerEntry("asset_" + secondAssetId + "_children", 1),
+          ScriptTransfer(i.caller, 1, firstPayment.assetId.value()),
+          ScriptTransfer(i.caller, 1, secondPayment.assetId.value())
         ]
-      }
-    }
+      
+      
+    
 }
 
 @Callable(i)
 func finishDuckHatchingItems(txIdStr: String, duckGenesString: String) = {
   if (i.caller != getItemsAddress() && duckGenesString != "" ) then throw("Only items can create fixed genes") else 
   let owner = i.originCaller.toString()
+  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
+  let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
+  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
   finishDuckHatch(txIdStr, owner, duckGenesString) 
 }
 
 @Callable(i)
 func finishDuckHatching(txIdStr: String) = {
   let owner = i.caller.toString()
+  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
+  let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
+  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
   finishDuckHatch(txIdStr, owner, "") 
+}
+
+@Callable(i)
+func finishDuckHatchingAdmin(txIdStr: String, owner: String) = {
+  if i.caller != this then throw("BFDH: Only admins can run this!") else 
+      finishDuckHatch(txIdStr, owner, "") 
 }
 
 @Callable(i)

@@ -90,21 +90,20 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
 
   let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
   let itemRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 2)
-  
-  
+
   if (jackpotRandom == 1) then { "phoenix" } else 
   if (itemRandom == 1) then {"item_ART-FREEGENE" } else {  
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
-    if (n<195) then { "duckling_20" } else 
-    if (n<295) then { "duckling_40" } else 
-    if (n<300) then { "duckling_80" } else 
-    if (n<400) then { "incubator" } else 
-    if (n<500) then { "perch_Y" } else 
-    if (n<600) then { "perch_G" } else 
-    if (n<700) then { "perch_B" } else 
-    if (n<800) then { "perch_R" } else
-    if (n<900) then { "ar" } else
+    if (n<150) then { "duckling_2" } else 
+    if (n<200) then { "duckling_10" } else
+    if (n<210) then { "duckling_20" } else
+    if (n<250) then { "incubator" } else
+    if (n<375) then { "perch_Y" } else
+    if (n<500) then { "perch_G" } else
+    if (n<625) then { "perch_B" } else
+    if (n<750) then { "perch_R" } else
+    if (n<875) then { "ar" } else
     { "meta" }
   }
 }
