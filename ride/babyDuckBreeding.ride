@@ -99,7 +99,7 @@ func calculateNewDucklingLevel(ducklingId: String, paymentAmount: Int) = {
 
   let currentLevel = getCurrentLevelInt(ducklingId)
   let newLevel = (currentLevel+ paymentAmount)
-  if newLevel >= DUCKLINGPRICE then throw("BCNDL: You are feeding your duckling to much! Only "+ (DUCKLINGPRICE-currentLevel).toString()+ "needed!") else
+  if newLevel > DUCKLINGPRICE then throw("BCNDL: You are feeding your duckling to much! Only "+ (DUCKLINGPRICE-currentLevel).toString()+ "needed!") else
   let result = newLevel.toString()
   (result, ["currentLevel=" + currentLevel.toString(), "newLevel=" + newLevel.toString(), "growth=" + growth.toString(), "lastFedTs=" + lastFedTimestampChecked.toString(), "fedDiff=" + fedDiff.toString()])
 }
