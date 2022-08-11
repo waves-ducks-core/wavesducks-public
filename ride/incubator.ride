@@ -194,7 +194,7 @@ func setSale(val: Int) = {
 
 @Callable(i)
 func startDuckHatching(refererAddress: String) = {
-  if getBabyDuckAddress() != this then throw("ISDHFA: From now on this is only possible through ducklings!") else
+  if getBabyDuckAddress() != i.caller then throw("ISDHFA: From now on this is only possible through ducklings!") else
   if (isLocked() > 0) then {
     throw("ISDH: EGG operations are temporarily locked")
   } else {
