@@ -38,7 +38,8 @@ func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_i
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 
-let backendPubKey = base58'BmKAXRQy7jZm44fa1YxNQDTcAwNSb74EpQwP5CT7UHdV'
+let backendPubKey = getStringValue(getOracle(),"static_backendPubKey").fromBase58String()
+
 let STARTTIMESTAMP = 1_632_474_000_000
 let LAPLENGTH = 21_600_000
 let DUCKLINGPRICE = 1_0000_0000

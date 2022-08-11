@@ -161,6 +161,11 @@
             "key": "static_babyDuckBreedingAddress",
             "type": "string",
             "value": "3P36HH7i6BBuuNp7FHQd6WX8gzfogi778i6"
+        },
+        {
+            "key": "static_backendPubKey",
+            "type": "string",
+            "value": "BnKJTqkWD69SotKhJXdKu76NRtkdQJEpThqGGeFwF9EL"
         }
     ],
     "fee": 600000,

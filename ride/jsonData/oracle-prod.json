@@ -161,6 +161,11 @@
             "key": "static_spiceAssetId",
             "type": "string",
             "value": "6jsmMsMfpJWqxSGyxrkTvH5zZyaQd2P6VEY9fBz2T8FB"
+        },
+        {
+            "key": "static_backendPubKey",
+            "type": "string",
+            "value": "BmKAXRQy7jZm44fa1YxNQDTcAwNSb74EpQwP5CT7UHdV"
         }
     ],
     "fee": 600000,
