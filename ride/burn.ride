@@ -25,7 +25,8 @@ func tryGetStringExternal(address: Address, key: String) = {
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getBabyduckAddress()= Address(tryGetString("static_babyDuckAddress").fromBase58String())
+func getBabyduckAddress()= Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String())
+func getCouponsAddress()= Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String())
 
 func getTotalBurnKey() = "BURN_TOTAL_AMOUNT_NEW"
 func getTotalBurnKeyOld() = "BURN_TOTAL_AMOUNT_OLD"
@@ -107,7 +108,7 @@ func burnDuckling()={
 
 @Callable(i)
 func burnByInvoke(amount: Int)={
-    if (i.caller != this) then throw("BBI: Admin feature only!") else
+    if (i.caller != this && i.caller != getCouponsAddress() ) then throw("BBI: Admin feature only!") else
     let burner = i.originCaller.toString()
     let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
     let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(burner))

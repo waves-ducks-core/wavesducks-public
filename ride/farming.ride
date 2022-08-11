@@ -220,14 +220,18 @@ func buyPerch(color: String, refererAddress: String) = {
       throw("you need to set color properly")
     } else {
       let exactPrice = calculatePerchPrice(i.caller.toString())
-      strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
-      let leftToPay = exactPrice-amountPaidByCoupons
+      let leftToPay = if i.originCaller==i.caller then {
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+          exactPrice-amountPaidByCoupons
+        }else {
+            exactPrice
+        }
 
       strict payment = if leftToPay!=0 then {
         let firstPayment = i.payments[0].value()
 
         if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-        if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()) else
+        if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
         let refererRewardForPerch = fraction(leftToPay, RefererReward, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
         [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
