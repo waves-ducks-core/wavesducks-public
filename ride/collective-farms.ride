@@ -355,7 +355,7 @@ func verify() = {
         # Avoid scam with high fees => allow only Waves and minimal amount
         if (inv.fee > 900000 || inv.feeAssetId != unit) then {
           throw("_15")
-        } else if (inv.payments.size() > 2) then {
+        } else if (inv.payments.size() > 3) then {
           throw("_17")
         } else if (inv.dApp.addressFromRecipient() == this && containsElement(acceptedCallsThis,inv.function)) then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
