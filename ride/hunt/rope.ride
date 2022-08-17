@@ -32,6 +32,15 @@ func getBackendProof(eggId: String, price: Int, distance: Int) = {
 }
 
 @Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("RCO: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
 func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)={
   let addressString = i.caller.toString()
   let backendProof = getBackendProof(eggId, price, distance)
