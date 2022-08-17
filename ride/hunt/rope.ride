@@ -8,7 +8,7 @@
 #eggId => only onique
 
 
-func eggIdKey(eggId: String) = "eggId_"+eggId
+func eggIdKey(eggId: String, user: String) = "eggId_"+eggId+"_"+user
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -44,6 +44,7 @@ func configureOracle(oracle: String) = {
 func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)={
   let addressString = i.caller.toString()
   let backendProof = getBackendProof(eggId, price, distance)
+  let exists = tryGetString(eggIdKey(eggId, i.originCaller.toString()))
 
   if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), getBackendPubKey())) then throw("RBR: Invalid proof from backend") else
     if distance > 1000 then throw("RBR: You can only maximum boost 1000meters distance!") else
@@ -51,7 +52,8 @@ func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)
     let amount = firstPayment.amount
     if (firstPayment.assetId != getEggAssetId()) then throw("RBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
     if amount != price then throw("RBR: Please attach the exact asset amount"+price.toString()) else
+    if exists != "" then throw("RBR: Rope was already bought for this egg by this user!") else
     [
-        StringEntry(eggIdKey(eggId),price.toString()+";"+distance.toString())
+        StringEntry(eggIdKey(eggId, i.originCaller.toString()),price.toString()+";"+distance.toString())
     ]
 }
