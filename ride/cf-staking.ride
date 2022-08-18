@@ -179,7 +179,7 @@ func startVote() ={
 @Callable(i)
 func voteToLiquidate(vote: Boolean)={
   let votePower = tryGetInteger(keyStakedAmount(i.caller))
-  if votePower == 0 then throw("CV: Please stake some tokens before you can vote!") else
+  if votePower == 0 then throw("CVTL: Please stake some tokens before you can vote!") else
   let voteAsString = vote.toString()
   let voteHeight = tryGetInteger(getVoteHeightKey())
   if voteHeight+getDuration() < height then throw("CV: Voting is finished, please finalize the vote!") else
@@ -193,7 +193,7 @@ func voteToLiquidate(vote: Boolean)={
 @Callable(i)
 func finalizeVote()={
   let voteHeight = tryGetInteger(getVoteHeightKey())
-  if voteHeight+getDuration() > height then throw("CV: Voting is not finished!") else
+  if voteHeight+getDuration() > height then throw("CFV: Voting is not finished!") else
   let totalStakedAmount = tryGetInteger(keyGlobalStaked)
   let totalVote = tryGetInteger(getTotalVoteKey(voteHeight.toString()))
   let quorum = totalVote/totalStakedAmount*100
@@ -268,7 +268,7 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
     let stakedAmount = tryGetInteger(keyStakedAmount(i.caller))
     let wdAmount = if (amount == -1) then stakedAmount else amount
     if ((wdAmount > stakedAmount))
-        then throw("you don't have tokens available")
+        then throw("CWFT: you don't have tokens available")
         else
         let votePower = adaptVotePowerStake(i.caller.toString(),-wdAmount) 
         (
@@ -287,7 +287,7 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
 #both
 @Callable(i)
 func stakeFarmTokens (compound: Boolean) = {
-  if isLiquidated() then throw("CTUR: CF is liquidated!") else
+  if isLiquidated() then throw("CSFT: CF is liquidated!") else
   let shareTokenId = getShareAssetId()
   if (i.payments.size() > 1) then throw("CSFT: To many payments added") else
   if (i.payments[0].assetId != shareTokenId)then throw("CSFT: Wrong assetId")else
@@ -313,7 +313,7 @@ func stakeFarmTokens (compound: Boolean) = {
 
 @Callable(i)
 func initiateDapp(address: String) = {
-  if isLiquidated() then throw("CTUR: CF is liquidated!") else
+  if isLiquidated() then throw("CID: CF is liquidated!") else
   if (i.caller != this) then throw("CID: Can be called only by the dapp-account") else {
     setCFAddressAndInitiate(address)
   }
@@ -322,7 +322,7 @@ func initiateDapp(address: String) = {
 #only staking
 @Callable(i)
 func claimReward () = {  
-  if isLiquidated() then throw("CTUR: CF is liquidated!") else
+  if isLiquidated() then throw("CCR: CF is liquidated!") else
   if (i.payments.size() > 0) 
   then {
           throw("CCR: Please don't add payments")

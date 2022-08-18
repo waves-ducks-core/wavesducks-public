@@ -121,32 +121,6 @@ func initBackupKey(publicKey: String)={
 }
 
 @Callable(i)
-func calculateCompoundShareAndIssue(amount: Int) = {
-  if (i.caller != this) then {
-    throw("You cannot do this action")
-  } else {
-    if (getBool(kLockedInvestments) == true) 
-    then  ([],
-          0)
-    else{
-      let shareAssetId = getShareAssetId()
-      let totalCompound = getIntA(stakingAddress,keyTotalCompound)
-      let totalStaked   = getIntA(stakingAddress,keyGlobalStaked)
-      let totalLocked = totalStaked+totalCompound
-      let amountForCompound = fraction(amount,totalCompound,totalLocked)
-      (
-        [
-          Reissue(shareAssetId, amountForCompound, true)
-        ],
-        amountForCompound
-      )
-    }
-  }
-
-
-}
-
-@Callable(i)
 func initCollectiveFarm(name: String, minimumThreshold: Int, migration: Boolean, totalFarmingReward: Int,totalLiquidity: Int, totalFarmToken: Int) = {
   if mAccPKeyString == "" then {
       throw("First initiatie a master public key!")
