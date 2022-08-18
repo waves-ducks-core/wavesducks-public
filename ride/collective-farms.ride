@@ -264,10 +264,8 @@ func claimFarmingRewardProxy(ids: String) = {
     let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
     let amountToPay = claimedReward-farmCeoFeeSize
     
-    strict amountCompound = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[]).asInt()
     strict topUp = invoke(stakingAddress,"topUpReward",[],[
-                          AttachedPayment(eggAssetId,amountToPay-amountCompound),
-                          AttachedPayment(shareAssetId,amountCompound)]
+                          AttachedPayment(eggAssetId,amountToPay)]
                           )
     [
       IntegerEntry(kTotalFarmingReward, totalFarmingReward + amountToPay),
@@ -327,11 +325,8 @@ func callUnstakeProxy(function: String, assetId: String) = {
     let farmCeoFeeSize = fraction(reward, feePercent, 100)
 
     let amountToPay = reward-farmCeoFeeSize
-    strict amountCompontCall = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[])
-    strict amountCompound = invoke(this,"calculateCompoundShareAndIssue",[amountToPay],[]).asInt()
     strict topUp = invoke(stakingAddress,"topUpReward",[],[
-                          AttachedPayment(eggAssetId,amountToPay-amountCompound),
-                          AttachedPayment(shareAssetId,amountCompound)]
+                          AttachedPayment(eggAssetId,amountToPay)]
                           )
     [
       IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),

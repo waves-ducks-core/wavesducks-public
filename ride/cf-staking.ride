@@ -122,16 +122,6 @@ func claimStakingResult (address: Address) = {
       ]
     }
 
-func handleCompoundTopUp(amount: Int)={
-  let total = tryGetInteger(keyTotalCompound) + amount
-  let staked = tryGetInteger(keyStakedCompound)
-  let vp = calcVirtualPrice(staked,total)
-  [
-    IntegerEntry(keyTotalCompound, total),
-    IntegerEntry(keyLastVP,vp)
-  ]
-}
-
 func handleStakingTopUp (amount: Int) = {
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let totalStakedAmount = tryGetInteger(keyGlobalStaked)
@@ -227,22 +217,12 @@ func topUpReward () = {
     if isLiquidated() then throw("CTUR: CF is liquidated!") else
     let eggAssetId = getEggId()
     let shareTokenId = getShareAssetId()
-    if (i.payments[0].assetId != eggAssetId)
-    then throw("CTUP: Wrong assetId, first payment should be EGG")
-    else { 
-      if (i.payments[1].assetId != shareTokenId)
-      then throw("CTUP: Wrong assetId, second payment should be farm tokens")
-      else {
+    if (i.payments[0].assetId != eggAssetId) then throw("CTUP: Wrong assetId, first payment should be EGG") else 
         let resHandleStaking = handleStakingTopUp(i.payments[0].amount) 
-        let resHandleCompound = handleCompoundTopUp(i.payments[1].amount)
         (
-          resHandleCompound++resHandleStaking, 
+          resHandleStaking, 
           true
           )
-
-    }
-
-    }
 }
 
 #both
@@ -309,45 +289,15 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
 func stakeFarmTokens (compound: Boolean) = {
   if isLiquidated() then throw("CTUR: CF is liquidated!") else
   let shareTokenId = getShareAssetId()
-  if (i.payments.size() > 1) then {
-          throw("CSFT: To many payments added")
-        } else
-  if (i.payments[0].assetId != shareTokenId)
-  then throw("CSFT: Wrong assetId")
-  else{
-    if compound
-    then {
-      let isLocked = isCollectiveFarmLocked()
-      if isLocked 
-      then throw("CSFT: The farm is closed for investments, it can't compound")
-      else {
-        #get amount of already staked funds
-        let keyStakedCompoundU = keyStakedCompoundUser(i.caller)
-        let alreadyStaked = tryGetInteger(keyStakedCompoundU)
-
-        #get total amount funds
-        let total = tryGetInteger(keyTotalCompound)
-        #get total amount userstaked funds
-        let staked = tryGetInteger(keyStakedCompound)
-        #calculate exactStakeAmount after normalization
-        let vp = calcVirtualPrice(staked,total)
-        let rawStakeAmount = i.payments[0].amount
-        let exactStakeAmount = fraction(rawStakeAmount, VPScale, vp)
-
-        [
-          IntegerEntry(keyStakedCompoundU,alreadyStaked+exactStakeAmount),
-          IntegerEntry(keyTotalCompound,total+rawStakeAmount),
-          IntegerEntry(keyStakedCompound,staked+exactStakeAmount),
-          IntegerEntry(keyLastVP,vp)
-        ]
-      }
-    }
-    else{
-        let amount = i.payments[0].amount
+  if (i.payments.size() > 1) then throw("CSFT: To many payments added") else
+  if (i.payments[0].assetId != shareTokenId)then throw("CSFT: Wrong assetId")else
+  let amount = i.payments[0].amount
+  if amount ==0 then throw("CSFT: Please attach positive asset amount!") else
+  if compound then throw("CSFT: Compound was disabled!") else
+        
         let addressStr = toString(i.caller)
         let totalStakedAmount = tryGetInteger(keyGlobalStaked)
-        if ((i.payments[0].assetId != shareTokenId))
-        then throw("CSFT: wrong asset attached")
+        if ((i.payments[0].assetId != shareTokenId))then throw("CSFT: wrong asset attached")
         else (
           let votePower = adaptVotePowerStake(i.caller.toString(),amount) 
 
@@ -357,8 +307,8 @@ func stakeFarmTokens (compound: Boolean) = {
             IntegerEntry(keyStakedAmount(i.caller), (tryGetInteger(keyStakedAmount(i.caller)) + amount))
           ]++votePower
         )
-    }
-    }
+    
+    
   }
 
 @Callable(i)
