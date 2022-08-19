@@ -35,6 +35,8 @@ func getItemsAddress() = Address(tryGetStringExternal(getOracle(),"static_itemsA
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getBabyDuckBreedingAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckBreedingAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getDucklingPrice() = tryGetIntegerExternal(getOracle(),"static_ducklingPrice")
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
@@ -297,15 +299,25 @@ func startDuckBreeding() = {
 
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
-  let thirdPayment = i.payments[2].value()
 
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
-  let thirdAssetId = thirdPayment.assetId.value()
 
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
-  if thirdAssetId != getEggAssetId() then throw("BSDB: wrong payment added!") else
-  if thirdPayment.amount != getDucklingPrice() then throw("BSDB: not enough payment added!") else
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getDucklingPrice()],[]).asInt()
+
+    let leftToPay = getDucklingPrice()-amountPaidByCoupons
+
+  strict payment = if leftToPay!=0 then {
+    let thirdPayment = i.payments[2].value()
+
+    if (thirdPayment.assetId != getEggAssetId()) then throw("BSDB: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+    if (thirdPayment.amount != leftToPay) then throw("BSDB: To breed you currently need the following amount of EGGlets: " + leftToPay.toString()) else
+    strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay)])
+        
+        leftToPay
+    }else 0
+
   strict children1 = invoke(this,"validateAndGetChildren",[firstAssetId],[]).asInt()
   strict children2 = invoke(this,"validateAndGetChildren",[secondAssetId],[]).asInt()
     if ( children1 > 0 || children2 > 0) then throw("One duck can be used for breeding only once in its lifetime.") else 
