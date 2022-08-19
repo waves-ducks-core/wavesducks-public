@@ -84,6 +84,13 @@ func addCouponsBatch(batch:String) = {
     
 }
 
+@Callable(i)
+func CFRefund(recipient: String,amount: Int)={
+    let cfAddress = tryGetStringExternal(i.caller,"CF_ADDRESS")
+    []
+
+}
+
 
 
 @Callable(i)
