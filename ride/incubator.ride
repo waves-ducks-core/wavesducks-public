@@ -216,7 +216,7 @@ func startDuckHatching(refererAddress: String) = {
 func startDuckHatchingForAddress(address: String) = {
   if (isLocked() > 0) then 
     throw("ISDHFA: EGG operations are temporarily locked")
-   else if (i.caller != getSwopPromoAddress() || i.caller!= this) then throw("ISDHFA: Permission denied") else {
+   else if (i.caller != getSwopPromoAddress() && i.caller!= this) then throw("ISDHFA: Permission denied") else {
     let totalDucksAmount = tryGetInteger("ducks_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
 
