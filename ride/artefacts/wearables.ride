@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -46,6 +46,17 @@ func tryGetCosmeticItem(item:String)= {
     }
 }
 
+func wearItem(assetIdWearAble: String, duckId: String)={
+  strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetIdWearAble],[]).asString()
+  if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
+    let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
+    strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
+    if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
+      [
+        StringEntry(keyArtefactDuck(duckId,artefactName), assetIdWearAble)
+      ]
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("admin only") else 
@@ -63,28 +74,42 @@ func wearItemToDuck() = {
   let secondAssetId = secondPayment.assetId.value().toBase58String()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("WRITD: NFT is not attached") else
   strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-  strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[secondAssetId],[]).asString()
-  if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
-    let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
-    strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
-    if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
-      [
-        StringEntry(keyArtefactDuck(duckId,artefactName), secondAssetId),
-        ScriptTransfer(i.caller, 1, firstPayment.assetId)
-      ]
-}
+  wearItem(secondAssetId,duckId)++[
+    ScriptTransfer(i.caller, 1, firstPayment.assetId)
+  ]
 
+}
 
 @Callable(i)
-func removeItemFromDuck(artefactName: String)={
-  let firstPayment = i.payments[0].value()
-  let duckId = firstPayment.assetId.value().toBase58String()
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-  let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
-  if !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRIFD: Only true cosmetics can be removed!") else
-  if artefactId=="" then throw("WRIFD: this duck does not wear a "+artefactName)else
-  [
-    DeleteEntry(keyArtefactDuck(duckId,artefactName)),
-    ScriptTransfer(i.caller, 1, artefactId.fromBase58String())
-  ]
+func wearXItemsToDuck()= {
+  if size(i.payments) < 2 then throw("WWXITD: Please attach at least 1 item and 1 duck!") else 
+  if size(i.payments) > 6 then throw("WWXITD: You can only attach 5 items and one duck!") else
+    func handleItem(acc: List[StringEntry|ScriptTransfer], payment: AttachedPayment) = {
+        let index  = indexOf(i.payments,payment)
+        if index ==0 then
+          let duckId = payment.assetId.value().toBase58String()
+          if (payment.amount != 1 ) then throw("WRITD: Duck is not attached") else
+          strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
+          acc++[
+            ScriptTransfer(i.caller, 1, payment.assetId)
+          ]
+        else
+            acc++wearItem(payment.assetId.value().toBase58String(),i.payments[0].assetId.value().toBase58String())
+
+    }
+    FOLD<6>(i.payments, [], handleItem)
 }
+
+#@Callable(i)
+#func removeItemFromDuck(artefactName: String)={
+#  let firstPayment = i.payments[0].value()
+#  let duckId = firstPayment.assetId.value().toBase58String()
+#  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
+#  let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
+#  if !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRIFD: Only true cosmetics can be removed!") else
+#  if artefactId=="" then throw("WRIFD: this duck does not wear a "+artefactName)else
+#  [
+#    DeleteEntry(keyArtefactDuck(duckId,artefactName)),
+#    ScriptTransfer(i.caller, 1, artefactId.fromBase58String())
+#  ]
+#}
