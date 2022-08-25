@@ -30,7 +30,7 @@ func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_far
 func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String())
-func getBreedingAddress() = Address(tryGetStringExternal(getOracle(),"static_babyDuckBreedingAddress").fromBase58String())
+func getBreedingAddress() = Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
