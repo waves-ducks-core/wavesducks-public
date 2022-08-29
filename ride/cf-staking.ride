@@ -9,11 +9,13 @@ func getCFAddress() = {
   getStringValue(this, "CF_ADDRESS").addressFromStringValue()
 }
 
-
-
 let mAccPKey = getStringValue(getCFAddress(),keyMAccPKey).fromBase58String()
 
 let mAccAddr = mAccPKey.addressFromPublicKey()
+
+func getCouponsAddress() = {
+  getStringValue(mAccAddr, "COUPONS_ADDRESS").addressFromStringValue()
+}
 
 #Variables for compound
 let keyTotalCompound = "total_compound"
@@ -37,7 +39,6 @@ func calcVirtualPrice(totalStaked: Int, total: Int) = {
     else
       fraction(total, VPScale, totalStaked)
 }
-
 #Variables for staking
 
 let Scale = 100000000
@@ -63,9 +64,7 @@ func isCollectiveFarmLocked()= {
   }
 
 }
-
 #general methods
-
 func getEggId() = {
   getStringValue(mAccAddr, "EGG_ASSET_ID").fromBase58String()
 }
@@ -81,8 +80,6 @@ func getShareAssetId()={
   getStringValue(getCFAddress(), "SHARE_ASSET_ID").fromBase58String()
 }
 
-
-
 func tryGetInteger (key: String) = match getInteger(this, key) {
     case b: Int => 
         b
@@ -96,7 +93,6 @@ func tryGetString (key: String) = match getString(this, key) {
     case _ => 
         ""
 }
-
 
 func getVoteHeightKey() = "VOTE_HEIGHT_START"
 func getDuration() = 10000
@@ -134,8 +130,6 @@ func handleStakingTopUp (amount: Int) = {
     ]
 }
 
-
-
 func addVotePower(caller: String, h: Int, vote: String, votePower: Int)={
   if h == 0 && vote != "" then [] else 
   if h+getDuration() < height then throw("CV: Voting is finished, please finalize the vote!") else
@@ -161,10 +155,40 @@ func isLiquidated()={
   getBooleanValue(resultVoteKey(voteHeight.toString()))
 }
 
-func claimRefund()={
-  throw("TODO: Not yet implemented!")
+@Callable(i)
+func claimRefundStaked()={
+  let addressStr = toString(i.caller)
+  let stakedAmount = tryGetInteger(keyStakedAmount(i.caller))
+  let voteHeight = tryGetInteger(getVoteHeightKey())
+  let voteByUserString = tryGetString(getVoteByUserKey(addressStr,voteHeight.toString()))
+  let multiplier = if voteByUserString=="" then 7 else 10
+  let refund = stakedAmount/10*multiplier
+  strict couponsCall = invoke(getCouponsAddress(), "CFRefund", [addressStr,refund],[])
+  [
+    IntegerEntry(keyStakedAmount(i.caller), 0),
+    Burn(getShareAssetId(), stakedAmount)
+
+  ]
 }
 
+@Callable(i)
+func claimRefundUnstaked()={
+
+  let shareTokenId = getShareAssetId()
+  if (i.payments.size() > 1) then throw("CSFT: To many payments added") else
+  if (i.payments[0].assetId != shareTokenId)then throw("CSFT: Wrong assetId")else
+  let amount = i.payments[0].amount
+  if amount ==0 then throw("CSFT: Please attach positive asset amount!") else
+
+  let addressStr = toString(i.caller)
+  let multiplier = 7
+  let refund = amount/10*multiplier
+  strict couponsCall = invoke(getCouponsAddress(), "CFRefund", [addressStr,refund],[])
+  [
+    Burn(getShareAssetId(), amount)
+
+  ]
+}
 
 
 @Callable(i)
