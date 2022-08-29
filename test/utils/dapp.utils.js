@@ -13,7 +13,7 @@ class DappUtils {
         name: "testEgg",
         description: "testEgg",
         decimals: 8,
-        quantity: 10000000,
+        quantity: 1000000000000000,
         reissuable: true,
       },
       accounts.oracle
