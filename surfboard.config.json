@@ -18,7 +18,7 @@
         "testnet": {
             "API_BASE": "https://nodes-testnet.wavesnodes.com/",
             "CHAIN_ID": "T",
-            "SEED": "arena weekend brand trophy final father oblige math minor drift armed wife",
+            "SEED": "arena weekend brand trophy final father oblige math minor drift armed wife 1",
             "timeout": 60000
         }
     },

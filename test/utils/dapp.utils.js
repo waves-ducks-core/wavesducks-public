@@ -25,6 +25,7 @@ class DappUtils {
 
   async setupDapp(name) {
     console.log(name + " start setup!");
+    console.log(address(accounts[name]));
     const script = compile(file(name + ".ride"));
     const ssTx = setScript({ script }, accounts[name]);
     await broadcast(ssTx);
