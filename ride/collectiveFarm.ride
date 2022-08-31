@@ -269,16 +269,6 @@ func claimCeoFee(address1: String, address2: String, address1Share: Int, address
 }
 
 @Callable(i)
-func startLiquidation(auctionId: String) = {
-  throw("_7")
-}
-
-@Callable(i)
-func voteForLiquidation(auctionId: String) = {
-  throw("_7")
-}
-
-@Callable(i)
 func callUnstakeProxy(function: String, assetId: String) = {
   if (getBool(kLocked) == true) then throw("Contract is locked now") else
   if (function != "unstakeNFT" && function != "unstakeJackpot") then throw("Bad function name") else

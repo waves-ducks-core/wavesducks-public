@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 6 #-}
+ {-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -6,10 +6,10 @@
 let keyMAccPKey = "master_pk"
 
 func getCFAddress() = {
-  getStringValue(this, "CF_ADDRESS").addressFromStringValue()
+  valueOrErrorMessage(getString(this, "CF_ADDRESS"), "CF_ADDRESS not found").addressFromStringValue()
 }
 
-let mAccPKey = getStringValue(getCFAddress(),keyMAccPKey).fromBase58String()
+let mAccPKey = valueOrErrorMessage(getString(getCFAddress(),keyMAccPKey), keyMAccPKey + " not found").fromBase58String()
 
 let mAccAddr = mAccPKey.addressFromPublicKey()
 
@@ -131,8 +131,8 @@ func handleStakingTopUp (amount: Int) = {
 }
 
 func addVotePower(caller: String, h: Int, vote: String, votePower: Int)={
-  if h == 0 && vote != "" then [] else 
-  if h+getDuration() < height then throw("CV: Voting is finished, please finalize the vote!") else
+  if h == 0 || vote == "" then [] else 
+  if h+getDuration() < height then throw("CAVP: Voting is finished, please finalize the vote;" + " Arguments: " + caller + ", " + h.toString() + ", " + vote + ", " + votePower.toString()) else
   let voteTotalByType = tryGetInteger(getTotalVoteByTypeKey(vote, h.toString()))
   let totalVote = tryGetInteger(getTotalVoteKey(h.toString()))
   [
