@@ -1,4 +1,4 @@
- {-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -80,11 +80,16 @@ func getShareAssetId()={
   getStringValue(getCFAddress(), "SHARE_ASSET_ID").fromBase58String()
 }
 
-func tryGetInteger (key: String) = match getInteger(this, key) {
-    case b: Int => 
-        b
-    case _ => 
-        0
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
+func tryGetInteger (key: String) = {
+    tryGetIntegerExternal(this, key)
 }
 
 func tryGetString (key: String) = match getString(this, key) {
@@ -95,7 +100,7 @@ func tryGetString (key: String) = match getString(this, key) {
 }
 
 func getVoteHeightKey() = "VOTE_HEIGHT_START"
-func getDuration() = 10000
+func getDuration() = if tryGetIntegerExternal(mAccAddr, "VOTE_DURATION") == 0 then 10000 else tryGetIntegerExternal(mAccAddr, "VOTE_DURATION")
 func getVoteByUserKey(user: String, height: String) = "VOTE_"+user+"_"+height
 func getTotalVoteByTypeKey(type: String, height: String) = "VOTE_TOTAL_"+type+"_"+height
 func getTotalVoteKey(height: String) = "VOTE_TOTAL_"+height
