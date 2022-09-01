@@ -94,19 +94,7 @@ func CFRefund(recipient: String,amount: Int)={
     let stakeAddress = getStringValue(getMasterAddress(),key)
     #Making sure that stakeaddress and invoker are the same and therefor valid
     if stakeAddress != i.caller.toString() then throw("CCR: This is something fishy going on!") else
-    let shareAssetId = getStringValue(Address(cfAddress.fromBase58String()),"SHARE_ASSET_ID")
-    
-    let payments = i.payments
-    if size(payments) != 1 then throw("CCR: Please make sure to attach only 1 payment!") else
-    let payment = payments[0].value()
-    let assetId = payment.assetId.value()
-    if assetId.toBase58String() != shareAssetId then throw("CCR: You can only burn "+shareAssetId) else
-    #It will never be possible to turn 1CF token into more then 1VEGG, so limit it against abuse
-    if amount > payment.amount then throw("CCR: This looks like abuse!") else
-    addCouponsInternal(recipient,amount)++
-    [
-        Burn(assetId,payment.amount)
-    ]
+    addCouponsInternal(recipient,amount)
 
 }
 
