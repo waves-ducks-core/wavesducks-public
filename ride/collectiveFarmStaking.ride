@@ -211,10 +211,10 @@ func voteToLiquidate(vote: Boolean)={
   if votePower == 0 then throw("CVTL: Please stake some tokens before you can vote!") else
   let voteAsString = vote.toString()
   let voteHeight = tryGetInteger(getVoteHeightKey())
-  if voteHeight+getDuration() < height then throw("CV: Voting is finished, please finalize the vote!") else
+  if voteHeight+getDuration() < height then throw("CVTL: Voting is finished, please finalize the vote!") else
   let voteByUserString = tryGetString(getVoteByUserKey(i.caller.toString(),voteHeight.toString()))
 
-  if voteByUserString !="" then throw("CV: You can not change your vote!") else 
+  if voteByUserString !="" then throw("CVTL: You can not change your vote!") else 
   addVotePower(i.caller.toString(),voteHeight,voteAsString,votePower)
 
 }
@@ -245,8 +245,7 @@ func finalizeVote()={
 func topUpReward () = {
     if isLiquidated() then throw("CTUR: CF is liquidated!") else
     let eggAssetId = getEggId()
-    let shareTokenId = getShareAssetId()
-    if (i.payments[0].assetId != eggAssetId) then throw("CTUP: Wrong assetId, first payment should be EGG") else 
+    if (i.payments[0].assetId != eggAssetId) then throw("CTUP: Wrong assetId, payment should be EGG") else 
         let resHandleStaking = handleStakingTopUp(i.payments[0].amount) 
         (
           resHandleStaking, 
