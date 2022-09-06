@@ -246,7 +246,7 @@ func finalizeVote()={
     BooleanEntry(resultVoteKey(voteHeight.toString()),liquidated),
     IntegerEntry("debug1",totalVote),
     IntegerEntry("debug2",shareAssetIdTotal),
-    IntegerEntry("debug3",quorum),
+    IntegerEntry("debug3",quorum)
 
   ]++resetKey
 
