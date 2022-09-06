@@ -9,6 +9,13 @@ func getCFAddress() = {
   valueOrErrorMessage(getString(this, "CF_ADDRESS"), "CF_ADDRESS not found").addressFromStringValue()
 }
 
+func tryGetBoolean(key: String) = {
+    match getBoolean(this, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
 let mAccPKey = valueOrErrorMessage(getString(getCFAddress(),keyMAccPKey), keyMAccPKey + " not found").fromBase58String()
 
 let mAccAddr = mAccPKey.addressFromPublicKey()
@@ -157,7 +164,7 @@ func adaptVotePowerStake(caller: String,votePower: Int)={
 func isLiquidated()={
   let voteHeight = tryGetInteger(getVoteHeightKey())
   if voteHeight ==0 then false else
-  getBooleanValue(resultVoteKey(voteHeight.toString()))
+  tryGetBoolean(resultVoteKey(voteHeight.toString()))
 }
 
 @Callable(i)
