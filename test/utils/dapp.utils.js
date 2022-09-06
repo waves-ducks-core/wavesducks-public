@@ -191,6 +191,96 @@ class DappUtils {
       { type: "integer", value: totalFarmToken ? totalFarmToken : 0 }
     ];
   }
+
+  /**
+   * Send a transaction in a broadcast.
+   * @param  {string} transaction 
+   * A transaction
+   * @Returns {promise}
+   * A promise containing transaction info.
+   */
+  async broadcastAndWaitForResponse(transaction) {
+    const promises = (await Promise.all([
+      broadcast(transaction),
+      waitForTx(transaction.id, { timeout: 60_000 })
+    ]));
+
+    // Return value can be ignored when not needed.
+    return promises[1];
+  }
+
+  /**
+   * Send a transaction in a broadcast and expect to get an error in response.
+   * @param  {string} transaction 
+   * A transaction
+   * @param  {string} errorMessage 
+   * An error message
+   * @param  {boolean} customMessage 
+   * A boolean deciding to include the default error message prefix.
+   */
+  async broadcastAndRejected(transaction, errorMessage, customMessage) {
+    if (!customMessage) {
+      await expect(broadcast(transaction)).rejectedWith("Error while executing account-script: " + errorMessage);
+    } else {
+      await expect(broadcast(transaction)).rejectedWith(errorMessage);
+    }
+  }
+
+  // TODO: add more documentation
+  buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray) {
+    return invokeScript(
+      {
+        version: 1,
+        dApp: address(dAppToCallSeed),
+        payment: paymentObjectsAsArray ? paymentObjectsAsArray : [],
+        call: {
+          function: functionToCall,
+          args: functionArgsAsArray ? functionArgsAsArray : [],
+        },
+        additionalFee: additionalFeeValue ? additionalFeeValue : 0,
+      },
+      callSeed
+    );
+  }
+
+  // Only use this when no arguments are expected, otherwise provide correct argument types with wrong values
+  // Reason: type checking happens on chain -> not our concern
+  buildInvokeScriptWithWrongFunctionArgs(dAppToCallSeed, functionToCall, callSeed, additionalFeeValue, paymentObjectsAsArray) {
+    const functionArgs = [{
+      type: "string",
+      value: "This is wrong"
+    }];
+
+    return buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgs, additionalFeeValue, paymentObjectsAsArray);
+  }
+
+  buildInvokeScriptWithWrongPaymentObjects(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue) {
+    const paymentObjects = [{
+      assetId: WAVES_ASSET_ID,
+      amount: 1
+    }];
+
+    return buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjects);
+  }
+
+  verifyTxResponse(txResponse, dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray) {
+    const DEFAULT_FEE = 500_000;
+
+    expect(txResponse["dApp"]).to.equal(address(dAppToCallSeed));
+    expect(txResponse["call"]["function"]).to.equal(functionToCall);
+    expect(txResponse["call"]["args"]).to.eql(functionArgsAsArray ? functionArgsAsArray : []);
+    expect(txResponse["sender"]).to.equal(address(callSeed));
+    expect(txResponse["fee"]).to.equal(DEFAULT_FEE + (additionalFeeValue ? additionalFeeValue : 0));
+    expect(txResponse["payment"]).to.eql(paymentObjectsAsArray ? paymentObjectsAsArray : []);
+  }
+
+  // TODO: integrate this function later
+  async buildSendVerifyTx(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray) {
+    const invoke = buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray);
+    const txResponse = await broadcastAndWaitForResponse(invoke);
+
+    verifyTxResponse(txResponse, dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray);
+  }
 }
 
 module.exports = DappUtils;

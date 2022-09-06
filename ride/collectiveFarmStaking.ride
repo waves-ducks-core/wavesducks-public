@@ -169,6 +169,7 @@ func isLiquidated()={
 
 @Callable(i)
 func claimRefundStaked()={
+  if isLiquidated() == false then throw("CCRS: cf not liquidated") else 
   let addressStr = toString(i.caller)
   let stakedAmount = tryGetInteger(keyStakedAmount(i.caller))
   let voteHeight = tryGetInteger(getVoteHeightKey())
@@ -185,7 +186,7 @@ func claimRefundStaked()={
 
 @Callable(i)
 func claimRefundUnstaked()={
-
+  if isLiquidated() == false then throw("CCRU: cf not liquidated") else 
   let shareTokenId = getShareAssetId()
   if (i.payments.size() > 1) then throw("CSFT: To many payments added") else
   if (i.payments[0].assetId != shareTokenId)then throw("CSFT: Wrong assetId")else
@@ -230,7 +231,6 @@ func voteToLiquidate(vote: Boolean)={
 func finalizeVote()={
   let voteHeight = tryGetInteger(getVoteHeightKey())
   if voteHeight+getDuration() > height then throw("CFV: Voting is not finished!") else
-  #TODO: should be total issued asset
   let shareAssetIdTotal = assetInfo(getShareAssetId()).value().quantity
   let totalStakedAmount = tryGetInteger(keyGlobalStaked)
   let totalVote = tryGetInteger(getTotalVoteKey(voteHeight.toString()))
@@ -243,10 +243,7 @@ func finalizeVote()={
   
   [
     IntegerEntry(quorumVoteKey(voteHeight.toString()),quorum),
-    BooleanEntry(resultVoteKey(voteHeight.toString()),liquidated),
-    IntegerEntry("debug1",totalVote),
-    IntegerEntry("debug2",shareAssetIdTotal),
-    IntegerEntry("debug3",quorum)
+    BooleanEntry(resultVoteKey(voteHeight.toString()),liquidated)
 
   ]++resetKey
 
@@ -329,7 +326,7 @@ func withdrawFarmTokens (amount: Int, compound: Boolean) = {
 func stakeFarmTokens (compound: Boolean) = {
   if isLiquidated() then throw("CSFT: CF is liquidated!") else
   let shareTokenId = getShareAssetId()
-  if (i.payments.size() > 1) then throw("CSFT: To many payments added") else
+  if (i.payments.size() > 1) then throw("CSFT: Too many payments added") else
   if (i.payments[0].assetId != shareTokenId)then throw("CSFT: Wrong assetId")else
   let amount = i.payments[0].amount
   if amount ==0 then throw("CSFT: Please attach positive asset amount!") else
