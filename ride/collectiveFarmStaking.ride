@@ -234,7 +234,7 @@ func finalizeVote()={
   let shareAssetIdTotal = assetInfo(getShareAssetId()).value().quantity
   let totalStakedAmount = tryGetInteger(keyGlobalStaked)
   let totalVote = tryGetInteger(getTotalVoteKey(voteHeight.toString()))
-  let quorum = totalVote/shareAssetIdTotal*100
+  let quorum = totalVote/(shareAssetIdTotal/100)
   let voteTotalByYes = tryGetInteger(getTotalVoteByTypeKey("true", voteHeight.toString()))
   let voteTotalByNo = tryGetInteger(getTotalVoteByTypeKey("false", voteHeight.toString()))
 
