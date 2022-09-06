@@ -243,7 +243,10 @@ func finalizeVote()={
   
   [
     IntegerEntry(quorumVoteKey(voteHeight.toString()),quorum),
-    BooleanEntry(resultVoteKey(voteHeight.toString()),liquidated)
+    BooleanEntry(resultVoteKey(voteHeight.toString()),liquidated),
+    IntegerEntry("debug1",totalVote),
+    IntegerEntry("debug2",shareAssetIdTotal),
+    IntegerEntry("debug3",quorum),
 
   ]++resetKey
 
