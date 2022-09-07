@@ -31,6 +31,7 @@ func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gam
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String())
 func getBreedingAddress() = Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String())
+func getMasterAddress() = Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
@@ -84,6 +85,19 @@ func addCouponsBatch(batch:String) = {
     }
     FOLD<20>(couponsList, [], handleCoupon)
     
+}
+
+@Callable(i)
+func CFRefund(recipient: String,amount: Int)={
+    #Get connected CF address (can be faked)
+    let cfAddress = getStringValue(i.caller,"CF_ADDRESS")
+    let key = "f_"+cfAddress+"_stake_address"
+    #Get connected stake address with a CF address, can not be faked since it's pulled from masterkey
+    let stakeAddress = getStringValue(getMasterAddress(),key)
+    #Making sure that stakeaddress and invoker are the same and therefor valid
+    if stakeAddress != i.caller.toString() then throw("CCR: This is something fishy going on!") else
+    addCouponsInternal(recipient,amount)
+
 }
 
 
