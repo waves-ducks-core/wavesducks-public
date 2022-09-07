@@ -1,4 +1,5 @@
 class DappUtils {
+  WAVES_ASSET_ID = "WAVES";
   deployedDapps = [];
   trustedContracts = "";
   eggAssetId = "";
@@ -195,9 +196,8 @@ class DappUtils {
   /**
    * Send a transaction in a broadcast.
    * @param  {string} transaction 
-   * A transaction
-   * @Returns {promise}
-   * A promise containing transaction info.
+   * @Returns  {Promise}
+   * A Promise object containing transaction info.
    */
   async broadcastAndWaitForResponse(transaction) {
     const promises = (await Promise.all([
@@ -226,7 +226,22 @@ class DappUtils {
     }
   }
 
-  // TODO: add more documentation
+  /**
+   * Build an invocation object.
+   * @param  {string} dAppToCallSeed 
+   * Required
+   * @param  {string} functionToCall 
+   * Required
+   * @param  {string} callSeed
+   * Required
+   * @param  {string} functionArgsAsArray
+   * Optional
+   * @param  {string} additionalFeeValue
+   * Optional
+   * @param  {string} paymentObjectsAsArray
+   * Optional
+   * @Returns  {invokeScript}
+   */
   buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray) {
     return invokeScript(
       {
@@ -243,26 +258,72 @@ class DappUtils {
     );
   }
 
-  // Only use this when no arguments are expected, otherwise provide correct argument types with wrong values
-  // Reason: type checking happens on chain -> not our concern
+  /**
+   * Build an invocation object with wrong function arguments.
+   * Only use this when no arguments are expected, otherwise provide correct argument types with wrong values
+   * Reason: type checking happens on chain -> not our concern
+   * @param  {string} dAppToCallSeed 
+   * Required
+   * @param  {string} functionToCall 
+   * Required
+   * @param  {string} callSeed
+   * Required
+   * @param  {string} additionalFeeValue
+   * Optional
+   * @param  {string} paymentObjectsAsArray
+   * Optional
+   * @Returns  {invokeScript}
+   */
   buildInvokeScriptWithWrongFunctionArgs(dAppToCallSeed, functionToCall, callSeed, additionalFeeValue, paymentObjectsAsArray) {
     const functionArgs = [{
       type: "string",
       value: "This is wrong"
     }];
 
-    return buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgs, additionalFeeValue, paymentObjectsAsArray);
+    return this.buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgs, additionalFeeValue, paymentObjectsAsArray);
   }
 
+  /**
+   * Build an invocation object with a wrong payment.
+   * @param  {string} dAppToCallSeed 
+   * Required
+   * @param  {string} functionToCall 
+   * Required
+   * @param  {string} callSeed
+   * Required
+   * @param  {string} functionArgsAsArray
+   * Optional
+   * @param  {string} additionalFeeValue
+   * Optional
+   * @Returns  {invokeScript}
+   */
   buildInvokeScriptWithWrongPaymentObjects(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue) {
     const paymentObjects = [{
-      assetId: WAVES_ASSET_ID,
+      assetId: this.WAVES_ASSET_ID,
       amount: 1
     }];
 
-    return buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjects);
+    return this.buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjects);
   }
 
+  /**
+   * Verify a transaction via the response.
+   * @param  {string} txResponse
+   * A transaction response. 
+   * Required
+   * @param  {string} dAppToCallSeed 
+   * Required
+   * @param  {string} functionToCall 
+   * Required
+   * @param  {string} callSeed
+   * Required
+   * @param  {string} functionArgsAsArray
+   * Optional
+   * @param  {string} additionalFeeValue
+   * Optional
+   * @param  {string} paymentObjectsAsArray
+   * Optional
+   */
   verifyTxResponse(txResponse, dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray) {
     const DEFAULT_FEE = 500_000;
 
@@ -274,12 +335,12 @@ class DappUtils {
     expect(txResponse["payment"]).to.eql(paymentObjectsAsArray ? paymentObjectsAsArray : []);
   }
 
-  // TODO: integrate this function later
+  // TODO: optionally use this function in future
   async buildSendVerifyTx(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray) {
     const invoke = buildInvokeScript(dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray);
     const txResponse = await broadcastAndWaitForResponse(invoke);
 
-    verifyTxResponse(txResponse, dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray);
+    this.verifyTxResponse(txResponse, dAppToCallSeed, functionToCall, callSeed, functionArgsAsArray, additionalFeeValue, paymentObjectsAsArray);
   }
 }
 

@@ -7,7 +7,7 @@ const DEFAULT_AMOUNT_OF_SHARE_ASSET = 10_000_000;
 const AMOUNT_OF_SHARE_ASSET_FOR_STAKING = 10_000_000;
 const TOTAL_AMOUNT_OF_SHARE_ASSET = DEFAULT_AMOUNT_OF_SHARE_ASSET + AMOUNT_OF_SHARE_ASSET_FOR_STAKING
 const AMOUNT_OF_EGG_REQUIRED = 100_000_000; // More than actually required.
-const VOTE_DURATION_IN_BLOCKS = 1;
+const VOTE_DURATION_IN_BLOCKS = 2;
 const WAVES_ASSET_ID = "WAVES";
 
 describe("ducks - collective farms - collectiveFarmStaking - complete flow", () => {
@@ -325,7 +325,7 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
     describe("claimReward", () => {
         it("should not claim farm staking rewards when sending a wrong payment", async () => {
             const invoke = dappUtils.buildInvokeScriptWithWrongPaymentObjects(accounts.collectiveFarmStaking, "claimReward", accounts.collectiveFarmMasterSeed);
-            const errorMessage = "";
+            const errorMessage = "CCR: Please don't add payments";
 
             await dappUtils.broadcastAndRejected(invoke, errorMessage);
         });
@@ -460,6 +460,62 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
         });
     });
 
+    describe("stakeFarmTokens - during voting period", () => {
+        it("should stake farm tokens", async () => {
+            const functionArgs = [
+                {
+                    type: "boolean",
+                    value: false
+                }
+            ];
+            const SHARE_ASSET_ID = (await accountDataByKey("SHARE_ASSET_ID", address(accounts.collectiveFarm)))["value"];
+            const paymentObjects = [
+                {
+                    assetId: SHARE_ASSET_ID,
+                    amount: (AMOUNT_OF_SHARE_ASSET_FOR_STAKING / 2),
+                }
+            ];
+
+            const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarmStaking, "stakeFarmTokens", accounts.collectiveFarmMasterSeed, functionArgs, undefined, paymentObjects);
+            const txResponse = await dappUtils.broadcastAndWaitForResponse(invoke);
+
+            dappUtils.verifyTxResponse(txResponse, accounts.collectiveFarmStaking, "stakeFarmTokens", accounts.collectiveFarmMasterSeed, functionArgs, undefined, paymentObjects);
+
+            let voteHeight = (await accountDataByKey("VOTE_HEIGHT_START", address(accounts.collectiveFarmStaking)))["value"];
+            const dataByKey = await accountDataByKey("global_staked", address(accounts.collectiveFarmStaking));
+            const dataByKey2 = await accountDataByKey(address(accounts.collectiveFarmMasterSeed) + "_farm_staked", address(accounts.collectiveFarmStaking));
+            const dataByKey3 = await accountDataByKey("VOTE_" + address(accounts.collectiveFarmMasterSeed) + "_" + voteHeight, address(accounts.collectiveFarmStaking));
+            const dataByKey4 = await accountDataByKey("VOTE_TOTAL_" + false + "_" + voteHeight, address(accounts.collectiveFarmStaking));
+            const dataByKey5 = await accountDataByKey("VOTE_TOTAL_" + voteHeight, address(accounts.collectiveFarmStaking));
+
+            expect(dataByKey).to.eql({
+                key: 'global_staked',
+                type: 'integer',
+                value: AMOUNT_OF_SHARE_ASSET_FOR_STAKING
+            });
+            expect(dataByKey2).to.eql({
+                key: address(accounts.collectiveFarmMasterSeed) + "_farm_staked",
+                type: 'integer',
+                value: AMOUNT_OF_SHARE_ASSET_FOR_STAKING
+            });
+            expect(dataByKey3).to.eql({
+                key: "VOTE_" + address(accounts.collectiveFarmMasterSeed) + "_" + voteHeight,
+                type: 'string',
+                value: 'false'
+            });
+            expect(dataByKey4).to.eql({
+                key: "VOTE_TOTAL_" + false + "_" + voteHeight,
+                type: 'integer',
+                value: AMOUNT_OF_SHARE_ASSET_FOR_STAKING
+            });
+            expect(dataByKey5).to.eql({
+                key: "VOTE_TOTAL_" + voteHeight,
+                type: 'integer',
+                value: AMOUNT_OF_SHARE_ASSET_FOR_STAKING
+            });
+        });
+    });
+
     describe("finalizeVote - during voting period", () => {
         it("should not finish the voting if the voting period is not finished", async () => {
             const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarmStaking, "finalizeVote", accounts.collectiveFarmMasterSeed);
@@ -496,7 +552,7 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
             expect(dataByKey).to.eql({
                 key: "QUORUM_" + voteHeight,
                 type: 'integer',
-                value: ((AMOUNT_OF_SHARE_ASSET_FOR_STAKING / 2) / TOTAL_AMOUNT_OF_SHARE_ASSET) * 100
+                value: (AMOUNT_OF_SHARE_ASSET_FOR_STAKING / TOTAL_AMOUNT_OF_SHARE_ASSET) * 100
             });
             expect(dataByKey2).to.eql({
                 key: "LIQUIDATED_" + voteHeight,
@@ -556,62 +612,6 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
             const txResponse = await dappUtils.broadcastAndWaitForResponse(invoke);
 
             dappUtils.verifyTxResponse(txResponse, accounts.collectiveFarmStaking, "voteToLiquidate", accounts.collectiveFarmMasterSeed, functionArgs);
-        });
-    });
-
-    describe("stakeFarmTokens - during voting period", () => {
-        it("should stake farm tokens", async () => {
-            const functionArgs = [
-                {
-                    type: "boolean",
-                    value: false
-                }
-            ];
-            const SHARE_ASSET_ID = (await accountDataByKey("SHARE_ASSET_ID", address(accounts.collectiveFarm)))["value"];
-            const paymentObjects = [
-                {
-                    assetId: SHARE_ASSET_ID,
-                    amount: (AMOUNT_OF_SHARE_ASSET_FOR_STAKING / 2),
-                }
-            ];
-
-            const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarmStaking, "stakeFarmTokens", accounts.collectiveFarmMasterSeed, functionArgs, undefined, paymentObjects);
-            const txResponse = await dappUtils.broadcastAndWaitForResponse(invoke);
-
-            dappUtils.verifyTxResponse(txResponse, accounts.collectiveFarmStaking, "stakeFarmTokens", accounts.collectiveFarmMasterSeed, functionArgs, undefined, paymentObjects);
-
-            let voteHeight = (await accountDataByKey("VOTE_HEIGHT_START", address(accounts.collectiveFarmStaking)))["value"];
-            const dataByKey = await accountDataByKey("global_staked", address(accounts.collectiveFarmStaking));
-            const dataByKey2 = await accountDataByKey(address(accounts.collectiveFarmMasterSeed) + "_farm_staked", address(accounts.collectiveFarmStaking));
-            const dataByKey3 = await accountDataByKey("VOTE_" + address(accounts.collectiveFarmMasterSeed) + "_" + voteHeight, address(accounts.collectiveFarmStaking));
-            const dataByKey4 = await accountDataByKey("VOTE_TOTAL_" + true + "_" + voteHeight, address(accounts.collectiveFarmStaking));
-            const dataByKey5 = await accountDataByKey("VOTE_TOTAL_" + voteHeight, address(accounts.collectiveFarmStaking));
-
-            expect(dataByKey).to.eql({
-                key: 'global_staked',
-                type: 'integer',
-                value: AMOUNT_OF_SHARE_ASSET_FOR_STAKING
-            });
-            expect(dataByKey2).to.eql({
-                key: address(accounts.collectiveFarmMasterSeed) + "_farm_staked",
-                type: 'integer',
-                value: AMOUNT_OF_SHARE_ASSET_FOR_STAKING
-            });
-            expect(dataByKey3).to.eql({
-                key: "VOTE_" + address(accounts.collectiveFarmMasterSeed) + "_" + voteHeight,
-                type: 'string',
-                value: 'true'
-            });
-            expect(dataByKey4).to.eql({
-                key: "VOTE_TOTAL_" + true + "_" + voteHeight,
-                type: 'integer',
-                value: AMOUNT_OF_SHARE_ASSET_FOR_STAKING
-            });
-            expect(dataByKey5).to.eql({
-                key: "VOTE_TOTAL_" + voteHeight,
-                type: 'integer',
-                value: AMOUNT_OF_SHARE_ASSET_FOR_STAKING
-            });
         });
     });
 
@@ -754,6 +754,145 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
     });
 
     describe("general functionality - after liquidation", () => {
+        describe("collectiveFarmStaking", () => {
+            it("should not set the address and not initiate if the farm is already liquidated", async () => {
+                const functionArgs = [
+                    {
+                        type: "string",
+                        value: address(accounts.collectiveFarm)
+                    }
+                ];
+                const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarmStaking, "initiateDapp", accounts.collectiveFarmStaking, functionArgs);
+                const errorMessage = "CID: CF is liquidated!";
 
-    })
+                await dappUtils.broadcastAndRejected(invoke, errorMessage);
+            });
+
+            it("should not add assets to the farm if the farm is liquidated", async () => {
+                const paymentObjects = [
+                    {
+                        assetId: dappUtils.eggAssetId,
+                        amount: 1_000_000
+                    }
+                ];
+
+                const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarmStaking, "topUpReward", accounts.collectiveFarmMasterSeed, undefined, undefined, paymentObjects);
+                const errorMessage = "CTUR: CF is liquidated!";
+
+                await dappUtils.broadcastAndRejected(invoke, errorMessage);
+            });
+
+            it("should not stake farm tokens if the farm is liquidated", async () => {
+                const functionArgs = [
+                    {
+                        type: "boolean",
+                        value: false
+                    }
+                ];
+                const SHARE_ASSET_ID = (await accountDataByKey("SHARE_ASSET_ID", address(accounts.collectiveFarm)))["value"];
+                const paymentObjects = [
+                    {
+                        assetId: SHARE_ASSET_ID,
+                        amount: (AMOUNT_OF_SHARE_ASSET_FOR_STAKING / 2),
+                    }
+                ];
+                const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarmStaking, "stakeFarmTokens", accounts.collectiveFarmMasterSeed, functionArgs, undefined, paymentObjects);
+                const errorMessage = "CSFT: CF is liquidated!";
+
+                await dappUtils.broadcastAndRejected(invoke, errorMessage);
+            });
+
+            it("should not withdraw farm tokens if the farm is liquidated", async () => {
+                const functionArgs = [
+                    {
+                        type: "integer",
+                        value: (AMOUNT_OF_SHARE_ASSET_FOR_STAKING / 2)
+                    },
+                    {
+                        type: "boolean",
+                        value: false
+                    }
+                ];
+                const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarmStaking, "withdrawFarmTokens", accounts.collectiveFarmMasterSeed, functionArgs);
+                const errorMessage = "CTUR: CF is liquidated!";
+
+                await dappUtils.broadcastAndRejected(invoke, errorMessage);
+            });
+
+            it("should not claim farm staking rewards if the farm is liquidated", async () => {
+                const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarmStaking, "claimReward", accounts.collectiveFarmMasterSeed);
+                const errorMessage = "CCR: CF is liquidated!";
+
+                await dappUtils.broadcastAndRejected(invoke, errorMessage);
+            });
+        });
+
+        describe("collectiveFarm", () => {
+            it("should not provide liquidity to the farm if the farm is liquidated", async () => {
+                const paymentObjects = [{
+                    assetId: dappUtils.eggAssetId,
+                    amount: 1_000_000,
+                }];
+                const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarm, "provideLiquidity", accounts.collectiveFarmMasterSeed, undefined, undefined, paymentObjects);
+                const errorMessage = "CPL: CF is liquidated!";
+
+                await dappUtils.broadcastAndRejected(invoke, errorMessage);
+            });
+
+            it("should not be able to claim farming rewards if the farm is liquidated", async () => {
+                const functionArgs = [
+                    {
+                        type: "string",
+                        value: "random;ids;split;by;"
+                    }
+                ];
+                const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarm, "claimFarmingRewardProxy", accounts.collectiveFarmMasterSeed, functionArgs);
+                const errorMessage = "CCFRP: CF is liquidated!";
+
+                await dappUtils.broadcastAndRejected(invoke, errorMessage);
+            });
+
+            it("should not be able to claim CEO fee if the farm is liquidated", async () => {
+                const functionArgs = [
+                    {
+                        type: "string",
+                        value: "address1"
+                    },
+                    {
+                        type: "string",
+                        value: "address2"
+                    },
+                    {
+                        type: "integer",
+                        value: 0
+                    },
+                    {
+                        type: "integer",
+                        value: 0
+                    }
+                ];
+                const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarm, "claimCeoFee", accounts.collectiveFarm, functionArgs, 400_000);
+                const errorMessage = "CCCF: CF is liquidated!";
+
+                await dappUtils.broadcastAndRejected(invoke, errorMessage);
+            });
+
+            it("should not be able to unstake assets if the farm is liquidated", async () => {
+                const functionArgs = [
+                    {
+                        type: "string",
+                        value: "unstakeNFT"
+                    },
+                    {
+                        type: "string",
+                        value: "assetId"
+                    }
+                ];
+                const invoke = dappUtils.buildInvokeScript(accounts.collectiveFarm, "callUnstakeProxy", accounts.collectiveFarm, functionArgs, 400_000);
+                const errorMessage = "CCUP: CF is liquidated!";
+
+                await dappUtils.broadcastAndRejected(invoke, errorMessage);
+            });
+        });
+    });
 });
