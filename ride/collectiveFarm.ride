@@ -1,6 +1,3 @@
-#TODO: investByClashOfFarms
-# Should invest into CF by masteraccount
-
 {-# STDLIB_VERSION 5 #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 {-# CONTENT_TYPE DAPP #-}
@@ -16,6 +13,7 @@ func getStr(key: String) = {
   }
 }
 
+
 let mAccPKeyString = getStr(keyMAccPKey)
 let backupPKeyString = getStr(keyBackupPKey)
 func getBackupKey() = if backupPKeyString== "" then this.bytes else backupPKeyString.fromBase58String()
@@ -25,6 +23,8 @@ let mAccAddr = addressFromPublicKey(mAccPKey)
 
 let feePercent = getIntegerValue(mAccAddr, "f_" + this.toString() + "_fee")
 let stakingAddress = valueOrErrorMessage(getString(mAccAddr, "f_" + this.toString() + "_stake_address"),"f_" + this.toString() + "_stake_address not defined").addressFromStringValue()
+
+
 
 let wAccPKey = valueOrErrorMessage(getString(mAccAddr, warsPKey),warsPKey + " not defined").fromBase58String()
 
@@ -67,12 +67,30 @@ func getStrA(a: Address, k: String) = {
   }
 }
 
+func tryGetBoolean(a: Address, key: String) = {
+    match getBoolean(a, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
+
 func getIntA(address: Address, key: String) = {
     match getInteger(address, key) {
         case b:Int => b
         case _ => 0
     }
 }
+
+func getVoteHeightKey() = "VOTE_HEIGHT_START"
+func resultVoteKey(height: String) = "LIQUIDATED_"+height
+
+func isLiquidated()={
+  let voteHeight = getIntA(stakingAddress, getVoteHeightKey())
+  if voteHeight ==0 then false else
+  tryGetBoolean(stakingAddress, resultVoteKey(voteHeight.toString()))
+}
+
 
 func getMarketProxyAddr() = {
   getStrA(mAccAddr, kMarketProxyDapp)
@@ -184,6 +202,7 @@ func unlockInvestments() = {
 
 @Callable(i)
 func provideLiquidity() = {
+  if isLiquidated() then throw("CPL: CF is liquidated!") else
   let eggAssetId = getEggId()
   if (i.callerPublicKey != wAccPKey && i.callerPublicKey != mAccPKey && getBool(kLockedInvestments) == true) then throw("Contract is locked for investments by it's CEO. Please invest in another collective farm.") else
   if (getBool(kLocked) == true) then throw("_22") else
@@ -211,6 +230,7 @@ func provideLiquidity() = {
 
 @Callable(i)
 func claimFarmingRewardProxy(ids: String) = {
+  if isLiquidated() then throw("CCFRP: CF is liquidated!") else
   if (i.callerPublicKey != mAccPKey) then throw("_23")
   else {
     let eggAssetId = getEggId()
@@ -251,6 +271,7 @@ func claimFarmingRewardProxy(ids: String) = {
 
 @Callable(i)
 func claimCeoFee(address1: String, address2: String, address1Share: Int, address2Share: Int) = {
+  if isLiquidated() then throw("CCCF: CF is liquidated!") else
   if(address1Share <0 ) then throw("Share 1 can't be negative") else
   if(address2Share <0 ) then throw("Share 2 can't be negative") else  
   if (address1Share + address2Share != 100) then throw("Sum of shares should be 100") else
@@ -270,6 +291,7 @@ func claimCeoFee(address1: String, address2: String, address1Share: Int, address
 
 @Callable(i)
 func callUnstakeProxy(function: String, assetId: String) = {
+  if isLiquidated() then throw("CCUP: CF is liquidated!") else
   if (getBool(kLocked) == true) then throw("Contract is locked now") else
   if (function != "unstakeNFT" && function != "unstakeJackpot") then throw("Bad function name") else
   if (i.caller != this) then throw("Can be called only by the account") else {
