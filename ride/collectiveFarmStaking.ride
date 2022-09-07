@@ -238,7 +238,7 @@ func finalizeVote()={
   let voteTotalByYes = tryGetInteger(getTotalVoteByTypeKey("true", voteHeight.toString()))
   let voteTotalByNo = tryGetInteger(getTotalVoteByTypeKey("false", voteHeight.toString()))
 
-  let liquidated = if quorum < 20 then true else if voteTotalByYes > voteTotalByNo then true else false
+  let liquidated = if quorum < 35 then true else if voteTotalByYes > voteTotalByNo then true else false
   let resetKey = if liquidated then [] else [IntegerEntry(getVoteHeightKey(),0)]
   
   [
