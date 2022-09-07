@@ -110,6 +110,31 @@ func lockDuckInternal(addressStr:String, pmt: AttachedPayment)={
   }
 }
 
+func unstakeDuck(assetIdStr: String, addressStr: String)={
+  let assetId = assetIdStr.fromBase58String()
+
+  let tDuckDetails = getDuckDetails(assetId)
+  let assetColor = tDuckDetails._1
+  let isJackpot = tDuckDetails._2
+
+  let kSpotsBusy = keySpotsBusy(addressStr)
+  let kDuckOwner = keyDuckOwner(assetId)
+
+  let remainingForUnlock = tryGetInteger(keyDuckUnlockTime(assetId)) - lastBlock.timestamp
+
+  if (tryGetString(kDuckOwner) != addressStr) then {throw("3UL: The duck is not yours")} 
+  else if (remainingForUnlock > 0) then {throw("3UL: You need to wait to unlock " + (remainingForUnlock / 1000).toString() + " seconds")}
+  else {
+    let unstakeFuncName = if isJackpot == true then "unstakeJackpot" else "unstakeNFT" 
+    strict inv1 = invoke(getFarmingAddress(), unstakeFuncName, [assetIdStr], [])  # TODO: jackpot unstaking
+    [
+      ScriptTransfer(Address(addressStr.fromBase58String()), 1, assetId),
+      DeleteEntry(keyLockedDuckStatus(addressStr, assetIdStr)), 
+      DeleteEntry(kDuckOwner), 
+      IntegerEntry(kSpotsBusy, tryGetInteger(kSpotsBusy) - 1)
+    ]
+  }
+}
 
 @Callable(i)
 func buyAccessItemInternal(addressStr:String)= {
@@ -223,30 +248,18 @@ func lockDuck() = {
 }
 
 @Callable(i)
+func unlockDuckOther(assetIdStr: String)={
+  if i.caller != this then throw("3UDO: Admin only!") else
+  let ownerKey = tryGetString(keyDuckOwner(assetIdStr.fromBase58String()))
+  unstakeDuck(assetIdStr, ownerKey)
+
+
+}
+
+@Callable(i)
 func unlockDuck(assetIdStr: String) = {
   let addressStr = i.caller.toString()
-  let assetId = assetIdStr.fromBase58String()
-
-  let tDuckDetails = getDuckDetails(assetId)
-  let assetColor = tDuckDetails._1
-  let isJackpot = tDuckDetails._2
-
-  let kSpotsBusy = keySpotsBusy(addressStr)
-  let kDuckOwner = keyDuckOwner(assetId)
-
-  let remainingForUnlock = tryGetInteger(keyDuckUnlockTime(assetId)) - lastBlock.timestamp
-
-  if (tryGetString(kDuckOwner) != addressStr) then {throw("3UL: The duck is not yours")} 
-  else if (remainingForUnlock > 0) then {throw("3UL: You need to wait to unlock " + (remainingForUnlock / 1000).toString() + " seconds")}
-  else {
-    let unstakeFuncName = if isJackpot == true then "unstakeJackpot" else "unstakeNFT" 
-    strict inv1 = invoke(getFarmingAddress(), unstakeFuncName, [assetIdStr], [])  # TODO: jackpot unstaking
-    [
-      ScriptTransfer(i.caller, 1, assetId),
-      DeleteEntry(keyLockedDuckStatus(addressStr, assetIdStr)), 
-      DeleteEntry(kDuckOwner), 
-      IntegerEntry(kSpotsBusy, tryGetInteger(kSpotsBusy) - 1)
-    ]
-  }
+  unstakeDuck(assetIdStr, addressStr)
+  
 }
         

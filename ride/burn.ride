@@ -25,13 +25,16 @@ func tryGetStringExternal(address: Address, key: String) = {
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getBabyduckAddress()= Address(tryGetString("static_babyDuckAddress").fromBase58String())
+func getBabyduckAddress()= Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String())
+func getCouponsAddress()= Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String())
 
 func getTotalBurnKey() = "BURN_TOTAL_AMOUNT_NEW"
 func getTotalBurnKeyOld() = "BURN_TOTAL_AMOUNT_OLD"
 func getLastBurnKey() = "BURN_LAST_AMOUNT"
 func getUserBurnKey(address: String) = "BURN_"+address+"_AMOUNT_NEW"
 func getUserBurnKeyOld(address: String) = "BURN_"+address+"_AMOUNT_OLD"
+
+func getBurnByDapp(address: String) = "BURN_DAPP_"+address+"_AMOUNT"
 
 func totalDucklingsBurned() = "BURN_TOTAL_AMOUNT_DUCKLING_NEW"
 func totalDucklingsBurnedOld() = "BURN_TOTAL_AMOUNT_DUCKLING_OLD"
@@ -57,13 +60,15 @@ func burnAttachedPayments()={
     let amount = paymentEgg.amount
     let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
     let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(burner))
+    let burnByDapp = tryGetInteger(getBurnByDapp(i.caller.toString()))
     [
         Burn(getEggAssetId(),amount),
         IntegerEntry(getTotalBurnKeyOld(),totalBurnTillDate),
         IntegerEntry(getUserBurnKeyOld(burner), totalBurnTillDateByUser),
         IntegerEntry(getTotalBurnKey(), totalBurnTillDate+amount),
         IntegerEntry(getUserBurnKey(burner), totalBurnTillDateByUser+amount),
-        IntegerEntry(getLastBurnKey(), amount)
+        IntegerEntry(getLastBurnKey(), amount),
+        IntegerEntry(getBurnByDapp(i.caller.toString()),burnByDapp+amount)
 
     ]
 }
@@ -103,17 +108,19 @@ func burnDuckling()={
 
 @Callable(i)
 func burnByInvoke(amount: Int)={
-    if (i.caller != this) then throw("BBI: Admin feature only!") else
+    if (i.caller != this && i.caller != getCouponsAddress() ) then throw("BBI: Admin feature only!") else
     let burner = i.originCaller.toString()
     let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
     let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(burner))
+    let burnByDapp = tryGetInteger(getBurnByDapp(i.caller.toString()))
     [
         Burn(getEggAssetId(),amount),
         IntegerEntry(getTotalBurnKeyOld(),totalBurnTillDate),
         IntegerEntry(getUserBurnKeyOld(burner), totalBurnTillDateByUser),
         IntegerEntry(getTotalBurnKey(), totalBurnTillDate+amount),
         IntegerEntry(getUserBurnKey(burner), totalBurnTillDateByUser+amount),
-        IntegerEntry(getLastBurnKey(), amount)
+        IntegerEntry(getLastBurnKey(), amount),
+        IntegerEntry(getBurnByDapp(i.caller.toString()),burnByDapp+amount)
 
     ]
 }

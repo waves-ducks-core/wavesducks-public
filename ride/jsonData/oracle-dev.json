@@ -146,6 +146,26 @@
             "key": "static_burnAddress",
             "type": "string",
             "value": "3P57np8oou9yBbg85Nk4FDYTC46exnTsQk1"
+        },
+        {
+            "key": "static_spiceAssetId",
+            "type": "string",
+            "value": "HSHP7YmvCX9vtKYfoTfcEd9hr8bnFm1PzoBrQRNy8q1q"
+        },
+        {
+            "key": "static_ducklingPrice",
+            "type": "integer",
+            "value": 100000000
+        },
+        {
+            "key": "static_babyDuckBreedingAddress",
+            "type": "string",
+            "value": "3P36HH7i6BBuuNp7FHQd6WX8gzfogi778i6"
+        },
+        {
+            "key": "static_backendPubKey",
+            "type": "string",
+            "value": "BnKJTqkWD69SotKhJXdKu76NRtkdQJEpThqGGeFwF9EL"
         }
     ],
     "fee": 600000,
