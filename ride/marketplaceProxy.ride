@@ -130,11 +130,12 @@ func getBidAmount(auctionId: String, bidId: String) = {
 func checkDataGetPrice(ach: String, breed: String, gen: String, price:Int, rarity: String, ts: Int, signature: String, duckId: String)={
   let text = makeString([rarity,breed,ach,gen,price.toString(),ts.toString()], ";") 
   let MSINHOUR = 3_600_000
-  if (!sigVerify_8Kb(text.toBytes(), signature.fromBase58String(), getBackendPubKey())) then throw("MCACS: Invalid proof from backend") else 
+  if (!sigVerify_8Kb(text.toBytes(), signature.fromBase58String(), getBackendPubKey())) then throw("MCACS: Invalid proof from backend key"+getBackendPubKey().toBase58String()+" "+text) else 
   let currentTs = lastBlock.timestamp
   if currentTs > ts+MSINHOUR then throw("MCACS: Outdated signature!") else
   let duckRarity = getAssetFarmingPower(duckId.fromBase58String())
-  if duckRarity != parseInt(rarity) then throw("MCACS: It seems not the correct price info was passed!") else
+  let diff = (duckRarity - parseIntValue(split(rarity,".")[0]))
+  if -5> diff || diff > 5 then throw("MCACS: It seems not the correct price info was passed! "+toString(duckRarity)+" "+rarity+ " "+toString(diff)) else
   price
   
 }
