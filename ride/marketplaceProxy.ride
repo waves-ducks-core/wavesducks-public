@@ -97,7 +97,7 @@ func getAssetFarmingPower(assetId: ByteVector) = {
     strict farmGen = invoke(Address(breederAddress),"getGenFromName",[assetName],[]).asString()
     getAssetRarity(farmGen, generation)
   } else {
-    throw("_20")
+    throw("MGAFP: _20")
   }
 }
 
@@ -128,15 +128,19 @@ func getBidAmount(auctionId: String, bidId: String) = {
 
 
 func checkDataGetPrice(ach: String, breed: String, gen: String, price:Int, rarity: String, ts: Int, signature: String, duckId: String)={
-  let text = makeString([rarity,breed,ach,gen,price.toString(),ts.toString()], ";") 
+  let isArtefact = gen.contains("ART")
+  let text = if isArtefact then makeString([gen,price.toString(),ts.toString()],";") else makeString([rarity,breed,ach,gen,price.toString(),ts.toString()], ";") 
   let MSINHOUR = 3_600_000
   if (!sigVerify_8Kb(text.toBytes(), signature.fromBase58String(), getBackendPubKey())) then throw("MCACS: Invalid proof from backend key"+getBackendPubKey().toBase58String()+" "+text) else 
   let currentTs = lastBlock.timestamp
   if currentTs > ts+MSINHOUR then throw("MCACS: Outdated signature!") else
-  let duckRarity = getAssetFarmingPower(duckId.fromBase58String())
-  let diff = (duckRarity - parseIntValue(split(rarity,".")[0]))
-  if -5> diff || diff > 5 then throw("MCACS: It seems not the correct price info was passed! "+toString(duckRarity)+" "+rarity+ " "+toString(diff)) else
-  price
+  if !isArtefact then
+    let duckRarity = getAssetFarmingPower(duckId.fromBase58String())
+    let diff = (duckRarity - parseIntValue(split(rarity,".")[0]))
+    if -5> diff || diff > 5 then throw("MCACS: It seems not the correct price info was passed! "+toString(duckRarity)+" "+rarity+ " "+toString(diff)) else
+    price
+  else
+    price
   
 }
 
@@ -168,9 +172,9 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let bidAmount = i.payments[0].value().amount.value()
     let duckMarketPrice = checkDataGetPrice( ach, breed, gen, price, rarity, ts, signature, duckAssetId)
     let maxPriceDiff = fraction(duckMarketPrice, 15, 100)
-    if (bidAmount > (duckMarketPrice + maxPriceDiff)) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()) else
+    if (bidAmount > (duckMarketPrice + maxPriceDiff)) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()+" diff: "+maxPriceDiff.toString()) else
     if (i.payments.size() != 1) then throw("_103") else {
-      strict placeBid = invoke(auctionDappAddress, "placeBid", [auctionId], [AttachedPayment(unit, bidAmount)])
+      strict placeBid = invoke(auctionDappAddress, "placeBid", [auctionId], [AttachedPayment(value(i.payments[0]).assetId, bidAmount)])
       [
         StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
       ]
@@ -202,9 +206,8 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let duckMarketPrice = checkDataGetPrice( ach, breed, gen, price, rarity, ts, signature, duckAssetId)
     let maxPriceDiff = fraction(duckMarketPrice, 15, 100)
     if (bidAmount > (duckMarketPrice + maxPriceDiff)) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()) else
-    if (i.payments.size() != 1) then throw("_103") else
-    if (i.payments[0].value().assetId != unit) then throw("_104") else{
-      strict instantBuy = invoke(auctionDappAddress, "instantBuy", [auctionId], [AttachedPayment(unit, bidAmount)])
+    if (i.payments.size() != 1) then throw("_103") else{
+      strict instantBuy = invoke(auctionDappAddress, "instantBuy", [auctionId], [AttachedPayment(value(i.payments[0]).assetId, bidAmount)])
       [
         StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
       ]
