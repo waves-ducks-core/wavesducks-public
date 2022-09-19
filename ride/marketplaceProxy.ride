@@ -144,6 +144,15 @@ func checkDataGetPrice(ach: String, breed: String, gen: String, price:Int, rarit
   
 }
 
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("BCO: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
 # params format
 @Callable(i)
 func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, str2: String, ach: String, breed: String, gen: String, price:Int, rarity: String, ts: Int, signature: String) = {
