@@ -230,6 +230,7 @@ func voteToLiquidate(vote: Boolean)={
 @Callable(i)
 func finalizeVote()={
   let voteHeight = tryGetInteger(getVoteHeightKey())
+  if voteHeight == 0 then throw("CFV: no vote running!") else 
   if voteHeight+getDuration() > height then throw("CFV: Voting is not finished!") else
   let shareAssetIdTotal = assetInfo(getShareAssetId()).value().quantity
   let totalStakedAmount = tryGetInteger(keyGlobalStaked)
