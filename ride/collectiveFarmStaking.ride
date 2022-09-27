@@ -360,7 +360,6 @@ func initiateDapp(address: String) = {
 #only staking
 @Callable(i)
 func claimReward () = {  
-  if isLiquidated() then throw("CCR: CF is liquidated!") else
   if (i.payments.size() > 0) 
   then {
           throw("CCR: Please don't add payments")

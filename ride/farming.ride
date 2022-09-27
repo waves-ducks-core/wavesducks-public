@@ -340,7 +340,7 @@ func unstakeNFT(asset: String) = {
     let realCaller = i.caller.toString()
     if unstaker != "" &&  unstaker != realCaller then throw("FUN: It seems duck was staked throuh a dapp, not directly, please unstake through dapp! "+ unstaker+ " "+ realCaller+ " "+address+" "+add) else 
     if (assetFarmingPower <= 0) then {
-      throw("FUN: asset not available")
+      throw("FUN: asset not available "+asset)
     } else {
       let isWithoutPerch = tryGetBoolean("address_"+address+"_asset_"+asset+"_without_perch")
       if (color == "U") then {

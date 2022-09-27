@@ -1,0 +1,89 @@
+{-# STDLIB_VERSION 6 #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+{-# CONTENT_TYPE DAPP #-}
+
+let keyMAccPKey = "master_pk"
+let keyBackupPKey = "back_pk"
+let warsPKey = "wars_pk"
+
+func getStr(key: String) = {
+  match getString(this, key) {
+      case b:String => b
+      case _ => ""
+  }
+}
+
+
+let mAccPKeyString = getStr(keyMAccPKey)
+let backupPKeyString = getStr(keyBackupPKey)
+func getBackupKey() = if backupPKeyString== "" then this.bytes else backupPKeyString.fromBase58String()
+let mAccPKey = mAccPKeyString.fromBase58String()
+
+let mAccAddr = addressFromPublicKey(mAccPKey)
+
+let feePercent = getIntegerValue(mAccAddr, "f_" + this.toString() + "_fee")
+let stakingAddress = valueOrErrorMessage(getString(mAccAddr, "f_" + this.toString() + "_stake_address"),"f_" + this.toString() + "_stake_address not defined").addressFromStringValue()
+
+
+
+let wAccPKey = valueOrErrorMessage(getString(mAccAddr, warsPKey),warsPKey + " not defined").fromBase58String()
+
+let kTotalLiquidity = "total_liquidity"
+let kInitialized = "INITIALIZED"
+let kLiquidityThreshold = "LIQUIDITY_THRESHOLD"
+let kTotalFarmingReward = "total_farming_reward"
+let kShareAssetId = "SHARE_ASSET_ID"
+let kIncubatorDapp = "INCUBATOR_DAPP"
+let kBreederDapp = "BREEDER_DAPP"
+let kFarmingDapp = "FARMING_DAPP"
+let kMarketProxyDapp = "MARKETPLACE_PROXY_DAPP"
+let kAuctionDapp = "AUCTION_DAPP"
+let kLocked = "LOCKED"
+let kCeoCollectedFee = "ceo_collected_fee"
+let kCeoCollectedFeeOverall = "ceo_fee_overall"
+let kLockedInvestments = "locked_investments"
+
+let keyTotalCompound = "total_compound"
+let keyGlobalStaked = "global_staked"
+
+
+
+func getStrA(a: Address, k: String) = {
+  match getString(a, k) {
+      case b:String => b
+      case _ => ""
+  }
+}
+
+@Callable(i)
+func callUnstakeProxy(function: String, ids: String) = {
+  if (function != "unstakeNFT" && function != "unstakeJackpot") then throw("Bad function name") else
+  if (i.caller != this) then throw("Can be called only by the account") else {
+      let farmingDappAddress = getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue()
+
+      func unstakeDuck(accum: Int, nftId: String) = {
+        strict invRes = invoke(farmingDappAddress, function, [nftId], [])
+
+        let reward = match invRes {
+          case int: Int =>  int
+          case _ => throw("Error during unstaking")
+        }
+        accum+reward
+
+      }
+
+    let nftIds = ids.split(";")
+    let foldResult = FOLD<10>(nftIds, 0, unstakeDuck)
+    let claimedReward = match foldResult {
+      case int: Int => int
+      case _ => throw("_6")
+    }
+
+    [IntegerEntry("DEBUG",claimedReward)]
+  }
+}
+
+@Verifier(tx)
+func verify() = {
+  sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
+}
