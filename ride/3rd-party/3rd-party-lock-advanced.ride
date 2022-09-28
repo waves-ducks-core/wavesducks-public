@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -161,6 +161,38 @@ func unstakeDuck(assetIdStr: String, addressStr: String)={
   }
 }
 
+func updateSettingInternal(i: Invocation, key: String, value: Int | String | Boolean | ByteVector) = {
+  if (i.caller != this) then throw("Only administrator can call this method") else {
+    match (value) {
+        case int: Int => [IntegerEntry(key, int)]
+        case s: String => [StringEntry(key, s)]
+        case b: Boolean => [BooleanEntry(key, b)]
+        case bv: ByteVector => [BinaryEntry(key, bv)]
+        case _ => throw("Bad value type")
+      }
+  }
+}
+
+@Callable(i)
+func updateSettingInt(key: String, value: Int) = {
+  updateSettingInternal(i,key, value)
+}
+
+@Callable(i)
+func updateSettingStr(key: String, value: String) = {
+  updateSettingInternal(i,key, value)
+}
+
+@Callable(i)
+func updateSettingBoolean(key: String, value: Boolean) = {
+  updateSettingInternal(i,key, value)
+}
+
+@Callable(i)
+func updateSettingByteVector(key: String, value: ByteVector) = {
+  updateSettingInternal(i,key, value)
+}
+
 @Callable(i)
 func buyAccessItemInternal(addressStr:String)= {
     if i.caller != this then throw("3BAII: internal use only") else 
@@ -189,18 +221,7 @@ func configureOracle(oracle: String, shortname: String, longname: String, nftNam
 
 }
 
-@Callable(i)
-func updateSetting(key: String, value: Int | String | Boolean | ByteVector) = {
-  if (i.caller != this) then throw("Only administrator can call this method") else {
-    match (value) {
-        case int: Int => [IntegerEntry(key, int)]
-        case s: String => [StringEntry(key, s)]
-        case b: Boolean => [BooleanEntry(key, b)]
-        case bv: ByteVector => [BinaryEntry(key, bv)]
-        case _ => throw("Bad value type")
-      }
-  }
-}
+
 
 @Callable(i)
 func deleteSetting(key: String) = {
