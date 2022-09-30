@@ -215,6 +215,7 @@ func startVote() ={
 
 @Callable(i)
 func voteToLiquidate(vote: Boolean)={
+  if isLiquidated() then throw("CFV: cf is liquidated") else 
   let votePower = tryGetInteger(keyStakedAmount(i.caller))
   if votePower == 0 then throw("CVTL: Please stake some tokens before you can vote!") else
   let voteAsString = vote.toString()
@@ -230,7 +231,9 @@ func voteToLiquidate(vote: Boolean)={
 @Callable(i)
 func finalizeVote()={
   let voteHeight = tryGetInteger(getVoteHeightKey())
+  if isLiquidated() then throw("CFV: cf is liquidated") else 
   if voteHeight+getDuration() > height then throw("CFV: Voting is not finished!") else
+  if voteHeight ==0 then throw("CFV: No vote to finalize!") else
   let shareAssetIdTotal = assetInfo(getShareAssetId()).value().quantity
   let totalStakedAmount = tryGetInteger(keyGlobalStaked)
   let totalVote = tryGetInteger(getTotalVoteKey(voteHeight.toString()))
