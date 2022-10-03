@@ -166,7 +166,14 @@
             "key": "static_backendPubKey",
             "type": "string",
             "value": "BmKAXRQy7jZm44fa1YxNQDTcAwNSb74EpQwP5CT7UHdV"
+        },
+        {
+            "key": "static_maxProxyDiff",
+            "type": "integer",
+            "value": 30
         }
+
+        
     ],
     "fee": 600000,
     "feeAssetId": "WAVES",

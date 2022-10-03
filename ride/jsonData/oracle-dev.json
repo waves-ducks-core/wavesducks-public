@@ -166,6 +166,11 @@
             "key": "static_backendPubKey",
             "type": "string",
             "value": "BnKJTqkWD69SotKhJXdKu76NRtkdQJEpThqGGeFwF9EL"
+        },
+        {
+            "key": "static_maxProxyDiff",
+            "type": "integer",
+            "value": 30
         }
     ],
     "fee": 600000,
