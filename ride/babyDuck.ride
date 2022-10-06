@@ -40,54 +40,24 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAdd
 
 let backendPubKey = getStringValue(getOracle(),"static_backendPubKey").fromBase58String()
 
-let STARTTIMESTAMP = 1_632_474_000_000
-let LAPLENGTH = 21_600_000
 let DUCKLINGPRICE = 1_0000_0000
 let percentGrowthPrecision = 1_0000_0000_0000_0000
 let existingDuckPrecision = 1_00_0000_0000_0000
 let KGlobalIssuedTimestamp = "global_issued_timestamp"
-let MSINDAY = 86_400_000
 
 func keyTotalFeed(ducklingId: String) = {
-  "duckling_" + ducklingId + "_feed"
-}
-
-func keyDucklingFedLap(ducklingId: String) = {
-  "duckling_" + ducklingId + "_fedLap"
-}
-
-func keyDucklingFedTimestamp(ducklingId: String) = {
-  "duckling_" + ducklingId + "_fedTs"
-}
-func keyDucklingFedLapTimestamp(ducklingId: String, lap: Int) = {
-  "duckling_" + ducklingId + "_lap_" + lap.toString() + "_fedTs"
-}
-
-func keyAddressFedTimestamp(address: String, lap: Int, timestamp: Int) = {
-  "address_" + address + "_lap_" + lap.toString() + "_fedTs_" + timestamp.toString()
+  "duckling_" + ducklingId + "_feed_spice"
 }
 
 func keyAddressNonce(address: String) = {
   "address_" + address + "_nonce"
 }
 
-func keyDucklingFedLastTimestamp(ducklingId: String) = {
-  "duckling_" + ducklingId + "_fedLastTs"
-}
-
 func keyDucklingLevel(ducklingId: String) = {
   "duckling_" + ducklingId + "_level"
 }
 
-func keyFeedForLap(address: String, lap: Int) = {
-  "address_" + address + "_lap_" + lap.toString() + "_feed"
-}
-
 func keyDucklingGrown(ducklingId: String) = {
-  "duckling_" + ducklingId + "_grown"
-}
-
-func keyStartHatchingId(ducklingId: String) = {
   "duckling_" + ducklingId + "_grown"
 }
 
@@ -137,35 +107,15 @@ func getCurrentLevelBigInt(ducklingId: String) = {
   }
 }
 
-
-
-func getCurrentLap() = {
-  ((lastBlock.timestamp - STARTTIMESTAMP) / LAPLENGTH) + 1
-}
-
-func getLastFedTimestamp(ducklingId: String) = {
-  let lastFedTimestamp = tryGetInteger(keyDucklingFedLastTimestamp(ducklingId))
-  if lastFedTimestamp > 0 then lastFedTimestamp else lastBlock.timestamp
-}
-
 # ducklingGrowthLevel counted with precision BigInt
 func calculateNewDucklingLevel(ducklingId: String, paymentAmount: Int) = {
 
   let currentTs = lastBlock.timestamp
-  let lastFedTimestampChecked = getLastFedTimestamp(ducklingId)
-  let fedDiff = currentTs - lastFedTimestampChecked
-  let penalty = 0.toBigInt() # if fedDiff == 0 || fedDiff <= (MSINDAY * 2) then 0.toBigInt() else (fedDiff / MSINDAY).toBigInt() * (existingDuckPrecision / 10).toBigInt()
-
   let growth = fraction(paymentAmount.toBigInt(), percentGrowthPrecision.toBigInt(), DUCKLINGPRICE.toBigInt())
-  # throw("currentLevel: " + getCurrentLevelBigInt(ducklingId).toString() + " penalty: " + penalty.toString() + "growth: " + growth.toString())
-  #if true == true then throw("Current: " + getCurrentLevelBigInt(ducklingId).toString() + " Pen: " + penalty.toString() + ", growth: " + growth.toString() + ", currentlap: " + currentlap.toString() + " lastFedLapNumber: " + lastFedLapNumber.toString()) else {
-  #}
   let currentLevel = getCurrentLevelBigInt(ducklingId)
-  #let newLevel = ((currentLevel - penalty) + growth)
-  #let result = if (newLevel < 0.toBigInt()) then growth.toString() else newLevel.toString()
   let newLevel = currentLevel+growth
   let result = newLevel.toString()
-  (result, ["currentLevel=" + currentLevel.toString(), "newLevel=" + newLevel.toString(), "growth=" + growth.toString(), "penalty=" + penalty.toString(), "lastFedTs=" + lastFedTimestampChecked.toString(), "fedDiff=" + fedDiff.toString()])
+  (result, ["currentLevel=" + currentLevel.toString(), "newLevel=" + newLevel.toString(), "growth=" + growth.toString()])
 }
 
 func getBackendProof(maxFeedAmount: Int, userNonce: Int, address: String) = {
@@ -249,16 +199,11 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
           ducklingIdCheck.id.toBase58String()
   
 
-  let kDucklingLastFedTs = keyDucklingFedLastTimestamp(ducklingId)
-  let lastFedTs = getLastFedTimestamp(realDucklingId)
   let currentPayment = i.payments[0].value().amount
   let kNewLevel = keyDucklingLevel(realDucklingId)
   let kTotalFeed = keyTotalFeed(realDucklingId)
   let totalFeed = tryGetInteger(kTotalFeed)
   let kFeedTxStats = "duckling_" + realDucklingId + "_stat_" + lastBlock.timestamp.toString()
-  let kAddressFedTimestamp = keyAddressFedTimestamp(addressString, getCurrentLap(), lastBlock.timestamp)
-  let kDucklingFedLapTimestamp = keyDucklingFedLapTimestamp(realDucklingId, getCurrentLap())
-  let kDucklingFedLap = keyDucklingFedLap(realDucklingId)
 
   if (maxFeedAmount < currentPayment) then throw("BFD: Cannot feed duckling for such amount, max feed amount is: " + maxFeedAmount.toString()) else 
     let calculateResults = calculateNewDucklingLevel(realDucklingId, currentPayment/100)
@@ -270,12 +215,8 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
       else
       [
         IntegerEntry(kAddressNonce, currentNonce + 1),
-        IntegerEntry(kDucklingLastFedTs, lastBlock.timestamp),
         IntegerEntry(kTotalFeed, totalFeed + currentPayment),
         IntegerEntry(kFeedTxStats, currentPayment),
-        IntegerEntry(kAddressFedTimestamp, currentPayment),
-        IntegerEntry(kDucklingFedLapTimestamp, currentPayment),
-        IntegerEntry(kDucklingFedLap, getCurrentLap()),
         StringEntry(kNewLevel, calculateResults._1),
         StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";"))
       ]
