@@ -23,12 +23,20 @@ func tryGetString(key: String) = {
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 
 func getBackendPubKey() = getStringValue(getOracle(),"static_backendPubKey").fromBase58String()
 
 
 func getBackendProof(eggId: String, price: Int, distance: Int) = {
   makeString([eggId, price.toString(), distance.toString()], ";")
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case string: String => throw("RAI: wrong type, expected: Int, but got: "+string)
+  case _ => throw("RAI: wrong type, expected: Int")
 }
 
 @Callable(i)
@@ -47,13 +55,19 @@ func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)
   let exists = tryGetString(eggIdKey(eggId, i.originCaller.toString()))
 
   if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), getBackendPubKey())) then throw("RBR: Invalid proof from backend") else
-    if distance > 1000 then throw("RBR: You can only maximum boost 1000meters distance!") else
-    let firstPayment = i.payments[0].value()
-    let amount = firstPayment.amount
-    if (firstPayment.assetId != getEggAssetId()) then throw("RBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
-    if amount != price then throw("RBR: Please attach the exact asset amount"+price.toString()) else
-    if exists != "" then throw("RBR: Rope was already bought for this egg by this user!") else
-    [
-        StringEntry(eggIdKey(eggId, i.originCaller.toString()),price.toString()+";"+distance.toString())
-    ]
+  if distance > 1000 then throw("RBR: You can only maximum boost 1000meters distance!") else
+  if exists != "" then throw("RBR: Rope was already bought for this egg by this user!") else
+      strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[price],[]).asInt()
+      let leftToPay = price-amountPaidByCoupons
+
+      strict payment = if leftToPay!=0 then {
+        let feePayment = i.payments[1].value()
+        if (feePayment.assetId != getEggAssetId()) then throw("RBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+        if (feePayment.amount != leftToPay)  then throw("RBR: Please attach the exact asset amount "+ leftToPay.toString()) else
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay)]) 
+        leftToPay
+      } else 0
+      [
+          StringEntry(eggIdKey(eggId, i.originCaller.toString()),price.toString()+";"+distance.toString())
+      ]
 }

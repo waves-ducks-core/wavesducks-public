@@ -149,7 +149,7 @@ func initRebirth() = {
   strict payment = if leftToPay!=0 then {
     let feePayment = i.payments[1].value()
     if (feePayment.assetId != getEggAssetId()) then throw("You need to attach EGG tokens as fee") else 
-    if (feePayment.amount < leftToPay)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + leftToPay.toString()) else
+    if (feePayment.amount != leftToPay)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + leftToPay.toString()) else
     strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay)]) 
     leftToPay
   } else 0
