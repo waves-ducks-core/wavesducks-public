@@ -121,13 +121,13 @@
         {
             "key": "static_marketPlaceFee",
             "type": "integer",
-            "value": 30
+            "value": 20
             
         },
         {
             "key": "static_marketPlaceFeeArtefacts",
             "type": "integer",
-            "value": 30
+            "value": 20
 
         },
         {
