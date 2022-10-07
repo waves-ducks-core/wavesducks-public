@@ -49,6 +49,10 @@ func keyTotalFeed(ducklingId: String) = {
   "duckling_" + ducklingId + "_feed_spice"
 }
 
+func keyTotalFeedUser(address: String) = {
+  "user_" + address + "_feed"
+}
+
 func keyAddressNonce(address: String) = {
   "address_" + address + "_nonce"
 }
@@ -202,7 +206,9 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
   let currentPayment = i.payments[0].value().amount
   let kNewLevel = keyDucklingLevel(realDucklingId)
   let kTotalFeed = keyTotalFeed(realDucklingId)
+  let kTotalFeedUser = keyTotalFeedUser(addressString)
   let totalFeed = tryGetInteger(kTotalFeed)
+  let totalFeedUser = tryGetInteger(kTotalFeedUser)
   let kFeedTxStats = "duckling_" + realDucklingId + "_stat_" + lastBlock.timestamp.toString()
 
   if (maxFeedAmount < currentPayment) then throw("BFD: Cannot feed duckling for such amount, max feed amount is: " + maxFeedAmount.toString()) else 
@@ -216,6 +222,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
       [
         IntegerEntry(kAddressNonce, currentNonce + 1),
         IntegerEntry(kTotalFeed, totalFeed + currentPayment),
+        IntegerEntry(kTotalFeedUser, totalFeedUser + currentPayment),
         IntegerEntry(kFeedTxStats, currentPayment),
         StringEntry(kNewLevel, calculateResults._1),
         StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";"))
