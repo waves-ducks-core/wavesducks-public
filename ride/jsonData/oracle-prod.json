@@ -170,7 +170,7 @@
         {
             "key": "static_maxProxyDiff",
             "type": "integer",
-            "value": 30
+            "value": 50
         }
 
         
