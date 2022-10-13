@@ -1,0 +1,98 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let basePrice = 2_000_000
+let increase = 1
+let increaseDecimals = 3
+
+
+func duckCapacityKey(duckId: String)= "added_capacity_"+duckId
+
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func tryGetInteger(key: String) = {
+  match getInteger(this, key) {
+      case b:Int => b
+      case _ => 0
+  }
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
+func getDuckCapacity(duckId: String) = tryGetInteger(duckCapacityKey(duckId))
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("CCO: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+#Formula: basePrice*((pow(r,eggs+1)-1)/(r-1))
+
+@Callable(i)
+func calculateTotalPriceEggs(eggs: Int)={
+    let powPart = pow(1000+increase,increaseDecimals,eggs+1,0,8, HALFUP)-1_0000_0000
+    let price = basePrice * powPart/(increase)/100000
+
+    (
+        [IntegerEntry("PRICE_CALCULATION_POW_"+eggs.toString(),powPart),
+        IntegerEntry("PRICE_CALCULATION_"+eggs.toString(),price)]
+    ,price
+    )
+
+}
+
+
+
+@Callable(i)
+func addCapacityToDuck(addedCapacity: Int)={
+    let firstPayment = i.payments[0].value()
+    let secondPayment = i.payments[1].value()
+    let duckAssetId = firstPayment.assetId.value().toBase58String()
+    strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckAssetId],[]).asInt()
+    if (firstPayment.amount != 1 ) then throw("NFT is not attached") else
+
+    let capacity = getDuckCapacity(duckAssetId)
+    let totalCapacity = capacity+addedCapacity
+    strict alreadyPaid = invoke(this,"calculateTotalPriceEggs",[capacity],[]).asInt()
+    strict totalToPay = invoke(this,"calculateTotalPriceEggs",[totalCapacity],[]).asInt()
+    let diff = totalToPay - alreadyPaid  
+
+
+    let amount = secondPayment.amount
+    if (secondPayment.assetId != getEggAssetId()) then throw("CBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+    if amount != diff then throw("CBR: Please attach the exact asset amount"+diff.toString()) else
+    let debug = makeString(
+        [
+        "oldCapacity=" + capacity.toString(), "newCapacity=" + totalCapacity.toString(), "diffCapacity=" + addedCapacity.toString(),
+        "oldPaid=" + alreadyPaid.toString(), "newPaid=" + totalToPay.toString(), "diffPaid=" + diff.toString()
+        ]
+        ,";")
+
+
+    [
+        IntegerEntry(duckCapacityKey(duckAssetId),totalCapacity),
+        StringEntry(duckCapacityKey(duckAssetId)+"_debug_"+height.toString(), debug)
+    ]
+}

@@ -22,7 +22,7 @@ func tryGetString(key: String) = {
 }
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
 
 func getBackendPubKey() = getStringValue(getOracle(),"static_backendPubKey").fromBase58String()
 
