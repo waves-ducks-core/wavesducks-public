@@ -63,6 +63,16 @@ func calculateTotalPriceEggs(eggs: Int)={
 
 }
 
+@Callable(i)
+func calculateDiffEggs(oldEggs: Int, newEggs: Int)={
+    strict alreadyPaid = invoke(this,"calculateTotalPriceEggs",[oldEggs],[]).asInt()
+    strict totalToPay = invoke(this,"calculateTotalPriceEggs",[newEggs],[]).asInt()
+    let diff = totalToPay - alreadyPaid  
+    let debug = makeString(["oldPaid=" + alreadyPaid.toString(), "newPaid=" + totalToPay.toString()],";")
+    ([
+        StringEntry("DEBUG_CALCULATIONS",debug)
+    ],diff)
+}
 
 
 @Callable(i)
@@ -75,18 +85,14 @@ func addCapacityToDuck(addedCapacity: Int)={
 
     let capacity = getDuckCapacity(duckAssetId)
     let totalCapacity = capacity+addedCapacity
-    strict alreadyPaid = invoke(this,"calculateTotalPriceEggs",[capacity],[]).asInt()
-    strict totalToPay = invoke(this,"calculateTotalPriceEggs",[totalCapacity],[]).asInt()
-    let diff = totalToPay - alreadyPaid  
-
+    strict diff = invoke(this,"calculateDiffEggs",[capacity,totalCapacity],[]).asInt()
 
     let amount = secondPayment.amount
     if (secondPayment.assetId != getEggAssetId()) then throw("CBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
     if amount != diff then throw("CBR: Please attach the exact asset amount"+diff.toString()) else
     let debug = makeString(
         [
-        "oldCapacity=" + capacity.toString(), "newCapacity=" + totalCapacity.toString(), "diffCapacity=" + addedCapacity.toString(),
-        "oldPaid=" + alreadyPaid.toString(), "newPaid=" + totalToPay.toString(), "diffPaid=" + diff.toString()
+        "oldCapacity=" + capacity.toString(), "newCapacity=" + totalCapacity.toString(), "diffCapacity=" + addedCapacity.toString(),"diffPaid=" + diff.toString()
         ]
         ,";")
 
