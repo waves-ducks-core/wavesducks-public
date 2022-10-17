@@ -23,23 +23,13 @@ func tryGetString(key: String) = {
 }
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-
-
-
-#Variables for staking
-
-let Scale = 100000000
-
-func keyStakedAmount(address: Address) = address.toString() + "_farm_staked"
-func keyLastCheckInterest(address: Address) =  address.toString() + "_lastCheck_interest"
-func keyEggClaimed(address: Address) = address.toString() + "_claimed"
+func keyStakedAmount(address: Address) = address.toString() + "_egg_staked"
 func keyUser(user: String,identifier: String) = "VOTE_"+user+"_"+identifier
 func keyTotalVoteByType(type: String, identifier: String) = "VOTE_TOTAL_"+type+"_"+identifier
 func keyTotalVote(identifier: String)= "VOTE_TOTAL_"+identifier
-
-let keyGlobalLastInterest = "global_lastCheck_interest"
+func keyUnlockBlocks(address: Address) = "unlockheight_"+address.toString()
+func keyMultiplier(address: Address, identifier: String) = "multiplier_"+address.toString()+"_"+identifier
 let keyGlobalStaked = "global_staked"
-let keyGlobalEggEarned =  "global_earnings"
 
 
 #general methods
@@ -69,36 +59,9 @@ func getVoteByUser(user: String,identifier: String) = keyUser(user,identifier)
 func getTotalVoteByType(type: String, identifier: String) = tryGetInteger(keyTotalVoteByType(type,identifier))
 func getTotalVote(identifier: String) = tryGetInteger(keyTotalVote(identifier))
 
-func claimStakingResult (address: Address) = {
-    let currentInterest = tryGetInteger(keyGlobalLastInterest)
-    let lastCheckInterest = tryGetInteger(keyLastCheckInterest(address))
-    let stakedAmount = tryGetInteger(keyStakedAmount(address))
-
-    let reward = if (lastCheckInterest > 0)
-        then fraction((currentInterest - lastCheckInterest), stakedAmount, Scale)
-        else 0
-    let transfer = if (reward >0 ) then [ScriptTransfer(address, reward, getEggAssetId())] else []
-      transfer++
-      [
-        IntegerEntry(keyLastCheckInterest(address), currentInterest), 
-        IntegerEntry(keyEggClaimed(address), (tryGetInteger(keyEggClaimed(address))) + reward)
-      ]
-    }
-
-func handleStakingTopUp (amount: Int) = {
-    let currentInterest = tryGetInteger(keyGlobalLastInterest)
-    let totalStakedAmount = tryGetInteger(keyGlobalStaked)
-    let interestDelta = if (totalStakedAmount > 0)
-        then fraction(amount, Scale, totalStakedAmount)
-        else 0
-    [
-      IntegerEntry(keyGlobalEggEarned, (tryGetInteger(keyGlobalEggEarned) + amount)), 
-      IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta))
-    ]
-}
 
 #TODO: simplify by just using total balance
-func setVotePower(caller: String, vote: String, totalVote: Int,identifier: String)={
+func setVotePower(caller: String, vote: String, totalVote: Int,identifier: String, multiplier: Int)={
   if vote == "" then [] else 
   if height+getDuration() < height then throw("CAVP: Voting is finished, please finalize the vote;" + " Arguments: " + caller + ", " + vote + ", " + totalVote.toString()) else
   let voteTotalByType = getTotalVoteByType(vote, identifier)
@@ -118,7 +81,8 @@ func adaptVotePowerStake(caller: String,votePower: Int)={
   let identifier = getActiveVoteIdentifier()
   let voteHeight = getVoteHeight(identifier)
   let voteByUserString = getVoteByUser(caller,identifier)
-  setVotePower(caller,voteByUserString,votePower,identifier)
+  let multiplier = 0
+  setVotePower(caller,voteByUserString,votePower,identifier, multiplier)
 }
 
 func voteIsActive()={
@@ -126,6 +90,27 @@ func voteIsActive()={
       if identifier =="" then false else
       let voteHeight = getVoteHeight(identifier)
       voteHeight+getDuration() > height
+}
+
+func calculateVotePower(multiplier: Int, baseVotePower: Int)={
+    let increase = 250
+    let increaseDecimals = 3
+    let duration = getDuration()
+    let powPart = pow(1000+increase,increaseDecimals,multiplier+1,0,8, HALFUP)
+    let votePower = baseVotePower * powPart/(increase)/100000
+
+    (
+        [
+          IntegerEntry("POWER_CALCULATION_POW_"+baseVotePower.toString()+"_"+multiplier.toString(),powPart),
+          IntegerEntry("POWER_CALCULATION_"+baseVotePower.toString()+"_"+multiplier.toString(),votePower)
+        ],
+      votePower
+    )
+}
+
+@Callable(i)
+func debug(multiplier: Int, baseVotePower: Int)={
+calculateVotePower(multiplier,baseVotePower)
 }
 
 @Callable(i)
@@ -137,6 +122,7 @@ func configureOracle(oracle: String) = {
 
 }
 
+
 @Callable(i)
 func startVote(identifier: String) ={
     if(i.caller!=getOracle()) then throw("ESV: Only the admin can start a vote for now!") else
@@ -147,8 +133,11 @@ func startVote(identifier: String) ={
 }
 
 
+
+#TODO: store the multiplier
+#TODO: store unstakemoment
 @Callable(i)
-func voteYesOrNo(vote: Boolean)={
+func voteYesOrNo(vote: Boolean, multiplier: Int)={
 
   let votePower = tryGetInteger(keyStakedAmount(i.caller))
   if votePower == 0 then throw("EVTL: Please stake some $EGG before you can vote!") else
@@ -161,7 +150,7 @@ func voteYesOrNo(vote: Boolean)={
   let voteByUserString = getVoteByUser(i.caller.toString(),identifier)
 
   if voteByUserString !="" then throw("EVTL: You can not change your vote!") else 
-  setVotePower(i.caller.toString(),voteAsString,votePower,identifier)
+  setVotePower(i.caller.toString(),voteAsString,votePower,identifier, multiplier)
 
 }
 
@@ -184,17 +173,6 @@ func finalizeVote(identifier: String)={
 
 }
 
-#both
-@Callable(i)
-func topUpReward () = {
-    let eggAssetId = getEggAssetId()
-    if (i.payments[0].assetId != eggAssetId) then throw("ETUP: Wrong assetId, payment should be EGG") else 
-        let resHandleStaking = handleStakingTopUp(i.payments[0].amount) 
-        (
-          resHandleStaking, 
-          true
-          )
-}
 
 #both
 @Callable(i)
@@ -207,7 +185,6 @@ func withdrawEgg (amount: Int) = {
     let wdAmount = if (amount == -1) then stakedAmount else amount
     if (wdAmount > stakedAmount) then throw("CWFT: you don't have (that much) tokens available")else
         (
-          claimStakingResult(i.caller) ++ 
           [
             IntegerEntry(keyStakedAmount(i.caller), (stakedAmount - wdAmount)), 
             IntegerEntry(keyGlobalStaked, (tryGetInteger(keyGlobalStaked) - wdAmount)), 
@@ -231,23 +208,9 @@ func stakeEgg () = {
     let totalStakedAmount = tryGetInteger(keyGlobalStaked)
 
     let votePower = adaptVotePowerStake(i.caller.toString(),totalStakedAmount + amount) 
-
-    claimStakingResult(i.caller) ++ 
     [
       IntegerEntry(keyGlobalStaked, (totalStakedAmount + amount)), 
       IntegerEntry(keyStakedAmount(i.caller), (tryGetInteger(keyStakedAmount(i.caller)) + amount))
     ]++votePower
 
   }
-
-#only staking
-@Callable(i)
-func claimReward () = {  
-  if (i.payments.size() > 0) 
-  then {
-          throw("ECR: Please don't add payments")
-  } else
-        claimStakingResult(i.caller)
-  }
-
-        
