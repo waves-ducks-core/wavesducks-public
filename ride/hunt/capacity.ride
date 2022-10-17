@@ -99,6 +99,7 @@ func addCapacityToDuck(addedCapacity: Int)={
 
     [
         IntegerEntry(duckCapacityKey(duckAssetId),totalCapacity),
-        StringEntry(duckCapacityKey(duckAssetId)+"_debug_"+height.toString(), debug)
+        StringEntry(duckCapacityKey(duckAssetId)+"_debug_"+height.toString(), debug),
+        ScriptTransfer(i.caller,1,firstPayment.assetId.value())
     ]
 }
