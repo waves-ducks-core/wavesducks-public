@@ -37,6 +37,33 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
 func getDuckCapacity(duckId: String) = tryGetInteger(duckCapacityKey(duckId))
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getHuntAddress()= Address(tryGetStringExternal(getOracle(),"static_huntAddress").fromBase58String())
+func keyDuckOwner(assetId: String) = "duck_" + assetId + "_owner"
+
+func common(nftId: String, payment: AttachedPayment, addedCapacity: Int)={
+    strict children = invoke(getBreederAddress(),"validateAndGetChildren",[nftId],[]).asInt()
+    let eggPayment = payment.value()
+    let capacity = getDuckCapacity(nftId)
+    let totalCapacity = capacity+addedCapacity
+    strict diff = invoke(this,"calculateDiffEggs",[capacity,totalCapacity],[]).asInt()
+
+    let amount = eggPayment.amount
+    if (eggPayment.assetId != getEggAssetId()) then throw("CBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+    if amount != diff then throw("CBR: Please attach the exact asset amount"+diff.toString()) else
+    let debug = makeString(
+        [
+        "oldCapacity=" + capacity.toString(), "newCapacity=" + totalCapacity.toString(), "diffCapacity=" + addedCapacity.toString(),"diffPaid=" + diff.toString()
+        ]
+        ,";")
+
+
+    [
+        IntegerEntry(duckCapacityKey(nftId),totalCapacity),
+        StringEntry(duckCapacityKey(nftId)+"_debug_"+height.toString(), debug)
+    ]
+
+}
+
 
 
 @Callable(i)
@@ -77,29 +104,20 @@ func calculateDiffEggs(oldEggs: Int, newEggs: Int)={
 
 @Callable(i)
 func addCapacityToDuck(addedCapacity: Int)={
-    let firstPayment = i.payments[0].value()
-    let secondPayment = i.payments[1].value()
-    let duckAssetId = firstPayment.assetId.value().toBase58String()
-    strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckAssetId],[]).asInt()
-    if (firstPayment.amount != 1 ) then throw("NFT is not attached") else
-
-    let capacity = getDuckCapacity(duckAssetId)
-    let totalCapacity = capacity+addedCapacity
-    strict diff = invoke(this,"calculateDiffEggs",[capacity,totalCapacity],[]).asInt()
-
-    let amount = secondPayment.amount
-    if (secondPayment.assetId != getEggAssetId()) then throw("CBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
-    if amount != diff then throw("CBR: Please attach the exact asset amount"+diff.toString()) else
-    let debug = makeString(
-        [
-        "oldCapacity=" + capacity.toString(), "newCapacity=" + totalCapacity.toString(), "diffCapacity=" + addedCapacity.toString(),"diffPaid=" + diff.toString()
-        ]
-        ,";")
-
-
-    [
-        IntegerEntry(duckCapacityKey(duckAssetId),totalCapacity),
-        StringEntry(duckCapacityKey(duckAssetId)+"_debug_"+height.toString(), debug),
-        ScriptTransfer(i.caller,1,firstPayment.assetId.value())
+    let nftPayment = i.payments[0].value()
+    let duckAssetId = nftPayment.assetId.value().toBase58String()
+    if (nftPayment.amount != 1 ) then throw("NFT is not attached") else
+    common(duckAssetId, i.payments[1],addedCapacity)++[
+        ScriptTransfer(i.caller,1,nftPayment.assetId.value())
     ]
+}
+
+
+@Callable(i)
+func addCapacityToDuckInHunt(nftId: String, addedCapacity: Int)={
+    let ownerInHunt =tryGetStringExternal(getHuntAddress(),keyDuckOwner(nftId))
+    if ownerInHunt != i.caller.toString() then throw("CBR: You can only add capacity to own ducks!") else
+    common(nftId, i.payments[0],addedCapacity)
+    
+
 }
