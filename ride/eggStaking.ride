@@ -96,7 +96,7 @@ func calculateVotePower(multiplier: Int, baseVotePower: Int)={
     let increase = 250
     let increaseDecimals = 3
     let duration = getDuration()
-    let powPart = pow(1000+increase,increaseDecimals,multiplier+1,0,8, HALFUP)
+    let powPart = pow(1000+increase,increaseDecimals,multiplier+1,0,8, HALFUP)-1_0000_0000
     let votePower = baseVotePower * powPart/(increase)/100000
 
     (
