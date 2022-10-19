@@ -1,0 +1,123 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let basePrice = 2_000_000
+let increase = 1
+let increaseDecimals = 3
+
+
+func duckCapacityKey(duckId: String)= "added_capacity_"+duckId
+
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func tryGetInteger(key: String) = {
+  match getInteger(this, key) {
+      case b:Int => b
+      case _ => 0
+  }
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
+func getDuckCapacity(duckId: String) = tryGetInteger(duckCapacityKey(duckId))
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getHuntAddress()= Address(tryGetStringExternal(getOracle(),"static_huntAddress").fromBase58String())
+func keyDuckOwner(assetId: String) = "duck_" + assetId + "_owner"
+
+func common(nftId: String, payment: AttachedPayment, addedCapacity: Int)={
+    strict children = invoke(getBreederAddress(),"validateAndGetChildren",[nftId],[]).asInt()
+    let eggPayment = payment.value()
+    let capacity = getDuckCapacity(nftId)
+    let totalCapacity = capacity+addedCapacity
+    strict diff = invoke(this,"calculateDiffEggs",[capacity,totalCapacity],[]).asInt()
+
+    let amount = eggPayment.amount
+    if (eggPayment.assetId != getEggAssetId()) then throw("CBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+    if amount != diff then throw("CBR: Please attach the exact asset amount"+diff.toString()) else
+    let debug = makeString(
+        [
+        "oldCapacity=" + capacity.toString(), "newCapacity=" + totalCapacity.toString(), "diffCapacity=" + addedCapacity.toString(),"diffPaid=" + diff.toString()
+        ]
+        ,";")
+
+
+    [
+        IntegerEntry(duckCapacityKey(nftId),totalCapacity),
+        StringEntry(duckCapacityKey(nftId)+"_debug_"+height.toString(), debug)
+    ]
+
+}
+
+
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("CCO: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+#Formula: basePrice*((pow(r,eggs+1)-1)/(r-1))
+
+@Callable(i)
+func calculateTotalPriceEggs(eggs: Int)={
+    let powPart = pow(1000+increase,increaseDecimals,eggs+1,0,8, HALFUP)-1_0000_0000
+    let price = basePrice * powPart/(increase)/100000
+
+    (
+        [IntegerEntry("PRICE_CALCULATION_POW_"+eggs.toString(),powPart),
+        IntegerEntry("PRICE_CALCULATION_"+eggs.toString(),price)]
+    ,price
+    )
+
+}
+
+@Callable(i)
+func calculateDiffEggs(oldEggs: Int, newEggs: Int)={
+    strict alreadyPaid = invoke(this,"calculateTotalPriceEggs",[oldEggs],[]).asInt()
+    strict totalToPay = invoke(this,"calculateTotalPriceEggs",[newEggs],[]).asInt()
+    let diff = totalToPay - alreadyPaid  
+    let debug = makeString(["oldPaid=" + alreadyPaid.toString(), "newPaid=" + totalToPay.toString()],";")
+    ([
+        StringEntry("DEBUG_CALCULATIONS",debug)
+    ],diff)
+}
+
+
+@Callable(i)
+func addCapacityToDuck(addedCapacity: Int)={
+    let nftPayment = i.payments[0].value()
+    let duckAssetId = nftPayment.assetId.value().toBase58String()
+    if (nftPayment.amount != 1 ) then throw("NFT is not attached") else
+    common(duckAssetId, i.payments[1],addedCapacity)++[
+        ScriptTransfer(i.caller,1,nftPayment.assetId.value())
+    ]
+}
+
+
+@Callable(i)
+func addCapacityToDuckInHunt(nftId: String, addedCapacity: Int)={
+    let ownerInHunt =tryGetStringExternal(getHuntAddress(),keyDuckOwner(nftId))
+    if ownerInHunt != i.caller.toString() then throw("CBR: You can only add capacity to own ducks!") else
+    common(nftId, i.payments[0],addedCapacity)
+    
+
+}
