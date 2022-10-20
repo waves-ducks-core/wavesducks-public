@@ -1,0 +1,34 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let START_PRICE = 500000
+let QUOTIENT = 2
+
+#p=pow(START_PRICE,1/CURRENT_LEVEL)*pow(CURRENT_LEVEL,1/QUOTIENT)
+
+
+func calculateLevelUp(currentLevel: Int)={
+    let p1=pow(START_PRICE,8,10000/currentLevel,4,3,CEILING)
+    let p2=pow(currentLevel,0,10000/QUOTIENT,4,8,CEILING)
+    let total = p1*p2
+    let debug = makeString(["level="+currentLevel.toString(),"p1="+p1.toString(),"p2="+p2.toString(),"total="+total.toString()],";")
+
+    (
+        [
+        StringEntry("DEBUG",debug)
+        ]
+    ,total)
+}
+
+
+@Callable(i)
+func levelUpMath(currentLevel: Int)={
+    calculateLevelUp(currentLevel)
+}
+
+
+@Callable(i)
+func resetSkillsMath()={
+    []
+}
