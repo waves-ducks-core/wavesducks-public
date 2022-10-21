@@ -22,6 +22,13 @@ func calculateLevelUp(currentLevel: Int)={
 }
 
 
+func calculateReset(currentLevel: Int, resetTimes: Int)={
+    let DEVIDER = 4
+    
+    []
+}
+
+
 @Callable(i)
 func levelUpMath(currentLevel: Int)={
     calculateLevelUp(currentLevel)
