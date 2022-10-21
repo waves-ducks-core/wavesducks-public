@@ -4,14 +4,15 @@
 
 let START_PRICE = 500000
 let QUOTIENT = 2
+let DECIMALS = 100000000
 
 #p=pow(START_PRICE,1/CURRENT_LEVEL)*pow(CURRENT_LEVEL,1/QUOTIENT)
 
 
 func calculateLevelUp(currentLevel: Int)={
-    let p1=pow(START_PRICE,8,10000/currentLevel,4,3,CEILING)
+    let p1=pow(START_PRICE,8,10000/currentLevel,4,8,CEILING)
     let p2=pow(currentLevel,0,10000/QUOTIENT,4,8,CEILING)
-    let total = p1*p2
+    let total = fraction(p1,p2,DECIMALS)
     let debug = makeString(["level="+currentLevel.toString(),"p1="+p1.toString(),"p2="+p2.toString(),"total="+total.toString()],";")
 
     (
@@ -24,8 +25,16 @@ func calculateLevelUp(currentLevel: Int)={
 
 func calculateReset(currentLevel: Int, resetTimes: Int)={
     let DEVIDER = 4
+    let resetTimesToUse = resetTimes+1
+    let result = fraction(resetTimesToUse, currentLevel*DECIMALS, DEVIDER)
     
-    []
+    let debug = makeString(["level="+currentLevel.toString(),"resetTimes="+resetTimes.toString(),"resetTimesToUse="+resetTimesToUse.toString(),"result="+result.toString()],";")
+
+    (
+        [
+        StringEntry("DEBUG",debug)
+        ]
+    ,result)
 }
 
 
@@ -36,6 +45,6 @@ func levelUpMath(currentLevel: Int)={
 
 
 @Callable(i)
-func resetSkillsMath()={
-    []
+func resetSkillsMath(currentLevel: Int, resetTimes: Int)={
+    calculateReset(currentLevel,resetTimes)
 }
