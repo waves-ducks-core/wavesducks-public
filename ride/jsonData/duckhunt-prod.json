@@ -19,6 +19,12 @@
             "type": "integer",
             "value": 604800000
             
+        },
+        {
+            "key": "static_UnlockDuration",
+            "type": "integer",
+            "value": 604800000
+            
         }
     ],
     "fee": 600000,
