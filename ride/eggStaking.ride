@@ -54,10 +54,12 @@ func getActiveVoteIdentifier() =  tryGetString("CURRENT_VOTE_IDENTIFIER")
 
 
 func getDuration() = if tryGetIntegerExternal(getOracle(), "VOTE_DURATION") == 0 then 10000 else tryGetIntegerExternal(getOracle(), "VOTE_DURATION")
-func getVoteByUser(user: String,identifier: String) = keyUser(user,identifier)
+func getVoteByUser(user: String,identifier: String) = tryGetString(keyUser(user,identifier))
 
 func getTotalVoteByType(type: String, identifier: String) = tryGetInteger(keyTotalVoteByType(type,identifier))
 func getTotalVote(identifier: String) = tryGetInteger(keyTotalVote(identifier))
+
+func getUnlockHeight(user: String) = tryGetInteger(keyUnlockBlocks(user))
 
 func calculateVotePower(multiplier: Int, baseVotePower: Int)={
     let increase = 250
@@ -75,7 +77,6 @@ func calculateVotePower(multiplier: Int, baseVotePower: Int)={
     )
 }
 
-#TODO: CHECK IF CURRENT UNLOCKPERIOD IS BIGGER, IF SO KEEP OLD PERIOD
 func setVotePower(caller: String, vote: String, votePower: Int,identifier: String, multiplier: Int)={
   let lockPeriod = getDuration()*(multiplier+1)
   let totalVoteCalc = calculateVotePower(multiplier-1,votePower)
@@ -85,14 +86,14 @@ func setVotePower(caller: String, vote: String, votePower: Int,identifier: Strin
   let voteTotalByType = getTotalVoteByType(vote, identifier)
   let totalVoteOld = getTotalVote(identifier)
   let diff = totalVoteOld - totalVote
-
+  let oldUnlockHeight = getUnlockHeight(caller)
 
   [
       StringEntry(keyUser(caller,identifier),vote),
       IntegerEntry(keyTotalVoteByType(vote,identifier),voteTotalByType+diff),
       IntegerEntry(keyTotalVote(identifier), totalVote),
       IntegerEntry(keyMultiplier(caller,identifier), multiplier),
-      IntegerEntry(keyUnlockBlocks(caller),getVoteHeight(identifier)+lockPeriod)
+      IntegerEntry(keyUnlockBlocks(caller),max([getVoteHeight(identifier)+lockPeriod,oldUnlockHeight]))
   ]++ totalVoteCalc._1 
 
 }
@@ -170,7 +171,6 @@ func finalizeVote(identifier: String)={
   let voteTotalByNo = getTotalVoteByType("false",identifier)
 
   let result = voteTotalByYes > voteTotalByNo 
-  #TODO: add processing of vote results
   [
     DeleteEntry("CURRENT_VOTE_IDENTIFIER"),
     BooleanEntry("VOTE_PASSED_"+identifier,result)
@@ -179,7 +179,6 @@ func finalizeVote(identifier: String)={
 }
 
 
-#TODO: make sure people can only wd when timer of multiplier is finished!
 @Callable(i)
 func withdrawEgg (amount: Int) = {
   if (i.payments.size() > 0) then throw("CWFT: Please don't add payments") else
@@ -188,6 +187,8 @@ func withdrawEgg (amount: Int) = {
     let addressStr = toString(i.caller)
     let stakedAmount = tryGetInteger(keyStakedAmount(i.caller))
     let wdAmount = if (amount == -1) then stakedAmount else amount
+    let unlockHeight = getUnlockHeight(i.caller.toString())
+    if height < unlockHeight then throw("CWFT: Your tokens are still locked until block "+unlockHeight.toString()) else
     if (wdAmount > stakedAmount) then throw("CWFT: you don't have (that much) tokens available")else
         (
           [
