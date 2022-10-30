@@ -85,7 +85,7 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
     });
   });
 
-  describe("initiateDapp - stake and unstake", () => {
+  describe("Stake - stake and unstake", () => {
     it("should stake the eggs", async () => {
       const paymentObjects = [
         {
@@ -152,16 +152,99 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
         undefined
       );
 
-      const dataByKey = await accountDataByKey(
+      const dataByKeyGlobalStaked = await accountDataByKey(
         "global_staked",
         address(accounts.eggStaking)
       );
 
-      expect(dataByKey).to.eql({
+      expect(dataByKeyGlobalStaked).to.eql({
         key: "global_staked",
         type: "integer",
         value: AMOUNT_OF_EGG_REQUIRED / 4,
       });
+
+      const dataByKeyEggStaked = await accountDataByKey(
+        address(accounts.userSeed) + "_egg_staked",
+        address(accounts.eggStaking)
+      );
+
+      expect(dataByKeyEggStaked).to.eql({
+        key: address(accounts.userSeed) + "_egg_staked",
+        type: "integer",
+        value: AMOUNT_OF_EGG_REQUIRED / 4,
+      });
+    });
+  });
+
+  describe("Vote - start vote, vote yes", () => {
+    it("should start the vote", async () => {
+      const identifier = "TEST-IDENTIFIER";
+      const functionArgs = [
+        {
+          type: "string",
+          value: identifier,
+        },
+      ];
+      const invoke = dappUtils.buildInvokeScript(
+        accounts.eggStaking,
+        "startVote",
+        accounts.oracle,
+        functionArgs
+      );
+      const txResponse = await dappUtils.broadcastAndWaitForResponse(invoke);
+
+      dappUtils.verifyTxResponse(
+        txResponse,
+        accounts.eggStaking,
+        "startVote",
+        accounts.oracle,
+        functionArgs
+      );
+
+      const dataByKey = await accountDataByKey(
+        "VOTE_HEIGHT_START_" + identifier,
+        address(accounts.eggStaking)
+      );
+
+      expect(dataByKey).to.eql({
+        key: "VOTE_HEIGHT_START_" + identifier,
+        type: "integer",
+        value: txResponse.height,
+      });
+
+      const functionArgsVote = [
+        {
+          type: "boolean",
+          value: true,
+        },
+        {
+          type: "integer",
+          value: 0,
+        },
+      ];
+      const invokeVote = dappUtils.buildInvokeScript(
+        accounts.eggStaking,
+        "voteYesOrNo",
+        accounts.userSeed,
+        functionArgsVote
+      );
+      const txResponseVote = await dappUtils.broadcastAndWaitForResponse(
+        invokeVote
+      );
+
+      dappUtils.verifyTxResponse(
+        txResponseVote,
+        accounts.eggStaking,
+        "voteYesOrNo",
+        accounts.userSeed,
+        functionArgsVote
+      );
+
+      //TODO: check correct keys are create
+      //TODO: Create second user, check if global variables are updated
+      //TODO: Make second user have a multiplier, check if math is correct
+      //TODO: check if locktimes are correct
+      //TODO: check vote results
     });
   });
 });
