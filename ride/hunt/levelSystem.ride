@@ -35,11 +35,11 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
 
 
-func calculateLevelUp(currentLevel: Int)={
-    let p1=pow(START_PRICE,8,10000/currentLevel,4,8,CEILING)
-    let p2=pow(currentLevel,0,10000/QUOTIENT,4,8,CEILING)
+func calculateLevelUp(futureLevel: Int)={
+    let p1=pow(START_PRICE,8,10000/futureLevel,4,8,CEILING)
+    let p2=pow(futureLevel,0,10000/QUOTIENT,4,8,CEILING)
     let total = fraction(p1,p2,DECIMALS)
-    let debug = makeString(["level="+currentLevel.toString(),"p1="+p1.toString(),"p2="+p2.toString(),"total="+total.toString()],";")
+    let debug = makeString(["newLevel="+futureLevel.toString(),"p1="+p1.toString(),"p2="+p2.toString(),"total="+total.toString()],";")
 
     (
         [
@@ -72,8 +72,8 @@ func configureOracle(oracle: String) = {
 }
 
 @Callable(i)
-func levelUpMath(currentLevel: Int)={
-    calculateLevelUp(currentLevel)
+func levelUpMath(futureLevel: Int)={
+    calculateLevelUp(futureLevel)
 }
 
 @Callable(i)
@@ -89,7 +89,7 @@ func levelUp()={
     let levelOfUser = tryGetInteger(keyUserAddressFilled)
     let totalSpentUser = tryGetInteger(keyUserSpentOnLevelFilled)
 
-    let priceCalc = calculateLevelUp(levelOfUser)
+    let priceCalc = calculateLevelUp(levelOfUser+1)
     let price = priceCalc._2
 
     let firstPayment = i.payments[0].value()
