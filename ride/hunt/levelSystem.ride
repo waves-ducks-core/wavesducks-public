@@ -1,0 +1,130 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let START_PRICE = 500000
+let QUOTIENT = 2
+let DECIMALS = 100000000
+
+func keyUserAddress(address: String)= address+"_level"
+func keyUserSpentOnLevel(address: String)= address+"_spentOnLevel"
+
+
+func keyUserSkillResetTimes(address: String)= address+"_skillsResetTimes"
+func keyUserSpentOnReset(address: String)= address+"_spentOnReset"
+
+func tryGetInteger(key: String) = {
+  match getInteger(this, key) {
+      case b:Int => b
+      case _ => 0
+  }
+}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
+
+
+func calculateLevelUp(futureLevel: Int)={
+    let p1=pow(START_PRICE,8,10000/futureLevel,4,8,CEILING)
+    let p2=pow(futureLevel,0,10000/QUOTIENT,4,8,CEILING)
+    let total = fraction(p1,p2,DECIMALS)
+    let debug = makeString(["newLevel="+futureLevel.toString(),"p1="+p1.toString(),"p2="+p2.toString(),"total="+total.toString()],";")
+
+    (
+        [
+        StringEntry("DEBUG",debug)
+        ]
+    ,total)
+}
+
+func calculateReset(currentLevel: Int, resetTimes: Int)={
+    let DEVIDER = 4
+    let resetTimesToUse = resetTimes+1
+    let result = fraction(resetTimesToUse, currentLevel*DECIMALS, DEVIDER)
+    
+    let debug = makeString(["level="+currentLevel.toString(),"resetTimes="+resetTimes.toString(),"resetTimesToUse="+resetTimesToUse.toString(),"result="+result.toString()],";")
+
+    (
+        [
+        StringEntry("DEBUG",debug)
+        ]
+    ,result)
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("RCO: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
+func levelUpMath(futureLevel: Int)={
+    calculateLevelUp(futureLevel)
+}
+
+@Callable(i)
+func resetSkillsMath(currentLevel: Int, resetTimes: Int)={
+    calculateReset(currentLevel,resetTimes)
+}
+
+@Callable(i)
+func levelUp()={
+    let keyUserAddressFilled = keyUserAddress(i.caller.toString())
+    let keyUserSpentOnLevelFilled = keyUserSpentOnLevel(i.caller.toString())
+
+    let levelOfUser = tryGetInteger(keyUserAddressFilled)
+    let totalSpentUser = tryGetInteger(keyUserSpentOnLevelFilled)
+
+    let priceCalc = calculateLevelUp(levelOfUser+1)
+    let price = priceCalc._2
+
+    let firstPayment = i.payments[0].value()
+    let amount = firstPayment.amount
+    if (firstPayment.assetId != getEggAssetId()) then throw("LLU: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+    if amount != price then throw("LLU: Please attach the exact asset amount"+price.toString()) else
+    [
+        IntegerEntry(keyUserAddressFilled,levelOfUser+1),
+        IntegerEntry(keyUserSpentOnLevelFilled,totalSpentUser+amount)
+
+    ]++priceCalc._1
+}
+
+
+@Callable(i)
+func reset()={
+    let keyUserAddressFilled = keyUserAddress(i.caller.toString())
+    let levelOfUser = tryGetInteger(keyUserAddressFilled)
+
+    let keyUserSkillResetTimesFilled = keyUserSkillResetTimes(i.caller.toString())
+    let resetsOfUser = tryGetInteger(keyUserSkillResetTimesFilled)
+
+    let keyUserSpentOnResetFilled =  keyUserSpentOnReset(i.caller.toString())
+    let amountOfSpendOnReset =  tryGetInteger(keyUserSpentOnResetFilled)
+
+    let calculateResetCalculated = calculateReset(levelOfUser, resetsOfUser)
+    let price = calculateResetCalculated._2
+
+    let firstPayment = i.payments[0].value()
+    let amount = firstPayment.amount
+    if (firstPayment.assetId != getEggAssetId()) then throw("LR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+    if amount != price then throw("LR: Please attach the exact asset amount"+price.toString()) else
+    [
+        IntegerEntry(keyUserSkillResetTimesFilled,resetsOfUser+1),
+        IntegerEntry(keyUserSpentOnResetFilled,amountOfSpendOnReset+amount)
+    ]++calculateResetCalculated._1
+
+}
