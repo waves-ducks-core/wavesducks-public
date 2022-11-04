@@ -13,6 +13,7 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
       oracle: 1.5,
       eggStaking: 0.1,
       userSeed: 1,
+      userSeed2: 1,
     };
 
     await accountUtils.defineAccounts(accountRecords); // Preserved variable 'accounts' contains all defined accounts.
@@ -46,6 +47,17 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
     );
 
     await dappUtils.broadcastAndWaitForResponse(transferTx);
+
+    const transferTx2 = transfer(
+      {
+        amount: AMOUNT_OF_EGG_REQUIRED,
+        assetId: dappUtils.eggAssetId,
+        recipient: address(accounts.userSeed2),
+      },
+      accounts.oracle
+    );
+
+    await dappUtils.broadcastAndWaitForResponse(transferTx2);
   });
 
   describe("initiateDapp - setup dapp", () => {
@@ -219,7 +231,7 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
         },
         {
           type: "integer",
-          value: 0,
+          value: 1,
         },
       ];
       const invokeVote = dappUtils.buildInvokeScript(
@@ -239,6 +251,28 @@ describe("ducks - collective farms - collectiveFarmStaking - complete flow", () 
         accounts.userSeed,
         functionArgsVote
       );
+
+      const dataByKey2 = await accountDataByKey(
+        "VOTE_TOTAL_" + identifier,
+        address(accounts.eggStaking)
+      );
+
+      expect(dataByKey2).to.eql({
+        key: "VOTE_TOTAL_" + identifier,
+        type: "integer",
+        value: AMOUNT_OF_EGG_REQUIRED / 4,
+      });
+
+      const dataByKey3 = await accountDataByKey(
+        "multiplier_" + address(userSeed) + "_" + identifier,
+        address(accounts.eggStaking)
+      );
+
+      expect(dataByKey3).to.eql({
+        key: "multiplier_" + address(userSeed) + "_" + identifier,
+        type: "integer",
+        value: 1,
+      });
 
       //TODO: check correct keys are create
       //TODO: Create second user, check if global variables are updated
