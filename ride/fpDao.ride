@@ -27,9 +27,11 @@ func tryGetString(key: String) = {
 
 #KEYS
 func getVoteHeightKey(identifier: String) = "VOTE_HEIGHT_START_"+identifier
+func totalVoted(identifier: String) = "AMOUNT_VOTES_"+identifier
 func getActiveVoteIdentifierKey() = "CURRENT_VOTE_IDENTIFIER"
 func getDurationKey()= "VOTE_DURATION"
 func getVotePowerKey(address: String)= "user_"+address+"_vote-power"
+func getUserVoteForIdentifierKey(address: String, identifier: String) = "user_"+address+"_identifier_"+identifier
 
 #ORACLE DATA
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
@@ -40,12 +42,30 @@ func getDuration() = if tryGetIntegerExternal(getOracle(),getDurationKey() ) == 
 func getVoteHeight(identifier: String) = tryGetInteger(getVoteHeightKey(identifier))
 func getActiveVoteIdentifier() =  tryGetString(getActiveVoteIdentifierKey())
 func getVotePower(address: String) = tryGetInteger(getVotePowerKey(address))
+func getUserVotePower(address: String) = tryGetInteger(getVotePowerKey(address))
+func getUserVoteForIdentifier(address: String, identifier: String)= tryGetString(getUserVoteForIdentifierKey(address,identifier))
+func getTotalVoted(identifier: String) = tryGetInteger(totalVoted(identifier))
 
 func voteIsActive()={
       let identifier =getActiveVoteIdentifier()
       if identifier =="" then false else
       let voteHeight = getVoteHeight(identifier)
       voteHeight+getDuration() > height
+}
+
+
+
+func voteProcessing(i: Invocation, vote: Boolean)={
+  if !voteIsActive() then throw("FVP: No vote is currently running") else 
+  let identifier =getActiveVoteIdentifier()
+  let fpUser = getUserVotePower(i.caller.toString())
+  if fpUser == 0 then throw("FVP: Please stake some ducks first!") else
+  let oldVote = getUserVoteForIdentifier(i.caller.toString(), identifier)
+  let uniqueVotes = if oldVote == "" then getTotalVoted(identifier)+1 else getTotalVoted(identifier)
+  [
+    IntegerEntry(totalVoted(identifier), uniqueVotes),
+    StringEntry(getUserVoteForIdentifierKey(i.caller.toString(),identifier),vote.toString())
+  ]
 }
 
 @Callable(i)
@@ -71,14 +91,14 @@ func startVote(identifier: String) ={
 
 
 @Callable(i)
-func voteTrueOrFalse(vote: Boolean)={
-  #Check if vote is running
-  #If vote is running, get last active identifier
-  #If no vote is running, throw error
-  #Check if user has FP, if no FP then dont let a user vote
-  #Register a user his true or false boolean for the specifique vote identifier
-  #Count how much people voted
-  []
+func voteYes()={
+  voteProcessing(i,true)
+}
+
+@Callable(i)
+func voteNo()={
+  voteProcessing(i,false)
+
 }
 
 @Callable(i)
