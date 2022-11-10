@@ -175,7 +175,7 @@ func instantBuy(auctionId: String) = {
         let auctionOwner = tryGetString("auction_" + auctionId + "_owner")
         let recordPrice = tryGetInteger(assetId+"_recordPrice")
         let newRecordPrice = max([recordPrice, amount])
-        strict burnCall = if isEggSell then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 100))]) else []
+        strict burnCall = if isEggSell then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 1000))]) else []
         [
           StringEntry("auction_" + auctionId + "_status", "finished"),
           IntegerEntry("auction_" + auctionId + "_finalPrice", amount),
@@ -183,7 +183,7 @@ func instantBuy(auctionId: String) = {
           StringEntry("assetId_" + assetId + "_bid_" + bidId + "_data", "{\"auctionId\": \"" + auctionId + "\", \"author\": \"" + i.originCaller.toString() + "\", \"amount\": \"" + amount.toString() + "\", \"status\": \"finished\"}"),
           DeleteEntry("address_" + auctionOwner + "_auction_" + auctionId + "_lockedNFT"),
           ScriptTransfer(i.originCaller, 1, this.getStringValue("auction_" + auctionId + "_assetId").fromBase58String()),
-          ScriptTransfer(addressFromStringValue(auctionOwner), fraction(amount, 100 - finalFee, 100), paymentAssetId)
+          ScriptTransfer(addressFromStringValue(auctionOwner), fraction(amount, 1000 - finalFee, 1000), paymentAssetId)
         ]
       }
     }
@@ -238,19 +238,6 @@ func cancelBid(auctionId: String, bidId: String) = {
 }
 
 @Callable(i)
-func cancelOutdatedBid(auctionId: String, bidId: String) = {
-  throw("MCOB: to be released")
-  # let auctionStatus = tryGetString("auction_" + auctionId + "_status")
-  # if (tryGetString("auction_" + auctionId + "_bid_" + bidId + "_status") != "open") then {
-  #   throw("bid is not open")
-  # } else if (auctionStatus != "cancelled" && auctionStatus != "finished") then {
-  #   throw("this oracle can cancel bids only for canceled or finished auctions")
-  # } else {
-  #   getBidCancelResults(auctionId, bidId)
-  # }
-}
-
-@Callable(i)
 func acceptBid(auctionId: String, bidId: String) = {
   let isEggSell = tryGetBoolean("auction_" + auctionId + "_eggSell")
   let paymentAssetId = if isEggSell == true then getEggAssetId() else unit
@@ -274,7 +261,7 @@ func acceptBid(auctionId: String, bidId: String) = {
     } else {
       let recordPrice = tryGetInteger(assetId+"_recordPrice")
       let newRecordPrice = max([recordPrice, bidAmount])
-      strict burnCall = if isEggSell then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(bidAmount, finalFee, 100))]) else []
+      strict burnCall = if isEggSell then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(bidAmount, finalFee, 1000))]) else []
       [
         StringEntry("auction_" + auctionId + "_bid_" + bidId + "_status", "finished"),
         StringEntry("auction_" + auctionId + "_status", "finished"),
@@ -283,7 +270,7 @@ func acceptBid(auctionId: String, bidId: String) = {
         IntegerEntry(assetId + "_recordPrice", newRecordPrice),
         DeleteEntry("address_" + bidAuthor + "_auction_" + auctionId + "_bid_" + bidId),
         DeleteEntry("address_" + auctionOwner + "_auction_" + auctionId + "_lockedNFT"),
-        ScriptTransfer(i.originCaller, fraction(bidAmount, 100 - finalFee, 100), paymentAssetId),
+        ScriptTransfer(i.originCaller, fraction(bidAmount, 1000 - finalFee, 1000), paymentAssetId),
         ScriptTransfer(addressFromStringValue(bidAuthor), 1, assetId.fromBase58String())
       ]
     }
