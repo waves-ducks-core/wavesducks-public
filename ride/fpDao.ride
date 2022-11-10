@@ -16,6 +16,14 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
+func tryGetBoolean(key: String) = {
+    match getBoolean(key) {
+        case b:Boolean => b
+        case _ => false
+    }
+
+}
+
 func tryGetInteger (key: String) = {
     tryGetIntegerExternal(this, key)
 }
@@ -28,10 +36,13 @@ func tryGetString(key: String) = {
 #KEYS
 func getVoteHeightKey(identifier: String) = "VOTE_HEIGHT_START_"+identifier
 func totalVoted(identifier: String) = "AMOUNT_VOTES_"+identifier
+func totalProcessed(identifier: String) = "AMOUNT_VOTES_PROCESSED_"+identifier
 func getActiveVoteIdentifierKey() = "CURRENT_VOTE_IDENTIFIER"
 func getDurationKey()= "VOTE_DURATION"
 func getVotePowerKey(address: String)= "user_"+address+"_vote-power"
-func getUserVoteForIdentifierKey(address: String, identifier: String) = "user_"+address+"_identifier_"+identifier
+func getUserVoteForIdentifierKey(address: String, identifier: String) = "user_"+address+"_identifier_"+identifier+"_vote"
+func getUserProcessedForIdentifierKey(address: String, identifier: String) = "user_"+address+"_identifier_"+identifier+"_processed"
+func getVotesForIdentifierAndOptionKey(identifier: String, option: String) = "total_votes_"+identifier+"_option_"+option
 
 #ORACLE DATA
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
@@ -45,6 +56,9 @@ func getVotePower(address: String) = tryGetInteger(getVotePowerKey(address))
 func getUserVotePower(address: String) = tryGetInteger(getVotePowerKey(address))
 func getUserVoteForIdentifier(address: String, identifier: String)= tryGetString(getUserVoteForIdentifierKey(address,identifier))
 func getTotalVoted(identifier: String) = tryGetInteger(totalVoted(identifier))
+func getTotalProcessed(identifier: String) = tryGetInteger(totalProcessed(identifier))
+func getUserProcessedForIdentifier(address: String, identifier: String) = tryGetBoolean(getUserProcessedForIdentifierKey(address, identifier))
+func getVotesForIdentifierAndOption(identifier: String, option: String) = tryGetInteger(getVotesForIdentifierAndOptionKey(identifier, option))
 
 func voteIsActive()={
       let identifier =getActiveVoteIdentifier()
@@ -102,15 +116,55 @@ func voteNo()={
 }
 
 @Callable(i)
-func finalizeVote(identifier: String, wallets: String)={
-  #Check if vote is finished
-  #Loop through the wallets, get there FP+ vote
-  ## Check if user is not processed yet
-  ## Add fp to either true or false variable name
-  ## Mark a fp user vote as processed.
-  ## Count how much wallets are processed
-  ## If processed= voted then process result
-  #Reset identifier and start height to empty
-  #IMPORTANT: It should be possible to run it infinite of times without issues or duplicate results
-  []
+func calculateVotes(wallets: String)={
+  let identifier = getActiveVoteIdentifier()
+  if identifier == "" then throw("FCV: No active vote running!") else
+  let voteHeight = getVoteHeight(identifier)
+  if voteHeight+getDuration() > height then throw("FFV: Vote is not finished yet!") else 
+
+
+  let walletsList = wallets.split(";")
+    func handleVoters(acc: List[IntegerEntry|BooleanEntry], voter: String) = {
+        let user = voter
+        if getUserProcessedForIdentifier(user,identifier) then throw("FCV: "+user+" is already processed!") else
+        let userFP = getUserVotePower(user)
+        let vote =getUserVoteForIdentifier(user,identifier)
+        if vote == "" then throw("FCV: "+user+" did not vote!") else
+        let voteKey = getVotesForIdentifierAndOptionKey(identifier,vote)
+        let currentVoteAmount = getVotesForIdentifierAndOption(identifier,vote)
+
+
+
+        acc++[
+          BooleanEntry(getUserProcessedForIdentifierKey(user,identifier), true),
+          IntegerEntry(voteKey,currentVoteAmount+userFP)
+        ]
+
+    }
+    let result =  FOLD<20>(walletsList, [], handleVoters)
+    let newTotalProcessed = getTotalProcessed(identifier)+size(walletsList)
+    result++[
+      IntegerEntry(totalProcessed(identifier), newTotalProcessed)
+    ]
+
+  
+}
+
+@Callable(i)
+func finalizeVote()={
+    let identifier = getActiveVoteIdentifier()
+    if identifier == "" then throw("FFV: No active vote running!") else
+    let voteHeight = getVoteHeight(identifier)
+    if voteHeight+getDuration() > height then throw("FFV: Vote is not finished yet!") else 
+
+    let finishVote = getTotalProcessed(identifier) == getTotalVoted(identifier)
+    if !finishVote then throw("FFV: Vote is not counted yet!") else
+    let result = getVotesForIdentifierAndOption(identifier, "true") > getVotesForIdentifierAndOption(identifier, "false")
+
+    [
+      DeleteEntry(getActiveVoteIdentifierKey()),
+      StringEntry("RESULT_"+identifier,result.toString())
+    ]
+
+    
 }
