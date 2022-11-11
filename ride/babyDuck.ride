@@ -100,11 +100,12 @@ func getDucklingPercentage(ducklingId: String)={
 
 func getCurrentLevelBigInt(ducklingId: String) = {
   let kDuckLevel = keyDucklingLevel(ducklingId)
+
   match (getString(kDuckLevel)){
     case s: String => s.parseBigIntValue()
     case _ => {
       match getBoolean("duckling_" + ducklingId + "_issuedByFeedCall") {
-        case b:Boolean => if b==true then 0.toBigInt() else getDucklingPercentage(ducklingId)
+        case b:Boolean => if b==true && tryGetInteger(keyStartPercentage(ducklingId)) == 0 then 0.toBigInt() else getDucklingPercentage(ducklingId)
         case _ => getDucklingPercentage(ducklingId)
       }
     }
@@ -172,7 +173,6 @@ func issueFreeDuckling(address: String, txIdStr: String, percentage: Int) = {
     ([
       StringEntry(address + "_" + txIdStr + "_di", assetId.toBase58String()),
       IntegerEntry("stats_amount", tryGetInteger("stats_amount") + 1),
-      BooleanEntry("duckling_" + assetId.toBase58String() + "_issuedByFeedCall", i.caller == this),
       IntegerEntry(keyStartPercentage(assetId.toBase58String()), percentage),
       StringEntry(keyOwner(assetId.toBase58String()),address ),
       asset,
