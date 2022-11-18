@@ -150,11 +150,12 @@ func itemIsInCoolDown(artefactName: String, artefactId: String)={
 func directBuyItem(itemName:String)={
   let basePrice = tryGetCosmeticItemPrice(itemName)
   let grow = tryGetInteger(growPercentage(itemName))
-  let price = if grow == 0 then basePrice else pow(basePrice,0,(100+grow),2,0, CEILING)
-  if !tryGetBoolean(sale(itemName)) then throw("IDBI: Item not for sale anymore") else
+  if !tryGetBoolean(sale(itemName)) then throw("IDBI: Item not for sale anymore"+sale(itemName)) else
   let maxSalesValue = tryGetInteger(maxSales(itemName))
   let soldValue = tryGetInteger(sold(itemName))
+  let price = if grow == 0 then basePrice else basePrice+basePrice/100*(soldValue*grow)
   if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("IDBI: Max editions sold!") else
+
 
   #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[price],[]).asInt()
   let amountPaidByCoupons = 0
