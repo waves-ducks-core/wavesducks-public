@@ -284,22 +284,22 @@
                 "value": 0
             },
             {
-                "key": "direct_cosmetic_JERSEY_MEXICO_",
+                "key": "direct_cosmetic_JERSEY_MEXICO",
                 "type": "integer",
                 "value": 110000000
             },
             {
-                "key": "direct_cosmetic_JERSEY_MEXICO__max_sales",
+                "key": "direct_cosmetic_JERSEY_MEXICO_max_sales",
                 "type": "integer",
                 "value": 910
             },
             {
-                "key": "direct_cosmetic_JERSEY_MEXICO__sale",
+                "key": "direct_cosmetic_JERSEY_MEXICO_sale",
                 "type": "boolean",
                 "value": true
             },
             {
-                "key": "direct_cosmetic_JERSEY_MEXICO__growing_percentage",
+                "key": "direct_cosmetic_JERSEY_MEXICO_growing_percentage",
                 "type": "integer",
                 "value": 0
             },
@@ -512,22 +512,22 @@
         "version": 1,
         "data": [
             {
-                "key": "direct_cosmetic_JERSEY_SOUTH_KOREA",
+                "key": "direct_cosmetic_JERSEY_SOUTHKOREA",
                 "type": "integer",
                 "value": 33000000
             },
             {
-                "key": "direct_cosmetic_JERSEY_SOUTH_KOREA_max_sales",
+                "key": "direct_cosmetic_JERSEY_SOUTHKOREA_max_sales",
                 "type": "integer",
                 "value": 3010
             },
             {
-                "key": "direct_cosmetic_JERSEY_SOUTH_KOREA_sale",
+                "key": "direct_cosmetic_JERSEY_SOUTHKOREA_sale",
                 "type": "boolean",
                 "value": true
             },
             {
-                "key": "direct_cosmetic_JERSEY_SOUTH_KOREA_growing_percentage",
+                "key": "direct_cosmetic_JERSEY_SOUTHKOREA_growing_percentage",
                 "type": "integer",
                 "value": 0
             },
@@ -572,42 +572,42 @@
                 "value": 0
             },
             {
-                "key": "direct_cosmetic_JERSEY_SAUDI_ARABIA",
+                "key": "direct_cosmetic_JERSEY_SAUDIARABIA",
                 "type": "integer",
                 "value": 20000000
             },
             {
-                "key": "direct_cosmetic_JERSEY_SAUDI_ARABIA_max_sales",
+                "key": "direct_cosmetic_JERSEY_SAUDIARABIA_max_sales",
                 "type": "integer",
                 "value": 5010
             },
             {
-                "key": "direct_cosmetic_JERSEY_SAUDI_ARABIA_sale",
+                "key": "direct_cosmetic_JERSEY_SAUDIARABIA_sale",
                 "type": "boolean",
                 "value": true
             },
             {
-                "key": "direct_cosmetic_JERSEY_SAUDI_ARABIA_growing_percentage",
+                "key": "direct_cosmetic_JERSEY_SAUDIARABIA_growing_percentage",
                 "type": "integer",
                 "value": 0
             },
             {
-                "key": "direct_cosmetic_JERSEY_COSTA_RICA",
+                "key": "direct_cosmetic_JERSEY_COSTARICA",
                 "type": "integer",
                 "value": 20000000
             },
             {
-                "key": "direct_cosmetic_JERSEY_COSTA_RICA_max_sales",
+                "key": "direct_cosmetic_JERSEY_COSTARICA_max_sales",
                 "type": "integer",
                 "value": 5010
             },
             {
-                "key": "direct_cosmetic_JERSEY_COSTA_RICA_sale",
+                "key": "direct_cosmetic_JERSEY_COSTARICA_sale",
                 "type": "boolean",
                 "value": true
             },
             {
-                "key": "direct_cosmetic_JERSEY_COSTA_RICA_growing_percentage",
+                "key": "direct_cosmetic_JERSEY_COSTARICA_growing_percentage",
                 "type": "integer",
                 "value": 0
             },
