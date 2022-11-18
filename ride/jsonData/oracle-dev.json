@@ -171,6 +171,11 @@
             "key": "static_maxProxyDiff",
             "type": "integer",
             "value": 30
+        },
+        {
+            "key": "VOTE_DURATION",
+            "type": "integer",
+            "value": 500
         }
     ],
     "fee": 600000,
