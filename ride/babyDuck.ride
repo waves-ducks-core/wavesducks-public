@@ -45,6 +45,14 @@ let percentGrowthPrecision = 1_0000_0000_0000_0000
 let existingDuckPrecision = 1_00_0000_0000_0000
 let KGlobalIssuedTimestamp = "global_issued_timestamp"
 
+
+let DUCKLINGPRICEOLD = 8000_0000
+let percentGrowthPrecisionOld = 1_0000_0000_0000_0000
+
+func keyTotalFeedOld(ducklingId: String) = {
+  "duckling_" + ducklingId + "_feed"
+}
+
 func keyTotalFeed(ducklingId: String) = {
   "duckling_" + ducklingId + "_feed_spice"
 }
@@ -237,6 +245,10 @@ func fixLevels(ducklingIds: String) = {
     func handleId(acc: List[StringEntry], id: String) = {
       let kTotalFeed = keyTotalFeed(id)
       let totalFeed = tryGetInteger(kTotalFeed)
+
+      let kTotalFeedOld = keyTotalFeedOld(id)
+      let totalFeedOld = tryGetInteger(kTotalFeedOld)
+
       let kNewLevel = keyDucklingLevel(id)
       let startingLevel = match getBoolean("duckling_" + id + "_issuedByFeedCall"){
         case b: Boolean => if b == true && tryGetInteger(keyStartPercentage(id)) == 0 then 0.toBigInt() else getDucklingPercentage(id)
@@ -244,12 +256,18 @@ func fixLevels(ducklingIds: String) = {
       }
 
       let growth = fraction((totalFeed/100).toBigInt(), percentGrowthPrecision.toBigInt(), DUCKLINGPRICE.toBigInt())
-      acc ++ [StringEntry(kNewLevel, (startingLevel + growth).toString())]
+      let growthOld = if totalFeedOld != 0 then fraction(totalFeedOld.toBigInt(), percentGrowthPrecisionOld.toBigInt(), DUCKLINGPRICEOLD.toBigInt()) else 0.toBigInt()
+      acc ++ [
+      StringEntry(kNewLevel, (startingLevel + growth + growthOld).toString()),
+      StringEntry("DEBUG",startingLevel.toString()+" "+growth.toString()+" "+growthOld.toString())
+      ]
     }
 
     FOLD<20>(ducklingIdsList, [], handleId)
   }
 }
+
+
 
 @Callable(i)
 func turnDucklingIntoDuck() = {
