@@ -121,13 +121,13 @@
         {
             "key": "static_marketPlaceFee",
             "type": "integer",
-            "value": 100
+            "value": 10
             
         },
         {
             "key": "static_marketPlaceFeeArtefacts",
             "type": "integer",
-            "value": 100
+            "value": 10
 
         },
         {
@@ -150,7 +150,7 @@
         {
             "key": "static_ducklingPrice",
             "type": "integer",
-            "value": 100000000
+            "value": 50000000
         },
         {
             "key": "static_babyDuckBreedingAddress",

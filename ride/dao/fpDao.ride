@@ -95,7 +95,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func startVote(identifier: String) ={
-    if(i.caller!=getOracle()) then throw("ESV: Only the admin can start a vote for now!") else
+    if(i.caller!=getOracle()) then throw("ESV: Only the admin can start a vote for now! "+i.caller.toString()+" "+getOracle().toString()) else
     if voteIsActive() then throw("CSV: There is already a vote running!") else
     [
       StringEntry("CURRENT_VOTE_IDENTIFIER", identifier),
@@ -124,27 +124,38 @@ func calculateVotes(wallets: String)={
 
 
   let walletsList = wallets.split(";")
-    func handleVoters(acc: List[IntegerEntry|BooleanEntry], voter: String) = {
+    func handleVoters(acc: (List[IntegerEntry|BooleanEntry], Int, Int), voter: String) = {
         let user = voter
         if getUserProcessedForIdentifier(user,identifier) then throw("FCV: "+user+" is already processed!") else
         let userFP = getUserVotePower(user)
         let vote =getUserVoteForIdentifier(user,identifier)
         if vote == "" then throw("FCV: "+user+" did not vote!") else
         let voteKey = getVotesForIdentifierAndOptionKey(identifier,vote)
-        let currentVoteAmount = getVotesForIdentifierAndOption(identifier,vote)
+
+        if vote == "true" then 
+          (        acc._1++[
+          BooleanEntry(getUserProcessedForIdentifierKey(user,identifier), true)
+          
+        ],
+        acc._2+userFP,
+        acc._3)
+        else
+                    (        acc._1++[
+          BooleanEntry(getUserProcessedForIdentifierKey(user,identifier), true)
+          
+        ],
+        acc._2,
+        acc._3+userFP)
 
 
-
-        acc++[
-          BooleanEntry(getUserProcessedForIdentifierKey(user,identifier), true),
-          IntegerEntry(voteKey,currentVoteAmount+userFP)
-        ]
 
     }
-    let result =  FOLD<20>(walletsList, [], handleVoters)
+    let result =  FOLD<20>(walletsList, ([],getVotesForIdentifierAndOption(identifier,"true"),getVotesForIdentifierAndOption(identifier,"false")), handleVoters)
     let newTotalProcessed = getTotalProcessed(identifier)+size(walletsList)
-    result++[
-      IntegerEntry(totalProcessed(identifier), newTotalProcessed)
+    result._1++[
+      IntegerEntry(totalProcessed(identifier), newTotalProcessed),
+      IntegerEntry(getVotesForIdentifierAndOptionKey(identifier,"true"),result._2),
+      IntegerEntry(getVotesForIdentifierAndOptionKey(identifier,"false"),result._3)
     ]
 
   
