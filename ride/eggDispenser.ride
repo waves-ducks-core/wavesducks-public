@@ -17,7 +17,7 @@ func makePayment() = {
   else {
     [
       IntegerEntry(klastRefillHeight, height),
-      ScriptTransfer(Address(farmingContractAddress), 70_00000000, eggAssetId),
+      ScriptTransfer(Address(farmingContractAddress), 85_00000000, eggAssetId),
       ScriptTransfer(i.caller, 1_000000, eggAssetId)
     ]
   }
