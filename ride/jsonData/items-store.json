@@ -331,22 +331,22 @@
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-FREDDYSWEATER",
+            "key": "direct_cosmetic_ART-FREDYSWEATER",
             "type": "integer",
             "value": 50000000
         },
         {
-            "key": "direct_cosmetic_ART-FREDDYSWEATER_max_sales",
+            "key": "direct_cosmetic_ART-FREDYSWEATER_max_sales",
             "type": "integer",
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-FREDDYSWEATER_sale",
+            "key": "direct_cosmetic_ART-FREDYSWEATER_sale",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "direct_cosmetic_ART-FREDDYSWEATER_growing_percentage",
+            "key": "direct_cosmetic_ART-FREDYSWEATER_growing_percentage",
             "type": "integer",
             "value": 0
         },
@@ -371,22 +371,22 @@
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-LEATHERJACKET",
+            "key": "direct_cosmetic_ART-LEATHERJCKET",
             "type": "integer",
             "value": 50000000
         },
         {
-            "key": "direct_cosmetic_ART-LEATHERJACKET_max_sales",
+            "key": "direct_cosmetic_ART-LEATHERJCKET_max_sales",
             "type": "integer",
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-LEATHERJACKET_sale",
+            "key": "direct_cosmetic_ART-LEATHERJCKET_sale",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "direct_cosmetic_ART-LEATHERJACKET_growing_percentage",
+            "key": "direct_cosmetic_ART-LEATHERJCKET_growing_percentage",
             "type": "integer",
             "value": 0
         },
@@ -491,22 +491,22 @@
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-WASSERMANVEST",
+            "key": "direct_cosmetic_ART-WASSERMANVST",
             "type": "integer",
             "value": 50000000
         },
         {
-            "key": "direct_cosmetic_ART-WASSERMANVEST_max_sales",
+            "key": "direct_cosmetic_ART-WASSERMANVST_max_sales",
             "type": "integer",
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-WASSERMANVEST_sale",
+            "key": "direct_cosmetic_ART-WASSERMANVST_sale",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "direct_cosmetic_ART-WASSERMANVEST_growing_percentage",
+            "key": "direct_cosmetic_ART-WASSERMANVST_growing_percentage",
             "type": "integer",
             "value": 0
         },
