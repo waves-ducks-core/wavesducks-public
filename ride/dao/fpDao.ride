@@ -168,7 +168,7 @@ func finalizeVote()={
     let voteHeight = getVoteHeight(identifier)
     if voteHeight+getDuration() > height then throw("FFV: Vote is not finished yet!") else 
 
-    let finishVote = getTotalProcessed(identifier) == getTotalVoted(identifier)
+    let finishVote = getTotalProcessed(identifier) != getTotalVoted(identifier)
     if !finishVote then throw("FFV: Vote is not counted yet!") else
     let result = getVotesForIdentifierAndOption(identifier, "true") > getVotesForIdentifierAndOption(identifier, "false")
 
