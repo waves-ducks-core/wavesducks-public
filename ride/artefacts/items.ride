@@ -111,6 +111,7 @@ func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_reb
 func priceKey(item:String)= "direct_cosmetic_"+item
 func maxSales(item:String)= "direct_cosmetic_"+item+"_max_sales"
 func sale(item:String)= "direct_cosmetic_"+item+"_sale"
+func priceAsset(item:String)= "direct_cosmetic_"+item+"_priceAsset"
 func growPercentage(item:String)= "direct_cosmetic_"+item+"_growing_percentage"
 func sold(item:String)= "direct_cosmetic_"+item+"_sold"
 func lastPrice(item:String)= "direct_cosmetic_"+item+"_last_price"
@@ -156,7 +157,8 @@ func directBuyItem(itemName:String)={
   let price = if grow == 0 then basePrice else basePrice+basePrice/100*(soldValue*grow)
   if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("IDBI: Max editions sold!") else
 
-
+  let assetId = if tryGetString(priceAsset(itemName))=="" then getEggAssetId() else tryGetString(priceAsset(itemName)).fromBase58String()
+  
   #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[price],[]).asInt()
   let amountPaidByCoupons = 0
   let leftToPay = price-amountPaidByCoupons
@@ -164,7 +166,7 @@ func directBuyItem(itemName:String)={
   strict payment = if leftToPay!=0 then {
       let firstPayment = i.payments[0].value()
       let amount = firstPayment.amount
-      if (firstPayment.assetId != getEggAssetId()) then throw("IDBI: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+      if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the following asset id: " + assetId.toBase58String()) else
       if amount != leftToPay then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
       leftToPay
   }else 0
