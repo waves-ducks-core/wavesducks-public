@@ -1,0 +1,28 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "direct_cosmetic_ART-FEED10",
+            "type": "integer",
+            "value": 15000000
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED10_max_sales",
+            "type": "integer",
+            "value": 5000
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED10_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED10_growing_percentage",
+            "type": "integer",
+            "value": 0
+        }
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}
