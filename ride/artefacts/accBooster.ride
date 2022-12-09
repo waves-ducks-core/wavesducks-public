@@ -4,6 +4,7 @@
 
 func keyUnstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"
 func keyArtefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
+func keyFeedLimit(owner: String) = "limit_"+owner
 
 let stakeable = [
   "ART-LAKE",
@@ -99,6 +100,19 @@ func unstakeItem(artefactName: String) = {
           DeleteEntry(keyArtefactOwner(artefactName,invoker))
         ] 
 }
+
+@Callable(i)
+func oneTimeUseFeed() ={
+  if !(size(i.payments) == 1 && i.payments[0].amount==1) then throw("Invalid payment") else 
+    let assetId = i.payments[0].assetId.value()
+    strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    if artefactName != "ART-FEED10" then throw("You can't use this artafect to earn feedlimit!") else
+        let invoker = i.caller.toString()
+        [
+          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+10)
+        ]
+}
+
 
 @Verifier(tx)
 func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
