@@ -110,6 +110,7 @@ func upgradeMantleFunc(i: Invocation, artefactId: String, amount: Int) = {
 
       let totalInvested = mantleAlreadyInvested + amount
       let newLevel = (10 * pow(totalInvested, 8, 6, 1, 8, HALFUP) + 100000000) / 100000000
+      if newLevel >= 340 then throw("DUMF: You reached the max level! Max level is 340!") else
       [
         IntegerEntry(kMantleLevel, newLevel),
         IntegerEntry(kMantleInvested, totalInvested),
