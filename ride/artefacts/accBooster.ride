@@ -109,7 +109,8 @@ func oneTimeUseFeed() ={
     if artefactName != "ART-FEED10" then throw("You can't use this artafect to earn feedlimit!") else
         let invoker = i.caller.toString()
         [
-          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+10)
+          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+10),
+          Burn(assetId,1)
         ]
 }
 

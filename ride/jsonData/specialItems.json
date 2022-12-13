@@ -7,6 +7,12 @@
             "type": "integer",
             "value": 15000000
         },
+
+        {
+            "key": "direct_cosmetic_ART-FEED10_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+        },
         {
             "key": "direct_cosmetic_ART-FEED10_max_sales",
             "type": "integer",
