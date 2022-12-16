@@ -25,7 +25,12 @@
         {
             "key": "direct_cosmetic_ART-CROWN",
             "type": "integer",
-            "value": 10000000
+            "value": 15000000
+        },
+        {
+            "key": "direct_cosmetic_ART-CROWN_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
         },
         {
             "key": "direct_cosmetic_ART-CROWN_max_sales",
@@ -125,7 +130,12 @@
         {
             "key": "direct_cosmetic_ART-MAFIAHAT",
             "type": "integer",
-            "value": 10000000
+            "value": 3000000
+        },
+        {
+            "key": "direct_cosmetic_ART-MAFIAHAT_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
         },
         {
             "key": "direct_cosmetic_ART-MAFIAHAT_max_sales",
@@ -185,7 +195,12 @@
         {
             "key": "direct_cosmetic_ART-TOMMYGUN",
             "type": "integer",
-            "value": 10000000
+            "value": 4000000
+        },
+        {
+            "key": "direct_cosmetic_ART-TOMMYGUN_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
         },
         {
             "key": "direct_cosmetic_ART-TOMMYGUN_max_sales",
@@ -393,7 +408,12 @@
         {
             "key": "direct_cosmetic_ART-PEPESHIRT",
             "type": "integer",
-            "value": 50000000
+            "value": 5000000
+        },
+        {
+            "key": "direct_cosmetic_ART-PEPESHIRT_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
         },
         {
             "key": "direct_cosmetic_ART-PEPESHIRT_max_sales",
@@ -513,7 +533,12 @@
         {
             "key": "direct_cosmetic_ART-CAT",
             "type": "integer",
-            "value": 10000000
+            "value": 4000000
+        },
+        {
+            "key": "direct_cosmetic_ART-CAT_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
         },
         {
             "key": "direct_cosmetic_ART-CAT_max_sales",
@@ -533,7 +558,12 @@
         {
             "key": "direct_cosmetic_ART-HAMSTER",
             "type": "integer",
-            "value": 10000000
+            "value": 4000000
+        },
+        {
+            "key": "direct_cosmetic_ART-HAMSTER_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
         },
         {
             "key": "direct_cosmetic_ART-HAMSTER_max_sales",
@@ -573,7 +603,12 @@
         {
             "key": "direct_cosmetic_ART-SNAKE",
             "type": "integer",
-            "value": 50000000
+            "value": 4000000
+        },
+        {
+            "key": "direct_cosmetic_ART-SNAKE_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
         },
         {
             "key": "direct_cosmetic_ART-SNAKE_max_sales",

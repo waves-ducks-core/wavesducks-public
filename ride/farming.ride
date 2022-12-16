@@ -197,6 +197,13 @@ func isProxyStakingSc(address: String)={
   allowedContractsList.indexOf(address) !=unit
 }
 
+#TODO: What to use as random? => backend signature
+#TODO: How big of a chance?
+#TODO: What with CF? => claim works but just 0 eggs 
+func getRandomIllness()={
+  []
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("FCO: admin only") else 
