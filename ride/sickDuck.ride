@@ -54,6 +54,15 @@ func getRandomNumber(variants: Int, txId: ByteVector, lastCheckDisease: Int, off
   randomHash.toInt(offset) % variants
 }
 
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("ICU: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+		
 
 @Callable(i)
 func checkIfDuckGetSick(duckId: String)={
