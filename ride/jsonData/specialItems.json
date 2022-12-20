@@ -27,6 +27,32 @@
             "key": "direct_cosmetic_ART-FEED10_growing_percentage",
             "type": "integer",
             "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SNOWMAN",
+            "type": "integer",
+            "value": 8000000
+        },
+
+        {
+            "key": "direct_cosmetic_ART-SNOWMAN_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+        },
+        {
+            "key": "direct_cosmetic_ART-SNOWMAN_max_sales",
+            "type": "integer",
+            "value": 500
+        },
+        {
+            "key": "direct_cosmetic_ART-SNOWMAN_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-SNOWMAN_growing_percentage",
+            "type": "integer",
+            "value": 5
         }
     ],
     "fee": 600000,
