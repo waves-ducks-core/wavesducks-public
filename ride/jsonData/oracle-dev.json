@@ -148,6 +148,12 @@
             "value": "3P57np8oou9yBbg85Nk4FDYTC46exnTsQk1"
         },
         {
+            "key": "static_sicknessAddress",
+            "type": "string",
+            "value": "3P6r1tQ9fZ72nN2c85JQd86HmFXsFoycSSB"
+            
+        },
+        {
             "key": "static_spiceAssetId",
             "type": "string",
             "value": "HSHP7YmvCX9vtKYfoTfcEd9hr8bnFm1PzoBrQRNy8q1q"
