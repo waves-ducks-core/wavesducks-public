@@ -16,7 +16,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_BRAZ_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_BRAZ_growing_percentage",
@@ -36,7 +36,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_FRAN_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_FRAN_growing_percentage",
@@ -56,7 +56,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_ARG_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_ARG_growing_percentage",
@@ -76,7 +76,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_ENG_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_ENG_growing_percentage",
@@ -96,7 +96,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_SPAIN_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_SPAIN_growing_percentage",
@@ -116,7 +116,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_GERM_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_GERM_growing_percentage",
@@ -136,7 +136,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_NETH_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_NETH_growing_percentage",
@@ -156,7 +156,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_PORT_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_PORT_growing_percentage",
@@ -176,7 +176,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_BELG_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_BELG_growing_percentage",
@@ -196,7 +196,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_DENM_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_DENM_growing_percentage",
@@ -216,7 +216,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_CROAT_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_CROAT_growing_percentage",
@@ -236,7 +236,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_URUG_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_URUG_growing_percentage",
@@ -256,7 +256,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_SWITZ_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_SWITZ_growing_percentage",
@@ -276,7 +276,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_SERB_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_SERB_growing_percentage",
@@ -296,7 +296,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_MEXIC_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_MEXIC_growing_percentage",
@@ -316,7 +316,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_WALES_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_WALES_growing_percentage",
@@ -336,7 +336,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_USA_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_USA_growing_percentage",
@@ -356,7 +356,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_POL_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_POL_growing_percentage",
@@ -376,7 +376,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_SENEG_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_SENEG_growing_percentage",
@@ -396,7 +396,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_ECUAD_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_ECUAD_growing_percentage",
@@ -416,7 +416,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_MOROC_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_MOROC_growing_percentage",
@@ -436,7 +436,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_CAMER_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_CAMER_growing_percentage",
@@ -456,7 +456,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_CANAD_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_CANAD_growing_percentage",
@@ -476,7 +476,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_JAPAN_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_JAPAN_growing_percentage",
@@ -496,7 +496,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_GHANA_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_GHANA_growing_percentage",
@@ -524,7 +524,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_SKOR_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_SKOR_growing_percentage",
@@ -544,7 +544,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_QATAR_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_QATAR_growing_percentage",
@@ -564,7 +564,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_IRAN_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_IRAN_growing_percentage",
@@ -584,7 +584,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_SAUDI_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_SAUDI_growing_percentage",
@@ -604,7 +604,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_COSTA_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_COSTA_growing_percentage",
@@ -624,7 +624,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_ASTRL_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_ASTRL_growing_percentage",
@@ -644,7 +644,7 @@
             {
                 "key": "direct_cosmetic_ART-JERSEY_TUNIS_sale",
                 "type": "boolean",
-                "value": true
+                "value": false
             },
             {
                 "key": "direct_cosmetic_ART-JERSEY_TUNIS_growing_percentage",

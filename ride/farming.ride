@@ -193,7 +193,7 @@ func getUnstakeResult(address: String, assetId: ByteVector, color: String, calle
   let reward = (farmedAmount - withdrawnAmount) / (scale * 100)
 
   let isWithoutPerch = tryGetBoolean("address_"+address+"_asset_"+asset+"_without_perch")
-  strict sicknessCheck = invoke(getSicknessAddress(),"checkIfDuckGetSick",[assetId],[]).asBoolean()
+  strict sicknessCheck = invoke(getSicknessAddress(),"checkIfDuckGetSick",[asset],[]).asBoolean()
   let rewardAfterSickNess = if sicknessCheck then 0 else reward
   let appendPerches = if isWithoutPerch then [DeleteEntry("address_"+address+"_asset_"+asset+"_without_perch")] else [IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color) + 1)]
           
@@ -429,7 +429,7 @@ func claimReward(asset: String) = {
 
     let assetId = asset.fromBase58String()
 
-    strict sicknessCheck = invoke(getSicknessAddress(),"checkIfDuckGetSick",[assetId],[]).asBoolean()
+    strict sicknessCheck = invoke(getSicknessAddress(),"checkIfDuckGetSick",[asset],[]).asBoolean()
     if sicknessCheck then 
     
       let assetFarmingPower =  getLastKnownAssetFarmingPower(address, asset)
