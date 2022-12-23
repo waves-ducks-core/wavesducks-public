@@ -150,7 +150,7 @@ func unstakeDuck(assetIdStr: String, addressStr: String)={
   if (tryGetString(kDuckOwner) != addressStr) then {throw("3UD: The duck is not yours")} 
   else if (remainingForUnlock > 0) then {throw("3UD: You need to wait to unlock " + (remainingForUnlock / 1000).toString() + " seconds")}
   else {
-    let unstakeFuncName = if isJackpot == true then "unstakeJackpot" else "unstakeNFT" 
+    let unstakeFuncName = if isJackpot == true then "unstakeJackpotWithoutClaimEgg" else "unstakeNFTWithoutClaim" 
     strict inv1 = invoke(getFarmingAddress(), unstakeFuncName, [assetIdStr], [])  # TODO: jackpot unstaking
     [
       ScriptTransfer(Address(addressStr.fromBase58String()), 1, assetId),
