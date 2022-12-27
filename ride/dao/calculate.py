@@ -39,9 +39,9 @@ for item in dataList:
     
 
 #if params != "":
-#    print(countAddress.invokeScript("3P38c43ME7gAtDWoM9NqA6juRMzjF2Uxz3b","calculateVotes",[{ "type": "string", "value": params[:-1] }],[]))
+    #print(countAddress.invokeScript("3P38c43ME7gAtDWoM9NqA6juRMzjF2Uxz3b","calculateVotes",[{ "type": "string", "value": params[:-1] }],[]))
 
-#print(countAddress.invokeScript("3P38c43ME7gAtDWoM9NqA6juRMzjF2Uxz3b","finalizeVote",[],[]))
+print(countAddress.invokeScript("3P38c43ME7gAtDWoM9NqA6juRMzjF2Uxz3b","finalizeVote",[],[]))
 
 
 
