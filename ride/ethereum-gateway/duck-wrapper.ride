@@ -25,6 +25,7 @@ func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fro
 
 #TODO: get those in the oracle
 let nftCreationAddressGateway = base58'3P8LVqVKhTViMJau96KNir6FhHr4WnfoW57'
+let nftGateway = base58'3PPfDHC6hNqDMxRArJvJRkYfC8y6S3rSnYb'
 
 
 func tryGetInteger(key: String) = {
@@ -148,7 +149,7 @@ func lock() = {
 
 @Callable(i)
 func unlock() = {
-  if (i.caller != Address(nftCreationAddressGateway)) then throw("DU: Not authorized!") else
+  if (i.caller != Address(nftGateway)) then throw("DU: Not authorized!") else
 
   let addressStr = i.caller.toString()
   let stakedNFTId = i.payments[0].assetId.value()  # todo: check amount = 1
