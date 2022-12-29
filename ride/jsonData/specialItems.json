@@ -53,6 +53,32 @@
             "key": "direct_cosmetic_ART-SNOWMAN_growing_percentage",
             "type": "integer",
             "value": 5
+        },
+
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM",
+            "type": "integer",
+            "value": 1000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+        },
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM_max_sales",
+            "type": "integer",
+            "value": 100
+        },
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM_growing_percentage",
+            "type": "integer",
+            "value": 0
         }
     ],
     "fee": 600000,
