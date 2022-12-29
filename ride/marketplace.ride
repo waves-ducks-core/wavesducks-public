@@ -176,7 +176,7 @@ func instantBuy(auctionId: String) = {
         let recordPrice = tryGetInteger(assetId+"_recordPrice")
         let newRecordPrice = max([recordPrice, amount])
         strict burnCall = if isEggSell then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 1000))]) else []
-        [
+        ([
           StringEntry("auction_" + auctionId + "_status", "finished"),
           IntegerEntry("auction_" + auctionId + "_finalPrice", amount),
           IntegerEntry(assetId + "_recordPrice", newRecordPrice),
@@ -184,7 +184,7 @@ func instantBuy(auctionId: String) = {
           DeleteEntry("address_" + auctionOwner + "_auction_" + auctionId + "_lockedNFT"),
           ScriptTransfer(i.originCaller, 1, this.getStringValue("auction_" + auctionId + "_assetId").fromBase58String()),
           ScriptTransfer(addressFromStringValue(auctionOwner), fraction(amount, 1000 - finalFee, 1000), paymentAssetId)
-        ]
+        ],this.getStringValue("auction_" + auctionId + "_assetId").fromBase58String())
       }
     }
   }

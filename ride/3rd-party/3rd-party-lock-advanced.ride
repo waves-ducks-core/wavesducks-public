@@ -256,7 +256,7 @@ func buyBooster() = {
 func buyAccessItemAndLockDuck()={
   let eggPayment = i.payments[0].value()
   let duckPayment = i.payments[1].value()
-  let addressStr = i.caller.toString()
+  let addressStr = i.originCaller.toString()
   if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
   strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).asString()
@@ -267,7 +267,7 @@ func buyAccessItemAndLockDuck()={
 
 @Callable(i)
 func buyAccessItem() = {
-  let addressStr = i.caller.toString()
+  let addressStr = i.originCaller.toString()
   let eggPayment = i.payments[0].value()
   if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
@@ -288,7 +288,7 @@ func buyAccessItemOther(addressOther: String) = {
 
 @Callable(i)
 func lockDuck() = {
-  let addressStr = i.caller.toString()
+  let addressStr = i.originCaller.toString()
   let duckPayment = i.payments[0].value()
   lockDuckInternal(addressStr,duckPayment)
 }

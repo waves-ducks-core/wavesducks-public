@@ -1,0 +1,63 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("AAS: wrong type, expected: String")
+}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getMarketplaceAddress() = Address(tryGetString("static_marketplaceAddress").fromBase58String())
+func getHuntAddress() = Address(tryGetString("static_huntAddress").fromBase58String())
+
+func getAccessItemAssetId() = tryGetStringExternal(getHuntAddress(),"static_accessItemAssetId").fromBase58String()
+func getAccessItemPrice() = tryGetIntegerExternal(getHuntAddress(),"static_accessItemPrice")
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("ACO: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+
+
+@Callable(i)
+func buyAndSendToHunt(auctionId: String) ={
+    strict duckBuying = invoke(getMarketplaceAddress(), "instantBuy", [auctionId], [i.payments[0]]).asString()
+    strict sendToHuntData = invoke(getHuntAddress(), "lockDuck", [], [AttachedPayment(duckBuying.fromBase58String(),1)]).asString()
+    []
+}
+
+@Callable(i)
+func buyDuckAndARAndSendToHunt(auctionId: String) ={
+    strict duckBuying = invoke(getMarketplaceAddress(), "instantBuy", [auctionId], [i.payments[0]]).asString()
+    strict sendToHuntData = invoke(getHuntAddress(), "buyAccessItemAndLockDuck", [], [
+      AttachedPayment(getAccessItemAssetId(),getAccessItemPrice()),
+      AttachedPayment(duckBuying.fromBase58String(),1)
+      ]).asString()
+  
+    []
+}
