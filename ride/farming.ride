@@ -43,7 +43,7 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAdd
 let RefererReward = 5 #percentage
 
 func getRewardPerBlock() = {
-  479 # 0.0684 EGGs per block
+  548 # 0.0684 EGGs per block
 }
 
 func isLocked() = {

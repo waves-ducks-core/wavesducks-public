@@ -47,7 +47,7 @@
         {
             "key": "direct_cosmetic_ART-SNOWMAN_sale",
             "type": "boolean",
-            "value": true
+            "value": false
         },
         {
             "key": "direct_cosmetic_ART-SNOWMAN_growing_percentage",
