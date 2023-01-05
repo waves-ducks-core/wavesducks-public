@@ -48,6 +48,7 @@ func getNFTName() = getString("static_nftName").valueOrErrorMessage("3GNN: There
 #GENERIC SETTINGS READ FROM ORACLE
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getRentingAddress() =  Address(tryGetStringExternal(getOracle(),"static_rentingAddress").fromBase58String())
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getBackendPubKey() = tryGetStringExternal(getOracle(),"static_backendPubKey").fromBase58String()
@@ -70,7 +71,7 @@ func asString(value: Any) = match value {
   case _ => throw("3AS: wrong type, expected: String")
 }
 
-func lockDuckInternal(addressStr:String, pmt: AttachedPayment)={
+func lockDuckInternal(addressStr:String,takeSpotsFrom:String, pmt: AttachedPayment)={
   let assetId = pmt.assetId.value()
   let assetIssuer = assetInfo(assetId).value().issuer
   let tDuckDetails = getDuckDetails(assetId)
@@ -78,9 +79,9 @@ func lockDuckInternal(addressStr:String, pmt: AttachedPayment)={
   let isJackpot = tDuckDetails._2
   # let assetRarity = getAssetFarmingPower(assetId)._2
 
-  let kSpotsBusy = keySpotsBusy(addressStr)
+  let kSpotsBusy = keySpotsBusy(takeSpotsFrom)
   let spotsBusy = tryGetInteger(kSpotsBusy)
-  let kSpotsBought = keySpotsBought(addressStr)
+  let kSpotsBought = keySpotsBought(takeSpotsFrom)
 
   let addressSpotsAvailable = tryGetInteger(kSpotsBought) - spotsBusy
 
@@ -113,7 +114,7 @@ func lockDuckInternal(addressStr:String, pmt: AttachedPayment)={
   }
 }
 
-func initUnlockDuck(assetIdStr: String, addressStr: String)={
+func initUnlockDuck(assetIdStr: String,addressStr: String)={
     let assetId = assetIdStr.fromBase58String()
 
   let tDuckDetails = getDuckDetails(assetId)
@@ -135,14 +136,14 @@ func initUnlockDuck(assetIdStr: String, addressStr: String)={
   }
 }
 
-func unstakeDuck(assetIdStr: String, addressStr: String)={
+func unstakeDuck(assetIdStr: String, addressStr: String,addSpotsTowards: String)={
   let assetId = assetIdStr.fromBase58String()
 
   let tDuckDetails = getDuckDetails(assetId)
   let assetColor = tDuckDetails._1
   let isJackpot = tDuckDetails._2
 
-  let kSpotsBusy = keySpotsBusy(addressStr)
+  let kSpotsBusy = keySpotsBusy(addSpotsTowards)
   let kDuckOwner = keyDuckOwner(assetId)
 
   let remainingForUnlock = tryGetInteger(keyDuckFinishUnlockTime(assetId)) - lastBlock.timestamp
@@ -260,7 +261,7 @@ func buyAccessItemAndLockDuck()={
   if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
   strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).asString()
-  let lockData = lockDuckInternal(addressStr,duckPayment)
+  let lockData = lockDuckInternal(addressStr, addressStr,duckPayment)
 
   (lockData, accessItemData)
 }
@@ -290,8 +291,10 @@ func buyAccessItemOther(addressOther: String) = {
 func lockDuck() = {
   let addressStr = i.originCaller.toString()
   let duckPayment = i.payments[0].value()
-  lockDuckInternal(addressStr,duckPayment)
+  lockDuckInternal(addressStr,addressStr,duckPayment)
 }
+
+
 
 @Callable(i)
 func initUnlock(assetIdStr: String)={
@@ -299,11 +302,28 @@ func initUnlock(assetIdStr: String)={
   initUnlockDuck(assetIdStr, addressStr)
 }
 
+#New methods to support renting person and spots owner to be different
+@Callable(i)
+func lockDuckRenting(addressTakeSpotsFrom: String) = {
+  if i.caller != getRentingAddress() then throw("3UDO: Renting only!") else
+    let addressStr = i.caller.toString()
+    let duckPayment = i.payments[0].value()
+    lockDuckInternal(addressStr,addressTakeSpotsFrom,duckPayment)
+}
+
+#New methods to support renting person and spots owner to be different
+@Callable(i)
+func unlockDuckRenting(assetIdStr: String,addSpotsTowards: String) = {
+  if i.caller != getRentingAddress() then throw("3UDO: Renting only!") else
+    let addressStr = i.caller.toString()
+    unstakeDuck(assetIdStr, addressStr,addSpotsTowards)
+}
+
 @Callable(i)
 func unlockDuckOther(assetIdStr: String)={
   if i.caller != this then throw("3UDO: Admin only!") else
   let ownerKey = tryGetString(keyDuckOwner(assetIdStr.fromBase58String()))
-  unstakeDuck(assetIdStr, ownerKey)
+  unstakeDuck(assetIdStr, ownerKey, ownerKey)
 
 
 }
@@ -319,7 +339,7 @@ func unlockDuck(assetIdStr: String, ts: Int, allowed: Boolean, signature: String
   let text = makeString([assetIdStr,ts.toString(),allowed.toString()],";")
   if (!sigVerify_8Kb(text.toBytes(), signature.fromBase58String(), getBackendPubKey())) then throw("3UD: Invalid proof from backend key"+getBackendPubKey().toBase58String()+" "+text) else 
 
-  unstakeDuck(assetIdStr, addressStr)
+  unstakeDuck(assetIdStr, addressStr, addressStr)
   
 }
         
