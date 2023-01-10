@@ -77,6 +77,73 @@ func putForRent(durationInMs: Int, percentage: Int) = {
   ]
 }
 
+#User need to be able to rent a duck from a user
+#User need to select a game to put it in, in this case it will only be HUNT to start with
+#Duration from renting is started
+#Duck shows for user in te selected game
+#User needs to add a payment as "borg"
+#TODO: CHECK THAT USER ADDED PAYMENT 1$EGG for now
+@Callable(i)
+func rentDuckFromUser(duckId: String, game: String)={
+  #Check if duck that user wants to rent is IDLE status
+  let duckStatus = tryGetString(getDuckStatusKey(duckId))
+  if duckStatus != "IDLE" then throw("You can only rent ducks with IDLE status. Current status: "+duckStatus) else
+  let duckOwner = tryGetString(getDuckOwnerKey(duckId))
+  #Check that owner has free spots
+  let boughtSpots = tryGetIntegerExternal(getHuntAddress(),keySpotsBought(duckOwner))
+  let busySpots = tryGetIntegerExternal(getHuntAddress(),keySpotsBusy(duckOwner))
+  if boughtSpots <= busySpots then throw("RPFR: No free spots!") else 
+  #Check if selected game is HUNT
+  if game != "HUNT" then throw("Unsupported game!") else
+  #Calcute start timestamp
+  let startTs = lastBlock.timestamp
+  #Stake duck in duckHunt
+  strict sendToHuntData = invoke(getHuntAddress(), "lockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
+
+  #Set start timestamp renting
+  #Set status to "RENTED"
+  #Set person who rents the duck
+  [
+    IntegerEntry(getDuckRentstartKey(duckId), startTs),
+    StringEntry(getDuckStatusKey(duckId),"RENTED"),
+    StringEntry(getDuckRentedByKey(duckId), i.caller.toString())
+  ]
+}
+
+#Profits for duck need to be topped up #USE FOLD
+## Profits need to be shared between owner and renter according by %
+## Games payout directly to rent sc?
+@Callable(i)
+func topUpRewards(duckIdAndAmounts: String, amounts: String, assetId: String)={
+  #Split dudckId based on ;
+  let duckIdAndAmountsList = duckIdAndAmounts.split(";")
+  #Loop (fold) through 10 items
+    func handleTopUp(acc: List[ScriptTransfer|IntegerEntry], duckIdAndAmount: String) = {
+      #split amounts based on :
+      let splitArray = split(duckIdAndAmount,":")
+      let duckId = splitArray[0]
+      let amount = parseIntValue(splitArray[1])
+
+      #Get percentage for each duck
+      let duckOwner = tryGetString(getDuckOwnerKey(duckId))
+      let renter = tryGetString(getDuckRentedByKey(duckId))
+      #Split profits between owner and lessor
+      let feePercentage = tryGetInteger(getDuckPercentageKey(duckId))
+      let forOwnerAmount = fraction(amount,feePercentage,100)
+      let forPlayerAmount = amount - forOwnerAmount
+      #Create transfer transactions for the funds
+      [
+        ScriptTransfer(addressFromStringValue(duckOwner), forOwnerAmount*100000,assetId.fromBase58String()),
+        ScriptTransfer(addressFromStringValue(renter), forPlayerAmount*100000,assetId.fromBase58String()),
+        #Store last topupforduck
+        IntegerEntry(getDuckLastPaidKey(duckId),lastBlock.timestamp)
+      ]
+
+    }
+  FOLD<15>(duckIdAndAmountsList, [], handleTopUp)
+
+}
+
 
 #User needs to be able to claim his duck back
 ## 1) After duration is over user need to be able to claim duck back
@@ -87,44 +154,27 @@ func putForRent(durationInMs: Int, percentage: Int) = {
 @Callable(i)
 func claimDuckBack(duckId: String)={
   #Check if duckId is owned by the person
+  let duckOwner = tryGetString(getDuckOwnerKey(duckId))
+  if duckOwner != i.caller.toString() then throw("Please don't try to steal someone else duck!") else
   #Check if duck is IDLE or rented out
+  let duckStatus = tryGetString(getDuckStatusKey(duckId))
+  if duckStatus == "IDLE" then [
+    #Send duck back
+    #Send borg back
+  ] else
+
   #If rented out, check duck last payment
-  #If last payment was within 3000 min, then throw error, else unstake + claimback
+  let lastPayment = getDuckLastPaidKey(duckId)
+  #If last payment was within 4320 min, then throw error, else unstake + claimback
+  let threeDaysInMs = 3 * 24 * 60 * 1000
+  #If timeout is over then rent it out, and pay back the "borg"
   []
 
 }
 
 
-#Profits for duck need to be topped up #USE FOLD
-## Profits need to be shared between owner and renter according by %
-## Games payout directly to rent sc?
-@Callable(i)
-func topUpRewards(duckIds: String, Amounts: String, assetId: String)={
-  #Split dudckId based on ;
-  #plit qmounts based on ;
-  #Loop (fold) through 10 items
-  #Get percentage for each duck
-  #Split profits between owner and lessor
-  #Create transfer transactions for the funds
-  []
 
-}
 
-#User need to be able to rent a duck from a user
-#User need to select a game to put it in, in this case it will only be HUNT to start with
-#Duration from renting is started
-#Duck shows for user in te selected game
-@Callable(i)
-func rentDuckFromUser(duckId: String, game: String)={
-  #Check if duck that user wants to rent is IDLE status
-  #Check that owner has free spots
-  #Check if selected game is HUNT
-  #Set start timestamp renting
-  #Set status to "RENTED"
-  #Stake duck in duckHunt
-  
-  []
-}
 
 
 @Callable(i)
