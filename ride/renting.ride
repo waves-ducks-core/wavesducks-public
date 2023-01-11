@@ -32,7 +32,8 @@ func asInt(value: Any) = match value {
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getHuntAddress() = Address(tryGetString("static_huntAddress").fromBase58String())
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
 
 
 
@@ -159,8 +160,9 @@ func claimDuckBack(duckId: String)={
   #Check if duck is IDLE or rented out
   let duckStatus = tryGetString(getDuckStatusKey(duckId))
   if duckStatus == "IDLE" then [
-    #Send duck back
-    #Send borg back
+      #Send duck back, there is no borg if duck was not rented out
+      ScriptTransfer(i.caller,1,duckId.fromBase58String())
+
   ] else
 
   #If rented out, check duck last payment
@@ -168,7 +170,12 @@ func claimDuckBack(duckId: String)={
   #If last payment was within 4320 min, then throw error, else unstake + claimback
   let threeDaysInMs = 3 * 24 * 60 * 1000
   #If timeout is over then rent it out, and pay back the "borg"
-  []
+  let player = getDuckRentedByKey(duckId)
+  [
+      #Send borg back
+      ScriptTransfer(addressFromStringValue(player),1_0000_0000,getEggAssetId())
+
+  ]
 
 }
 
