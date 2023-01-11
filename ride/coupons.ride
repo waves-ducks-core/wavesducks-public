@@ -110,7 +110,8 @@ func useCoupons(amountTryingToPay:Int)= {
     let user = i.originCaller.toString()
     let keyActive = couponsUserActive(user)
     let availableCoupons = tryGetInteger(keyActive)
-    let leftToPay = if amountTryingToPay > availableCoupons then amountTryingToPay-availableCoupons else 0
+    if availableCoupons < 0 then throw("CUC: Get rekt!") else
+    let leftToPay = if amountTryingToPay > availableCoupons && availableCoupons > 0 then amountTryingToPay-availableCoupons else 0
     let amountPaid = amountTryingToPay-leftToPay
     let availableCouponsLeft = availableCoupons-amountPaid
 
