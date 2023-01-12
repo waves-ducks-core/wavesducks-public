@@ -2,9 +2,9 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("AAS: wrong type, expected: String")
+func asByteVector(value: Any) = match value {
+  case byteVector: ByteVector => byteVector
+  case _ => throw("AAS: wrong type, expected: byteVector")
 }
 
 func tryGetStringExternal(address: Address, key: String) = {
@@ -27,8 +27,8 @@ func tryGetString(key: String) = {
 }
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getMarketplaceAddress() = Address(tryGetString("static_marketplaceAddress").fromBase58String())
-func getHuntAddress() = Address(tryGetString("static_huntAddress").fromBase58String())
+func getMarketplaceAddress() = Address(tryGetStringExternal(getOracle(),"static_marketplaceAddress").fromBase58String())
+func getHuntAddress() = Address(tryGetStringExternal(getOracle(),"statiac_huntAddress").fromBase58String())
 
 func getAccessItemAssetId() = tryGetStringExternal(getHuntAddress(),"static_accessItemAssetId").fromBase58String()
 func getAccessItemPrice() = tryGetIntegerExternal(getHuntAddress(),"static_accessItemPrice")
@@ -46,18 +46,19 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func buyAndSendToHunt(auctionId: String) ={
-    strict duckBuying = invoke(getMarketplaceAddress(), "instantBuy", [auctionId], [i.payments[0]]).asString()
-    strict sendToHuntData = invoke(getHuntAddress(), "lockDuck", [], [AttachedPayment(duckBuying.fromBase58String(),1)]).asString()
-    []
+    strict duckBuying = invoke(getMarketplaceAddress(), "instantBuy", [auctionId], [i.payments[0]]).asByteVector()
+    strict sendToHuntData = invoke(getHuntAddress(), "lockDuck", [], [AttachedPayment(duckBuying,1)])
+    [StringEntry("DEBUG",auctionId+" "+duckBuying.toBase58String())]
 }
 
 @Callable(i)
 func buyDuckAndARAndSendToHunt(auctionId: String) ={
-    strict duckBuying = invoke(getMarketplaceAddress(), "instantBuy", [auctionId], [i.payments[0]]).asString()
+    strict duckBuying = invoke(getMarketplaceAddress(), "instantBuy", [auctionId], [i.payments[0]]).asByteVector()
     strict sendToHuntData = invoke(getHuntAddress(), "buyAccessItemAndLockDuck", [], [
       AttachedPayment(getAccessItemAssetId(),getAccessItemPrice()),
-      AttachedPayment(duckBuying.fromBase58String(),1)
-      ]).asString()
+      AttachedPayment(duckBuying,1)
+      ])
   
-    []
+        [StringEntry("DEBUG",auctionId+" "+duckBuying.toBase58String())]
+
 }
