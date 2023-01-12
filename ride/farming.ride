@@ -208,7 +208,7 @@ func getUnstakeResult(address: String, assetId: ByteVector, color: String, calle
       DeleteEntry("address_"+address+"_asset_"+asset+"_unstaker"),
       IntegerEntry("address_"+address+"_asset_"+asset+"_farmingPower", 0),
       IntegerEntry("address_"+address+"_asset_"+asset+"_lastCheckInterest", getCurrentInterest()),
-      IntegerEntry("address_"+address+"_asset_"+asset+"_withdrawnAmount", tryGetInteger("address_"+address+"_asset_"+asset+"_withdrawnAmount") + withdrawnAmount * scale2),
+      IntegerEntry("address_"+address+"_asset_"+asset+"_withdrawnAmount", tryGetInteger("address_"+address+"_asset_"+asset+"_withdrawnAmount") + rewardAfterSickNess * scale2),
       IntegerEntry("address_"+address+"_asset_"+asset+"_lastCheckFarmedAmount", tryGetInteger("address_"+address+"_asset_"+asset+"_lastCheckFarmedAmount") + assetRewardDelta)
     ]++appendPerches ++ [
             ScriptTransfer(caller, 1, assetId)
