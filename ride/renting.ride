@@ -88,14 +88,14 @@ func putForRent(durationInMs: Int, percentage: Int) = {
 func rentDuckFromUser(duckId: String, game: String)={
   #Check if duck that user wants to rent is IDLE status
   let duckStatus = tryGetString(getDuckStatusKey(duckId))
-  if duckStatus != "IDLE" then throw("You can only rent ducks with IDLE status. Current status: "+duckStatus) else
+  if duckStatus != "IDLE" then throw("RRDFU: You can only rent ducks with IDLE status. Current status: "+duckStatus) else
   let duckOwner = tryGetString(getDuckOwnerKey(duckId))
   #Check that owner has free spots
   let boughtSpots = tryGetIntegerExternal(getHuntAddress(),keySpotsBought(duckOwner))
   let busySpots = tryGetIntegerExternal(getHuntAddress(),keySpotsBusy(duckOwner))
-  if boughtSpots <= busySpots then throw("RPFR: No free spots!") else 
+  if boughtSpots <= busySpots then throw("RRDFU: No free spots!") else 
   #Check if selected game is HUNT
-  if game != "HUNT" then throw("Unsupported game!") else
+  if game != "HUNT" then throw("RRDFU: Unsupported game!") else
   #Calcute start timestamp
   let startTs = lastBlock.timestamp
   #Stake duck in duckHunt
@@ -115,9 +115,7 @@ func rentDuckFromUser(duckId: String, game: String)={
 ## Profits need to be shared between owner and renter according by %
 ## Games payout directly to rent sc?
 @Callable(i)
-func topUpRewards(duckIdAndAmounts: String, amounts: String, assetId: String)={
-  #Split dudckId based on ;
-  let duckIdAndAmountsList = duckIdAndAmounts.split(";")
+func topUpRewards(duckIdAndAmountsList: List[String], amounts: String, assetId: String)={
   #Loop (fold) through 10 items
     func handleTopUp(acc: List[ScriptTransfer|IntegerEntry], duckIdAndAmount: String) = {
       #split amounts based on :
@@ -156,26 +154,72 @@ func topUpRewards(duckIdAndAmounts: String, amounts: String, assetId: String)={
 func claimDuckBack(duckId: String)={
   #Check if duckId is owned by the person
   let duckOwner = tryGetString(getDuckOwnerKey(duckId))
-  if duckOwner != i.caller.toString() then throw("Please don't try to steal someone else duck!") else
+  if duckOwner != i.caller.toString() then throw("RCDB: Please don't try to steal someone else duck!") else
   #Check if duck is IDLE or rented out
   let duckStatus = tryGetString(getDuckStatusKey(duckId))
   if duckStatus == "IDLE" then [
       #Send duck back, there is no borg if duck was not rented out
-      ScriptTransfer(i.caller,1,duckId.fromBase58String())
+      ScriptTransfer(i.caller,1,duckId.fromBase58String()),
+      DeleteEntry(getDuckStatusKey(duckId))
 
   ] else
 
-  #If rented out, check duck last payment
-  let lastPayment = getDuckLastPaidKey(duckId)
-  #If last payment was within 4320 min, then throw error, else unstake + claimback
-  let threeDaysInMs = 3 * 24 * 60 * 1000
-  #If timeout is over then rent it out, and pay back the "borg"
-  let player = getDuckRentedByKey(duckId)
-  [
-      #Send borg back
-      ScriptTransfer(addressFromStringValue(player),1_0000_0000,getEggAssetId())
 
+  #If timeout is over then stop renting out, and pay back the "borg", unstake
+  let startTs = tryGetInteger(getDuckRentstartKey(duckId))
+  if startTs+ tryGetInteger(getDuckDurationKey(duckId)) < lastBlock.timestamp then  
+      let player = tryGetString(getDuckRentedByKey(duckId))
+      #Unstake
+      strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
+      [
+      
+          #Send borg back
+          ScriptTransfer(addressFromStringValue(player),1_0000_0000,getEggAssetId()),
+          #Send duck back
+          ScriptTransfer(addressFromStringValue(duckOwner),1,duckId.fromBase58String()),
+          #Delete status
+          DeleteEntry(getDuckStatusKey(duckId)),
+          DeleteEntry(getDuckRentedByKey(duckId))
+      ]
+  else
+      #If rented out, check duck last payment
+      let lastPayment = tryGetInteger(getDuckLastPaidKey(duckId))
+      #If last payment was within 4320 min, then throw error, else unstake + claimback
+      let threeDaysInMs = 3 * 24 * 60 * 1000
+      if lastPayment+threeDaysInMs < lastBlock.height then
+          strict unstake = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
+          [
+            #Send duck back
+            ScriptTransfer(addressFromStringValue(duckOwner),1,duckId.fromBase58String()),
+            #Delete status
+            DeleteEntry(getDuckStatusKey(duckId)),
+            DeleteEntry(getDuckRentedByKey(duckId))
+
+          ]
+      else throw("RCDB: Renting period is not over and player is active!")
+
+
+}
+
+@Callable(i)
+func sendDuckBack(duckId: String)={
+  #Check if duckid is rented by caller
+  let rentedBy = tryGetString(getDuckRentedByKey(duckId))
+  if rentedBy != i.caller.toString() then throw("RSDB: You didn't rent this duck!") else 
+  let duckOwner = tryGetString(getDuckOwnerKey(duckId))
+
+  strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
+  [
+      
+    #Send borg back
+    ScriptTransfer(i.caller,1_0000_0000,getEggAssetId()),
+    #set duck idle
+    StringEntry(getDuckStatusKey(duckId),"IDLE"),
+    #Delete status
+    DeleteEntry(getDuckStatusKey(duckId)),
+    DeleteEntry(getDuckRentedByKey(duckId))
   ]
+
 
 }
 
