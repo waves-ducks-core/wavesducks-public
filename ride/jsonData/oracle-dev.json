@@ -182,6 +182,12 @@
             "key": "VOTE_DURATION",
             "type": "integer",
             "value": 500
+        },
+        {
+            "key": "static_rentingAddress",
+            "type": "string",
+            "value": "3P8FgFUEvZCD1c6FkZM3zT5eYezocydyxDD"
+            
         }
     ],
     "fee": 600000,
