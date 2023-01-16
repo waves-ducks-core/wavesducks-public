@@ -55,28 +55,28 @@
             "value": 5
         },
         {
-            "key": "direct_cosmetic_ART-HEAL-POTION",
+            "key": "direct_cosmetic_ART-CURE",
             "type": "integer",
             "value": 10000000
         },
 
         {
-            "key": "direct_cosmetic_ART-HEAL-POTION_priceAsset",
+            "key": "direct_cosmetic_ART-CURE_priceAsset",
             "type": "string",
             "value": "HSHP7YmvCX9vtKYfoTfcEd9hr8bnFm1PzoBrQRNy8q1q"
         },
         {
-            "key": "direct_cosmetic_ART-HEAL-POTION_max_sales",
+            "key": "direct_cosmetic_ART-CURE_max_sales",
             "type": "integer",
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-HEAL-POTION_sale",
+            "key": "direct_cosmetic_ART-CURE_sale",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "direct_cosmetic_ART-HEAL-POTION_growing_percentage",
+            "key": "direct_cosmetic_ART-CURE_growing_percentage",
             "type": "integer",
             "value": 0
         }
