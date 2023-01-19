@@ -114,6 +114,7 @@ func useCoupons(amountTryingToPay:Int)= {
     let leftToPay = if amountTryingToPay > availableCoupons && availableCoupons > 0 then amountTryingToPay-availableCoupons else 0
     let amountPaid = amountTryingToPay-leftToPay
     let availableCouponsLeft = availableCoupons-amountPaid
+    if availableCouponsLeft < 0 then throw("CUC: You try to overspend!") else
 
     let keySpend = couponsUserSpend(user)
     let keyOld = couponsUserActiveOld(user)
