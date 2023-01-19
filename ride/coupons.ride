@@ -111,7 +111,7 @@ func useCoupons(amountTryingToPay:Int)= {
     let keyActive = couponsUserActive(user)
     let availableCoupons = tryGetInteger(keyActive)
     if availableCoupons < 0 then throw("CUC: Get rekt!") else
-    let leftToPay = if amountTryingToPay > availableCoupons && availableCoupons > 0 then amountTryingToPay-availableCoupons else 0
+    let leftToPay = if amountTryingToPay > availableCoupons then amountTryingToPay-availableCoupons else 0
     let amountPaid = amountTryingToPay-leftToPay
     let availableCouponsLeft = availableCoupons-amountPaid
     if availableCouponsLeft < 0 then throw("CUC: You try to overspend!") else
