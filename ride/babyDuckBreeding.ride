@@ -29,13 +29,27 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),"static_spiceAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
-let DUCKLINGPRICE = 1_00_0000_0000
 let KGlobalIssuedTimestamp = "global_issued_timestamp"
 
 func keyTotalFeed(ducklingId: String) = {
   "duckling_" + ducklingId + "_feed"
 }
 
+func keyGen(ducklingId: String) = {
+  "duckling_" + ducklingId + "_gen"
+}
+
+func keyFeedNeeded(ducklingId: String) ={
+  "duckling_"+ducklingId+"_feedNeeded"
+}
+
+func getDucklingPrice(ducklingId: String) = {
+  let key = keyFeedNeeded(ducklingId)
+      match getInteger(this, key) {
+        case b:Int => b*1_0000_0000
+        case _ => 80_0000_0000
+    }
+}
 
 func keyDucklingFedLastTimestamp(ducklingId: String) = {
   "duckling_" + ducklingId + "_fedLastTs"
@@ -99,7 +113,7 @@ func calculateNewDucklingLevel(ducklingId: String, paymentAmount: Int) = {
 
   let currentLevel = getCurrentLevelInt(ducklingId)
   let newLevel = (currentLevel+ paymentAmount)
-  if newLevel > DUCKLINGPRICE then throw("BCNDL: You are feeding your duckling to much! Only "+ (DUCKLINGPRICE-currentLevel).toString()+ "needed!") else
+  if newLevel > getDucklingPrice(ducklingId) then throw("BCNDL: You are feeding your duckling to much! Only "+ (getDucklingPrice(ducklingId)-currentLevel).toString()+ "needed!") else
   let result = newLevel.toString()
   (result, ["currentLevel=" + currentLevel.toString(), "newLevel=" + newLevel.toString(), "growth=" + growth.toString(), "lastFedTs=" + lastFedTimestampChecked.toString(), "fedDiff=" + fedDiff.toString()])
 }
@@ -127,7 +141,7 @@ func configureOracle(oracle: String) = {
 }
 
 @Callable(i)
-func issueDuckling(address: String, txIdStr: String) = {
+func issueDuckling(address: String, txIdStr: String, spiceAmount: Int, gen: String) = {
   if i.caller != getBreederAddress() then throw("BID: You can't issue free duckling") else
   let asset = Issue("BABY-11111111-HZ", "", 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
@@ -137,6 +151,8 @@ func issueDuckling(address: String, txIdStr: String) = {
       BooleanEntry("duckling_" + assetId.toBase58String() + "_issuedByFeedCall", i.caller == this),
       IntegerEntry(keyStartPercentage(assetId.toBase58String()), 0),
       StringEntry(keyOwner(assetId.toBase58String()),address ),
+      StringEntry(keyGen(assetId.toBase58String()), gen),
+      IntegerEntry(keyFeedNeeded(assetId.toBase58String()),spiceAmount),
       asset,
       ScriptTransfer(addressFromString(address).value(), 1, assetId)
     ], assetId.toBase58String())
@@ -193,7 +209,9 @@ func turnDucklingIntoDuck() = {
   if (i.payments.size() != 1) then throw("BTDIT: Bad payment attached (asset[s] or amount)") else {
   if (i.payments[0].amount != 1) then throw("BTDIT: Please attach a nft!") else 
     let pmt = assetInfo(i.payments[0].value().assetId.value()).value()
-    if (getCurrentLevelInt(pmt.id.toBase58String()) < DUCKLINGPRICE ) then throw("BTDIT: Duckling is not grown yet..."+getCurrentLevelInt(pmt.id.toBase58String()).toString()+" "+DUCKLINGPRICE.toString()) else
+    let price = getDucklingPrice(pmt.id.toBase58String())
+    if (getCurrentLevelInt(pmt.id.toBase58String()) <  price) 
+    then throw("BTDIT: Duckling is not grown yet..."+getCurrentLevelInt(pmt.id.toBase58String()).toString()+" "+ price.toString()) else
     if (pmt.issuer != this) then throw("BTDIT: Can use only ducklings from this dApp") else {
       let kDucklingGrown = keyDucklingGrown(pmt.id.toBase58String())
       ([

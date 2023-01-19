@@ -325,7 +325,12 @@ func startDuckBreeding() = {
     if ( children1 > 0 || children2 > 0) then throw("One duck can be used for breeding only once in its lifetime.") else 
       let breededStatus = canBeBreeded(firstAssetId.fromBase58String(), secondAssetId.fromBase58String())
       if (breededStatus != "true") then throw("These ducks cannot be breeded: " + breededStatus) else
-        strict ducklingGen = invoke(getBabyDuckBreedingAddress(),"issueDuckling",[i.caller.toString(),i.transactionId.toBase58String()],[]).asString()
+        let parent1Gen = assetInfo(firstPayment.assetId.value()).value().name.split("")
+        let parent2Gen = assetInfo(secondPayment.assetId.value()).value().name.split("")
+        let newG = determineGeneration(parent1Gen[14], parent2Gen[14])
+        
+        let spiceAmount = Generations.indexOf(newG).value()*10
+        strict ducklingGen = invoke(getBabyDuckBreedingAddress(),"issueDuckling",[i.caller.toString(),i.transactionId.toBase58String(), spiceAmount, newG],[]).asString()
         [
           StringEntry(getDuckParentKey(i.transactionId, 1), firstAssetId),
           StringEntry(getDuckParentKey(i.transactionId, 2), secondAssetId),
