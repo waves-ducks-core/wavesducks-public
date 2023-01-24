@@ -42,7 +42,7 @@ let backendPubKey = getStringValue(getOracle(),"static_backendPubKey").fromBase5
 
 let DUCKLINGPRICE = 1_0000_0000
 let percentGrowthPrecision = 1_0000_0000_0000_0000
-let existingDuckPrecision = 1_00_0000_0000_0000
+let oneSpicePrecsion = 1_00_0000_0000_0000
 let KGlobalIssuedTimestamp = "global_issued_timestamp"
 
 
@@ -85,6 +85,10 @@ func keyBlacklisted(ducklingId: String) ={
   "duckling_" + ducklingId + "_blacklisted"
 }
 
+func keyAmountOfAdultDuckling()={
+  "adult_ducklings"
+}
+
 func tryGetInteger(key: String) = {
     let val = match getInteger(this, key) {
         case b:Int => b
@@ -102,8 +106,8 @@ func getBool(key: String) = {
 
 func getDucklingPercentage(ducklingId: String)={
           let percentageDuckling = tryGetInteger(keyStartPercentage(ducklingId))
-          let base = if percentageDuckling != 0 then percentageDuckling else 20 
-          (base * existingDuckPrecision).toBigInt() # duckling from rebirth
+          let base = if percentageDuckling != 0 then percentageDuckling else 5 
+          (base * oneSpicePrecsion).toBigInt() # duckling from rebirth
 }
 
 func getCurrentLevelBigInt(ducklingId: String) = {
@@ -149,7 +153,14 @@ func configureOracle(oracle: String) = {
 
 }
 
-
+@Callable(i)
+func calculateDucklingPriceTwoDecimals()={
+  let x = tryGetInteger(keyAmountOfAdultDuckling())
+  let price = 19 + pow(x,0,8,1,2, HALFUP)
+  ([
+    StringEntry("DEBUG_PRICE", price.toString())
+  ],price)
+}
 
 @Callable(i)
 func buyDuckling()={
@@ -282,14 +293,19 @@ func turnDucklingIntoDuck() = {
     
     let pmt = assetInfo(i.payments[0].value().assetId.value()).value()
     let blackListed = tryGetBoolean(keyBlacklisted(pmt.id.toBase58String()))
-    if blackListed then throw("BTD: Can not convert blacklisted duckling!") else 
-    if (getCurrentLevelBigInt(pmt.id.toBase58String()) < percentGrowthPrecision.toBigInt()) then throw("BTD: Duckling is not grown yet...") else
+    if blackListed then throw("BTD: Can not convert blacklisted duckling!") else
+
+    strict adultPriceCall =  invoke(this,"calculateDucklingPriceTwoDecimals",[],[]).asInt()
+    let normalizedPrice = fraction(adultPriceCall, oneSpicePrecsion ,100)
+    if (getCurrentLevelBigInt(pmt.id.toBase58String()) < normalizedPrice.toBigInt()) then throw("BTD: Duckling is not grown yet...") else
+
     if (pmt.issuer != this) then throw("BTD: Can use only ducklings from this dApp") else {
       strict call = invoke(getIncubatorAddress(), "startDuckHatching", [""], [])
       let kDucklingGrown = keyDucklingGrown(pmt.id.toBase58String())
       [
         BooleanEntry(kDucklingGrown, true),
-        IntegerEntry(KGlobalIssuedTimestamp, lastBlock.timestamp)
+        IntegerEntry(KGlobalIssuedTimestamp, lastBlock.timestamp),
+        IntegerEntry(keyAmountOfAdultDuckling(),tryGetInteger(keyAmountOfAdultDuckling())+1)
       ]
     }
   }
