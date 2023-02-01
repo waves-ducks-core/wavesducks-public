@@ -1,24 +1,23 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let eggsAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-let devAddress = base58'3P44yqcpfhPF2iC1nptm2ZJCTaN7VYhz9og'
-let eggsNeeded = 3 * 1_000_000
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_minimumEggAmount() = "static_minimumEggAmount"
+func staticKey_votingDueTime() = "static_votingDueTime"
+func staticKey_candidates() = "static_candidates"
+
+func key_candidateSum(candidate: String) = "candidate_" + candidate + "_sum"
+func key_spentByUser(participantAddress: String) = "address_" + participantAddress + "_sum"
+func key_payedForCandidateAt(candidate: String, timestamp: String) = "candidate_" + candidate + "_stats_" + timestamp
 
 
-let candidates = [
-  "Rickycoin",
-  "Vova",
-  "MarvinFavis",
-  "BlackTurtle",
-  "TravelDubai",
-  "Rob/Gizmo",
-  "Inal",
-  "Eattheart/Eric",
-  "Anar",
-  "Dasha"
-]
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
 
 func tryGetInteger(key: String) = {
     match getInteger(this, key) {
@@ -27,25 +26,60 @@ func tryGetInteger(key: String) = {
     }
 }
 
+func tryGetString(key: String) = {
+    tryGetStringExternal(this, key)
+}
+
+func tryGetStringList(key: String) = {
+    tryGetString(key).split(";")
+}
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+
+func eggAssetId() = tryGetStringExternal(getOracle(), "static_eggAssetId").fromBase58String()
+
+func minimumEggAmount() = tryGetInteger(staticKey_minimumEggAmount())
+func votingDueTime() = tryGetInteger(staticKey_votingDueTime())
+func candidates() = tryGetStringList(staticKey_candidates())
+
+func candidateSum(candidate: String) = tryGetInteger(key_candidateSum(candidate))
+func spentByUser(participantAddress: String) = tryGetInteger(key_spentByUser(participantAddress))
+func payedForCandidateAt(candidate: String, timestamp: String) = tryGetInteger(key_payedForCandidateAt(candidate, timestamp))
+
+
+
+@Callable(i)
+func setup(oracleAddress: String, candidates: String, votingDueTime: Int, minimumEggAmount: Int) = {
+    if i.caller != this then throw("DOTYS: admin only") else
+    
+    [
+    	IntegerEntry(staticKey_minimumEggAmount(), minimumEggAmount),
+    	IntegerEntry(staticKey_votingDueTime(), votingDueTime),
+    	StringEntry(staticKey_candidates(), candidates),
+    	StringEntry(staticKey_oracleAddress(), oracleAddress)
+    ]
+}
+
 @Callable(i)
 func voteFor(candidate: String) = {
-  let firstPayment = i.payments[0].value()
-  if (lastBlock.timestamp > 1639933200000) then throw("Voting is over!") else
-  if (candidates.containsElement(candidate) == false) then throw("Unknown candidate " + candidate)
-  else if (firstPayment.assetId != eggsAssetId) then 
-    throw("You can attach only EGG tokens with the following asset id: " + eggsAssetId.toBase58String())
-  else if (firstPayment.amount < eggsNeeded)  then 
-    throw("To vote you currently need at least the following amount of EGGlets: " + eggsNeeded.toString())
-  else {
-    let addressKey = "address_" + i.caller.bytes.toBase58String() + "_sum"
-    let currentSpentByUser = tryGetInteger(addressKey)
+  let payment = i.payments[0].value()
+  
+  if (lastBlock.timestamp > votingDueTime()) then throw("Voting is over!") else
+  
+  if (!candidates().containsElement(candidate)) then throw("Unknown candidate " + candidate) else
+  
+  if (payment.assetId != eggAssetId()) then 
+    throw("You can attach only EGG tokens with the following asset id: " + eggAssetId().toBase58String()) else
+  
+  if (payment.amount < minimumEggAmount())  then 
+    throw("To vote you currently need at least the following amount of EGG: " + minimumEggAmount().toString()) else
 
-    let addressCandidate = "candidate_" + candidate + "_sum"
-    let currentCandidateFor = tryGetInteger(addressCandidate)
-    [
-      IntegerEntry(addressCandidate, currentCandidateFor + firstPayment.amount),
-      IntegerEntry(addressKey, currentSpentByUser + firstPayment.amount),
-      IntegerEntry("candidate_" + candidate + "_stats_" + lastBlock.timestamp.toString(), firstPayment.amount)
-    ]
-  }
+	let caller = i.caller.toString()
+	let timestamp = lastBlock.timestamp.toString()
+
+	[
+		IntegerEntry(key_candidateSum(candidate), candidateSum(candidate) + payment.amount),
+		IntegerEntry(key_spentByUser(caller), spentByUser(caller) + payment.amount),
+		IntegerEntry(key_payedForCandidateAt(candidate, timestamp), payment.amount)
+	]
 }
