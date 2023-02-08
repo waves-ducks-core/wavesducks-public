@@ -7,9 +7,74 @@
     "version": 1,
     "data": [
       {
-        "key": "allowed_contracts",
+        "key": "allowed_contract_3P3Gtbq2raMqBkks8tr6sTZH9uHCoVTBfQ8",
         "type": "string",
-        "value": "3P3Gtbq2raMqBkks8tr6sTZH9uHCoVTBfQ8;3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw;3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv;3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb;3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW;3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ;3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg;3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT;3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR;3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD;3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PKdgEHMR7HzTQdXkHqTPRUWtBXhYF1NihS;"
+        "value": "HUNT"
+      },
+      {
+        "key": "allowed_contract_3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw",
+        "type": "string",
+        "value": "WEARABLES"
+      },
+      {
+        "key": "allowed_contract_3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv",
+        "type": "string",
+        "value": "INCUBATOR"
+      },
+      {
+        "key": "allowed_contract_3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb",
+        "type": "string",
+        "value": "BREEDING"
+      },
+      {
+        "key": "allowed_contract_3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW",
+        "type": "string",
+        "value": "FARMING"
+      },
+      {
+        "key": "allowed_contract_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ",
+        "type": "string",
+        "value": "REBIRTH"
+      },
+      {
+        "key": "allowed_contract_3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg",
+        "type": "string",
+        "value": "DUCKLING"
+      },
+      {
+        "key": "allowed_contract_3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT",
+        "type": "string",
+        "value": "WARS"
+      },
+      {
+        "key": "allowed_contract_3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR",
+        "type": "string",
+        "value": "ITEMS"
+      },
+      {
+        "key": "allowed_contract_3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD",
+        "type": "string",
+        "value": "ACCOUNT_BOOSTERS"
+      },
+      {
+        "key": "allowed_contract_3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo",
+        "type": "string",
+        "value": "DH1"
+      },
+      {
+        "key": "allowed_contract_3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL",
+        "type": "string",
+        "value": "DH2"
+      },
+      {
+        "key": "allowed_contract_3PKdgEHMR7HzTQdXkHqTPRUWtBXhYF1NihS",
+        "type": "string",
+        "value": "BREEDING_BABYDUCK"
+      },
+      {
+        "key": "allowed_contract_3P472BzRvamyTwGWD2os6oQNzvy8FYt7uSG",
+        "type": "string",
+        "value": "RECHARGE_CAPACITY"
       },
       {
         "key": "COUPONS_ADDRESS",

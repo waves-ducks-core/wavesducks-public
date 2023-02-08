@@ -345,10 +345,9 @@ func verify() = {
         } else if (inv.dApp.addressFromRecipient() == stakingAddress && containsElement(acceptedCallsStaking,inv.function) ) then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
         }else {
-          let allowedContracts = getStrA(mAccAddr, "allowed_contracts")
-          let allowedContractsList = allowedContracts.split(";")
           let dappToCall = inv.dApp.addressFromRecipient().toString()
-          allowedContractsList.indexOf(dappToCall) != unit
+          let allowedContract = getStrA(mAccAddr, "allowed_contract_"+dappToCall)
+          allowedContract != ""
         }
       }
       case ss: SetScriptTransaction => {
