@@ -1,0 +1,117 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetString(key: String) = {
+    match getString(this, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+
+func getTotalTicketIssued() = "total"
+func getUserByTicketNr(number: Int)= "ticket_"+number.toString()
+func getAssetId() = tryGetString("static_assetId").fromBase58String()
+func getLastTxHeight() = "height"
+
+let price = 1_000000
+let vrfHeightAdded = 10
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
+func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int, offset: Int) = {
+  let randomSeedBlock = blockInfoByHeight(hatchingFinishHeight-1).value()
+  let randomHash = sha256(base58'raffeee' + txId + randomSeedBlock.vrf.value())
+  randomHash.toInt(offset) % variants
+}
+
+@Callable(i)
+func reward()={
+    if i.caller != this then throw("Cheater!")else
+    let amountSold = getIntegerValue(getTotalTicketIssued())
+    #1. 1 Genesis ducks for 100 sold tickets
+    #2. 20 EGG for 250 tickets
+    #3. 1 obstinates for 500 tickets 
+    #4. Jackpot for 1000 tickets 
+    #5. 30 EGG for 2500 tickets
+    #6. Custom Cosmetic artifact for 5000 tickets
+    let tier1 = if amountSold >= 100 then {
+        let numbersRandom = getRandomNumber(amountSold, i.transactionId, getIntegerValue(getLastTxHeight())+vrfHeightAdded, 1)
+        let winner = getStringValue(this,getUserByTicketNr(numbersRandom))
+        [StringEntry(numbersRandom.toString()+"_"+winner,"GENESIS")]
+    } else[]
+    let tier2 = if amountSold >= 250 then {
+        let numbersRandom = getRandomNumber(amountSold, i.transactionId, getIntegerValue(getLastTxHeight())+vrfHeightAdded, 2)
+        let winner = getStringValue(this,getUserByTicketNr(numbersRandom))
+        [StringEntry(numbersRandom.toString()+"_"+winner,"20EGG")]
+    } else[]
+    let tier3 = if amountSold >= 500 then {
+        let numbersRandom = getRandomNumber(amountSold, i.transactionId, getIntegerValue(getLastTxHeight())+vrfHeightAdded, 3)
+        let winner = getStringValue(this,getUserByTicketNr(numbersRandom))
+        [StringEntry(numbersRandom.toString()+"_"+winner,"OBSTI")]
+    } else[]
+    let tier4 = if amountSold >= 1000 then {
+        let numbersRandom = getRandomNumber(amountSold, i.transactionId, getIntegerValue(getLastTxHeight())+vrfHeightAdded, 4)
+        let winner = getStringValue(this,getUserByTicketNr(numbersRandom))
+        [StringEntry(numbersRandom.toString()+"_"+winner,"JU")]
+    } else[]
+    let tier5 = if amountSold >= 25000 then {
+        let numbersRandom = getRandomNumber(amountSold, i.transactionId, getIntegerValue(getLastTxHeight())+vrfHeightAdded, 5)
+        let winner = getStringValue(this,getUserByTicketNr(numbersRandom))
+        [StringEntry(numbersRandom.toString()+"_"+winner,"30EGG")]
+    } else[]
+    let tier6 = if amountSold >= 5000 then {
+        let numbersRandom = getRandomNumber(amountSold, i.transactionId, getIntegerValue(getLastTxHeight())+vrfHeightAdded, 6)
+        let winner = getStringValue(this,getUserByTicketNr(numbersRandom))
+        [StringEntry(numbersRandom.toString()+"_"+winner,"CUSTOM")]
+    } else[]
+
+    tier1++tier2++tier3++tier4++tier5++tier6
+}
+
+@Callable(i)
+func configureOracle(oracle: String, assetId: String) = {
+  if i.caller != this then throw("admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle),
+    StringEntry("static_assetId",assetId)
+  ]
+
+}
+
+
+
+@Callable(i)
+func buyTicket(amount: Int)={
+  let totalTickets = tryGetInteger(getTotalTicketIssued())
+    let user = i.caller.toString()
+    let totalPrice = price * amount
+    let pmtUSDT = i.payments[0].value()
+    if pmtUSDT.assetId.value() != getAssetId() then throw("TBT: Please attach the correct payment!") else
+    if pmtUSDT.amount != totalPrice then throw("TBT: Please attach enough payment!") else
+
+    func handleTopUp(acc: List[StringEntry], index: Int) = {
+      if index <= amount then
+      acc++[
+        StringEntry(getUserByTicketNr(index+totalTickets), i.caller.toString())
+      ]
+      else
+      acc++[]
+    }
+
+    let f = FOLD<15>([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], [], handleTopUp)
+    [
+      IntegerEntry(getTotalTicketIssued(), totalTickets+amount),
+      IntegerEntry(getLastTxHeight(),height)
+      
+    ]++f
+
+}
