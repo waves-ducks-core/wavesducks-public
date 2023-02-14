@@ -157,7 +157,7 @@ func directBuyItem(itemName:String)={
   let basePrice = tryGetCosmeticItemPrice(itemName)
   let grow = tryGetInteger(key_growPercentageCosmetic(itemName))
   let startTs = tryGetInteger(key_startTsCosmetic(itemName))
-  let endTs = tryGetInteger(key_startTsCosmetic(itemName))
+  let endTs = tryGetInteger(key_endTsCosmetic(itemName))
   if startTs != 0 && startTs> lastBlock.timestamp then throw("IDBI: The sale did not start yet!") else
   if endTs != 0 && endTs < lastBlock.timestamp then throw("IDBI: The sale has already finished!") else
   if !tryGetBoolean(key_saleCosmetic(itemName)) then throw("IDBI: Item not for sale anymore"+key_saleCosmetic(itemName)) else
