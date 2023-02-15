@@ -105,6 +105,43 @@
             "key": "direct_cosmetic_ART-BORZOI_growing_percentage",
             "type": "integer",
             "value": 8
+        },
+        
+
+        {
+            "key": "direct_cosmetic_ART-CUPID",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-CUPID_priceAsset",
+            "type": "string",
+            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+        },
+        {
+            "key": "direct_cosmetic_ART-CUPID_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-CUPID_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-CUPID_growing_percentage",
+            "type": "integer",
+            "value": 7
+        },
+        {
+            "key": "direct_cosmetic_ART-CUPID_startTs",
+            "type": "integer",
+            "value": 1676367021000
+        },
+        {
+            "key": "direct_cosmetic_ART-CUPID_endTs",
+            "type": "integer",
+            "value": 1676503821000
         }
     ],
     "fee": 600000,
