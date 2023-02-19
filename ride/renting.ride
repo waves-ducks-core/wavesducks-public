@@ -29,6 +29,7 @@ func asInt(value: Any) = match value {
   case int: Int => int
   case _ => throw("RAI: wrong type, expected: Int")
 }
+let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getHuntAddress() = Address(tryGetString("static_huntAddress").fromBase58String())
@@ -45,6 +46,9 @@ func getDuckDurationKey(duck: String) =  { "duck_"+duck+"_duration"}
 func getDuckRentstartKey(duck: String) =  { "duck_"+duck+"_start_ts"}
 func getDuckPercentageKey(duck: String) =  { "duck_"+duck+"_percentage"}
 func getDuckLastPaidKey(duck: String) =  { "duck_"+duck+"_lastPaid"}
+func getTotalRentedKey(user: String) = {"rented_"+user+"_amount"}
+func getTotalBoughtExtraSpotsKey(user: String) = {"spots_"+user+"_amount"}
+func getRefundableFee(user: String, duck: String) = {"spots_"+user+"_amount"}
 
 #Variables needed from hunt sc
 func keySpotsBought(addressStr: String) = "address_" + addressStr + "_spotsBought"
@@ -86,6 +90,13 @@ func putForRent(durationInMs: Int, percentage: Int) = {
 #TODO: CHECK THAT USER ADDED PAYMENT 1$EGG for now
 @Callable(i)
 func rentDuckFromUser(duckId: String, game: String)={
+  let genes = assetInfo(duckId.fromBase58String()).value().name.split("")
+  let generation = genes[14]
+  let fee = Generations.indexOf(generation).value() * 10000_0000
+  let pmt = i.payments[0].value()
+  if pmt.assetId.value() != getEggAssetId() then throw("TBT: Please attach the correct payment!") else
+  if pmt.amount != fee then throw("RRDFU: Please attach enough refundable deposits!") else
+
   #Check if duck that user wants to rent is IDLE status
   let duckStatus = tryGetString(getDuckStatusKey(duckId))
   if duckStatus != "IDLE" then throw("RRDFU: You can only rent ducks with IDLE status. Current status: "+duckStatus) else
@@ -100,12 +111,19 @@ func rentDuckFromUser(duckId: String, game: String)={
   let startTs = lastBlock.timestamp
   #Stake duck in duckHunt
   strict sendToHuntData = invoke(getHuntAddress(), "lockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
-
+  let amountRentedKey =  getTotalRentedKey(i.caller.toString())
+  let boughtKey = getTotalBoughtExtraSpotsKey(i.caller.toString())
+  let newAmountRented = tryGetInteger(amountRentedKey)+1
+  let totalSpots = tryGetInteger(boughtKey)+5
+  if newAmountRented > totalSpots then throw("RRDFU: You already rented max amount of ducks! "+totalSpots.toString()) else
   #Set start timestamp renting
   #Set status to "RENTED"
   #Set person who rents the duck
   [
     IntegerEntry(getDuckRentstartKey(duckId), startTs),
+    #Store refundable fee
+    IntegerEntry(getRefundableFee(i.caller.toString(),duckId),fee),
+    IntegerEntry(amountRentedKey, newAmountRented),
     StringEntry(getDuckStatusKey(duckId),"RENTED"),
     StringEntry(getDuckRentedByKey(duckId), i.caller.toString())
   ]
@@ -171,10 +189,12 @@ func claimDuckBack(duckId: String)={
       let player = tryGetString(getDuckRentedByKey(duckId))
       #Unstake
       strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
+      let refundFeeKey = getRefundableFee(player,duckId)
       [
       
           #Send borg back
-          ScriptTransfer(addressFromStringValue(player),1_0000_0000,getEggAssetId()),
+          ScriptTransfer(addressFromStringValue(player),tryGetInteger(refundFeeKey),getEggAssetId()),
+          DeleteEntry(refundFeeKey),
           #Send duck back
           ScriptTransfer(addressFromStringValue(duckOwner),1,duckId.fromBase58String()),
           #Delete status
@@ -207,12 +227,14 @@ func sendDuckBack(duckId: String)={
   let rentedBy = tryGetString(getDuckRentedByKey(duckId))
   if rentedBy != i.caller.toString() then throw("RSDB: You didn't rent this duck!") else 
   let duckOwner = tryGetString(getDuckOwnerKey(duckId))
+  let refundFeeKey = getRefundableFee(i.caller.toString(),duckId)
 
   strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
   [
       
     #Send borg back
-    ScriptTransfer(i.caller,1_0000_0000,getEggAssetId()),
+    ScriptTransfer(i.caller,tryGetInteger(refundFeeKey),getEggAssetId()),
+    DeleteEntry(refundFeeKey),
     #set duck idle
     StringEntry(getDuckStatusKey(duckId),"IDLE"),
     #Delete status
