@@ -2,6 +2,29 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_huntAddress() = "static_huntAddress"
+func staticKey_breederAddress() = "static_breederAddress"
+func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_minPercentage() = "static_minPercentage"
+func staticKey_maxPercentage() = "static_maxPercentage"
+
+#variables needed
+func key_getDuckOwner(duck: String) = { "duck_"+duck+"_owner"} 
+func key_getDuckStatus(duck: String) = { "duck_"+duck+"_status"}
+func key_getDuckRentedBy(duck: String) =  { "duck_"+duck+"_rentedBy"}
+func key_getDuckDuration(duck: String) =  { "duck_"+duck+"_duration"}
+func key_getDuckRentstart(duck: String) =  { "duck_"+duck+"_start_ts"}
+func key_getDuckPercentage(duck: String) =  { "duck_"+duck+"_percentage"}
+func key_getDuckLastPaid(duck: String) =  { "duck_"+duck+"_lastPaid"}
+func key_getTotalRented(user: String) = {"rented_"+user+"_amount"}
+func key_getTotalBoughtExtraSpots(user: String) = {"spots_"+user+"_amount"}
+func key_getRefundableFee(user: String, duck: String) = {"spots_"+user+"_amount"}
+
+#Variables needed from hunt sc
+func key_spotsBought(addressStr: String) = "address_" + addressStr + "_spotsBought"
+func key_spotsBusy(addressStr: String) = "address_" + addressStr + "_spotsBusy"
+
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
         case a:String => a
@@ -31,28 +54,36 @@ func asInt(value: Any) = match value {
 }
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getHuntAddress() = Address(tryGetString("static_huntAddress").fromBase58String())
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
 
 
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
 
-#variables needed
-func getDuckOwnerKey(duck: String) = { "duck_"+duck+"_owner"} 
-func getDuckStatusKey(duck: String) = { "duck_"+duck+"_status"}
-func getDuckRentedByKey(duck: String) =  { "duck_"+duck+"_rentedBy"}
-func getDuckDurationKey(duck: String) =  { "duck_"+duck+"_duration"}
-func getDuckRentstartKey(duck: String) =  { "duck_"+duck+"_start_ts"}
-func getDuckPercentageKey(duck: String) =  { "duck_"+duck+"_percentage"}
-func getDuckLastPaidKey(duck: String) =  { "duck_"+duck+"_lastPaid"}
-func getTotalRentedKey(user: String) = {"rented_"+user+"_amount"}
-func getTotalBoughtExtraSpotsKey(user: String) = {"spots_"+user+"_amount"}
-func getRefundableFee(user: String, duck: String) = {"spots_"+user+"_amount"}
 
-#Variables needed from hunt sc
-func keySpotsBought(addressStr: String) = "address_" + addressStr + "_spotsBought"
-func keySpotsBusy(addressStr: String) = "address_" + addressStr + "_spotsBusy"
+func putForRentInternal(i: Invocation,durationInMs: Int, percentage: Int)={
+    #Check for attached duck
+  let firstPayment = i.payments[0].value()
+  let duckId = firstPayment.assetId.value().toBase58String()
+  if (firstPayment.amount != 1) then throw("RPFR: NFT is not attached") else
+  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
+  #Check if owner has free AR-glasses
+  let boughtSpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBought(i.caller.toString()))
+  let busySpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBusy(i.caller.toString()))
+  if boughtSpots <= busySpots then throw("RPFR: No free spots! "+busySpots.toString()+" "+boughtSpots.toString()+" "+i.caller.toString()+" "+getHuntAddress().toString()) else 
+  #Store data on chain
+  #let endTimeStamp = lastBlock.timestamp+durationInMs
+  if (percentage > getIntegerValue(this,staticKey_maxPercentage()) || percentage < getIntegerValue(this,staticKey_minPercentage())) then throw("RPFR: please pick a percentage between "+staticKey_minPercentage()+" and "+staticKey_maxPercentage()+"%") else 
+  [
+    IntegerEntry(key_getDuckPercentage(duckId),percentage),
+    IntegerEntry(key_getDuckDuration(duckId),durationInMs),
+    StringEntry(key_getDuckOwner(duckId),i.caller.toString()),
+    StringEntry(key_getDuckStatus(duckId),"IDLE")
+  ]
+}
+
+
 
 #User needs to be able to stake a duck and put it up for renting
 ## User needs to have at least free AR glass/staked duck. When no free AR glass, the duck can not be rented out by someone for AR.
@@ -62,24 +93,14 @@ func keySpotsBusy(addressStr: String) = "address_" + addressStr + "_spotsBusy"
 ## Store on chain = percentage, duration, owner, status=idle,rented
 @Callable(i)
 func putForRent(durationInMs: Int, percentage: Int) = {
-  #Check for attached duck
-  let firstPayment = i.payments[0].value()
-  let duckId = firstPayment.assetId.value().toBase58String()
-  if (firstPayment.amount != 1) then throw("RPFR: NFT is not attached") else
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-  #Check if owner has free AR-glasses
-  let boughtSpots = tryGetIntegerExternal(getHuntAddress(),keySpotsBought(i.caller.toString()))
-  let busySpots = tryGetIntegerExternal(getHuntAddress(),keySpotsBusy(i.caller.toString()))
-  if boughtSpots <= busySpots then throw("RPFR: No free spots!") else 
-  #Store data on chain
-  #let endTimeStamp = lastBlock.timestamp+durationInMs
-  if (percentage > 80 || percentage < 5) then throw("RPFR: please pick a percentage between 5 and 80%") else 
-  [
-    IntegerEntry(getDuckPercentageKey(duckId),percentage),
-    IntegerEntry(getDuckDurationKey(duckId),durationInMs),
-    StringEntry(getDuckOwnerKey(duckId),i.caller.toString()),
-    StringEntry(getDuckStatusKey(duckId),"IDLE")
-  ]
+  putForRentInternal(i,durationInMs,percentage)
+}
+
+@Callable(i)
+func buyGlassesAndPutForRent(durationInMs: Int, percentage: Int) = {
+  strict buyGlasses = invoke(getHuntAddress(), "buyAccessItem()", [], [i.payments[1]])
+  putForRentInternal(i,durationInMs,percentage)
+
 }
 
 #User need to be able to rent a duck from a user
@@ -98,12 +119,12 @@ func rentDuckFromUser(duckId: String, game: String)={
   if pmt.amount != fee then throw("RRDFU: Please attach enough refundable deposits!") else
 
   #Check if duck that user wants to rent is IDLE status
-  let duckStatus = tryGetString(getDuckStatusKey(duckId))
+  let duckStatus = tryGetString(key_getDuckStatus(duckId))
   if duckStatus != "IDLE" then throw("RRDFU: You can only rent ducks with IDLE status. Current status: "+duckStatus) else
-  let duckOwner = tryGetString(getDuckOwnerKey(duckId))
+  let duckOwner = tryGetString(key_getDuckOwner(duckId))
   #Check that owner has free spots
-  let boughtSpots = tryGetIntegerExternal(getHuntAddress(),keySpotsBought(duckOwner))
-  let busySpots = tryGetIntegerExternal(getHuntAddress(),keySpotsBusy(duckOwner))
+  let boughtSpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBought(duckOwner))
+  let busySpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBusy(duckOwner))
   if boughtSpots <= busySpots then throw("RRDFU: No free spots!") else 
   #Check if selected game is HUNT
   if game != "HUNT" then throw("RRDFU: Unsupported game!") else
@@ -111,8 +132,8 @@ func rentDuckFromUser(duckId: String, game: String)={
   let startTs = lastBlock.timestamp
   #Stake duck in duckHunt
   strict sendToHuntData = invoke(getHuntAddress(), "lockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
-  let amountRentedKey =  getTotalRentedKey(i.caller.toString())
-  let boughtKey = getTotalBoughtExtraSpotsKey(i.caller.toString())
+  let amountRentedKey =  key_getTotalRented(i.caller.toString())
+  let boughtKey = key_getTotalBoughtExtraSpots(i.caller.toString())
   let newAmountRented = tryGetInteger(amountRentedKey)+1
   let totalSpots = tryGetInteger(boughtKey)+5
   if newAmountRented > totalSpots then throw("RRDFU: You already rented max amount of ducks! "+totalSpots.toString()) else
@@ -120,12 +141,12 @@ func rentDuckFromUser(duckId: String, game: String)={
   #Set status to "RENTED"
   #Set person who rents the duck
   [
-    IntegerEntry(getDuckRentstartKey(duckId), startTs),
+    IntegerEntry(key_getDuckRentstart(duckId), startTs),
     #Store refundable fee
-    IntegerEntry(getRefundableFee(i.caller.toString(),duckId),fee),
+    IntegerEntry(key_getRefundableFee(i.caller.toString(),duckId),fee),
     IntegerEntry(amountRentedKey, newAmountRented),
-    StringEntry(getDuckStatusKey(duckId),"RENTED"),
-    StringEntry(getDuckRentedByKey(duckId), i.caller.toString())
+    StringEntry(key_getDuckStatus(duckId),"RENTED"),
+    StringEntry(key_getDuckRentedBy(duckId), i.caller.toString())
   ]
 }
 
@@ -142,10 +163,10 @@ func topUpRewards(duckIdAndAmountsList: List[String], amounts: String, assetId: 
       let amount = parseIntValue(splitArray[1])
 
       #Get percentage for each duck
-      let duckOwner = tryGetString(getDuckOwnerKey(duckId))
-      let renter = tryGetString(getDuckRentedByKey(duckId))
+      let duckOwner = tryGetString(key_getDuckOwner(duckId))
+      let renter = tryGetString(key_getDuckRentedBy(duckId))
       #Split profits between owner and lessor
-      let feePercentage = tryGetInteger(getDuckPercentageKey(duckId))
+      let feePercentage = tryGetInteger(key_getDuckPercentage(duckId))
       let forOwnerAmount = fraction(amount,feePercentage,100)
       let forPlayerAmount = amount - forOwnerAmount
       #Create transfer transactions for the funds
@@ -153,7 +174,7 @@ func topUpRewards(duckIdAndAmountsList: List[String], amounts: String, assetId: 
         ScriptTransfer(addressFromStringValue(duckOwner), forOwnerAmount*100000,assetId.fromBase58String()),
         ScriptTransfer(addressFromStringValue(renter), forPlayerAmount*100000,assetId.fromBase58String()),
         #Store last topupforduck
-        IntegerEntry(getDuckLastPaidKey(duckId),lastBlock.timestamp)
+        IntegerEntry(key_getDuckLastPaid(duckId),lastBlock.timestamp)
       ]
 
     }
@@ -171,25 +192,25 @@ func topUpRewards(duckIdAndAmountsList: List[String], amounts: String, assetId: 
 @Callable(i)
 func claimDuckBack(duckId: String)={
   #Check if duckId is owned by the person
-  let duckOwner = tryGetString(getDuckOwnerKey(duckId))
+  let duckOwner = tryGetString(key_getDuckOwner(duckId))
   if duckOwner != i.caller.toString() then throw("RCDB: Please don't try to steal someone else duck!") else
   #Check if duck is IDLE or rented out
-  let duckStatus = tryGetString(getDuckStatusKey(duckId))
+  let duckStatus = tryGetString(key_getDuckStatus(duckId))
   if duckStatus == "IDLE" then [
       #Send duck back, there is no borg if duck was not rented out
       ScriptTransfer(i.caller,1,duckId.fromBase58String()),
-      DeleteEntry(getDuckStatusKey(duckId))
+      DeleteEntry(key_getDuckStatus(duckId))
 
   ] else
 
 
   #If timeout is over then stop renting out, and pay back the "borg", unstake
-  let startTs = tryGetInteger(getDuckRentstartKey(duckId))
-  if startTs+ tryGetInteger(getDuckDurationKey(duckId)) < lastBlock.timestamp then  
-      let player = tryGetString(getDuckRentedByKey(duckId))
+  let startTs = tryGetInteger(key_getDuckRentstart(duckId))
+  if startTs+ tryGetInteger(key_getDuckDuration(duckId)) < lastBlock.timestamp then  
+      let player = tryGetString(key_getDuckRentedBy(duckId))
       #Unstake
       strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
-      let refundFeeKey = getRefundableFee(player,duckId)
+      let refundFeeKey = key_getRefundableFee(player,duckId)
       [
       
           #Send borg back
@@ -198,12 +219,12 @@ func claimDuckBack(duckId: String)={
           #Send duck back
           ScriptTransfer(addressFromStringValue(duckOwner),1,duckId.fromBase58String()),
           #Delete status
-          DeleteEntry(getDuckStatusKey(duckId)),
-          DeleteEntry(getDuckRentedByKey(duckId))
+          DeleteEntry(key_getDuckStatus(duckId)),
+          DeleteEntry(key_getDuckRentedBy(duckId))
       ]
   else
       #If rented out, check duck last payment
-      let lastPayment = tryGetInteger(getDuckLastPaidKey(duckId))
+      let lastPayment = tryGetInteger(key_getDuckLastPaid(duckId))
       #If last payment was within 4320 min, then throw error, else unstake + claimback
       let threeDaysInMs = 3 * 24 * 60 * 1000
       if lastPayment+threeDaysInMs < lastBlock.height then
@@ -212,8 +233,8 @@ func claimDuckBack(duckId: String)={
             #Send duck back
             ScriptTransfer(addressFromStringValue(duckOwner),1,duckId.fromBase58String()),
             #Delete status
-            DeleteEntry(getDuckStatusKey(duckId)),
-            DeleteEntry(getDuckRentedByKey(duckId))
+            DeleteEntry(key_getDuckStatus(duckId)),
+            DeleteEntry(key_getDuckRentedBy(duckId))
 
           ]
       else throw("RCDB: Renting period is not over and player is active!")
@@ -224,10 +245,10 @@ func claimDuckBack(duckId: String)={
 @Callable(i)
 func sendDuckBack(duckId: String)={
   #Check if duckid is rented by caller
-  let rentedBy = tryGetString(getDuckRentedByKey(duckId))
+  let rentedBy = tryGetString(key_getDuckRentedBy(duckId))
   if rentedBy != i.caller.toString() then throw("RSDB: You didn't rent this duck!") else 
-  let duckOwner = tryGetString(getDuckOwnerKey(duckId))
-  let refundFeeKey = getRefundableFee(i.caller.toString(),duckId)
+  let duckOwner = tryGetString(key_getDuckOwner(duckId))
+  let refundFeeKey = key_getRefundableFee(i.caller.toString(),duckId)
 
   strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
   [
@@ -236,25 +257,24 @@ func sendDuckBack(duckId: String)={
     ScriptTransfer(i.caller,tryGetInteger(refundFeeKey),getEggAssetId()),
     DeleteEntry(refundFeeKey),
     #set duck idle
-    StringEntry(getDuckStatusKey(duckId),"IDLE"),
+    StringEntry(key_getDuckStatus(duckId),"IDLE"),
     #Delete status
-    DeleteEntry(getDuckStatusKey(duckId)),
-    DeleteEntry(getDuckRentedByKey(duckId))
+    DeleteEntry(key_getDuckStatus(duckId)),
+    DeleteEntry(key_getDuckRentedBy(duckId))
   ]
 
 
 }
 
 
-
-
-
-
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("RCO: admin only") else 
   [
-    StringEntry("static_oracleAddress",oracle)
+    StringEntry(staticKey_oracleAddress(),oracle),
+    IntegerEntry(staticKey_minPercentage(),5),
+    IntegerEntry(staticKey_maxPercentage(),80)
+
   ]
 
 }
