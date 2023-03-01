@@ -286,8 +286,9 @@ func init() = {
 }
 
 @Callable(i)
-func buyPerch(color: String, refererAddress: String) = {
+func buyPerch(colorI: String, refererAddress: String) = {
     strict locked =  isLocked()
+    let color = if colorI == "U" then "B" else colorI
     if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
       throw("you need to set color properly")
     } else {
