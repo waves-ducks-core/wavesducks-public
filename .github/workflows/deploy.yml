@@ -14,8 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: npm install waves/surfboard
-        run:  npm install -g @waves/surfboard
+        run: npm install -g @waves/surfboard
       - name: deploy babyduck breeding
-        run: surfboard run deploy-scripts/babyDuckBreeding.deploy.js
+        run: surfboard run deploy-scripts/dapp.deploy.js
         env:
-          BABYDUCKBREEDINGSEED: ${{ secrets.BABYDUCKBREEDINGSEED }}
+          FILE: babyDuckBreeding
+          SEED: ${{ secrets.BABYDUCKBREEDINGSEED }}
