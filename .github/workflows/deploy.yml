@@ -16,4 +16,6 @@ jobs:
       - name: npm install waves/surfboard
         run:  npm install -g @waves/surfboard
       - name: deploy babyduck breeding
-        run: surfboard run deploy-scripts/babyDuckBreeding.deploy.js 
+        run: surfboard run deploy-scripts/babyDuckBreeding.deploy.js
+        env:
+          BABYDUCKBREEDINGSEED: ${{ secrets.BABYDUCKBREEDINGSEED }}
