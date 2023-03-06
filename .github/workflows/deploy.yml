@@ -14,12 +14,13 @@ jobs:
       matrix:
         sc: [baby_Duck_Breeding, baby_Duck]
     runs-on: ubuntu-latest
+    name: ${{ matrix.sc }}
     steps:
       - uses: actions/checkout@v3
       - name: npm install waves/surfboard
         run: npm install -g @waves/surfboard
 
-      - name: deploy babyduck breeding
+      - name: deploy ${{ matrix.sc }}
         run: surfboard run deploy-scripts/dapp.deploy.js
         env:
           FILE: ${{ matrix.sc }}
