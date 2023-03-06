@@ -12,13 +12,13 @@ jobs:
   run-npm-build:
     strategy:
       matrix:
-        sc: [babyDuckBreeding,babyDuck]
+        sc: [baby_Duck_Breeding, baby_Duck]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: npm install waves/surfboard
         run: npm install -g @waves/surfboard
-        
+
       - name: deploy babyduck breeding
         run: surfboard run deploy-scripts/dapp.deploy.js
         env:
