@@ -5,7 +5,7 @@
   // Functions, available in tests, also available here
   const script = compile(file("babyDuckBreeding.ride"));
 
-  const dappSeed = env.BABYDUCKBREEDINGSEED; // Or use seed phrase from surfboard.config.json
+  const dappSeed = process.env.BABYDUCKBREEDINGSEED; // Or use seed phrase from surfboard.config.json
   const ssTx = setScript(
     {
       script,
