@@ -12,7 +12,7 @@ jobs:
   run-npm-build:
     strategy:
       matrix:
-        sc: [babyDuckBreeding]
+        sc: [babyDuckBreeding,babyDuck]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
