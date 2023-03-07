@@ -269,6 +269,17 @@ func unstakeJackpotInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
   
 }
 
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("FCO: admin only") else 
@@ -510,6 +521,9 @@ func healDuck(duckId: String)={
 
 @Verifier(tx)
 func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
     let firstUser = base58'FzsTVRXqD46KW5yj6qGNVrsouvWjpCQvD1446A96iGt4'
     let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
     let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
