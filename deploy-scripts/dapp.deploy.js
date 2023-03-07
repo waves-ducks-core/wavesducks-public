@@ -9,6 +9,7 @@
   const ssTx = setScript(
     {
       script,
+      extraFee: 4000000,
     },
     dappSeed
   );
