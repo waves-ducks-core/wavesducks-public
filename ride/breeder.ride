@@ -341,7 +341,7 @@ func startDuckBreeding() = {
         let parent2Gen = assetInfo(secondPayment.assetId.value()).value().name.split("")
         let newG = determineGeneration(parent1Gen[14], parent2Gen[14])
         
-        let spiceAmount = Generations.indexOf(newG).value()*10
+        let spiceAmount = (Generations.indexOf(newG).value()+1)*10
         strict ducklingGen = invoke(getBabyDuckBreedingAddress(),"issueDuckling",[i.caller.toString(),i.transactionId.toBase58String(), spiceAmount, newG],[]).asString()
         [
           StringEntry(getDuckParentKey(i.transactionId, 1), firstAssetId),
