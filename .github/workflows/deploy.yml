@@ -11,6 +11,7 @@ on:
 jobs:
   run-npm-build:
     strategy:
+      fail-fast: false
       matrix:
         sc:
           [
