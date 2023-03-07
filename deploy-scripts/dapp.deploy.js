@@ -13,7 +13,13 @@
     },
     dappSeed
   );
-  await broadcast(ssTx).catch((e) => console.log(e));
-  await waitForTx(ssTx.id).catch((e) => console.log(e));
+  await broadcast(ssTx).catch((e) => {
+    console.log(e);
+    throw e;
+  });
+  await waitForTx(ssTx.id).catch((e) => {
+    console.log(e);
+    throw e;
+  });
   console.log(ssTx.id);
 })();
