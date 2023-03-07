@@ -26,6 +26,12 @@ jobs:
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
     steps:
+      - name: "check if ${{matrix.sc}} exists"
+        env: 
+            super_secret: ${{ secrets[matrix.sc] }}
+        if: ${{ env.super_secret == '' }}
+        run: 'echo "echo the secret ${{matrix.sc}} has not been made; echo please go to \"settings \> secrets \> actions\" to create it"
+
       - uses: actions/checkout@v3
       - name: npm install waves/surfboard
         run: npm install -g @waves/surfboard
