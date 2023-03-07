@@ -22,7 +22,10 @@ jobs:
         env: 
             super_secret: ${{ secrets[matrix.sc] }}
         if: ${{ env.super_secret == '' }}
-        run: 'echo ${{matrix.sc}} does not exists'
+        run: |
+        'echo ${{matrix.sc}} does not exists'
+        exit 1
+
 
       - uses: actions/checkout@v3
       - name: npm install waves/surfboard
