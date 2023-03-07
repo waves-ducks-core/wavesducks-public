@@ -14,15 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         sc:
-          [
-            breeder,
-            farming,
-            baby_Duck_Breeding,
-            baby_Duck,
-            incubator,
-            renting,
-            burn,
-          ]
+          [breeder,farming,baby_Duck_Breeding,baby_Duck,incubator,renting,burn]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
     steps:
@@ -30,7 +22,7 @@ jobs:
         env: 
             super_secret: ${{ secrets[matrix.sc] }}
         if: ${{ env.super_secret == '' }}
-        run: 'echo "the secret ${{matrix.sc}} has not been made"
+        run: 'echo ${{matrix.sc}} does not exists'
 
       - uses: actions/checkout@v3
       - name: npm install waves/surfboard
