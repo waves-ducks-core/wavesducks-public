@@ -12,7 +12,16 @@ jobs:
   run-npm-build:
     strategy:
       matrix:
-        sc: [breeder, farming, baby_Duck_Breeding, baby_Duck]
+        sc:
+          [
+            breeder,
+            farming,
+            baby_Duck_Breeding,
+            baby_Duck,
+            incubator,
+            renting,
+            burn,
+          ]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
     steps:
