@@ -30,7 +30,7 @@ jobs:
         env: 
             super_secret: ${{ secrets[matrix.sc] }}
         if: ${{ env.super_secret == '' }}
-        run: 'echo "echo the secret ${{matrix.sc}} has not been made; echo please go to \"settings \> secrets \> actions\" to create it"
+        run: 'echo "the secret ${{matrix.sc}} has not been made"
 
       - uses: actions/checkout@v3
       - name: npm install waves/surfboard
