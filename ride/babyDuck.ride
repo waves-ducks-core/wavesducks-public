@@ -160,7 +160,7 @@ func configureOracle(oracle: String) = {
 @Callable(i)
 func calculateDucklingPriceTwoDecimals()={
   let x = tryGetInteger(keyAmountOfAdultDuckling())
-  let price = 19 + pow(x,0,8,1,2, HALFUP)
+  let price = 1900 + pow(x,0,8,1,2, HALFUP)
   ([
     StringEntry("DEBUG_PRICE", price.toString())
   ],price)
