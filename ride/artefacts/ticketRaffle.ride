@@ -72,7 +72,7 @@ func reward()={
         let winner = getStringValue(this,key_userByTicketNr(numbersRandom))
         [IntegerEntry(key_winner(winner, "JU"),numbersRandom)]
     } else[]
-    let tier5 = if amountSold >= 25000 then {
+    let tier5 = if amountSold >= 2500 then {
         let numbersRandom = getRandomNumber(amountSold, i.transactionId, getIntegerValue(key_lastTxHeight())+vrfHeightAdded, 5)
         let winner = getStringValue(this,key_userByTicketNr(numbersRandom))
         [IntegerEntry(key_winner(winner, "30EGG"),numbersRandom)]
