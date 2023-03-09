@@ -4,7 +4,7 @@
 (async () => {
   // Functions, available in tests, also available here
   let [path, ...rest] = process.env.FILE.split("_");
-  rest = rest.join();
+  rest = rest.join("");
   const script = compile(file(path + "/" + rest + ".ride"));
 
   const dappSeed = process.env.SEED; // Or use seed phrase from surfboard.config.json
