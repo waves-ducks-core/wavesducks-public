@@ -28,9 +28,9 @@ func tryGetString(key: String) = {
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getMarketplaceAddress() = Address(tryGetStringExternal(getOracle(),"static_marketplaceAddress").fromBase58String())
-func getHuntAddress() = Address(tryGetStringExternal(getOracle(),"statiac_huntAddress").fromBase58String())
+func getHuntAddress() = Address(tryGetStringExternal(getOracle(),"static_huntAddress").fromBase58String())
 
-func getAccessItemAssetId() = tryGetStringExternal(getHuntAddress(),"static_accessItemAssetId").fromBase58String()
+func getAccessItemAssetId() = valueOrErrorMessage(getString(getHuntAddress(),"static_accessItemAssetId"),"Can not find access item id in "+getHuntAddress().toString()).fromBase58String()
 func getAccessItemPrice() = tryGetIntegerExternal(getHuntAddress(),"static_accessItemPrice")
 
 @Callable(i)
@@ -53,9 +53,12 @@ func buyAndSendToHunt(auctionId: String) ={
 
 @Callable(i)
 func buyDuckAndARAndSendToHunt(auctionId: String) ={
+  if size(i.payments)!=2 then throw("ABD: Please make sure to attach 2 payments!") else
+  if i.payments[1].assetId != getAccessItemAssetId() then throw("ABD: Wrong asset id! "+i.payments[1].assetId.value().toBase58String()+" "+getAccessItemAssetId().toBase58String())else
+  if i.payments[1].amount != getAccessItemPrice() then throw("ABD: Wrong Amount attached! "+i.payments[1].amount.toString()+" "+getAccessItemPrice().toString())else
     strict duckBuying = invoke(getMarketplaceAddress(), "instantBuy", [auctionId], [i.payments[0]]).asByteVector()
     strict sendToHuntData = invoke(getHuntAddress(), "buyAccessItemAndLockDuck", [], [
-      AttachedPayment(getAccessItemAssetId(),getAccessItemPrice()),
+      i.payments[1],
       AttachedPayment(duckBuying,1)
       ])
   

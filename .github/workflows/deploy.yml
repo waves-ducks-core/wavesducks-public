@@ -13,16 +13,24 @@ jobs:
       fail-fast: false
       matrix:
         sc:
-          [breeder,farming,baby_Duck_Breeding,baby_Duck,incubator,renting,burn]
+          [
+            breeder,
+            farming,
+            baby_Duck_Breeding,
+            baby_Duck,
+            incubator,
+            renting,
+            burn,
+            actionWrapper,
+          ]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
     steps:
       - name: "check if ${{matrix.sc}} exists"
-        env: 
-            super_secret: ${{ secrets[matrix.sc] }}
+        env:
+          super_secret: ${{ secrets[matrix.sc] }}
         if: ${{ env.super_secret == '' }}
         run: exit 1
-
 
       - uses: actions/checkout@v3
       - name: npm install waves/surfboard
@@ -33,22 +41,20 @@ jobs:
         env:
           FILE: ${{ matrix.sc }}
           SEED: ${{ secrets[matrix.sc] }}
-          
+
   deploy-subdir:
     strategy:
       fail-fast: false
       matrix:
-        sc:
-          [artefacts_ticket_Raffle]
+        sc: [artefacts_ticket_Raffle, 3rd-party_hunt]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
     steps:
       - name: "check if ${{matrix.sc}} exists"
-        env: 
-            super_secret: ${{ secrets[matrix.sc] }}
+        env:
+          super_secret: ${{ secrets[matrix.sc] }}
         if: ${{ env.super_secret == '' }}
         run: exit 1
-
 
       - uses: actions/checkout@v3
       - name: npm install waves/surfboard

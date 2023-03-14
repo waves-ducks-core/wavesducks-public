@@ -8,6 +8,8 @@ func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_minPercentage() = "static_minPercentage"
 func staticKey_maxPercentage() = "static_maxPercentage"
+func staticKey_accessItemAssetId() = "static_accessItemAssetId"
+func staticKey_accessItemPrice() = "static_accessItemPrice"
 
 #variables needed
 func key_getDuckOwner(duck: String) = { "duck_"+duck+"_owner"} 
@@ -20,6 +22,7 @@ func key_getDuckLastPaid(duck: String) =  { "duck_"+duck+"_lastPaid"}
 func key_getTotalRented(user: String) = {"rented_"+user+"_amount"}
 func key_getTotalBoughtExtraSpots(user: String) = {"spots_"+user+"_amount"}
 func key_getRefundableFee(user: String, duck: String) = {"spots_"+user+"_amount"}
+func key_gamePreFundedItemForDuck(duck:String) = {"access_funded_"+duck}
 
 #Variables needed from hunt sc
 func key_spotsBought(addressStr: String) = "address_" + addressStr + "_spotsBought"
@@ -60,7 +63,8 @@ func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58Str
 func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
-
+func getAccessItemAssetId() = tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId()).fromBase58String()
+func getAccessItemPrice() = tryGetIntegerExternal(getHuntAddress(),"static_accessItemPrice")
 
 func putForRentInternal(i: Invocation,durationInMs: Int, percentage: Int)={
     #Check for attached duck
@@ -125,7 +129,16 @@ func rentDuckFromUser(duckId: String, game: String)={
   #Check that owner has free spots
   let boughtSpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBought(duckOwner))
   let busySpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBusy(duckOwner))
-  if boughtSpots <= busySpots then throw("RRDFU: No free spots!") else 
+  let buySpotIfNeeded = if boughtSpots <= busySpots then 
+  strict call = invoke(getHuntAddress(), "buyAccessItemOther", [duckOwner], [
+    AttachedPayment(
+      tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId()).fromBase58String(),
+      getIntegerValue(getHuntAddress(),staticKey_accessItemPrice())
+    )
+    ])
+  [
+    BooleanEntry(key_gamePreFundedItemForDuck(duckId),true)
+  ] else []
   #Check if selected game is HUNT
   if game != "HUNT" then throw("RRDFU: Unsupported game!") else
   #Calcute start timestamp
@@ -209,7 +222,7 @@ func claimDuckBack(duckId: String)={
   if startTs+ tryGetInteger(key_getDuckDuration(duckId)) < lastBlock.timestamp then  
       let player = tryGetString(key_getDuckRentedBy(duckId))
       #Unstake
-      strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
+      strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckId,duckOwner], [])
       let refundFeeKey = key_getRefundableFee(player,duckId)
       [
       
@@ -228,7 +241,7 @@ func claimDuckBack(duckId: String)={
       #If last payment was within 4320 min, then throw error, else unstake + claimback
       let threeDaysInMs = 3 * 24 * 60 * 1000
       if lastPayment+threeDaysInMs < lastBlock.height then
-          strict unstake = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
+          strict unstake = invoke(getHuntAddress(), "unlockDuckRenting", [duckId,duckOwner], [])
           [
             #Send duck back
             ScriptTransfer(addressFromStringValue(duckOwner),1,duckId.fromBase58String()),
@@ -250,7 +263,7 @@ func sendDuckBack(duckId: String)={
   let duckOwner = tryGetString(key_getDuckOwner(duckId))
   let refundFeeKey = key_getRefundableFee(i.caller.toString(),duckId)
 
-  strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckOwner], [AttachedPayment(duckId.fromBase58String(),1)])
+  strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckId,duckOwner], [])
   [
       
     #Send borg back
