@@ -201,7 +201,7 @@ func topUpRewards(duckIdAndAmountsList: List[String], amounts: String, assetId: 
 ## 2) After duck didnt get rewards for 3000 blocks
 ## User received duck
 ## Status from rented = put false, rentedby who = null
-
+#TODO: make sure that a user did pay his debt to the smart contract
 @Callable(i)
 func claimDuckBack(duckId: String)={
   #Check if duckId is owned by the person
