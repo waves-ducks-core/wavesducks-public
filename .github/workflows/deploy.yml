@@ -21,7 +21,7 @@ jobs:
             incubator,
             renting,
             burn,
-            actionWrapper,
+            action_Wrapper,
           ]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
@@ -46,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sc: [artefacts_ticket_Raffle, 3rd-party_hunt]
+        sc: [artefacts_ticket_Raffle, games_hunt]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
     steps:
