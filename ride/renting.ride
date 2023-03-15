@@ -87,7 +87,13 @@ func putForRentInternal(i: Invocation,durationInMs: Int, percentage: Int)={
   ]
 }
 
+func tryGetBoolean(key: String) = {
+    match getBoolean(key) {
+        case b:Boolean => b
+        case _ => false
+    }
 
+}
 
 #User needs to be able to stake a duck and put it up for renting
 ## User needs to have at least free AR glass/staked duck. When no free AR glass, the duck can not be rented out by someone for AR.
@@ -207,6 +213,12 @@ func claimDuckBack(duckId: String)={
   #Check if duckId is owned by the person
   let duckOwner = tryGetString(key_getDuckOwner(duckId))
   if duckOwner != i.caller.toString() then throw("RCDB: Please don't try to steal someone else duck!") else
+  if tryGetBoolean(key_gamePreFundedItemForDuck(duckId)) 
+  && (
+    i.payments[0].assetId !=  tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId()).fromBase58String() ||
+     i.payments[0].amount != getIntegerValue(getHuntAddress(),staticKey_accessItemPrice())
+     ) then throw("Please make sure to attach enough funds to pay for your previous spot!")
+   else
   #Check if duck is IDLE or rented out
   let duckStatus = tryGetString(key_getDuckStatus(duckId))
   if duckStatus == "IDLE" then [
