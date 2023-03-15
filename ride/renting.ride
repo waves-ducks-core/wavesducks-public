@@ -207,12 +207,12 @@ func topUpRewards(duckIdAndAmountsList: List[String], amounts: String, assetId: 
 ## 2) After duck didnt get rewards for 3000 blocks
 ## User received duck
 ## Status from rented = put false, rentedby who = null
-#TODO: make sure that a user did pay his debt to the smart contract
 @Callable(i)
 func claimDuckBack(duckId: String)={
   #Check if duckId is owned by the person
   let duckOwner = tryGetString(key_getDuckOwner(duckId))
   if duckOwner != i.caller.toString() then throw("RCDB: Please don't try to steal someone else duck!") else
+  #Make sure that a duck owner does pay his debts
   if tryGetBoolean(key_gamePreFundedItemForDuck(duckId)) 
   && (
     i.payments[0].assetId !=  tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId()).fromBase58String() ||
