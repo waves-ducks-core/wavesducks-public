@@ -77,6 +77,11 @@
         "value": "RECHARGE_CAPACITY"
       },
       {
+        "key": "allowed_contract_3PRG9LfW6QZxKdTWB8eEdUia2bH6bHvyx7y",
+        "type": "string",
+        "value": "PUZZLE_POOL"
+      },
+      {
         "key": "COUPONS_ADDRESS",
         "type": "string",
         "value": "3P5W1D4UuSZrNfeZFJZcD5wT2avfbHbzTvS"
