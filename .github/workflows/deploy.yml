@@ -22,6 +22,7 @@ jobs:
             renting,
             burn,
             action_Wrapper,
+            marketplace,
           ]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}

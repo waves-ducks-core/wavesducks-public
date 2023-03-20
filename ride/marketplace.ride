@@ -90,6 +90,17 @@ func getBidCancelResults(auctionId: String, bidId: String) = {
   ]
 }
 
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("MCO: admin only") else 
@@ -176,7 +187,11 @@ func instantBuy(auctionId: String) = {
         let auctionOwner = tryGetString("auction_" + auctionId + "_owner")
         let recordPrice = tryGetInteger(assetId+"_recordPrice")
         let newRecordPrice = max([recordPrice, amount])
-        strict burnCall = if isEggSell then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 1000))]) else []
+              let burnCall = if isEggSell then {
+                strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 1000))])
+                []
+                }else [
+            ScriptTransfer(getFeeAggregatorAddress(),fraction(amount, finalFee, 1000),unit)]
         let caller = if getMarketPlaceProxy() == i.caller then i.originCaller else i.caller
         ([
           StringEntry("auction_" + auctionId + "_status", "finished"),
@@ -186,7 +201,7 @@ func instantBuy(auctionId: String) = {
           DeleteEntry("address_" + auctionOwner + "_auction_" + auctionId + "_lockedNFT"),
           ScriptTransfer(caller, 1, this.getStringValue("auction_" + auctionId + "_assetId").fromBase58String()),
           ScriptTransfer(addressFromStringValue(auctionOwner), fraction(amount, 1000 - finalFee, 1000), paymentAssetId)
-        ],this.getStringValue("auction_" + auctionId + "_assetId").fromBase58String())
+        ]++burnCall,this.getStringValue("auction_" + auctionId + "_assetId").fromBase58String())
       }
     }
   }
@@ -263,7 +278,12 @@ func acceptBid(auctionId: String, bidId: String) = {
     } else {
       let recordPrice = tryGetInteger(assetId+"_recordPrice")
       let newRecordPrice = max([recordPrice, bidAmount])
-      strict burnCall = if isEggSell then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(bidAmount, finalFee, 1000))]) else []
+              let burnCall = if isEggSell then {
+                strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(bidAmount, finalFee, 1000))])
+                []
+                }else [
+            ScriptTransfer(getFeeAggregatorAddress(),fraction(bidAmount, finalFee, 1000),unit)
+        ]
       [
         StringEntry("auction_" + auctionId + "_bid_" + bidId + "_status", "finished"),
         StringEntry("auction_" + auctionId + "_status", "finished"),
@@ -274,7 +294,7 @@ func acceptBid(auctionId: String, bidId: String) = {
         DeleteEntry("address_" + auctionOwner + "_auction_" + auctionId + "_lockedNFT"),
         ScriptTransfer(i.originCaller, fraction(bidAmount, 1000 - finalFee, 1000), paymentAssetId),
         ScriptTransfer(addressFromStringValue(bidAuthor), 1, assetId.fromBase58String())
-      ]
+      ]++burnCall
     }
   }
 }
@@ -282,6 +302,9 @@ func acceptBid(auctionId: String, bidId: String) = {
 
 @Verifier(tx)
 func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
     let firstUser = base58'FzsTVRXqD46KW5yj6qGNVrsouvWjpCQvD1446A96iGt4'
     let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
     let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
