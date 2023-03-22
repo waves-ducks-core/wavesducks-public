@@ -1,0 +1,40 @@
+# This is a basic workflow that is manually triggered
+
+name: Add item to itemstore
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+    inputs:
+        name:
+          description: "give me the item name"
+          default: "ART-PLACEHOLDER"
+          type: string
+        priceAsset:
+          description: "give me the price asset"
+          default: "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+          type: string
+        maxSales:
+          description: "give me the max sales"
+          type: number
+        sale:
+          description: "tell me if the item should be for sale"
+          default: true
+          type: boolean
+        growingPercentage:
+          description: "give me price growth rate"
+          type: number
+        startTs:
+          description: "give me the start ts"
+          type: number
+        endTs:
+          description: "give me the end ts"
+          type: number
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: ${{inputs.name}}
+    steps: 
+      - name: Group of log lines
+        run: |
+            echo "{{inputs.priceAsset}}"
