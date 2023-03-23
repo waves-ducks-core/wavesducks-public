@@ -59,5 +59,5 @@
     console.log(e);
     throw e;
   });
-  console.log(tx.id);
+  console.log("https://wavesexplorer.com/transactions/" + tx.id);
 })();
