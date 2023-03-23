@@ -35,6 +35,9 @@ jobs:
     runs-on: ubuntu-latest
     name: ${{inputs.name}}
     steps:
+      - uses: actions/checkout@v3
+      - name: npm install waves/surfboard
+        run: npm install -g @waves/surfboard
       - name: add items ${{ inputs.name }}
         run: surfboard run deploy-scripts/item.deploy.js
         env:
