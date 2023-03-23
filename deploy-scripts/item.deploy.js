@@ -59,5 +59,5 @@
     console.log(e);
     throw e;
   });
-  console.log(ssTx.id);
+  console.log(tx.id);
 })();
