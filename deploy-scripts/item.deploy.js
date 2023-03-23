@@ -11,6 +11,8 @@
   const GROWINGPERCENTAGE = process.env.GROWINGPERCENTAGE;
   const STARTTS = process.env.STARTTS;
   const ENDTS = process.env.ENDTS;
+  const STARTPRICE = process.env.STARTPRICE;
+  const PROD = process.env.PROD;
   console.log(
     NAME,
     PRICEASSET,
@@ -20,21 +22,40 @@
     STARTTS,
     ENDTS
   );
-  // const dappSeed = process.env.SEED; // Or use seed phrase from surfboard.config.json
-  // const ssTx = setScript(
-  //   {
-  //     script,
-  //     additionalFee: 400000,
-  //   },
-  //   dappSeed
-  // );
-  // await broadcast(ssTx).catch((e) => {
-  //   console.log(e);
-  //   throw e;
-  // });
-  // await waitForTx(ssTx.id).catch((e) => {
-  //   console.log(e);
-  //   throw e;
-  // });
-  // console.log(ssTx.id);
+  const dapp = PROD
+    ? "3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR"
+    : "3PAi1ePLQrYrY3jj9omBtT6isMkZsapbmks";
+
+  const signerSeed = process.env.SEED; // Or use seed phrase from surfboard.config.json
+  const tx = invokeScript(
+    {
+      version: 1,
+      dApp: address(dapp),
+      call: {
+        function: "addItemToStore",
+        args: [
+          { type: "integer", value: STARTPRICE },
+          { type: "string", value: ITEM },
+          { type: "integer", value: MAXSALES },
+          { type: "boolean", value: SALE },
+          { type: "string", value: MAXSALES },
+          { type: "integer", value: GROWINGPERCENTAGE },
+          { type: "integer", value: STARTTS },
+          { type: "integer", value: ENDTS },
+        ],
+      },
+      payment: null,
+    },
+    signerSeed
+  );
+  console.log(tx);
+  await broadcast(tx).catch((e) => {
+    console.log(e);
+    throw e;
+  });
+  await waitForTx(tx.id).catch((e) => {
+    console.log(e);
+    throw e;
+  });
+  console.log(ssTx.id);
 })();

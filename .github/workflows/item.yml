@@ -33,6 +33,10 @@ on:
       startPrice:
         description: "give me the start price"
         type: number
+      prod:
+        description: "tell me if i should use prod env"
+        default: false
+        type: boolean
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -52,3 +56,4 @@ jobs:
           STARTTS: ${{inputs.startTs}}
           ENDTS: ${{inputs.endTs}}
           STARTPRICE: ${{inputs.startPrice}}
+          PROD: ${{inputs.prod}}
