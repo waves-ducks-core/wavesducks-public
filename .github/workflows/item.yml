@@ -42,6 +42,6 @@ jobs:
           PRICEASSET: ${{ inputs.priceAsset }}
           MAXSALES: ${{inputs.maxSales}}
           SALE: ${{inputs.sale}}
-          GROWINGPERCENTAGE: ${{growingPercentage}}
-          STARTTS: ${{startTs}}
-          ENDTS: ${{endTs}}
+          GROWINGPERCENTAGE: ${{inputs.growingPercentage}}
+          STARTTS: ${{inputs.startTs}}
+          ENDTS: ${{inputs.endTs}}
