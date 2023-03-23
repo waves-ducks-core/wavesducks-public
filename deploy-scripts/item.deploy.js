@@ -22,7 +22,7 @@
     STARTTS,
     ENDTS
   );
-  const dapp = PROD
+  const dapp = Boolean(PROD)
     ? "3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR"
     : "3PAi1ePLQrYrY3jj9omBtT6isMkZsapbmks";
 
