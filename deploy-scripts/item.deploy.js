@@ -40,7 +40,7 @@
           { type: "string", value: NAME },
           { type: "integer", value: Number(MAXSALES) },
           { type: "boolean", value: SALE == "true" },
-          { type: "integer", value: Number(MAXSALES) },
+          { type: "string", value: PRICEASSET },
           { type: "integer", value: Number(GROWINGPERCENTAGE) },
           { type: "integer", value: Number(STARTTS) },
           { type: "integer", value: Number(ENDTS) },
