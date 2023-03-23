@@ -21,7 +21,7 @@ func key_getDuckPercentage(duck: String) =  { "duck_"+duck+"_percentage"}
 func key_getDuckLastPaid(duck: String) =  { "duck_"+duck+"_lastPaid"}
 func key_getTotalRented(user: String) = {"rented_"+user+"_amount"}
 func key_getTotalBoughtExtraSpots(user: String) = {"spots_"+user+"_amount"}
-func key_getRefundableFee(user: String, duck: String) = {"spots_"+user+"_amount"}
+func key_getRefundableFee(user: String, duck: String) = {"refund_"+user+"_"+duck+"_amount"}
 func key_gamePreFundedItemForDuck(duck:String) = {"access_funded_"+duck}
 
 #Variables needed from hunt sc
