@@ -20,11 +20,13 @@
     SALE,
     GROWINGPERCENTAGE,
     STARTTS,
-    ENDTS
+    ENDTS,
+    Boolean(PROD)
   );
-  const dapp = Boolean(PROD)
-    ? "3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR"
-    : "3PAi1ePLQrYrY3jj9omBtT6isMkZsapbmks";
+  const dapp =
+    Boolean(PROD) == true
+      ? "3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR"
+      : "3PAi1ePLQrYrY3jj9omBtT6isMkZsapbmks";
 
   const signerSeed = process.env.SEED; // Or use seed phrase from surfboard.config.json
   const tx = invokeScript(
