@@ -39,7 +39,7 @@
           { type: "integer", value: Number(STARTPRICE) },
           { type: "string", value: NAME },
           { type: "integer", value: Number(MAXSALES) },
-          { type: "boolean", value: SALE },
+          { type: "boolean", value: SALE == "true" },
           { type: "string", value: MAXSALES },
           { type: "integer", value: GROWINGPERCENTAGE },
           { type: "integer", value: Number(STARTTS) },
