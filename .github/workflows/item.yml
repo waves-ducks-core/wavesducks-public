@@ -62,4 +62,4 @@ jobs:
           ENDTS: ${{inputs.endTs}}
           STARTPRICE: ${{inputs.startPrice}}
           PROD: ${{inputs.prod}}
-          SEED: ${{ secrets[PIPELINE_USER] }}
+          SEED: ${{ secrets['PIPELINE_USER'] }}
