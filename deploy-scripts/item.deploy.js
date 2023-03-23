@@ -21,10 +21,10 @@
     GROWINGPERCENTAGE,
     STARTTS,
     ENDTS,
-    Boolean(PROD)
+    PROD
   );
   const dapp =
-    Boolean(PROD) == true
+    PROD == "true"
       ? "3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR"
       : "3PAi1ePLQrYrY3jj9omBtT6isMkZsapbmks";
 
@@ -39,7 +39,7 @@
           { type: "integer", value: Number(STARTPRICE) },
           { type: "string", value: NAME },
           { type: "integer", value: Number(MAXSALES) },
-          { type: "boolean", value: Boolean(SALE) },
+          { type: "boolean", value: SALE },
           { type: "string", value: MAXSALES },
           { type: "integer", value: GROWINGPERCENTAGE },
           { type: "integer", value: Number(STARTTS) },
