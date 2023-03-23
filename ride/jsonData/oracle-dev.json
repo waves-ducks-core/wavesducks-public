@@ -10,7 +10,7 @@
         {
             "key": "static_eggAssetId",
             "type": "string",
-            "value": "3v7zGkeHS6KrsvmTRzEzvCxm5cdzkCtM7z5cM6efcjCB"
+            "value": "ByDNZ4FQnD27uMmPqmqMNBiK86oEBoL2w3Us2z8cz1wF"
         },
         {
             "key": "static_incubatorAddress",
@@ -188,7 +188,15 @@
             "type": "string",
             "value": "3P8FgFUEvZCD1c6FkZM3zT5eYezocydyxDD"
             
+        },
+        {
+            "key": "static_pipelineUser",
+            "type": "string",
+            "value": "3P5NZnLvHbtcVe4oFjNbTGQUkRpGCaZkd4e"
+            
         }
+
+        
     ],
     "fee": 600000,
     "feeAssetId": "WAVES",

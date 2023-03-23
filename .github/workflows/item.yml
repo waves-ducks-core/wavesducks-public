@@ -30,6 +30,9 @@ on:
       endTs:
         description: "give me the end ts"
         type: number
+      startPrice:
+        description: "give me the start price"
+        type: number
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -48,3 +51,4 @@ jobs:
           GROWINGPERCENTAGE: ${{inputs.growingPercentage}}
           STARTTS: ${{inputs.startTs}}
           ENDTS: ${{inputs.endTs}}
+          STARTPRICE: ${{inputs.startPrice}}

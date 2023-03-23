@@ -7,6 +7,7 @@ func staticKey_breederAddress() ="static_breederAddress"
 func staticKey_eggAssetId() ="static_eggAssetId"
 func staticKey_trustedContracts() ="static_trustedContracts"
 func staticKey_rebirthAddress() ="static_rebirthAddress"
+func staticKey_pipelineUser() ="static_pipelineUser"
 
 #TODO: make sure to allow coupons contract when we release new items
 func key_artefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
@@ -151,6 +152,9 @@ func itemIsInCoolDown(artefactName: String, artefactId: String)={
   else true
 }
 
+func isTestEnv()={
+  tryGetBoolean("TESTENV")
+}
 
 @Callable(i)
 func directBuyItem(itemName:String)={
@@ -421,6 +425,23 @@ func buyArtefact() = {
   }
 }
 
+
+@Callable(i)
+func addItemToStore(price: Int, item: String,maxSales: Int, sale:Boolean,pricesset:String,growthPercentage: Int,startTs:Int,endTs: Int)={
+if i.caller != addressFromStringValue(tryGetStringExternal(getOracle(),staticKey_pipelineUser())) then throw("IAITS: Only for trusted users!") else
+
+[
+  IntegerEntry(key_priceCosmetic(item),price),
+  IntegerEntry(key_maxSalesCosmetic(item),maxSales),
+  BooleanEntry(key_saleCosmetic(item),sale),
+  StringEntry(key_priceAssetCosmetic(item),pricesset),
+  IntegerEntry(key_growPercentageCosmetic(item),growthPercentage),
+  IntegerEntry(key_startTsCosmetic(item),startTs),
+  IntegerEntry(key_endTsCosmetic(item),endTs)
+]
+
+}
+
 @Callable(i)
 func setGlobalArtAmount(newAmount: Int) = {
   if (i.caller == this || i.caller == Address(devAddress)) then {
@@ -453,6 +474,31 @@ func claimArtefact(boxIdStr: String) = {
 }
 
 @Verifier(tx)
-func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'FzsTVRXqD46KW5yj6qGNVrsouvWjpCQvD1446A96iGt4'
+    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
+    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 2
+    }
+}
 
 

@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sc: [artefacts_ticket_Raffle, games_hunt]
+        sc: [artefacts_ticket_Raffle, games_hunt, artefacts_items]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
     steps:

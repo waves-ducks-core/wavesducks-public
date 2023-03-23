@@ -171,6 +171,12 @@
             "key": "static_maxProxyDiff",
             "type": "integer",
             "value": 50
+        },
+        {
+            "key": "static_pipelineUser",
+            "type": "string",
+            "value": "3P5NZnLvHbtcVe4oFjNbTGQUkRpGCaZkd4e"
+            
         }
 
         
