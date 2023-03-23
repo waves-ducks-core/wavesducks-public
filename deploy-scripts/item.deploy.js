@@ -35,7 +35,7 @@
         function: "addItemToStore",
         args: [
           { type: "integer", value: STARTPRICE },
-          { type: "string", value: ITEM },
+          { type: "string", value: NAME },
           { type: "integer", value: MAXSALES },
           { type: "boolean", value: SALE },
           { type: "string", value: MAXSALES },

@@ -16,6 +16,7 @@ on:
         type: string
       maxSales:
         description: "give me the max sales"
+        default: 0
         type: number
       sale:
         description: "tell me if the item should be for sale"
@@ -23,15 +24,19 @@ on:
         type: boolean
       growingPercentage:
         description: "give me price growth rate"
+        default: 0
         type: number
       startTs:
         description: "give me the start ts"
+        default: 0
         type: number
       endTs:
         description: "give me the end ts"
+        default: 0
         type: number
       startPrice:
         description: "give me the start price"
+        default: 100000000
         type: number
       prod:
         description: "tell me if i should use prod env"
