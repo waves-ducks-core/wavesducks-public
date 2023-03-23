@@ -34,21 +34,21 @@
       call: {
         function: "addItemToStore",
         args: [
-          { type: "integer", value: STARTPRICE },
+          { type: "integer", value: Number(STARTPRICE) },
           { type: "string", value: NAME },
-          { type: "integer", value: MAXSALES },
-          { type: "boolean", value: SALE },
+          { type: "integer", value: Number(MAXSALES) },
+          { type: "boolean", value: Boolean(SALE) },
           { type: "string", value: MAXSALES },
           { type: "integer", value: GROWINGPERCENTAGE },
-          { type: "integer", value: STARTTS },
-          { type: "integer", value: ENDTS },
+          { type: "integer", value: Number(STARTTS) },
+          { type: "integer", value: Number(ENDTS) },
         ],
       },
       payment: null,
     },
     signerSeed
   );
-  console.log(tx);
+  console.log(JSON.stringify(tx));
   await broadcast(tx).catch((e) => {
     console.log(e);
     throw e;
