@@ -30,7 +30,7 @@
   const tx = invokeScript(
     {
       version: 1,
-      dApp: address(dapp),
+      dApp: dapp,
       call: {
         function: "addItemToStore",
         args: [
