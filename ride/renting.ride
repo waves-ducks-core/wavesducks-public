@@ -136,7 +136,10 @@ func rentDuckFromUser(duckId: String, game: String)={
   #Check that owner has free spots
   let boughtSpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBought(duckOwner))
   let busySpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBusy(duckOwner))
-  if boughtSpots <= busySpots then throw("Trying to buy spots "+staticKey_accessItemPrice()+" "+staticKey_accessItemAssetId()+" "+getHuntAddress().toString()+" "+tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId())) else
+  if boughtSpots <= busySpots then throw("Trying to buy spots "+staticKey_accessItemPrice()+
+  " "+boughtSpots.toString()+" "+busySpots.toString()+
+  " "+staticKey_accessItemAssetId()+" "+getHuntAddress().toString()+
+  " "+tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId())) else
   # let buySpotIfNeeded = if boughtSpots <= busySpots then 
   # strict call = invoke(getHuntAddress(), "buyAccessItemOther", [duckOwner], [
   #   AttachedPayment(
