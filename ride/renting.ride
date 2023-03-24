@@ -10,6 +10,7 @@ func staticKey_minPercentage() = "static_minPercentage"
 func staticKey_maxPercentage() = "static_maxPercentage"
 func staticKey_accessItemAssetId() = "static_accessItemAssetId"
 func staticKey_accessItemPrice() = "static_accessItemPrice"
+func staticKey_depositSteps() = "static_depositSteps"
 
 #variables needed
 func key_getDuckOwner(duck: String) = { "duck_"+duck+"_owner"} 
@@ -64,7 +65,7 @@ func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntA
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
 func getAccessItemAssetId() = tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId()).fromBase58String()
-func getAccessItemPrice() = tryGetIntegerExternal(getHuntAddress(),"static_accessItemPrice")
+func getAccessItemPrice() = tryGetIntegerExternal(getHuntAddress(),staticKey_accessItemPrice())
 
 func putForRentInternal(i: Invocation,durationInMs: Int, percentage: Int)={
     #Check for attached duck
@@ -123,7 +124,7 @@ func buyGlassesAndPutForRent(durationInMs: Int, percentage: Int) = {
 func rentDuckFromUser(duckId: String, game: String)={
   let genes = assetInfo(duckId.fromBase58String()).value().name.split("")
   let generation = genes[14]
-  let fee = (Generations.indexOf(generation).value()+1) * 5000_0000
+  let fee = (Generations.indexOf(generation).value()+1) * getIntegerValue(staticKey_depositSteps())
   let pmt = i.payments[0].value()
   if pmt.assetId.value() != getEggAssetId() then throw("TBT: Please attach the correct payment!") else
   if pmt.amount != fee then throw("RRDFU: Please attach enough refundable deposits!") else
@@ -135,16 +136,17 @@ func rentDuckFromUser(duckId: String, game: String)={
   #Check that owner has free spots
   let boughtSpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBought(duckOwner))
   let busySpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBusy(duckOwner))
-  let buySpotIfNeeded = if boughtSpots <= busySpots then 
-  strict call = invoke(getHuntAddress(), "buyAccessItemOther", [duckOwner], [
-    AttachedPayment(
-      tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId()).fromBase58String(),
-      getIntegerValue(getHuntAddress(),staticKey_accessItemPrice())
-    )
-    ])
-  [
-    BooleanEntry(key_gamePreFundedItemForDuck(duckId),true)
-  ] else []
+  if boughtSpots <= busySpots then throw("Trying to buy spots "+staticKey_accessItemPrice()+" "+staticKey_accessItemAssetId()+" "+getHuntAddress().toString()+" "+tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId())) else
+  # let buySpotIfNeeded = if boughtSpots <= busySpots then 
+  # strict call = invoke(getHuntAddress(), "buyAccessItemOther", [duckOwner], [
+  #   AttachedPayment(
+  #     tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId()).fromBase58String(),
+  #     getIntegerValue(getHuntAddress(),staticKey_accessItemPrice())
+  #   )
+  #   ])
+  # [
+  #   BooleanEntry(key_gamePreFundedItemForDuck(duckId),true)
+  # ] else []
   #Check if selected game is HUNT
   if game != "HUNT" then throw("RRDFU: Unsupported game!") else
   #Calcute start timestamp
@@ -298,7 +300,8 @@ func configureOracle(oracle: String) = {
   [
     StringEntry(staticKey_oracleAddress(),oracle),
     IntegerEntry(staticKey_minPercentage(),5),
-    IntegerEntry(staticKey_maxPercentage(),80)
+    IntegerEntry(staticKey_maxPercentage(),80),
+    IntegerEntry(staticKey_depositSteps(),50000000)
 
   ]
 
