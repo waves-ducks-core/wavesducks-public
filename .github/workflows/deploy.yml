@@ -24,6 +24,7 @@ jobs:
             action_Wrapper,
             marketplace,
             ref_Contract,
+            rebirth,
           ]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}

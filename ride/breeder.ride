@@ -37,6 +37,7 @@ func getBabyDuckBreedingAddress() =  Address(tryGetStringExternal(getOracle(),"s
 func getDucklingPrice() = tryGetIntegerExternal(getOracle(),"static_ducklingPrice")
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
@@ -309,7 +310,7 @@ func createDuckSpecialGenes(address: ByteVector, duckGen: String, children: Int)
  }
 
 @Callable(i)
-func startDuckBreeding() = {
+func startDuckBreeding(refererAddress: String) = {
 
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
@@ -327,7 +328,11 @@ func startDuckBreeding() = {
 
     if (thirdPayment.assetId != getEggAssetId()) then throw("BSDB: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
     if (thirdPayment.amount != leftToPay) then throw("BSDB: To breed you currently need the following amount of EGGlets: " + leftToPay.toString()) else
-    strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay)])
+    let refererRewardForPerch = fraction(leftToPay, 5, 100)
+        strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay-refererRewardForPerch)])
         
         leftToPay
     }else 0

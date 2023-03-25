@@ -34,6 +34,7 @@ func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_coup
 func getMetaraceAddress() = Address(tryGetStringExternal(getOracle(),"static_metaRaceAddress").fromBase58String())
 func getHuntAddress() = Address(tryGetStringExternal(getOracle(),"static_huntAddress").fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 
 let PHOENIXBASEOPTIONS = 1000  # base chance to get a phoenix: 1 / (1000 - 1000/2 * rarity)
 
@@ -125,6 +126,18 @@ func asInt(value: Any) = match value {
   case _ => throw("RAI: wrong type, expected: Int")
 }
 
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
+
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("RCU: admin only") else 
@@ -135,7 +148,7 @@ func configureOracle(oracle: String) = {
 }
 
 @Callable(i)
-func initRebirth() = {
+func initRebirth(refererAddress: String) = {
   let pmt = i.payments[0]
   let assetId = pmt.assetId.value()
   let initTx = i.transactionId.toBase58String()
@@ -150,8 +163,13 @@ func initRebirth() = {
     let feePayment = i.payments[1].value()
     if (feePayment.assetId != getEggAssetId()) then throw("You need to attach EGG tokens as fee") else 
     if (feePayment.amount < leftToPay)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + leftToPay.toString()) else
-    strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay)]) 
-    leftToPay
+        let refererRewardForPerch = fraction(leftToPay, 5, 100)
+        strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay-refererRewardForPerch)])
+        
+        leftToPay
   } else 0
    
   let (gen, rarity) = getAssetFarmingPower(assetId)
@@ -238,6 +256,9 @@ func finishRebirth(initTx: String) = {
 
 @Verifier(tx)
 func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
     let firstUser = base58'FzsTVRXqD46KW5yj6qGNVrsouvWjpCQvD1446A96iGt4'
     let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
     let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'

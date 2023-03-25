@@ -37,6 +37,7 @@ func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_reb
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 
 let backendPubKey = getStringValue(getOracle(),"static_backendPubKey").fromBase58String()
 
@@ -167,7 +168,7 @@ func calculateDucklingPriceTwoDecimals()={
 }
 
 @Callable(i)
-func buyDuckling()={
+func buyDuckling(refererAddress: String)={
   let exactPrice = getDucklingPrice()
   if exactPrice < 50000000 then throw("BBD: Invalid price from oracle!") else
   strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
@@ -178,7 +179,11 @@ func buyDuckling()={
 
     if (firstPayment.assetId != getEggAssetId()) then throw("BBD: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
     if (firstPayment.amount != leftToPay) then throw("BBD: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()) else
-    strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay)])
+    let refererRewardForPerch = fraction(leftToPay, 5, 100)
+        strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay-refererRewardForPerch)])
         
         leftToPay
     }else 0
