@@ -23,6 +23,7 @@ jobs:
             burn,
             action_Wrapper,
             marketplace,
+            ref_Contract,
           ]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}

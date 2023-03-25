@@ -2,13 +2,21 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let eggsAssetId = base58'JCGDtrVy64cCJ1wCKfCaiNQMnyYwii71TbE5QeAHfxgF'
-let incubatorAddress = base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-let farmingAddress = base58'3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW'
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_breederAddress() = "static_breederAddress"
+func staticKey_babyDuckAddress() = "static_babyDuckAddress"
+func staticKey_farmingAddress() = "static_farmingAddress"
+func staticKey_cfMasterAddress() = "static_cfMasterAddress"
+func staticKey_huntAddress()= "static_huntAddress"
+func staticKey_rebirthAddress() = "static_rebirthAddress"
 
-let collectiveMasterAddress = base58'3PDktsxDVEcoobpEBJcausnKo4enhcWUDEF'
-
-let ref20 = ["3PR66kMvUDE1QvYAg8r6e1xDX7QbnTV7JW5"]
+func tryGetBoolean(key: String) = {
+    match getBoolean(this, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
 
 func tryGetInteger(key: String) = {
     match getInteger(this, key) {
@@ -17,12 +25,7 @@ func tryGetInteger(key: String) = {
     }
 }
 
-func masterTryGetBoolean(key: String) = {
-    match getBoolean(Address(collectiveMasterAddress), key) {
-        case b:Boolean => b
-        case _ => false
-    }
-}
+
 
 func isValidAddress(address: String) = {
   match(addressFromString(address)) {
@@ -31,19 +34,35 @@ func isValidAddress(address: String) = {
   }
 }
 
-func tryGetString(key: String) = {
-    match getString(this, key) {
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
         case a:String => a
         case _ => ""
     }
 }
 
-func getRefMultiplier(refererAddress: String) = {
-  if (ref20.indexOf(refererAddress) != unit) then {
-    4
-  } else {
-    1
-  }
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String())
+func getBabyDuckAddress() = Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String())
+func getFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_farmingAddress()).fromBase58String())
+func getCfMasterAddress() = Address(tryGetStringExternal(getOracle(),staticKey_cfMasterAddress()).fromBase58String())
+func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
+func getRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
+func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),getHuntAddress(),getRebirthAddress()]
+func masterTryGetBoolean(key: String) = {
+    match getBoolean(getCfMasterAddress(), key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
+func isTestEnv()={
+  tryGetBoolean("TESTENV")
 }
 
 @Callable(i)
@@ -64,9 +83,8 @@ func addRefKey(refererAddress: String, refererKey: String) = {
 @Callable(i)
 func refPayment(refererKey: String) = {
   let referalAddress = i.originCaller.toString()
-  if (i.caller.bytes != incubatorAddress && i.caller.bytes != farmingAddress) then {
-    throw("This method can be called only by farming and incubator dApps")
-  } else if ((refererKey == "") && (tryGetString("address_" + referalAddress + "_referedBy") == "")) then {
+  if (getTrustedAddress().indexOf(i.caller) == unit) then throw("This method can be called only by farming and incubator dApps")else 
+  if ((refererKey == "") && (tryGetString("address_" + referalAddress + "_referedBy") == "")) then {
     []
   } else if (masterTryGetBoolean("farm_"+referalAddress)) then {
     # blocked for collective farms
@@ -83,7 +101,7 @@ func refPayment(refererKey: String) = {
       case _ => givenReferer
     } 
 
-    let refAmount = i.payments[0].amount * getRefMultiplier(refererAddress)
+    let refAmount = i.payments[0].amount
 
     if (refererAddress.addressFromString() == unit) then {
       []
@@ -103,13 +121,48 @@ func refPayment(refererKey: String) = {
           IntegerEntry(refererEarnedReward, tryGetInteger(refererEarnedReward) + paymentForReferer),
           IntegerEntry(referalDeliveredReward, tryGetInteger(referalDeliveredReward) + paymentForReferer),
           IntegerEntry("referer_"+refererAddress+"_referal_"+referalAddress+"_amount", tryGetInteger("referer_"+refererAddress+"_referal_"+referalAddress+"_amount") + 1),
-          ScriptTransfer(refererAddressValue, paymentForReferer, eggsAssetId)
+          ScriptTransfer(refererAddressValue, paymentForReferer, getEggAssetId())
         ]
       }
     }
   }
 }
 
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("RCCO: admin only") else 
+  [
+    StringEntry(staticKey_oracleAddress(),oracle)
+
+  ]
+
+}
+
 @Verifier(tx)
-func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'FzsTVRXqD46KW5yj6qGNVrsouvWjpCQvD1446A96iGt4'
+    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
+    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 2
+    }
+}
         
