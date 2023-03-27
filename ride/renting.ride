@@ -109,7 +109,7 @@ func putForRent(durationInMs: Int, percentage: Int) = {
 
 @Callable(i)
 func buyGlassesAndPutForRent(durationInMs: Int, percentage: Int) = {
-  strict buyGlasses = invoke(getHuntAddress(), "buyAccessItem()", [], [i.payments[1]])
+  strict buyGlasses = invoke(getHuntAddress(), "buyAccessItem", [], [i.payments[1]])
   putForRentInternal(i,durationInMs,percentage)
 
 }
