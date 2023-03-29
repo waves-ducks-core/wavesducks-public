@@ -175,28 +175,20 @@ func rentDuckFromUser(duckId: String, game: String)={
 }
 
 #Profits for duck need to be topped up #USE FOLD
-## Profits need to be shared between owner and renter according by %
-## Games payout directly to rent sc?
+## Pass list with address and amount
+## ['address:amount:duckid','address:amount:duckid']
 @Callable(i)
 func topUpRewards(duckIdAndAmountsList: List[String], assetId: String)={
   #Loop (fold) through 10 items
-    func handleTopUp(acc: List[ScriptTransfer|IntegerEntry], duckIdAndAmount: String) = {
+    func handleTopUp(acc: List[ScriptTransfer|IntegerEntry], userAndAmount: String) = {
       #split amounts based on :
-      let splitArray = split(duckIdAndAmount,":")
-      let duckId = splitArray[0]
+      let splitArray = split(userAndAmount,":")
+      let user = splitArray[0]
       let amount = parseIntValue(splitArray[1])
-
-      #Get percentage for each duck
-      let duckOwner = tryGetString(key_getDuckOwner(duckId))
-      let renter = tryGetString(key_getDuckRentedBy(duckId))
-      #Split profits between owner and lessor
-      let feePercentage = tryGetInteger(key_getDuckPercentage(duckId))
-      let forOwnerAmount = fraction(amount,feePercentage,100)
-      let forPlayerAmount = amount - forOwnerAmount
+      let duckId = splitArray[2]
       #Create transfer transactions for the funds
       [
-        ScriptTransfer(addressFromStringValue(duckOwner), forOwnerAmount*100000,assetId.fromBase58String()),
-        ScriptTransfer(addressFromStringValue(renter), forPlayerAmount*100000,assetId.fromBase58String()),
+        ScriptTransfer(addressFromStringValue(user), amount*100000,assetId.fromBase58String()),
         #Store last topupforduck
         IntegerEntry(key_getDuckLastPaid(duckId),lastBlock.timestamp)
       ]
