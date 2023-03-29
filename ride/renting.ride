@@ -178,7 +178,7 @@ func rentDuckFromUser(duckId: String, game: String)={
 ## Profits need to be shared between owner and renter according by %
 ## Games payout directly to rent sc?
 @Callable(i)
-func topUpRewards(duckIdAndAmountsList: List[String], amounts: String, assetId: String)={
+func topUpRewards(duckIdAndAmountsList: List[String], assetId: String)={
   #Loop (fold) through 10 items
     func handleTopUp(acc: List[ScriptTransfer|IntegerEntry], duckIdAndAmount: String) = {
       #split amounts based on :
