@@ -281,7 +281,6 @@ func sendDuckBack(duckId: String)={
     #set duck idle
     StringEntry(key_getDuckStatus(duckId),"IDLE"),
     #Delete status
-    DeleteEntry(key_getDuckStatus(duckId)),
     DeleteEntry(key_getDuckRentedBy(duckId))
   ]
 
