@@ -296,7 +296,9 @@ func configureOracle(oracle: String) = {
     StringEntry(staticKey_oracleAddress(),oracle),
     IntegerEntry(staticKey_minPercentage(),5),
     IntegerEntry(staticKey_maxPercentage(),80),
-    IntegerEntry(staticKey_depositSteps(),50000000)
+    IntegerEntry(staticKey_depositSteps(),50000000),
+    IntegerEntry(staticKey_rentSlotsGeneral(),5)
+    
 
   ]
 
