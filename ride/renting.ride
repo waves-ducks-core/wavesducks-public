@@ -11,7 +11,7 @@ func staticKey_maxPercentage() = "static_maxPercentage"
 func staticKey_accessItemAssetId() = "static_accessItemAssetId"
 func staticKey_accessItemPrice() = "static_accessItemPrice"
 func staticKey_depositSteps() = "static_depositSteps"
-
+func staticKey_rentSlotsGeneral() = "static_rentSlots"
 #variables needed
 func key_getDuckOwner(duck: String) = { "duck_"+duck+"_owner"} 
 func key_getDuckStatus(duck: String) = { "duck_"+duck+"_status"}
@@ -159,7 +159,7 @@ func rentDuckFromUser(duckId: String, game: String)={
   let amountRentedKey =  key_getTotalRented(i.caller.toString())
   let boughtKey = key_getTotalBoughtExtraSpots(i.caller.toString())
   let newAmountRented = tryGetInteger(amountRentedKey)+1
-  let totalSpots = tryGetInteger(boughtKey)+5
+  let totalSpots = tryGetInteger(boughtKey)+getIntegerValue(this,staticKey_rentSlotsGeneral())
   if newAmountRented > totalSpots then throw("RRDFU: You already rented max amount of ducks! "+totalSpots.toString()) else
   #Set start timestamp renting
   #Set status to "RENTED"
