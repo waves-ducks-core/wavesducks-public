@@ -232,9 +232,11 @@ func claimDuckBack(duckId: String)={
       let player = tryGetString(key_getDuckRentedBy(duckId))
       #Unstake
       strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckId,duckOwner], [])
+      let amountRentedKey =  key_getTotalRented(player)
+      let newAmountRented = getIntegerValue(this,amountRentedKey)-1
       let refundFeeKey = key_getRefundableFee(player,duckId)
       [
-      
+          IntegerEntry(amountRentedKey,newAmountRented),
           #Send borg back
           ScriptTransfer(addressFromStringValue(player),tryGetInteger(refundFeeKey),getEggAssetId()),
           DeleteEntry(refundFeeKey),
@@ -250,8 +252,12 @@ func claimDuckBack(duckId: String)={
       #If last payment was within 4320 min, then throw error, else unstake + claimback
       let threeDaysInMs = 3 * 24 * 60 * 1000
       if lastPayment+threeDaysInMs < lastBlock.height then
+          let player = tryGetString(key_getDuckRentedBy(duckId))
           strict unstake = invoke(getHuntAddress(), "unlockDuckRenting", [duckId,duckOwner], [])
+            let amountRentedKey =  key_getTotalRented(player)
+            let newAmountRented = getIntegerValue(this,amountRentedKey)-1
           [
+            IntegerEntry(amountRentedKey,newAmountRented),
             #Send duck back
             ScriptTransfer(addressFromStringValue(duckOwner),1,duckId.fromBase58String()),
             #Delete status
@@ -271,7 +277,8 @@ func sendDuckBack(duckId: String)={
   if rentedBy != i.caller.toString() then throw("RSDB: You didn't rent this duck!") else 
   let duckOwner = tryGetString(key_getDuckOwner(duckId))
   let refundFeeKey = key_getRefundableFee(i.caller.toString(),duckId)
-
+  let amountRentedKey =  key_getTotalRented(i.caller.toString())
+  let newAmountRented = getIntegerValue(this,amountRentedKey)-1
   strict removeFromHunt = invoke(getHuntAddress(), "unlockDuckRenting", [duckId,duckOwner], [])
   [
       
@@ -281,7 +288,8 @@ func sendDuckBack(duckId: String)={
     #set duck idle
     StringEntry(key_getDuckStatus(duckId),"IDLE"),
     #Delete status
-    DeleteEntry(key_getDuckRentedBy(duckId))
+    DeleteEntry(key_getDuckRentedBy(duckId)),
+    IntegerEntry(amountRentedKey,newAmountRented)
   ]
 
 
