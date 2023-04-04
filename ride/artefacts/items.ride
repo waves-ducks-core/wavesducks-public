@@ -170,7 +170,9 @@ func directBuyItem(itemName:String)={
   let price = if grow == 0 then basePrice else basePrice+basePrice/100*(soldValue*grow)
   if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("IDBI: Max editions sold!") else
 
-  let assetId = if tryGetString(key_priceAssetCosmetic(itemName))=="" then getEggAssetId() else tryGetString(key_priceAssetCosmetic(itemName)).fromBase58String()
+  let assetId = if tryGetString(key_priceAssetCosmetic(itemName))=="" then getEggAssetId() else
+  if tryGetString(key_priceAssetCosmetic(itemName))=="WAVES" then unit  else 
+  tryGetString(key_priceAssetCosmetic(itemName)).fromBase58String()
   
   #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[price],[]).asInt()
   let amountPaidByCoupons = 0
@@ -179,7 +181,7 @@ func directBuyItem(itemName:String)={
   strict payment = if leftToPay!=0 then {
       let firstPayment = i.payments[0].value()
       let amount = firstPayment.amount
-      if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the following asset id: " + assetId.toBase58String()) else
+      if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
       if amount != leftToPay then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
       leftToPay
   }else 0
