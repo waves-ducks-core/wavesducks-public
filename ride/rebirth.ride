@@ -100,10 +100,15 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
     if (n<200) then { "duckling_10" } else
     if (n<210) then { "duckling_20" } else
     if (n<250) then { "incubator" } else
-    if (n<375) then { "perch_Y" } else
-    if (n<500) then { "perch_G" } else
-    if (n<625) then { "perch_B" } else
-    if (n<750) then { "perch_R" } else
+
+    if (n<280) then { "item_ART-SNAKE" } else
+    if (n<410) then { "item_ART-KATANA" } else
+    if (n<460) then { "item_ART-ROBODUCK" } else
+    if (n<480) then { "item_ART-CROWN" } else
+    if (n<610) then { "item_ART-SCEPTER" } else
+    if (n<740) then { "item_ART-BUILTBODY" } else
+    if (n<750) then { "item_ART-FEED10" } else
+
     if (n<875) then { "ar" } else
     { "meta" }
   }

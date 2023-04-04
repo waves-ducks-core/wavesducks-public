@@ -30,6 +30,8 @@ func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_items
 func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getMarketPlaceProxy() = Address(tryGetStringExternal(getOracle(),"static_marketPlaceProxyAddress").fromBase58String())
+func getBuybackAddress() = Address(tryGetStringExternal(getOracle(),"static_buybackAddress").fromBase58String())
+
 
 let kGlobalCounter = "GLOBAL_COUNTER"
 
@@ -120,6 +122,7 @@ func initAuction(startPrice: Int, instantPrice: Int, description: String, eggSel
   let asset = getAssetGenotype(assetId)
 
   if (pmt.amount != 1) then throw("MIA: NFT is not attached") else
+  if (eggSell == "true") then throw("MIA: Same rules for everyone!") else
   if (asset == "") then {
     throw("MIA: You can only sell an NFT-duck created in incubator or breeder")
   } else {
@@ -191,7 +194,8 @@ func instantBuy(auctionId: String) = {
                 strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 1000))])
                 []
                 }else [
-            ScriptTransfer(getFeeAggregatorAddress(),fraction(amount, finalFee, 1000),unit)]
+            ScriptTransfer(getFeeAggregatorAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit),
+            ScriptTransfer(getBuybackAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit)]
         let caller = if getMarketPlaceProxy() == i.caller then i.originCaller else i.caller
         ([
           StringEntry("auction_" + auctionId + "_status", "finished"),
@@ -282,7 +286,8 @@ func acceptBid(auctionId: String, bidId: String) = {
                 strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(bidAmount, finalFee, 1000))])
                 []
                 }else [
-            ScriptTransfer(getFeeAggregatorAddress(),fraction(bidAmount, finalFee, 1000),unit)
+                  ScriptTransfer(getFeeAggregatorAddress(),fraction(bidAmount, fraction(finalFee,6,10), 1000),unit),
+                  ScriptTransfer(getBuybackAddress(),fraction(bidAmount, fraction(finalFee,6,10), 1000),unit)
         ]
       [
         StringEntry("auction_" + auctionId + "_bid_" + bidId + "_status", "finished"),

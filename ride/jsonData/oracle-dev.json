@@ -200,7 +200,22 @@
             "type": "string",
             "value": "3PA1KvFfq9VuJjg45p2ytGgaNjrgnLSgf4r"
             
+        },
+        {
+            "key": "static_nodeAddress",
+            "type": "string",
+            "value": "3PA1KvFfq9VuJjg45p2ytGgaNjrgnLSgf4r"
+            
+        },
+        {
+            "key": "static_buybackAddress",
+            "type": "string",
+            "value": "3PLdbabW22kBhfy6Wnndbi6ex6D58VPCRUP"
+            
         }
+
+
+        
 
         
     ],
