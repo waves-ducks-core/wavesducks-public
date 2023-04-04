@@ -12,7 +12,7 @@ on:
         type: string
       priceAsset:
         description: "give me the price asset"
-        default: "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+        default: "WAVES"
         type: string
       maxSales:
         description: "give me the max sales"

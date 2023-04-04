@@ -5,13 +5,13 @@
         {
             "key": "direct_cosmetic_ART-FEED10",
             "type": "integer",
-            "value": 30000000
+            "value": 1500000000
         },
 
         {
             "key": "direct_cosmetic_ART-FEED10_priceAsset",
             "type": "string",
-            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+            "value": "WAVES"
         },
         {
             "key": "direct_cosmetic_ART-FEED10_max_sales",
@@ -31,13 +31,13 @@
         {
             "key": "direct_cosmetic_ART-SNOWMAN",
             "type": "integer",
-            "value": 8000000
+            "value": 400000000
         },
 
         {
             "key": "direct_cosmetic_ART-SNOWMAN_priceAsset",
             "type": "string",
-            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+            "value": "WAVES"
         },
         {
             "key": "direct_cosmetic_ART-SNOWMAN_max_sales",
@@ -58,12 +58,12 @@
         {
             "key": "direct_cosmetic_ART-CUST-COSM",
             "type": "integer",
-            "value": 1000000000
+            "value": 50000000000
         },
         {
             "key": "direct_cosmetic_ART-CUST-COSM_priceAsset",
             "type": "string",
-            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+            "value": "WAVES"
         },
         {
             "key": "direct_cosmetic_ART-CUST-COSM_max_sales",
@@ -84,12 +84,12 @@
         {
             "key": "direct_cosmetic_ART-BORZOI",
             "type": "integer",
-            "value": 30000000
+            "value": 1500000000
         },
         {
             "key": "direct_cosmetic_ART-BORZOI_priceAsset",
             "type": "string",
-            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+            "value": "WAVES"
         },
         {
             "key": "direct_cosmetic_ART-BORZOI_max_sales",
@@ -111,12 +111,12 @@
         {
             "key": "direct_cosmetic_ART-CUPID",
             "type": "integer",
-            "value": 20000000
+            "value": 1000000000
         },
         {
             "key": "direct_cosmetic_ART-CUPID_priceAsset",
             "type": "string",
-            "value": "34N9YcEETLWn93qYQ64EsP1x89tSruJU44RrEMSXXEPJ"
+            "value": "WAVES"
         },
         {
             "key": "direct_cosmetic_ART-CUPID_max_sales",
