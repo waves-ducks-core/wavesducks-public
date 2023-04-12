@@ -244,6 +244,18 @@ func calculateOutAmount(AmountIn: Int, assetIn: ByteVector|Unit, assetOut: ByteV
   }
 }
 
+func calculateMinToGet(asset1: String, asset2: String, amountToSwap: Int)={
+    let kBalanceA = "global_"+asset1+"_balance"
+    let A_asset_balance = getIntegerValue(this, kBalanceA)
+    let kBalanceB = "global_"+asset2+"_balance"
+    let B_asset_balance = getIntegerValue(this, kBalanceB)
+
+    let toGet = calculateOutAmount(amountToSwap, asset1.getAssetBytes(), asset2.getAssetBytes(), A_asset_balance, B_asset_balance)
+    strict feeAmount = fraction(toGet, Fee, FeeScale)
+    strict cleanAmountOut = toGet - feeAmount   
+
+    cleanAmountOut
+}
 
 func getTokenBalance(assetId: ByteVector|Unit) = {
   match (assetId) {
@@ -318,6 +330,14 @@ func isTestEnv()={
     }
     testenv
 } 
+
+@Callable(i)
+func readOnlyFunc(asset1: String, asset2: String, amountToSwap: Int)={
+  let amountOut = calculateMinToGet(asset1, asset2, amountToSwap)
+  [
+    IntegerEntry("DEBUG", amountOut)
+  ]
+}
 
 @Callable(i)
 func topUpFunds()={
