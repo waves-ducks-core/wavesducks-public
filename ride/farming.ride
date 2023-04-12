@@ -34,6 +34,10 @@ func staticKey_accBoosterAddress() = "static_accBoosterAddress"
 func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
 func staticKey_maintenance() = "static_maintenance"
 #TODO add last 4 also here
+func staticKey_cfMasterAddress() = "static_cfMasterAddress"
+func staticKey_duckWrapper() = "static_duckWrapper"
+func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
@@ -49,13 +53,21 @@ func getMetaraceAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
 func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakingContracts())
 func getMaintenance() =  tryGetStringExternal(getOracle(),staticKey_maintenance())
-func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
-func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),"static_duckWrapper").fromBase58String())
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
-func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_cfMasterAddress()).fromBase58String())
+func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),staticKey_duckWrapper()).fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 #func getSicknessAddress() = Address(tryGetStringExternal(getOracle(),"static_sicknessAddress").fromBase58String())
 
 let RefererReward = 5 #percentage
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("FCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  if payment.amount != feeAmount then throw("FCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  true
+
+}
 
 func getRewardPerBlock() = {
   548 # 0.0684 EGGs per block
@@ -314,6 +326,7 @@ func init() = {
 @Callable(i)
 func buyPerch(colorI: String, refererAddress: String) = {
     strict locked =  isLocked()
+    strict validPayment = checkAdditionalPayment(i.payments[0])
     let color = if colorI == "U" then "B" else colorI
     if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
       throw("you need to set color properly")
@@ -325,9 +338,8 @@ func buyPerch(colorI: String, refererAddress: String) = {
         }else {
             exactPrice
         }
-
       strict payment = if leftToPay!=0 then {
-        let firstPayment = i.payments[0].value()
+        let firstPayment = i.payments[1].value()
 
         if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
         if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
@@ -371,6 +383,7 @@ func addFreePerch(address: String, color: String) = {
 @Callable(i)
 func stakeNFT() = {
   strict locked = isLocked()
+  strict validPayment = checkAdditionalPayment(i.payments[1])
   let pmt = i.payments[0].value()
   let assetId = i.payments[0].value().assetId.value()
   let realCaller = i.caller.toString()
@@ -417,7 +430,7 @@ func stakeNFTWithoutPerch() = {
 
 @Callable(i)
 func unstakeNFT(asset: String) = {
-
+  strict validPayment = checkAdditionalPayment(i.payments[0])
   unstakeNFTInternal(asset,i,true)
   
 }
@@ -434,6 +447,7 @@ func unstakeNFTWithoutClaim(asset: String) = {
 @Callable(i)
 func stakeJackpot(color: String) = {
     strict locked = isLocked()
+    strict validPayment = checkAdditionalPayment(i.payments[1])
     let pmt = i.payments[0].value()
     let assetId = pmt.assetId.value()
     let realCaller = i.caller.toString()
@@ -465,7 +479,7 @@ func stakeJackpot(color: String) = {
 
 @Callable(i)
 func unstakeJackpot(asset: String) = {
-  
+  strict validPayment = checkAdditionalPayment(i.payments[0])
   unstakeJackpotInternal(asset,i,true)
 
   
@@ -482,6 +496,7 @@ func unstakeJackpotWithoutClaimEgg(asset: String) = {
 @Callable(i)
 func claimReward(asset: String) = {
   strict locked = isLocked()
+  strict validPayment = if i.originCaller == getCfMasterAddress() then true else checkAdditionalPayment(i.payments[0])
   let address = if i.originCaller == getCfMasterAddress() then i.caller.toString() else i.originCaller.toString()
 
 
