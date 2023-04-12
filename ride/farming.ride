@@ -21,19 +21,34 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_incubatorAddress() = "static_incubatorAddress"
+func staticKey_rebirthAddress() = "static_rebirthAddress"
+func staticKey_swopPromoAddress() = "static_swopPromoAddress"
+func staticKey_breederAddress() = "static_breederAddress"
+func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_metaRaceAddress() = "static_metaRaceAddress"
+func staticKey_accBoosterAddress() = "static_accBoosterAddress"
+func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
+func staticKey_maintenance() = "static_maintenance"
+#TODO add last 4 also here
+func staticKey_extraFee() = "static_extraFee"
 
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
-func getSwopPromoAddress() =  Address(tryGetStringExternal(getOracle(),"static_swopPromoAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXWD'
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
-func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
-func getMetaraceAddress() =  Address(tryGetStringExternal(getOracle(),"static_metaRaceAddress").fromBase58String())
-func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),"static_accBoosterAddress").fromBase58String())
-func getProxyStaking() =  tryGetStringExternal(getOracle(),"static_proxyStakingContracts")
-func getMaintenance() =  tryGetStringExternal(getOracle(),"static_maintenance")
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getSwopPromoAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_swopPromoAddress()).fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXWD'
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getMetaraceAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_metaRaceAddress()).fromBase58String())
+func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
+func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakingContracts())
+func getMaintenance() =  tryGetStringExternal(getOracle(),staticKey_maintenance())
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
 func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),"static_duckWrapper").fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
@@ -284,7 +299,7 @@ func isTestEnv()={
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("FCO: admin only") else 
   [
-    StringEntry("static_oracleAddress",oracle)
+    StringEntry(staticKey_oracleAddress(),oracle)
   ]
 
 }
