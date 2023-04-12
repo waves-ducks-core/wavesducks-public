@@ -39,7 +39,7 @@ func staticKey_duckWrapper() = "static_duckWrapper"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
-
+func staticKey_feeAggregator() = "static_feeAggregator"
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
@@ -57,6 +57,7 @@ func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_
 func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),staticKey_duckWrapper()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 #func getSicknessAddress() = Address(tryGetStringExternal(getOracle(),"static_sicknessAddress").fromBase58String())
 
 let RefererReward = 5 #percentage
@@ -65,7 +66,7 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("FCAP: Please attach waves") else
   let feeAmount = getIntegerValue(this,staticKey_extraFee())
   if payment.amount != feeAmount then throw("FCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
-  true
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
 
 }
 
@@ -358,7 +359,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
 
       [
         IntegerEntry(perchAmountKey, perchAmount + 1)
-      ]
+      ]++validPayment
       
     }
   
@@ -402,7 +403,7 @@ func stakeNFT() = {
 
     getStakeResult(address, assetId, assetFarmingPower, realCaller) ++ [
       IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1)
-    ]
+    ]++validPayment
   }
     
 }
@@ -431,7 +432,8 @@ func stakeNFTWithoutPerch() = {
 @Callable(i)
 func unstakeNFT(asset: String) = {
   strict validPayment = checkAdditionalPayment(i.payments[0])
-  unstakeNFTInternal(asset,i,true)
+  let result = unstakeNFTInternal(asset,i,true)
+  (result._1++validPayment,result._2)
   
 }
 
@@ -468,7 +470,7 @@ func stakeJackpot(color: String) = {
           getStakeResult(address, assetId, farmingPower._2,realCaller) ++ [
             IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1),
             StringEntry("address_"+address+"_asset_"+assetId.toBase58String()+"_perchColor", color)
-          ]
+          ]++validPayment
         }
       }
     } else {
@@ -480,7 +482,9 @@ func stakeJackpot(color: String) = {
 @Callable(i)
 func unstakeJackpot(asset: String) = {
   strict validPayment = checkAdditionalPayment(i.payments[0])
-  unstakeJackpotInternal(asset,i,true)
+  let result = unstakeJackpotInternal(asset,i,true)
+  (result._1++validPayment,result._2)
+  
 
   
 }
@@ -496,7 +500,7 @@ func unstakeJackpotWithoutClaimEgg(asset: String) = {
 @Callable(i)
 func claimReward(asset: String) = {
   strict locked = isLocked()
-  strict validPayment = if i.originCaller == getCfMasterAddress() then true else checkAdditionalPayment(i.payments[0])
+  strict validPayment = if i.originCaller == getCfMasterAddress() then [] else checkAdditionalPayment(i.payments[0])
   let address = if i.originCaller == getCfMasterAddress() then i.caller.toString() else i.originCaller.toString()
 
 
@@ -528,7 +532,7 @@ func claimReward(asset: String) = {
         [
         IntegerEntry("address_"+address+"_asset_"+asset+"_withdrawnAmount", tryGetInteger("address_"+address+"_asset_"+asset+"_withdrawnAmount") + reward * scale2),
         ScriptTransfer(Address(address.fromBase58String()), reward * 1000000, getEggAssetId())
-        ],
+        ]++validPayment,
         reward * 1000000
       )
     
