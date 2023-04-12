@@ -189,6 +189,12 @@
             "type": "string",
             "value": "3PLdbabW22kBhfy6Wnndbi6ex6D58VPCRUP"
             
+        },
+        {
+            "key": "static_extraFee",
+            "type": "integer",
+            "value": 1000000
+            
         }
 
         
