@@ -97,6 +97,8 @@ func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
     ("DUCK-WWWWBEIJ-JU", "1B1E1I1J4W-J", entry)
   }else if (jackpotRandom == 19 && wasUniqueBorn("DUCK-WWWCLOWN-JU") == 0) then {
     ("DUCK-WWWCLOWN-JU", "1C1L1N1O4W-J", entry)
+  }else if (jackpotRandom == 88 && wasUniqueBorn("DUCK-WWWWAVES-JU") == 0) then {
+    ("DUCK-WWWWAVES-JU", "1A1E1S1V4W-J", entry)
   }else {
     let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 5)
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 6)
