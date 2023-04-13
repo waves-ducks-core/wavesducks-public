@@ -6,7 +6,11 @@
 #eggId;price;distance + signature
 #distance below 1km => check it
 #eggId => only onique
-
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_backendPubKey() = "static_backendPubKey"
 
 func eggIdKey(eggId: String, user: String) = "eggId_"+eggId+"_"+user
 
@@ -21,27 +25,36 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
-
-func getBackendPubKey() = getStringValue(getOracle(),"static_backendPubKey").fromBase58String()
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
+func getBackendPubKey() = getStringValue(getOracle(),staticKey_backendPubKey()).fromBase58String()
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
 
 func getBackendProof(eggId: String, price: Int, distance: Int) = {
   makeString([eggId, price.toString(), distance.toString()], ";")
 }
 
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("RCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  if payment.amount != feeAmount then throw("RCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("RCO: admin only") else 
   [
-    StringEntry("static_oracleAddress",oracle)
+    StringEntry(staticKey_oracleAddress(),oracle)
   ]
 
 }
 
 @Callable(i)
 func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)={
+  strict validPayment = checkAdditionalPayment(i.payments[1])
   let addressString = i.caller.toString()
   let backendProof = getBackendProof(eggId, price, distance)
   let exists = tryGetString(eggIdKey(eggId, i.originCaller.toString()))
@@ -55,5 +68,5 @@ func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)
     if exists != "" then throw("RBR: Rope was already bought for this egg by this user!") else
     [
         StringEntry(eggIdKey(eggId, i.originCaller.toString()),price.toString()+";"+distance.toString())
-    ]
+    ]++validPayment
 }

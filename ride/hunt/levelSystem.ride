@@ -6,7 +6,14 @@ let START_PRICE = 500000
 let QUOTIENT = 2
 let DECIMALS = 100000000
 
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_eggAssetId()= "static_eggAssetId"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+
+
 func keyUserAddress(address: String)= address+"_level"
+
 func keyUserSpentOnLevel(address: String)= address+"_spentOnLevel"
 
 
@@ -31,8 +38,9 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
 
 func calculateLevelUp(futureLevel: Int)={
@@ -62,11 +70,19 @@ func calculateReset(currentLevel: Int, resetTimes: Int)={
     ,result)
 }
 
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("LSCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  if payment.amount != feeAmount then throw("LSCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("RCO: admin only") else 
   [
-    StringEntry("static_oracleAddress",oracle)
+    StringEntry(staticKey_oracleAddress(),oracle)
   ]
 
 }
@@ -100,7 +116,7 @@ func levelUp()={
         IntegerEntry(keyUserAddressFilled,levelOfUser+1),
         IntegerEntry(keyUserSpentOnLevelFilled,totalSpentUser+amount)
 
-    ]++priceCalc._1
+    ]++priceCalc._1++checkAdditionalPayment(i.payments[1])
 }
 
 
@@ -125,6 +141,6 @@ func reset()={
     [
         IntegerEntry(keyUserSkillResetTimesFilled,resetsOfUser+1),
         IntegerEntry(keyUserSpentOnResetFilled,amountOfSpendOnReset+amount)
-    ]++calculateResetCalculated._1
+    ]++calculateResetCalculated._1++checkAdditionalPayment(i.payments[1])
 
 }

@@ -33,11 +33,20 @@ func asInt(value: Any) = match value {
   case _ => throw("wrong type, expected: Int")
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_breederAddress()= "static_breederAddress"
+func staticKey_huntAddress()= "static_huntAddress"
+func staticKey_eggAssetId()= "static_eggAssetId"
+func staticKey_feeAggregator() = "static_feeAggregator"
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
 func getDuckCapacity(duckId: String) = tryGetInteger(duckCapacityKey(duckId))
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getHuntAddress()= Address(tryGetStringExternal(getOracle(),"static_huntAddress").fromBase58String())
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getHuntAddress()= Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+
 func keyDuckOwner(assetId: String) = "duck_" + assetId + "_owner"
 
 func common(nftId: String, payment: AttachedPayment, addedCapacity: Int)={
@@ -64,13 +73,19 @@ func common(nftId: String, payment: AttachedPayment, addedCapacity: Int)={
 
 }
 
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("CCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  if payment.amount != feeAmount then throw("CCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
 
+}
 
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("CCO: admin only") else 
   [
-    StringEntry("static_oracleAddress",oracle)
+    StringEntry(staticKey_oracleAddress(),oracle)
   ]
 
 }
@@ -105,19 +120,21 @@ func calculateDiffEggs(oldEggs: Int, newEggs: Int)={
 @Callable(i)
 func addCapacityToDuck(addedCapacity: Int)={
     let nftPayment = i.payments[0].value()
+    let validPayment = checkAdditionalPayment(i.payments[1])
     let duckAssetId = nftPayment.assetId.value().toBase58String()
     if (nftPayment.amount != 1 ) then throw("NFT is not attached") else
     common(duckAssetId, i.payments[1],addedCapacity)++[
         ScriptTransfer(i.caller,1,nftPayment.assetId.value())
-    ]
+    ]++validPayment
 }
 
 
 @Callable(i)
 func addCapacityToDuckInHunt(nftId: String, addedCapacity: Int)={
     let ownerInHunt =tryGetStringExternal(getHuntAddress(),keyDuckOwner(nftId))
+    let validPayment = checkAdditionalPayment(i.payments[1])
     if ownerInHunt != i.caller.toString() then throw("CBR: You can only add capacity to own ducks!") else
-    common(nftId, i.payments[0],addedCapacity)
+    common(nftId, i.payments[0],addedCapacity)++validPayment
     
 
 }
