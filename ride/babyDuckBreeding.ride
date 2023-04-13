@@ -2,6 +2,13 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_spiceAssetId() = "static_spiceAssetId"
+func staticKey_breederAddress() = "static_breederAddress"
+func staticKey_feeAggregator() = "static_feeAggregator"
+
+
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
         case a:String => a
@@ -25,9 +32,18 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getSpiceAssetId() = tryGetStringExternal(getOracle(),"static_spiceAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  if payment.amount != feeAmount then throw("BDCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
 
 let KGlobalIssuedTimestamp = "global_issued_timestamp"
 
@@ -166,7 +182,7 @@ func issueDuckling(address: String, txIdStr: String, spiceAmount: Int, gen: Stri
 @Callable(i)
 func feedDuckling(ducklingId: String) = {
   let addressString = i.caller.toString()
-  let realDucklingId = if (i.payments.size() != 1 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else
+  let realDucklingId = if (i.payments.size() != 2 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else
     let blackListed = tryGetBoolean(keyBlacklisted(ducklingId))
     if blackListed then throw("BFD: Can not feed blacklisted duckling!") else  
     if (getBool(keyDucklingGrown(ducklingId))) then throw("BFD: Duckling is already grown") else 
@@ -188,6 +204,7 @@ func feedDuckling(ducklingId: String) = {
   let kTotalFeed = keyTotalFeed(realDucklingId)
   let totalFeed = tryGetInteger(kTotalFeed)
   let kFeedTxStats = "duckling_" + realDucklingId + "_stat_" + lastBlock.timestamp.toString()
+  strict validPayments = checkAdditionalPayment(i.payments[1])
 
     let calculateResults = calculateNewDucklingLevel(realDucklingId, currentPayment)
     [
@@ -196,13 +213,14 @@ func feedDuckling(ducklingId: String) = {
       IntegerEntry(kFeedTxStats, currentPayment),
       StringEntry(kNewLevel, calculateResults._1),
       StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";"))
-    ]
+    ]++validPayments
   
 }
 
 
 @Callable(i)
 func turnDucklingIntoDuck() = {
+  strict validPayments = checkAdditionalPayment(i.payments[1])
   if i.caller != getBreederAddress() then throw("BTDIT: You can't turn duckling") else
   let address = i.caller.toString()
   let txId = i.transactionId.toBase58String()
@@ -210,7 +228,7 @@ func turnDucklingIntoDuck() = {
   let fiveMinInMs = 1 * 60 * 1000
   let timeDiff = lastBlock.timestamp - (lastIssuedDucklingTs+fiveMinInMs);
   if (lastIssuedDucklingTs > 0 && timeDiff < 0) then throw("BTDIT: Can issue ducklings only once per 1 minutes, please wait for " + fraction(timeDiff, 1, 1000).toString() + " sec.") else 
-  if (i.payments.size() != 1) then throw("BTDIT: Bad payment attached (asset[s] or amount)") else {
+  if (i.payments.size() != 2) then throw("BTDIT: Bad payment attached (asset[s] or amount)") else {
   if (i.payments[0].amount != 1) then throw("BTDIT: Please attach a nft!") else 
     let pmt = assetInfo(i.payments[0].value().assetId.value()).value()
     let price = getDucklingPrice(pmt.id.toBase58String())
@@ -221,7 +239,7 @@ func turnDucklingIntoDuck() = {
       ([
         BooleanEntry(kDucklingGrown, true),
         IntegerEntry(KGlobalIssuedTimestamp, lastBlock.timestamp)
-      ],pmt.id.toBase58String())
+      ]++validPayments,pmt.id.toBase58String())
     }
   }
 }

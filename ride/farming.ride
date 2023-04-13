@@ -40,8 +40,8 @@ func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
-func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
