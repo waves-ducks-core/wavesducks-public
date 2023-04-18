@@ -8,6 +8,8 @@ func staticKey_eggAssetId() ="static_eggAssetId"
 func staticKey_trustedContracts() ="static_trustedContracts"
 func staticKey_rebirthAddress() ="static_rebirthAddress"
 func staticKey_pipelineUser() ="static_pipelineUser"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
 
 #TODO: make sure to allow coupons contract when we release new items
 func key_artefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
@@ -119,8 +121,7 @@ func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_b
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),staticKey_trustedContracts())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
-
-
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
 func tryGetCosmeticItemPrice(item:String)= {
   let key = key_priceCosmetic(item)
@@ -156,6 +157,14 @@ func isTestEnv()={
   tryGetBoolean("TESTENV")
 }
 
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  if payment.amount != feeAmount then throw("WCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
+
 @Callable(i)
 func directBuyItem(itemName:String)={
   let basePrice = tryGetCosmeticItemPrice(itemName)
@@ -178,8 +187,9 @@ func directBuyItem(itemName:String)={
   let amountPaidByCoupons = 0
   let leftToPay = price-amountPaidByCoupons
 
+  let validPayment = checkAdditionalPayment(i.payments[0])
   strict payment = if leftToPay!=0 then {
-      let firstPayment = i.payments[0].value()
+      let firstPayment = i.payments[1].value()
       let amount = firstPayment.amount
       if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
       if amount != leftToPay then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
@@ -198,7 +208,7 @@ func directBuyItem(itemName:String)={
       IntegerEntry(key_lastPriceCosmetic(itemName), price),
       IntegerEntry(key_soldCosmetic(itemName), soldValue+1),
       ScriptTransfer(address, 1, artefactId)
-    ],artefactId.toBase58String())
+    ]++validPayment,artefactId.toBase58String())
 
 
 }
@@ -271,6 +281,7 @@ func calculateFarmingPowerBoost(duckId: String, address: String)={
 @Callable(i)
 func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = {
   let firstPayment = i.payments[0].value()
+  let validPayment = checkAdditionalPayment(i.payments[1])
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
   strict artefact = invoke(this,"checkArtefactDetails",[firstAssetId],[]).asString()
@@ -286,7 +297,7 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
   strict call = invoke(getBreederAddress(), "finishDuckHatchingItems", [txIdStr, duckGenesString], [])
   [
     Burn(firstPayment.assetId.value(),1)
-  ]
+  ]++validPayment
 
 }
 
@@ -307,19 +318,21 @@ func freeGene(txIdStr: String) = {
 
   let selectedGene = getRandomGenes(txId,processFinishHeight)
   let randomPosition = getRandomNumber(7, txId, processFinishHeight, 3)
+  let validPayment = checkAdditionalPayment(i.payments[1])
 
   strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txId, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
   
   strict call = invoke(getBreederAddress(), "finishDuckHatchingItems", [txIdStr, duckGenesString], [])
   [
     Burn(firstPayment.assetId.value(),1)
-  ]
+  ]++validPayment
 }
 
 @Callable(i)
 func copyDuck()= {
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
+  let validPayment = checkAdditionalPayment(i.payments[2])
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).asInt()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
@@ -333,7 +346,7 @@ func copyDuck()= {
     [
       ScriptTransfer(i.caller, 1, firstPayment.assetId),
       Burn(secondPayment.assetId.value(),1)
-    ]
+    ]++validPayment
 
 }
 
@@ -341,6 +354,7 @@ func copyDuck()= {
 func addArteFactToDuck()= {
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
+  let validPayment = checkAdditionalPayment(i.payments[2])
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
   strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).asInt()
@@ -361,7 +375,7 @@ func addArteFactToDuck()= {
     [
       Burn(firstPayment.assetId.value(),1),
       Burn(secondPayment.assetId.value(),1)
-    ]
+    ]++validPayment
   }
 }
 

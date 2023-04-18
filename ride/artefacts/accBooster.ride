@@ -2,6 +2,12 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+
+
 func keyUnstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"
 func keyArtefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
 func keyFeedLimit(owner: String) = "limit_"+owner
@@ -34,8 +40,9 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -47,7 +54,13 @@ func asInt(value: Any) = match value {
   case _ => throw("wrong type, expected: Int")
 }
 
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  if payment.amount != feeAmount then throw("WCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
 
+}
 
 func itemIsInCoolDown(artefactName: String, artefactId: String)={
   let unstakeHeightLast = tryGetInteger(keyUnstakeHeight(artefactName,artefactId))
@@ -61,14 +74,15 @@ func itemIsInCoolDown(artefactName: String, artefactId: String)={
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("admin only") else 
   [
-    StringEntry("static_oracleAddress",oracle)
+    StringEntry(staticKey_oracleAddress(),oracle)
   ]
 
 }
 
 @Callable(i)
 func stakeItem() = {
-    if !(size(i.payments) == 1 && i.payments[0].amount==1) then throw("Invalid payment") else 
+    let validPayment = checkAdditionalPayment(i.payments[1])
+    if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
       let assetId = i.payments[0].assetId.value()
       strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
       if !containsElement(stakeable, artefactName) then throw("You can't stake this artafect") else 
@@ -81,11 +95,12 @@ func stakeItem() = {
             if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[3,invoker],[]) else nil
             [
               StringEntry(keyArtefactOwner(artefactName,invoker), assetId.toBase58String())
-            ]
+            ]++validPayment
 }
 
 @Callable(i)
 func unstakeItem(artefactName: String) = {
+    let validPayment = checkAdditionalPayment(i.payments[0])
     if ! containsElement(stakeable, artefactName) then throw("This artefact doesn't exist") else 
       let invoker = i.caller.toString()
       let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
@@ -98,12 +113,13 @@ func unstakeItem(artefactName: String) = {
           IntegerEntry(keyUnstakeHeight(artefactName,artefactId),height),
           ScriptTransfer(i.caller,1,artefactId.fromBase58String()),
           DeleteEntry(keyArtefactOwner(artefactName,invoker))
-        ] 
+        ]++validPayment 
 }
 
 @Callable(i)
 func oneTimeUseFeed() ={
-  if !(size(i.payments) == 1 && i.payments[0].amount==1) then throw("Invalid payment") else 
+  let validPayment = checkAdditionalPayment(i.payments[1])
+  if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
     let assetId = i.payments[0].assetId.value()
     strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
     if artefactName != "ART-FEED10" then throw("You can't use this artafect to earn feedlimit!") else
@@ -111,7 +127,7 @@ func oneTimeUseFeed() ={
         [
           IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+10),
           Burn(assetId,1)
-        ]
+        ]++validPayment
 }
 
 

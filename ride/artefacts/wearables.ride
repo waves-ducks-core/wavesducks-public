@@ -2,6 +2,12 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_breederAddress() = "static_breederAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+
 
 let wearables = [
   "ART-CAPE", # Magic Cape
@@ -34,9 +40,19 @@ func asString(value: Any) = match value {
   case _ => throw("wrong type, expected: String")
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  if payment.amount != feeAmount then throw("WCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
 
 func tryGetCosmeticItem(item:String)= {
   let key = "direct_cosmetic_"+item
@@ -61,7 +77,7 @@ func wearItem(assetIdWearAble: String, duckId: String)={
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("admin only") else 
   [
-    StringEntry("static_oracleAddress",oracle)
+    StringEntry(staticKey_oracleAddress(),oracle)
   ]
 
 }
@@ -70,20 +86,22 @@ func configureOracle(oracle: String) = {
 func wearItemToDuck() = {
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
+  let validPayment = checkAdditionalPayment(i.payments[2])
   let duckId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("WRITD: NFT is not attached") else
   strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
   wearItem(secondAssetId,duckId)++[
     ScriptTransfer(i.caller, 1, firstPayment.assetId)
-  ]
+  ]++validPayment
 
 }
 
 @Callable(i)
 func wearXItemsToDuck()= {
-  if size(i.payments) < 2 then throw("WWXITD: Please attach at least 1 item and 1 duck!") else 
-  if size(i.payments) > 6 then throw("WWXITD: You can only attach 5 items and one duck!") else
+  let validPayment = checkAdditionalPayment(i.payments[1])
+  if size(i.payments) < 3 then throw("WWXITD: Please attach at least 1 item and 1 duck!") else 
+  if size(i.payments) > 7 then throw("WWXITD: You can only attach 5 items and one duck!") else
     func handleItem(acc: List[StringEntry|ScriptTransfer], payment: AttachedPayment) = {
         let index  = indexOf(i.payments,payment)
         if index ==0 then
@@ -94,10 +112,10 @@ func wearXItemsToDuck()= {
             ScriptTransfer(i.caller, 1, payment.assetId)
           ]
         else
-            acc++wearItem(payment.assetId.value().toBase58String(),i.payments[0].assetId.value().toBase58String())
+            acc++wearItem(payment.assetId.value().toBase58String(),i.payments[1].assetId.value().toBase58String())
 
     }
-    FOLD<6>(i.payments, [], handleItem)
+    FOLD<6>(i.payments, [], handleItem)++validPayment
 }
 
 #@Callable(i)
