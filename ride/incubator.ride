@@ -89,8 +89,6 @@ func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
   let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
   if (jackpotRandom == 51 && wasUniqueBorn("DUCK-WWWWINAL-JU") == 0) then {
     ("DUCK-WWWWINAL-JU", "1A1I1L1N4W-J", entry)
-  }else if (jackpotRandom == 69 && wasUniqueBorn("DUCK-WWWWBEIJ-JU") == 0) then {
-    ("DUCK-WWWWBEIJ-JU", "1B1E1I1J4W-J", entry)
   }else if (jackpotRandom == 19 && wasUniqueBorn("DUCK-WWWCLOWN-JU") == 0) then {
     ("DUCK-WWWCLOWN-JU", "1C1L1N1O4W-J", entry)
   }else if (jackpotRandom == 29 && wasUniqueBorn("DUCK-WWDETECT-JU") == 0) then {
