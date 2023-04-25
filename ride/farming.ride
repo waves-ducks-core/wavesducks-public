@@ -40,6 +40,7 @@ func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_huntAddress() = "static_huntAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
@@ -58,6 +59,7 @@ func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),staticKey_du
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
 #func getSicknessAddress() = Address(tryGetStringExternal(getOracle(),"static_sicknessAddress").fromBase58String())
 
 let RefererReward = 5 #percentage
@@ -384,7 +386,7 @@ func addFreePerch(address: String, color: String) = {
 @Callable(i)
 func stakeNFT() = {
   strict locked = isLocked()
-  strict validPayment = checkAdditionalPayment(i.payments[1])
+  strict validPayment = if i.caller == getHuntAddress() || i.caller == getMetaraceAddress() then [] else checkAdditionalPayment(i.payments[1])
   let pmt = i.payments[0].value()
   let assetId = i.payments[0].value().assetId.value()
   let realCaller = i.caller.toString()
@@ -449,7 +451,7 @@ func unstakeNFTWithoutClaim(asset: String) = {
 @Callable(i)
 func stakeJackpot(color: String) = {
     strict locked = isLocked()
-    strict validPayment = checkAdditionalPayment(i.payments[1])
+    strict validPayment = if i.caller == getHuntAddress() || i.caller == getMetaraceAddress() then [] else checkAdditionalPayment(i.payments[1])
     let pmt = i.payments[0].value()
     let assetId = pmt.assetId.value()
     let realCaller = i.caller.toString()
