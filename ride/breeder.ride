@@ -28,16 +28,38 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String())
-func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
-func getItemsAddress() = Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getBabyDuckBreedingAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckBreedingAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getDucklingPrice() = tryGetIntegerExternal(getOracle(),"static_ducklingPrice")
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
-func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
-func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_incubatorAddress() = "static_incubatorAddress"
+func staticKey_rebirthAddress() = "static_rebirthAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_babyDuckBreedingAddress() = "static_babyDuckBreedingAddress"
+func staticKey_ducklingPrice() = "static_ducklingPrice"
+func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_burnAddress() = "static_burnAddress"
+func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String())
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
+func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getBabyDuckBreedingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_babyDuckBreedingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getDucklingPrice() = tryGetIntegerExternal(getOracle(),staticKey_ducklingPrice())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("BCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != feeAmount then throw("BCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
 
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
@@ -314,6 +336,8 @@ func startDuckBreeding(refererAddress: String) = {
 
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
+  strict validPayment = checkAdditionalPayment(i.payments[2])
+
 
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
@@ -324,7 +348,7 @@ func startDuckBreeding(refererAddress: String) = {
     let leftToPay = getDucklingPrice()-amountPaidByCoupons
 
   strict payment = if leftToPay!=0 then {
-    let thirdPayment = i.payments[2].value()
+    let thirdPayment = i.payments[3].value()
 
     if (thirdPayment.assetId != getEggAssetId()) then throw("BSDB: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
     if (thirdPayment.amount != leftToPay) then throw("BSDB: To breed you currently need the following amount of EGGlets: " + leftToPay.toString()) else
@@ -359,7 +383,7 @@ func startDuckBreeding(refererAddress: String) = {
           IntegerEntry("asset_" + secondAssetId + "_children", 1),
           ScriptTransfer(i.caller, 1, firstPayment.assetId.value()),
           ScriptTransfer(i.caller, 1, secondPayment.assetId.value())
-        ]
+        ]++validPayment
       
       
     
@@ -372,7 +396,8 @@ func finishDuckHatchingItems(txIdStr: String, duckGenesString: String) = {
   strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
   let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
   if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
-  finishDuckHatch(txIdStr, owner, duckGenesString) 
+  strict validPayment = checkAdditionalPayment(i.payments[0])
+  finishDuckHatch(txIdStr, owner, duckGenesString)++validPayment 
 }
 
 @Callable(i)
@@ -380,8 +405,9 @@ func finishDuckHatching(txIdStr: String) = {
   let owner = i.caller.toString()
   strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
   let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
-  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
-  finishDuckHatch(txIdStr, owner, "") 
+  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else
+  strict validPayment = checkAdditionalPayment(i.payments[0]) 
+  finishDuckHatch(txIdStr, owner, "") ++validPayment 
 }
 
 @Callable(i)
