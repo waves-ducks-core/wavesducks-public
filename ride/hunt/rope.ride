@@ -37,7 +37,7 @@ func getBackendProof(eggId: String, price: Int, distance: Int) = {
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("RCAP: Please attach waves") else
-  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
   if payment.amount != feeAmount then throw("RCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
   [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
 

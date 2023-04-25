@@ -72,7 +72,7 @@ func calculateReset(currentLevel: Int, resetTimes: Int)={
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("LSCAP: Please attach waves") else
-  let feeAmount = getIntegerValue(this,staticKey_extraFee())
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
   if payment.amount != feeAmount then throw("LSCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
   [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
 
