@@ -542,18 +542,18 @@ func claimReward(asset: String) = {
 }
 
 
-@Callable(i)
-func healDuck(duckId: String)={
-  #strict sicknessCheck = invoke(getSicknessAddress(),"healDuck",[duckId],i.payments).asBoolean()
-  let address = if isProxyStakingSc(i.caller.toString())  then i.originCaller.toString() else i.caller.toString()
-  let farmingPower = getAssetFarmingPower(duckId.toBytes(),address)._2
+# @Callable(i)
+# func healDuck(duckId: String)={
+#   #strict sicknessCheck = invoke(getSicknessAddress(),"healDuck",[duckId],i.payments).asBoolean()
+#   let address = if isProxyStakingSc(i.caller.toString())  then i.originCaller.toString() else i.caller.toString()
+#   let farmingPower = getAssetFarmingPower(duckId.toBytes(),address)._2
 
-  [
-    IntegerEntry("total_farmingPower", tryGetInteger("total_farmingPower") + farmingPower),
-    IntegerEntry("address_"+address+"_asset_"+duckId+"_farmingPower", farmingPower)
-  ] 
+#   [
+#     IntegerEntry("total_farmingPower", tryGetInteger("total_farmingPower") + farmingPower),
+#     IntegerEntry("address_"+address+"_asset_"+duckId+"_farmingPower", farmingPower)
+#   ] 
 
-}
+# }
 
 @Verifier(tx)
 func verify() = {
