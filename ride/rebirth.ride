@@ -22,19 +22,44 @@ func tryGetString(key: String) = {
 }
 let delayForHatching = 2
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
-func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
-func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String())
-func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String())
-func getMetaraceAddress() = Address(tryGetStringExternal(getOracle(),"static_metaRaceAddress").fromBase58String())
-func getHuntAddress() = Address(tryGetStringExternal(getOracle(),"static_huntAddress").fromBase58String())
-func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
-func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_incubatorAddress() = "static_incubatorAddress"
+func staticKey_breederAddress() = "static_breederAddress"
+func staticKey_farmingAddress() = "static_farmingAddress"
+func staticKey_babyDuckAddress() = "static_babyDuckAddress"
+func staticKey_gameDappAddress() = "static_gameDappAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_metaRaceAddress() = "static_metaRaceAddress"
+func staticKey_huntAddress() = "static_huntAddress"
+func staticKey_burnAddress() = "static_burnAddress"
+func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(), staticKey_farmingAddress()).fromBase58String())
+func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
+func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),staticKey_gameDappAddress()).fromBase58String())
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String())
+func getMetaraceAddress() = Address(tryGetStringExternal(getOracle(),staticKey_metaRaceAddress()).fromBase58String())
+func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("RCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != feeAmount then throw("RCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
 
 let PHOENIXBASEOPTIONS = 1000  # base chance to get a phoenix: 1 / (1000 - 1000/2 * rarity)
 
@@ -164,8 +189,10 @@ func initRebirth(refererAddress: String) = {
   strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[feeAmount],[]).asInt()
   let leftToPay = feeAmount-amountPaidByCoupons
 
+  strict validPayment = checkAdditionalPayment(i.payments[1])
+
   strict payment = if leftToPay!=0 then {
-    let feePayment = i.payments[1].value()
+    let feePayment = i.payments[2].value()
     if (feePayment.assetId != getEggAssetId()) then throw("You need to attach EGG tokens as fee") else 
     if (feePayment.amount < leftToPay)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + leftToPay.toString()) else
         let refererRewardForPerch = fraction(leftToPay, 5, 100)
@@ -186,7 +213,7 @@ func initRebirth(refererAddress: String) = {
     StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
     IntegerEntry("address_" + address + "_initTx_" + initTx + "_assetRarity", rarity),
     StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String())
-  ]
+  ]++validPayment
 
   
 }
@@ -198,6 +225,7 @@ func finishRebirth(initTx: String) = {
   let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
   let assetRarity = tryGetInteger("address_" + address + "_initTx_" + initTx + "_assetRarity")
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
+  strict validPayment = checkAdditionalPayment(i.payments[0])
 
   func getAccessItemAssetId(address: Address) = tryGetStringExternal(address,"static_accessItemAssetId").fromBase58String()
   func getAccessItemPrice(address: Address) = tryGetIntExternal(address,"static_accessItemPrice")
@@ -254,7 +282,7 @@ func finishRebirth(initTx: String) = {
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish")
-      ]
+      ]++validPayment
     }
   }
 }
