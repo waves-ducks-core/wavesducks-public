@@ -460,8 +460,8 @@ func generateIndex(needChange: Boolean) = {
       let result = handlePoolTokensAdd(PIssued, i.payments, i.originCaller, needChange)
       
       (result ++ [
-        ScriptTransfer(i.caller, PIssued, tryGetBinary("global_poolToken_id")),
         reissue,
+        ScriptTransfer(i.caller, PIssued, tryGetBinary("global_poolToken_id")),
         IntegerEntry("global_poolToken_amount", tryGetInteger("global_poolToken_amount") + PIssued)
       ], PIssued)
     }
