@@ -329,7 +329,7 @@ func init() = {
 @Callable(i)
 func buyPerch(colorI: String, refererAddress: String) = {
     strict locked =  isLocked()
-    strict validPayment = if i.caller == getHuntAddress() || i.caller == getMetaraceAddress() then [] else checkAdditionalPayment(i.payments[1])
+    strict validPayment = if i.caller == getHuntAddress() || i.caller == getMetaraceAddress() then [] else checkAdditionalPayment(i.payments[0])
     let color = if colorI == "U" then "B" else colorI
     if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
       throw("you need to set color properly")
