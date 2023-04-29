@@ -3,9 +3,14 @@
     "version": 1,
     "data": [
         {
+            "key": "direct_cosmetic_ART-TOPHAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
             "key": "direct_cosmetic_ART-TOPHAT",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
         },
         {
             "key": "direct_cosmetic_ART-TOPHAT_max_sales",
@@ -48,9 +53,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-JESTERHAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
             "key": "direct_cosmetic_ART-JESTERHAT",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
         },
         {
             "key": "direct_cosmetic_ART-JESTERHAT_max_sales",
@@ -68,9 +78,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-PANAMAHAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
             "key": "direct_cosmetic_ART-PANAMAHAT",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
         },
         {
             "key": "direct_cosmetic_ART-PANAMAHAT_max_sales",
@@ -88,9 +103,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-PEPEHAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
             "key": "direct_cosmetic_ART-PEPEHAT",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
         },
         {
             "key": "direct_cosmetic_ART-PEPEHAT_max_sales",
@@ -108,9 +128,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-SOMBRERO_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
             "key": "direct_cosmetic_ART-SOMBRERO",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
         },
         {
             "key": "direct_cosmetic_ART-SOMBRERO_max_sales",
@@ -153,9 +178,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-ICECREAM_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
             "key": "direct_cosmetic_ART-ICECREAM",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
         },
         {
             "key": "direct_cosmetic_ART-ICECREAM_max_sales",
@@ -173,9 +203,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-ORB_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
             "key": "direct_cosmetic_ART-ORB",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
         },
         {
             "key": "direct_cosmetic_ART-ORB_max_sales",
@@ -218,9 +253,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-UMBRELLA_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
             "key": "direct_cosmetic_ART-UMBRELLA",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
         },
         {
             "key": "direct_cosmetic_ART-UMBRELLA_max_sales",
@@ -298,9 +338,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-BLUESHIRT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
             "key": "direct_cosmetic_ART-BLUESHIRT",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
         },
         {
             "key": "direct_cosmetic_ART-BLUESHIRT_max_sales",
@@ -318,9 +363,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-BUILTBODY_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
             "key": "direct_cosmetic_ART-BUILTBODY",
             "type": "integer",
-            "value": 50000000
+            "value": 100000000
         },
         {
             "key": "direct_cosmetic_ART-BUILTBODY_max_sales",
@@ -346,9 +396,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-FREDYSWEATER_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
             "key": "direct_cosmetic_ART-FREDYSWEATER",
             "type": "integer",
-            "value": 50000000
+            "value": 100000000
         },
         {
             "key": "direct_cosmetic_ART-FREDYSWEATER_max_sales",
@@ -366,9 +421,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-GUARDSUIT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
             "key": "direct_cosmetic_ART-GUARDSUIT",
             "type": "integer",
-            "value": 50000000
+            "value": 100000000
         },
         {
             "key": "direct_cosmetic_ART-GUARDSUIT_max_sales",
@@ -386,9 +446,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-LEATHERJCKET_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
             "key": "direct_cosmetic_ART-LEATHERJCKET",
             "type": "integer",
-            "value": 50000000
+            "value": 100000000
         },
         {
             "key": "direct_cosmetic_ART-LEATHERJCKET_max_sales",
@@ -431,9 +496,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-ROYALCOAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
             "key": "direct_cosmetic_ART-ROYALCOAT",
             "type": "integer",
-            "value": 50000000
+            "value": 100000000
         },
         {
             "key": "direct_cosmetic_ART-ROYALCOAT_max_sales",
@@ -451,9 +521,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-TANKTOP_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
             "key": "direct_cosmetic_ART-TANKTOP",
             "type": "integer",
-            "value": 50000000
+            "value": 100000000
         },
         {
             "key": "direct_cosmetic_ART-TANKTOP_max_sales",
@@ -471,9 +546,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-TRENCHCOAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },        
+        {
             "key": "direct_cosmetic_ART-TRENCHCOAT",
             "type": "integer",
-            "value": 50000000
+            "value": 100000000
         },
         {
             "key": "direct_cosmetic_ART-TRENCHCOAT_max_sales",
@@ -491,9 +571,14 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-TUXEDO_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
             "key": "direct_cosmetic_ART-TUXEDO",
             "type": "integer",
-            "value": 50000000
+            "value": 100000000
         },
         {
             "key": "direct_cosmetic_ART-TUXEDO_max_sales",
@@ -510,6 +595,11 @@
             "type": "integer",
             "value": 0
         },
+        {
+            "key": "direct_cosmetic_ART-WASSERMANVST_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
         {
             "key": "direct_cosmetic_ART-WASSERMANVST",
             "type": "integer",
