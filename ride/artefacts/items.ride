@@ -183,32 +183,29 @@ func directBuyItem(itemName:String)={
   if tryGetString(key_priceAssetCosmetic(itemName))=="WAVES" then unit  else 
   tryGetString(key_priceAssetCosmetic(itemName)).fromBase58String()
   
-  #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[price],[]).asInt()
   let amountPaidByCoupons = 0
   let leftToPay = price-amountPaidByCoupons
 
   let validPayment = checkAdditionalPayment(i.payments[0])
-  strict payment = if leftToPay!=0 then {
-      let firstPayment = i.payments[1].value()
-      let amount = firstPayment.amount
-      if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
-      if amount != leftToPay then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
-      leftToPay
-  }else 0
+  let firstPayment = i.payments[1].value()
+  let amount = firstPayment.amount
+  if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
+  if amount != leftToPay then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
   
-    let txIdStr = i.transactionId.toBase58String()
-    let address = i.originCaller
+  let txIdStr = i.transactionId.toBase58String()
+  let address = i.originCaller
 
-    let artefact = Issue(itemName, "NFT artefact of Waves Ducks game: "+itemName, 1, 0, false, unit, 0)
-    let artefactId = artefact.calculateAssetId()
+  let artefact = Issue(itemName, "NFT artefact of Waves Ducks game: "+itemName, 1, 0, false, unit, 0)
+  let artefactId = artefact.calculateAssetId()
 
-    ([
-      artefact,
-      StringEntry("artefact_" + artefactId.toBase58String() + "_type", itemName),
-      IntegerEntry(key_lastPriceCosmetic(itemName), price),
-      IntegerEntry(key_soldCosmetic(itemName), soldValue+1),
-      ScriptTransfer(address, 1, artefactId)
-    ]++validPayment,artefactId.toBase58String())
+  ([
+    artefact,
+    StringEntry("artefact_" + artefactId.toBase58String() + "_type", itemName),
+    IntegerEntry(key_lastPriceCosmetic(itemName), price),
+    IntegerEntry(key_soldCosmetic(itemName), soldValue+1),
+    ScriptTransfer(address, 1, artefactId),
+    ScriptTransfer(getFeeAggregator(),amount,assetId)
+  ]++validPayment,artefactId.toBase58String())
 
 
 }

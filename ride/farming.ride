@@ -60,7 +60,6 @@ func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_co
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
-#func getSicknessAddress() = Address(tryGetStringExternal(getOracle(),"static_sicknessAddress").fromBase58String())
 
 let RefererReward = 5 #percentage
 
@@ -190,7 +189,6 @@ func addAssetIdToGenEntry(assetId: String, assetGen: String) = {
 
 
 func getStakeResult(address: String, assetId: ByteVector, assetFarmingPower: Int, unstaker: String) = {
-  #if tryGetBooleanExternal(getSicknessAddress(),isSickDuck(assetId.toBase58String())) then throw("FGSR: Please first heal your duck!") else
   let asset = assetId.toBase58String()
   [
     IntegerEntry("total_farmingPower", tryGetInteger("total_farmingPower") + assetFarmingPower),
@@ -223,9 +221,7 @@ func getUnstakeResult(address: String, assetId: ByteVector, color: String, calle
   let reward = (farmedAmount - withdrawnAmount) / (scale * 100)
 
   let isWithoutPerch = tryGetBoolean("address_"+address+"_asset_"+asset+"_without_perch")
-  #strict sicknessCheck = invoke(getSicknessAddress(),"checkIfDuckGetSick",[asset],[]).asBoolean()
-  let sicknessCheck = false
-  let rewardAfterSickNess = if sicknessCheck then 0 else reward
+  let rewardAfterSickNess = reward
   let appendPerches = if isWithoutPerch then [DeleteEntry("address_"+address+"_asset_"+asset+"_without_perch")] else [IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color) + 1)]
   let sendTx = if claimEggs then ([
             ScriptTransfer(caller, rewardAfterSickNess * 1000000, getEggAssetId())
@@ -508,18 +504,6 @@ func claimReward(asset: String) = {
 
     let assetId = asset.fromBase58String()
 
-    #strict sicknessCheck = invoke(getSicknessAddress(),"checkIfDuckGetSick",[asset],[]).asBoolean()
-    let sicknessCheck = false
-    if sicknessCheck then 
-    
-      let assetFarmingPower =  getLastKnownAssetFarmingPower(address, asset)
-      [
-        IntegerEntry("total_farmingPower", tryGetInteger("total_farmingPower") - assetFarmingPower),
-        IntegerEntry("address_"+address+"_asset_"+asset+"_farmingPower", 0)
-      ]
-    
-    else
-
     let assetFarmingPower = getLastKnownAssetFarmingPower(address, asset)
     let assetRewardDelta = calcAssetRewardDelta(address, asset, assetFarmingPower)
     
@@ -541,19 +525,6 @@ func claimReward(asset: String) = {
   
 }
 
-
-# @Callable(i)
-# func healDuck(duckId: String)={
-#   #strict sicknessCheck = invoke(getSicknessAddress(),"healDuck",[duckId],i.payments).asBoolean()
-#   let address = if isProxyStakingSc(i.caller.toString())  then i.originCaller.toString() else i.caller.toString()
-#   let farmingPower = getAssetFarmingPower(duckId.toBytes(),address)._2
-
-#   [
-#     IntegerEntry("total_farmingPower", tryGetInteger("total_farmingPower") + farmingPower),
-#     IntegerEntry("address_"+address+"_asset_"+duckId+"_farmingPower", farmingPower)
-#   ] 
-
-# }
 
 @Verifier(tx)
 func verify() = {
