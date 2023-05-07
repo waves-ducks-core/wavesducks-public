@@ -524,12 +524,7 @@ func swap(assetOut: String, minimum: Int) ={
   strict cleanAmountOut = invokeSwap._1 
   strict feeAmount = invokeSwap._2
 
-  strict topUp = if assetOut == "WAVES" then {
-      strict unstake = reentrantInvoke(this,"internal",[false, cleanAmountOut+fraction(feeAmount,3,4), "WAVES"],[])
-      
-        [ScriptTransfer(getFeesAccount(),fraction(feeAmount,2,4),assetOut.getAssetBytes())]
-      } else         
-          [ScriptTransfer(getFeesAccount(),fraction(feeAmount,2,4),assetOut.getAssetBytes())]
+  strict topUp = [ScriptTransfer(getFeesAccount(),fraction(feeAmount,2,4),assetOut.getAssetBytes())]
 
   (topUp,cleanAmountOut)
 }
@@ -575,6 +570,7 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
     strict newBalanceIn = AssetInBalance + AmountIn
     strict stake = reentrantInvoke(this,"internal",[true, AmountIn, AssetIn],[])
     strict newBalanceOut = AssetOutBalance - AmountOut
+    strict unstake = reentrantInvoke(this,"internal",[false, cleanAmountOut+fraction(feeAmount,3,4), "WAVES"],[])
       (
         [
           IntegerEntry("global_"+assetOut+"_balance", newBalanceOut+fraction(feeAmount,1,4)),
