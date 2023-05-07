@@ -4,7 +4,7 @@
     "senderPublicKey": "23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T",
     "fee": 500000,
     "feeAssetId": null,
-    "version": 1,
+    "version": 2,
     "data": [
       {
         "key": "allowed_contract_3P3Gtbq2raMqBkks8tr6sTZH9uHCoVTBfQ8",
@@ -77,9 +77,18 @@
         "value": "RECHARGE_CAPACITY"
       },
       {
-        "key": "allowed_contract_3PRG9LfW6QZxKdTWB8eEdUia2bH6bHvyx7y",
+        "key": "allowed_contract_3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ",
         "type": "string",
-        "value": "PUZZLE_POOL"
+        "value": "NATIVE_POOL"
+      },
+      {
+        "key": "allowed_contract_3PJwsxCtCXTxex5dPSFjYGp95mxF1BDJDnq",
+        "type": "string",
+        "value": "LAYER2_POOL"
+      },
+      {
+        "key": "allowed_contract_3PRG9LfW6QZxKdTWB8eEdUia2bH6bHvyx7y",
+        "value": null
       },
       {
         "key": "COUPONS_ADDRESS",

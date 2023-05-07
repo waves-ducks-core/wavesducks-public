@@ -195,6 +195,12 @@
             "type": "integer",
             "value": 1000000
             
+        },
+        {
+            "key": "static_ammAddress",
+            "type": "string",
+            "value": "3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ"
+            
         }
 
         

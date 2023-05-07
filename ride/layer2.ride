@@ -1,0 +1,69 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_ammAddress() = "static_ammAddress"
+
+func getOracle() = Address(getStringValue(this,staticKey_oracleAddress()).fromBase58String())
+func getAmm() = Address(getStringValue(getOracle(),staticKey_ammAddress()).fromBase58String())
+
+func getAssetBytes(assetIdStr: String) = {
+  if (assetIdStr == "WAVES") then {unit} else {assetIdStr.fromBase58String()}
+}
+
+
+func getTokenBalance(assetId: ByteVector|Unit) = {
+  match (assetId) {
+      case t:ByteVector => assetBalance(this, t)
+      case _ => wavesBalance(this).available
+    }
+}
+
+func addAssetBytesToList(accum: List[ByteVector], item: String) = { accum ++ [item.getAssetBytes()] }
+
+@Callable(i)
+func generateAndStakeIndex() = {
+  let mainAddress = getAmm()
+  let assetIds = FOLD<10>(getStringValue(mainAddress, "static_tokenIds").split(","), [], addAssetBytesToList)
+  let baseAssetId = getStringValue(mainAddress, "static_baseTokenId").getAssetBytes()
+  let secondaryAssetIds = assetIds.removeByIndex(assetIds.indexOf(baseAssetId).value())
+  let poolIndexId = getBinaryValue(mainAddress, "global_poolToken_id")
+
+  strict PIssuedAmount = match reentrantInvoke(mainAddress, "generateIndex", [true], i.payments) {
+    case x: Int => x
+    case _ => 0
+  }
+
+  strict stakeInvoke = reentrantInvoke(mainAddress, "stakeIndex", [], [AttachedPayment(poolIndexId, PIssuedAmount)])
+  []
+}
+
+@Callable(i)
+func unstakeAndRedeemIndex(amount: Int) = {
+  let mainAddress = getAmm()
+  let assetIds = FOLD<10>(getStringValue(mainAddress, "static_tokenIds").split(","), [], addAssetBytesToList)
+  let baseAssetId = getStringValue(mainAddress, "static_baseTokenId").getAssetBytes()
+  let secondaryAssetIds = assetIds.removeByIndex(assetIds.indexOf(baseAssetId).value())
+  let poolIndexId = getBinaryValue(mainAddress, "global_poolToken_id")
+  
+  strict unstakeInvoke = reentrantInvoke(mainAddress, "unstakeIndex", [amount], i.payments)
+  strict redeemInvoke = reentrantInvoke(mainAddress, "redeemIndex", [true], [AttachedPayment(poolIndexId, amount)])
+  []
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("BCO: admin only") else 
+  [
+    StringEntry(staticKey_oracleAddress(),oracle)
+  ]
+
+}
+
+@Verifier(tx)
+func verify() = {
+    sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  
+}
+

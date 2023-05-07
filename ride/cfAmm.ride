@@ -479,28 +479,6 @@ func stakeIndex() = {
 }
 
 @Callable(i)
-func generateAndStakeIndex(needChange: Boolean) = {
-  # throw("LP is closed yet")
-  if (i.payments.size() != T) then {
-    throw("you need to attach all pool tokens. amount of pool tokens: " + T.toString())
-  } else {
-    if (!(checkTokensValidity(i.payments))) then {throw("wrong assets attached")} 
-    else {
-      let PIssued = getMinPIssued(i.payments)
-      let reissue = Reissue(getBinaryValue("global_poolToken_id"), PIssued, true)
-
-      let result = handlePoolTokensAdd(PIssued, i.payments, i.originCaller, needChange)
-      
-      (result ++ [
-        reissue,
-        IntegerEntry("global_poolToken_amount", tryGetInteger("global_poolToken_amount") + PIssued)
-      ]++indexStakeResult(i.originCaller.toString(), PIssued), PIssued)
-    }
-  }
-}
-
-
-@Callable(i)
 func unstakeIndex(shareAmount: Int) = {
   let addressStr = i.originCaller.toString()
 
@@ -519,7 +497,6 @@ func claimIndexRewards() = {
   claimResult(i.caller)
 }
 
-
 @Callable(i)
 func redeemIndex(sendToOrigin: Boolean) = {
   # throw("LP is closed yet")
@@ -533,28 +510,6 @@ func redeemIndex(sendToOrigin: Boolean) = {
       Burn(tryGetBinary("global_poolToken_id"), PRedeemed),
       IntegerEntry("global_poolToken_amount", tryGetInteger("global_poolToken_amount") - PRedeemed)
     ]
-  }
-}
-
-@Callable(i)
-func unstakeAndRedeemIndex(shareAmount: Int) = {
-  let addressStr = i.originCaller.toString()
-
-  let shareAvailable = tryGetInteger(addressStr + "_indexStaked")
-  if (shareAmount > shareAvailable) then {throw("you don't have index tokens available")} else {
-
-    let PRedeemed = shareAmount
-    let result = handlePoolTokensRedeem(PRedeemed, i.originCaller)
-
-    claimResult(i.originCaller) ++ [
-      IntegerEntry(addressStr + "_indexStaked", shareAvailable - shareAmount),
-      IntegerEntry("global_indexStaked", tryGetInteger("global_indexStaked") - shareAmount),
-      ScriptTransfer(i.caller, shareAmount, getBinaryValue("global_poolToken_id"))
-    ]++     result ++ [
-      Burn(tryGetBinary("global_poolToken_id"), PRedeemed),
-      IntegerEntry("global_poolToken_amount", tryGetInteger("global_poolToken_amount") - PRedeemed)
-    ]
-    
   }
 }
 

@@ -338,7 +338,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
             exactPrice
         }
       strict payment = if leftToPay!=0 then {
-        let firstPayment = i.payments[1].value()
+        let firstPayment = if size(i.payments) == 2 then  i.payments[1].value() else  i.payments[0].value()
 
         if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
         if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
