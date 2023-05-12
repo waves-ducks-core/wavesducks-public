@@ -201,7 +201,15 @@
             "type": "string",
             "value": "3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ"
             
+        },
+        {
+            "key": "static_huntMultiplierPrice",
+            "type": "integer",
+            "value": 50000000
+            
         }
+
+        
 
         
     ],

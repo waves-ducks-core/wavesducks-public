@@ -243,7 +243,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
 
 
   let realDucklingId = if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), backendPubKey)) then throw("BFD: Invalid proof from backend") else 
-    if (i.payments.size() != 1 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else 
+    if (i.payments.size() != 2 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else 
     if (getBool(keyDucklingGrown(ducklingId))) then throw("BFD: Duckling is already grown") else 
     if (userNonce != currentNonce + 1) then throw("BFD: User Nonce should be " + currentNonce.toString() + " + 1, while received " + userNonce.toString()) else 
       let blackListed = tryGetBoolean(keyBlacklisted(ducklingId))

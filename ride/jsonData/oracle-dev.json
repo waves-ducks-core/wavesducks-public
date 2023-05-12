@@ -218,6 +218,12 @@
             "type": "string",
             "value": "3P5s8fYvGZuf8WGv5SVJYqyo5mbXUhhtKWj"
             
+        },
+        {
+            "key": "static_huntMultiplierPrice",
+            "type": "integer",
+            "value": 1
+            
         }
     ],
     "fee": 600000,
