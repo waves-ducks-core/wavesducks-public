@@ -396,8 +396,7 @@ func finishDuckHatchingItems(txIdStr: String, duckGenesString: String) = {
   strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
   let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
   if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
-  strict validPayment = checkAdditionalPayment(i.payments[0])
-  finishDuckHatch(txIdStr, owner, duckGenesString)++validPayment 
+  finishDuckHatch(txIdStr, owner, duckGenesString)
 }
 
 @Callable(i)
@@ -406,8 +405,7 @@ func finishDuckHatching(txIdStr: String) = {
   strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
   let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
   if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else
-  strict validPayment = checkAdditionalPayment(i.payments[0]) 
-  finishDuckHatch(txIdStr, owner, "") ++validPayment 
+  finishDuckHatch(txIdStr, owner, "") 
 }
 
 @Callable(i)
