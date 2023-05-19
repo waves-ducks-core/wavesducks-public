@@ -79,7 +79,59 @@
             "key": "direct_cosmetic_ART-CURE_growing_percentage",
             "type": "integer",
             "value": 0
+        },
+
+        {
+            "key": "direct_cosmetic_ART-FIRE_HELMET",
+            "type": "integer",
+            "value": 10000000
+        },
+        {
+            "key": "direct_cosmetic_ART-FIRE_HELMET_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-FIRE_ARMOUR",
+            "type": "integer",
+            "value": 10000000
+        },
+        {
+            "key": "direct_cosmetic_ART-FIRE_ARMOUR_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-FIRE_SWORD",
+            "type": "integer",
+            "value": 10000000
+        },
+        {
+            "key": "direct_cosmetic_ART-FIRE_SWORD_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-FIRE_SHIELD",
+            "type": "integer",
+            "value": 10000000
+        },
+        {
+            "key": "direct_cosmetic_ART-FIRE_SHIELD_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-FIRE_TAIL",
+            "type": "integer",
+            "value": 10000000
+        },
+        {
+            "key": "direct_cosmetic_ART-FIRE_TAIL_sale",
+            "type": "boolean",
+            "value": false
         }
+       
     ],
     "fee": 600000,
     "feeAssetId": "WAVES"

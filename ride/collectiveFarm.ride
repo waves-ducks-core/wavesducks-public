@@ -298,7 +298,7 @@ func callUnstakeProxy(function: String, assetId: String) = {
     let eggAssetId = getEggId()
     let shareAssetId = getShareAssetId()
     let farmingDappAddress = getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue()
-    strict unstakedReward = invoke(farmingDappAddress, function, [assetId], [])
+    strict unstakedReward = invoke(farmingDappAddress, function, [assetId], [AttachedPayment(unit,1000000)])
 
     let reward = match unstakedReward {
       case int: Int =>  int
