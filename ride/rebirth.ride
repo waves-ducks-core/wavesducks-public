@@ -133,8 +133,8 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
     if (n<610) then { "item_ART-SCEPTER" } else
     if (n<740) then { "item_ART-BUILTBODY" } else
     if (n<750) then { "item_ART-FEED10" } else
-
-    if (n<875) then { "ar" } else
+    if (n<800) then { "item_ART-FIRE_ARMOUR" } else
+    if (n<900) then { "ar" } else
     { "meta" }
   }
 }
