@@ -429,7 +429,7 @@ func stakeNFTWithoutPerch() = {
 
 @Callable(i)
 func unstakeNFT(asset: String) = {
-  strict validPayment = checkAdditionalPayment(i.payments[0])
+  strict validPayment = if i.caller == getMetaraceAddress() then [] else checkAdditionalPayment(i.payments[0])
   let result = unstakeNFTInternal(asset,i,true)
   (result._1++validPayment,result._2)
   
