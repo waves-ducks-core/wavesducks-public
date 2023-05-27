@@ -570,7 +570,7 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
     strict newBalanceIn = AssetInBalance + AmountIn
     strict stake = reentrantInvoke(this,"internal",[true, AmountIn, AssetIn],[])
     strict newBalanceOut = AssetOutBalance - AmountOut
-    strict unstake = reentrantInvoke(this,"internal",[false, cleanAmountOut+fraction(feeAmount,3,4), "WAVES"],[])
+    strict unstake = reentrantInvoke(this,"internal",[false, cleanAmountOut+fraction(feeAmount,3,4), assetOut],[])
       (
         [
           IntegerEntry("global_"+assetOut+"_balance", newBalanceOut+fraction(feeAmount,1,4)),

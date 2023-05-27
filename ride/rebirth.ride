@@ -126,14 +126,14 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
     if (n<210) then { "duckling_20" } else
     if (n<250) then { "incubator" } else
 
-    if (n<280) then { "item_ART-SNAKE" } else
-    if (n<410) then { "item_ART-KATANA" } else
-    if (n<460) then { "item_ART-ROBODUCK" } else
-    if (n<480) then { "item_ART-CROWN" } else
-    if (n<610) then { "item_ART-SCEPTER" } else
-    if (n<740) then { "item_ART-BUILTBODY" } else
-    if (n<750) then { "item_ART-FEED10" } else
-    if (n<800) then { "item_ART-FIRE_ARMOUR" } else
+    if (n<280) then { "item!ART-SNAKE" } else
+    if (n<410) then { "item!ART-KATANA" } else
+    if (n<460) then { "item!ART-ROBODUCK" } else
+    if (n<480) then { "item!ART-CROWN" } else
+    if (n<610) then { "item!ART-SCEPTER" } else
+    if (n<740) then { "item!ART-BUILTBODY" } else
+    if (n<750) then { "item!ART-FEED10" } else
+    if (n<800) then { "item!ART-FIRE_ARMOUR" } else
     if (n<900) then { "ar" } else
     { "meta" }
   }
@@ -271,7 +271,7 @@ func finishRebirth(initTx: String) = {
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       } else if (win.indexOf("item") !=unit) then {
-        let itemName = win.split("_")[1]
+        let itemName = win.split("!")[1]
         strict call = invoke(getItemsAddress(), "issueArtefact", [itemName, address], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 

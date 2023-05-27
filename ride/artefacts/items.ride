@@ -395,7 +395,7 @@ func preInit() = {
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getHuntDistroAddress()) then throw("admin only") else 
-     if (i.caller == getHuntDistroAddress() && !type.contains("FIRE_HELMET")) then throw("FIRE ITEM ONLY!") else
+     if (i.caller == getHuntDistroAddress() && !type.contains("ART-FIRE_")) then throw("FIRE ITEM ONLY!") else
     let txIdStr = i.transactionId.toBase58String()
     let address = Address(fromBase58String(receiver))
 
