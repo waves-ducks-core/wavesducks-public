@@ -212,10 +212,15 @@
             "key": "static_huntDistroAddress",
             "type": "string",
             "value": "3P7eZotfwNFYWGm9YeWhTZed1JdLdiszuh7"
+        },
+        {
+            "key": "static_rentingAddress",
+            "type": "string",
+            "value": "3P355gZeQTTSwE5Cynz9FQekvWJRhASBHFC"
         }
 
         
-
+        
         
     ],
     "fee": 600000,

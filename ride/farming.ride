@@ -72,7 +72,7 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 }
 
 func getRewardPerBlock() = {
-  548 # 0.0684 EGGs per block
+  274 # 0.0684 EGGs per block
 }
 
 func isLocked() = {
