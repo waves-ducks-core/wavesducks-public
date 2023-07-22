@@ -24,8 +24,10 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 
-func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
@@ -55,25 +57,31 @@ func getGlobalCounter() = {
 }
 
 func getAssetGenotype(assetId: ByteVector) = {
-  if (assetInfo(assetId).value().issuer == getItemsAddress()) then "ART" else {
+  if (assetInfo(assetId).value().issuer == getItemsAddress()) then "ART" else 
   let asset1 = match getString(getIncubatorAddress(), assetId.toBase58String()) {
         case b:String => b
         case _ => ""
     }
-  if (asset1 != "") then {
-    asset1
-  } else {
+  if (asset1 != "") then asset1  else 
     let asset2 = match getString(getBreederAddress(), assetId.toBase58String()) {
       case c:String => c
       case _ => ""
     }
-    if (asset2 != "") then {
-      asset2
-    } else {
-      ""
-    }
-  }
-  }
+    if (asset2 != "") then asset2 else 
+      let asset3 = match getString(getIncubatorAddress(), assetId.toBase58String()) {
+          case b:String => b
+          case _ => ""
+      }
+      if (asset3 != "") then asset1  else 
+        let asset4 = match getString(getBreederAddress(), assetId.toBase58String()) {
+          case c:String => c
+          case _ => ""
+        }
+        if (asset4 != "") then asset4 else ""
+    
+  
+  
+  
 }
 
 func getBidCancelResults(auctionId: String, bidId: String) = {
