@@ -140,7 +140,7 @@ func rentDuckFromUser(duckId: String, game: String)={
   # " "+boughtSpots.toString()+" "+busySpots.toString()+
   # " "+staticKey_accessItemAssetId()+" "+getHuntAddress().toString()+
   # " "+tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId())) else
-  let buySpotIfNeeded = if boughtSpots <= busySpots then 
+  strict buySpotIfNeeded = if boughtSpots == busySpots then 
   strict call = invoke(getHuntAddress(), "buyAccessItemOther", [duckOwner], [
     AttachedPayment(
       tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId()).fromBase58String(),
@@ -171,7 +171,7 @@ func rentDuckFromUser(duckId: String, game: String)={
     IntegerEntry(amountRentedKey, newAmountRented),
     StringEntry(key_getDuckStatus(duckId),"RENTED"),
     StringEntry(key_getDuckRentedBy(duckId), i.caller.toString())
-  ]
+  ]++buySpotIfNeeded
 }
 
 #Profits for duck need to be topped up #USE FOLD
