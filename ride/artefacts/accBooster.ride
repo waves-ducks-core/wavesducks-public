@@ -122,10 +122,11 @@ func oneTimeUseFeed() ={
   if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
     let assetId = i.payments[0].assetId.value()
     strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
-    if artefactName != "ART-FEED10" then throw("You can't use this artafect to earn feedlimit!") else
+    if !artefactName.contains("ART-FEED") then throw("You can't use this artafect to earn feedlimit!") else
         let invoker = i.caller.toString()
+        let amount = drop(artefactName,8)
         [
-          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+10),
+          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+parseIntValue(amount)),
           Burn(assetId,1)
         ]++validPayment
 }

@@ -116,7 +116,7 @@ func lockDuckInternal(addressStr:String,takeSpotsFrom:String, pmt: AttachedPayme
 
   if (pmt.amount != 1) then throw("NFT is not attached") else 
   if (assetIssuer != getIncubatorAddress() && assetIssuer != getBreederAddress()) then { throw("ivalid NFT attached") } 
-  else if (addressSpotsAvailable <= 0) then { throw("No spots available") }
+  else if (addressSpotsAvailable <= 0) then { throw("No spots available in hunt for: "+takeSpotsFrom) }
   else {
     let kPerchesAvailable = "address_" + this.toString() + "_perchesAvailable_" + assetColor
     strict perchesAvailable = match getInteger(getFarmingAddress(), kPerchesAvailable) {
