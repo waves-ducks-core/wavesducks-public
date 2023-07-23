@@ -15,11 +15,12 @@ func tryGetString(key: String) = {
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_eggAssetId() = "static_eggAssetId"
 
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -137,6 +138,7 @@ func setDiscount(val: Int) = {
 @Callable(i)
 func startTRTLHatching(refererAddress: String) = {
   strict feeValidate = checkAdditionalPayment(i.payments[0])
+  #TODO: add validation that feeValidate payment is added!
   if (isLocked() > 0) then {
     throw("EGG operations are temporarily locked")
   } else {
@@ -164,6 +166,7 @@ func startTRTLHatching(refererAddress: String) = {
 @Callable(i)
 func finishTRTLHatching(txIdStr: String) = {
   strict feeValidate = checkAdditionalPayment(i.payments[0])
+  #TODO: add validation that feeValidate payment is added!
   let txId = fromBase58String(txIdStr)
   let hatchingStatusKey = getHatchingStatusKey(i.caller.toString(), txId)
   let finishHeightKey = getHatchingFinishHeightKey(i.caller.toString(), txId)
@@ -197,6 +200,22 @@ func finishTRTLHatching(txIdStr: String) = {
       ]
     }
 }
+
+# @Callable(i)
+# func reduceRarity(assetId: String, fGen: String) = {
+#   let asset = assetId.fromBase58String()
+#   if (i.caller != Address(rebirthAddress) && i.caller != this) then {
+#     throw("admin or rebirth only")
+#   } else {
+#     let duckGen = assetInfo(asset).value().name
+#     let letter = duckGen.take(6).takeRight(1)
+#     let farmGen = "8"+letter+"-G"
+#     [
+#       IntegerEntry(getDuckStatsKey(duckGen), tryGetInteger(getDuckStatsKey(duckGen)) - 1),
+#       IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
+#     ]
+#   }
+# }
 
 @Verifier(tx)
 func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
