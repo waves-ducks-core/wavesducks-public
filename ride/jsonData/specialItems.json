@@ -5,7 +5,7 @@
         {
             "key": "direct_cosmetic_ART-FEED10",
             "type": "integer",
-            "value": 500000000
+            "value": 300000000
         },
 
         {
@@ -204,6 +204,53 @@
             "key": "direct_cosmetic_ART-FIRE_TAIL_priceAsset",
             "type": "string",
             "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED50_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED50_max_sales",
+            "type": "integer",
+            "value": 5000
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED50_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED50_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        
+        {
+            "key": "direct_cosmetic_ART-FEED100",
+            "type": "integer",
+            "value": 2000000000
+        },
+
+        {
+            "key": "direct_cosmetic_ART-FEED100_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED100_max_sales",
+            "type": "integer",
+            "value": 5000
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED100_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED100_growing_percentage",
+            "type": "integer",
+            "value": 0
         }
     ],
     "fee": 600000,

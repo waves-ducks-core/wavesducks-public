@@ -68,12 +68,12 @@ func getAssetGenotype(assetId: ByteVector) = {
       case _ => ""
     }
     if (asset2 != "") then asset2 else 
-      let asset3 = match getString(getIncubatorAddress(), assetId.toBase58String()) {
+      let asset3 = match getString(getTurtleIncubatorAddress(), assetId.toBase58String()) {
           case b:String => b
           case _ => ""
       }
       if (asset3 != "") then asset1  else 
-        let asset4 = match getString(getBreederAddress(), assetId.toBase58String()) {
+        let asset4 = match getString(getTurtleBreederAddress(), assetId.toBase58String()) {
           case c:String => c
           case _ => ""
         }
@@ -146,6 +146,7 @@ func initAuction(startPrice: Int, instantPrice: Int, description: String, eggSel
       StringEntry("auction_" + auctionId + "_description", description),
       IntegerEntry("auction_" + auctionId + "_startPrice", startPrice),
       BooleanEntry("auction_" + auctionId + "_isArtefact", assetInfo(assetId).value().issuer == getItemsAddress()),
+      BooleanEntry("auction_" + auctionId + "_isTurtle", assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer == getTurtleIncubatorAddress()),
       IntegerEntry("auction_" + auctionId + "_instantPrice", instantPrice),
       StringEntry("address_" + i.originCaller.toString() + "_auction_" + auctionId + "_lockedNFT", assetId.toBase58String())
     ]

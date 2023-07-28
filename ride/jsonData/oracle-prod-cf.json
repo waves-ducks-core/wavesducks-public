@@ -87,6 +87,11 @@
         "value": "LAYER2_POOL"
       },
       {
+        "key": "allowed_contract_3P355gZeQTTSwE5Cynz9FQekvWJRhASBHFC",
+        "type": "string",
+        "value": "RENTING"
+      },
+      {
         "key": "allowed_contract_3PRG9LfW6QZxKdTWB8eEdUia2bH6bHvyx7y",
         "value": null
       },

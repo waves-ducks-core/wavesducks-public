@@ -28,8 +28,8 @@ func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
-func staticKey_incubatorAddress() = "static_incubatorAddress"
-func staticKey_breederAddress() = "static_breederAddress"
+func staticKey_turtleIncubatorAddress() = "static_turtleIncubatorAddress"
+func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
 
 func rewardClaimedKey(address: Address) = address.toString() + "_claimed"
@@ -43,8 +43,8 @@ func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58Str
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -68,7 +68,7 @@ func claimStakingResult (address: Address) = {
     let reward = if (lastCheckInterest > 0)
         then fraction((currentInterest - lastCheckInterest), stakedAmount, Scale)
         else 0
-    let transfer = if (reward >0 ) then [ScriptTransfer(address, reward, unit)] else []
+    let transfer = if (reward >0 ) then [ScriptTransfer(address, reward, getSpiceAssetId())] else []
       transfer++
       [
         IntegerEntry(keyLastCheckInterest(address), currentInterest), 
@@ -89,10 +89,35 @@ func handleStakingTopUp (amount: Int) = {
     ]
 }
 
+
+func unstakeNFTInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
+
+    let assetId = asset.fromBase58String()
+    let address = i.originCaller.toString()
+
+    
+    let color = assetInfo(assetId).value().name.takeRight(1)
+    let appendPerches = [IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color) + 1)]
+    if getStringValue(assetId.toBase58String()+"_owner") != address then throw("This is not your turtle to claim!!") else
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId],[]).asInt()
+
+    #TODO: send turtle to the user, 
+    #TODO: lower fp
+    #TODO: 
+    let diff = [
+      IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())-farmingPower),
+      IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))-farmingPower),
+      DeleteEntry(assetId.toBase58String()+"_owner"),
+      DeleteEntry(assetId.toBase58String()+"_power"),
+      ScriptTransfer(i.caller,1,assetId)
+    ]
+    (appendPerches++claimStakingResult(i.caller)++diff,farmingPower)
+}
+
 @Callable(i)
 func calculateFarmPower(assetId:String)={
-  if !(assetInfo(assetId.fromBase58String()).value().issuer == getBreederAddress() 
-      ||assetInfo(assetId.fromBase58String()).value().issuer == getIncubatorAddress()) then throw("This does not seem like a valid Turtle!")else
+  if !(assetInfo(assetId.fromBase58String()).value().issuer == getTurtleBreederAddress() 
+      ||assetInfo(assetId.fromBase58String()).value().issuer == getTurtleIncubatorAddress()) then throw("This does not seem like a valid Turtle!")else
   let assetName = assetInfo(assetId.fromBase58String()).value().name
   let genotype = assetName.drop(5).dropRight(3).split("")
   func uniqueArrayFilter(accum: List[String], nextGen: String) =
@@ -171,10 +196,6 @@ func stakeNFT() = {
   if (pmt.amount != 1) then throw("NFT is not attached") else
   if (availablePerches <= 0) then throw("no beach available for the type " + color) else 
     strict farmingPower = invoke(this,"calculateFarmPower",[assetId],[]).asInt()
-    #TODO: claim staking rewards whenever you add more ducks to the staking
-
-      
-
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower),
@@ -185,9 +206,6 @@ func stakeNFT() = {
   
     
 }
-
-#TODO:
-#topup stake rewards=> take math logic from transitum or ducks staking pool
 
 @Callable(i)
 func topUpReward () = {
@@ -209,8 +227,17 @@ func topUpReward () = {
 #Claime stake rewards
 #send duck back
 #adjust total staked power
+@Callable(i)
+func unstakeNFT(asset: String) = {
+  strict validPayment = checkAdditionalPayment(i.payments[0])
+  let result = unstakeNFTInternal(asset,i,true)
+  (result._1++validPayment,result._2)
+  
+}
 
-
-#TODO
 #claim rewards
-#check transitum interest logic
+@Callable(i)
+func claimReward () = {
+  strict validPayment =  checkAdditionalPayment(i.payments[0])  
+  if (i.payments.size() > 1) then throw("Please don't add extra payments") else claimStakingResult(i.caller)
+  }
