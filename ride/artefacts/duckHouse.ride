@@ -145,7 +145,7 @@ func unstakeDuck(asset: String)={
     let owner = tryGetString(keyOwner(duckHouseId))
     let address = i.caller.toString()
     if owner != address then throw("Don't try to steal someone duck!") else
-    strict unstakeDuckReward = if isJackpot(asset.fromBase58String()) then invoke(getFarmingAddress(),"unstakeJackpot",[asset],i.payments).asInt() else invoke(getFarmingAddress(),"unstakeNFT",[asset],[]).asInt()
+    strict unstakeDuckReward = if isJackpot(asset.fromBase58String()) then invoke(getFarmingAddress(),"unstakeJackpot",[asset],i.payments).asInt() else invoke(getFarmingAddress(),"unstakeNFT",[asset],i.payments).asInt()
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
     if filledSpots == 0 then throw("You aren't staking any ducks!") else
     strict unboostDuck = invoke(getItemsAddress(),"manipulateBoost",[-boost(),asset],[])
