@@ -120,7 +120,7 @@ func calculateDiffEggs(oldEggs: Int, newEggs: Int)={
 @Callable(i)
 func addCapacityToDuck(addedCapacity: Int)={
     let nftPayment = i.payments[0].value()
-    let validPayment = checkAdditionalPayment(i.payments[1])
+    let validPayment = checkAdditionalPayment(i.payments[2])
     let duckAssetId = nftPayment.assetId.value().toBase58String()
     if (nftPayment.amount != 1 ) then throw("NFT is not attached") else
     common(duckAssetId, i.payments[1],addedCapacity)++[

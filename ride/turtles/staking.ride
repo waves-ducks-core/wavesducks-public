@@ -99,7 +99,7 @@ func unstakeNFTInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
     let color = assetInfo(assetId).value().name.takeRight(1)
     let appendPerches = [IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color) + 1)]
     if getStringValue(assetId.toBase58String()+"_owner") != address then throw("This is not your turtle to claim!!") else
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId],[]).asInt()
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asInt()
 
     #TODO: send turtle to the user, 
     #TODO: lower fp
@@ -109,6 +109,7 @@ func unstakeNFTInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))-farmingPower),
       DeleteEntry(assetId.toBase58String()+"_owner"),
       DeleteEntry(assetId.toBase58String()+"_power"),
+      DeleteEntry("assetId_"+assetId.toBase58String()+"_owner_"+address+"_power"),
       ScriptTransfer(i.caller,1,assetId)
     ]
     (appendPerches++claimStakingResult(i.caller)++diff,farmingPower)
@@ -185,8 +186,7 @@ func buyBeach(color: String, refererAddress: String) = {
 func stakeNFT() = {
   strict validPayment =  checkAdditionalPayment(i.payments[0])
   let pmt = i.payments[1].value()
-  let assetId = i.payments[1].value().assetId.value()
-  let realCaller = i.caller.toString()
+  let assetId = pmt.assetId.value()
   let address = i.caller.toString()
 
 
@@ -195,13 +195,14 @@ func stakeNFT() = {
 
   if (pmt.amount != 1) then throw("NFT is not attached") else
   if (availablePerches <= 0) then throw("no beach available for the type " + color) else 
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId],[]).asInt()
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asInt()
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower),
       IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1),
       StringEntry(assetId.toBase58String()+"_owner",address),
-      IntegerEntry(assetId.toBase58String()+"_power",farmingPower)
+      IntegerEntry(assetId.toBase58String()+"_power",farmingPower),
+      IntegerEntry("assetId_"+assetId.toBase58String()+"_owner_"+address+"_power",farmingPower)
     ]++claimStakingResult(i.caller)++validPayment
   
     

@@ -210,7 +210,7 @@
         {
             "key": "static_extraFee",
             "type": "integer",
-            "value": 1000000
+            "value": 1
             
         },
         {
