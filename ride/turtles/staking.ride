@@ -97,7 +97,7 @@ func unstakeNFTInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
 
     
     let color = assetInfo(assetId).value().name.takeRight(1)
-    let appendPerches = [IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color) + 1)]
+    let appendPerches = [IntegerEntry("address_"+address+"_beachesAvailable_"+color, tryGetInteger("address_"+address+"_beachesAvailable_"+color) + 1)]
     if getStringValue(assetId.toBase58String()+"_owner") != address then throw("This is not your turtle to claim!!") else
     strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asInt()
 
@@ -199,7 +199,7 @@ func stakeNFT() = {
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower),
-      IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1),
+      IntegerEntry("address_"+address+"_beachesAvailable_"+color, availablePerches - 1),
       StringEntry(assetId.toBase58String()+"_owner",address),
       IntegerEntry(assetId.toBase58String()+"_power",farmingPower),
       IntegerEntry("assetId_"+assetId.toBase58String()+"_owner_"+address+"_power",farmingPower)

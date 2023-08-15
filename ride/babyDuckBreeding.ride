@@ -218,7 +218,9 @@ func feedDuckling(ducklingId: String) = {
       IntegerEntry(kTotalFeed, totalFeed + currentPayment),
       IntegerEntry(kFeedTxStats, currentPayment),
       StringEntry(kNewLevel, calculateResults._1),
-      StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";"))
+      StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";")),
+      Burn(getSpiceAssetId(), currentPayment/2)
+
     ]++validPayments
   
 }
