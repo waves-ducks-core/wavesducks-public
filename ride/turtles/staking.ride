@@ -2,7 +2,6 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let beachPrice = 1_0000_0000
 let Scale = 100000000
 
 func tryGetInteger(key: String) = {
@@ -30,6 +29,7 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_turtleIncubatorAddress() = "static_turtleIncubatorAddress"
 func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
+func staticKey_turtleBeachFee() = "static_turtleBeachFee"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
 
 func rewardClaimedKey(address: Address) = address.toString() + "_claimed"
@@ -140,7 +140,7 @@ func buyBeach(color: String, refererAddress: String) = {
     if (["R", "D", "S", "G"].indexOf(color).value() < 0) then {
       throw("you need to set color properly")
     } else {
-      let exactPrice = beachPrice
+      let exactPrice = getIntegerValue(staticKey_turtleBeachFee())
       let leftToPay = if i.originCaller==i.caller then {
           #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
           #exactPrice-amountPaidByCoupons
@@ -210,7 +210,6 @@ func stakeNFT() = {
 
 @Callable(i)
 func topUpReward () = {
-    let caller = i.caller.toString()
     if(size(i.payments)!=1) then throw("Wrong amount of payments attached") else
     if !(isDefined(i.payments[0].assetId))then throw("Waves rewards not supported")else
     if i.payments[0].assetId!= getSpiceAssetId() then throw("Please attach spice!") else

@@ -14,6 +14,12 @@
             
         },
         {
+            "key": "static_turtleBeachFee",
+            "type": "integer",
+            "value": 200000000
+            
+        },
+        {
             "key": "static_turtleBreederAddress",
             "type": "string",
             "value": "3PAAYogFMWzD3enj9WaBhmrfj7pEuAqRXVG"

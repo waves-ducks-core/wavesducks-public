@@ -41,6 +41,7 @@ func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_backendPubKey() = "static_backendPubKey"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getDucklingPrice() = tryGetIntegerExternal(getOracle(),staticKey_ducklingPrice())
@@ -52,6 +53,7 @@ func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_co
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 let backendPubKey = getStringValue(getOracle(),staticKey_backendPubKey()).fromBase58String()
 
@@ -266,6 +268,8 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
   if (maxFeedAmount < currentPayment) then throw("BFD: Cannot feed duckling for such amount, max feed amount is: " + maxFeedAmount.toString()) else 
     let calculateResults = calculateNewDucklingLevel(realDucklingId, currentPayment)
     let ducklingOwner = tryGetString(keyOwner(realDucklingId))
+    strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
+        [], [AttachedPayment(getSpiceAssetId(), currentPayment/2)])
     if ducklingOwner != i.caller.toString()&& !isTestEnv() then 
       [
         BooleanEntry(keyBlacklisted(realDucklingId), true)
@@ -277,7 +281,8 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
         IntegerEntry(kTotalFeedUser, totalFeedUser + currentPayment),
         IntegerEntry(kFeedTxStats, currentPayment),
         StringEntry(kNewLevel, calculateResults._1),
-        StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";"))
+        StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";")),
+        Burn(getSpiceAssetId(), currentPayment/2)
       ]++feeValidate
   
 }

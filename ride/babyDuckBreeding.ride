@@ -7,6 +7,7 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
 func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 
 
 func tryGetStringExternal(address: Address, key: String) = {
@@ -36,6 +37,8 @@ func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58Str
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -183,6 +186,7 @@ func issueDuckling(address: String, txIdStr: String, spiceAmount: Int, gen: Stri
 func feedDuckling(ducklingId: String) = {
   let addressString = i.caller.toString()
   let realDucklingId = if (i.payments.size() != 2 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD: Bad payment attached (asset[s] or amount)") else
+
     let blackListed = tryGetBoolean(keyBlacklisted(ducklingId))
     if blackListed then throw("BFD: Can not feed blacklisted duckling!") else  
     if (getBool(keyDucklingGrown(ducklingId))) then throw("BFD: Duckling is already grown") else 
@@ -207,6 +211,8 @@ func feedDuckling(ducklingId: String) = {
   strict validPayments = checkAdditionalPayment(i.payments[1])
 
     let calculateResults = calculateNewDucklingLevel(realDucklingId, currentPayment)
+        strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
+        [], [AttachedPayment(getSpiceAssetId(), currentPayment/2)])
     [
       IntegerEntry(kDucklingLastFedTs, lastBlock.timestamp),
       IntegerEntry(kTotalFeed, totalFeed + currentPayment),
