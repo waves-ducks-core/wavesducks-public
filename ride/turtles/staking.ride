@@ -212,8 +212,8 @@ func stakeNFT() = {
 func topUpReward () = {
     let caller = i.caller.toString()
     if(size(i.payments)!=1) then throw("Wrong amount of payments attached") else
-    if (isDefined(i.payments[0].assetId))then throw("Waves rewards not supported")else
-    if isDefined(i.payments[0].assetId!= getSpiceAssetId()) then throw("Please attach spice!") else
+    if !(isDefined(i.payments[0].assetId))then throw("Waves rewards not supported")else
+    if i.payments[0].assetId!= getSpiceAssetId() then throw("Please attach spice!") else
         let resHandleStaking = handleStakingTopUp(i.payments[0].amount) 
         (
           resHandleStaking, 
