@@ -1,0 +1,38 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_turtleIncubatorAddress",
+            "type": "string",
+            "value": "3PE9yT1qVM9hsRkpiV6Y7AKEubafyT5NCuB"
+        },
+        {
+            "key": "static_turtleIncubationFee",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+        {
+            "key": "static_turtleBeachFee",
+            "type": "integer",
+            "value": 200000000
+            
+        },
+        {
+            "key": "static_turtleBreederAddress",
+            "type": "string",
+            "value": "3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t"
+        },
+        {
+            "key": "static_turtleStakingAddress",
+            "type": "string",
+            "value": "3PG1QrkrsZaEpo8Bhe34geNNA1d9M8REGrv"
+        }
+        
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES",
+    "senderPublicKey": "Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe"
+}
+

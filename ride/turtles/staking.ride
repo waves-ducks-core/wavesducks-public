@@ -133,6 +133,21 @@ func calculateFarmPower(assetId:String)={
 
 }
 
+@Callable(i)
+func calculateFarmPowerAssetName(assetName:String)={
+  let genotype = assetName.drop(5).dropRight(3).split("")
+  func uniqueArrayFilter(accum: List[String], nextGen: String) =
+        if !containsElement(accum,nextGen) then accum:+nextGen else accum
+  let uniqueList = FOLD<8>(genotype, [], uniqueArrayFilter)
+  let totalGenes = size(uniqueList)
+  let power = pow(15,1,totalGenes,0,2,DOWN)
+
+  ([
+    IntegerEntry("DEBUG_"+assetName, power)
+  ],power)
+
+}
+
 
 @Callable(i)
 func buyBeach(color: String, refererAddress: String) = {
@@ -140,7 +155,7 @@ func buyBeach(color: String, refererAddress: String) = {
     if (["R", "D", "S", "G"].indexOf(color).value() < 0) then {
       throw("you need to set color properly")
     } else {
-      let exactPrice = getIntegerValue(staticKey_turtleBeachFee())
+      let exactPrice = getIntegerValue(getOracle(),staticKey_turtleBeachFee())
       let leftToPay = if i.originCaller==i.caller then {
           #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
           #exactPrice-amountPaidByCoupons

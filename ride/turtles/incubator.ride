@@ -21,6 +21,7 @@ func staticKey_eggAssetId() = "static_eggAssetId"
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -157,6 +158,7 @@ func startTRTLHatching(refererAddress: String) = {
     if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
     else if (firstPayment.amount < eggsNeeded)  then throw("To hatch a Turtle you currently need the following amount of EGGlets: " + eggsNeeded.toString())
     else {
+        strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),firstPayment.amount)])
         results ++ [ScriptTransfer(i.caller, firstPayment.amount - eggsNeeded, getEggAssetId())]
     }
   }

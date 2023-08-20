@@ -26,6 +26,7 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getTurtleIncubator() = Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubator()).fromBase58String())
 func getTurtleIncubationFee() = getIntegerValue(getOracle(),staticKey_turtleIncubationFee())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -173,6 +174,7 @@ func startTRTLBreeding() = {
   let thirdPayment = i.payments[3].value()
   if (thirdPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
   if (thirdPayment.amount < getTurtleIncubationFee())  then throw("To breed a Turtle you following amount of EGGlets: " + getTurtleIncubationFee().toString()) else
+  strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),getTurtleIncubationFee())])
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
 
