@@ -335,9 +335,9 @@ func verify() = {
         if (getBool(kLocked) == true) then throw("_22") else
         # Avoid scam with high fees => allow only Waves and minimal amount
         if (inv.fee > 900000 || inv.feeAssetId != unit) then {
-          throw("_15")
-        } else if (inv.payments.size() > 3) then {
-          throw("_17")
+          throw("_15: to much fee")
+        } else if (inv.payments.size() > 4) then {
+          throw("_17: to big payment size")
         } else if (inv.dApp.addressFromRecipient() == this && containsElement(acceptedCallsThis,inv.function)) then {
           sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
         } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
@@ -347,7 +347,8 @@ func verify() = {
         }else {
           let dappToCall = inv.dApp.addressFromRecipient().toString()
           let allowedContract = getStrA(mAccAddr, "allowed_contract_"+dappToCall)
-          allowedContract != ""
+          if (allowedContract=="FARMING" && inv.function == "claimReward") then false
+          else allowedContract != ""
         }
       }
       case ss: SetScriptTransaction => {
