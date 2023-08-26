@@ -72,7 +72,7 @@ func getAssetGenotype(assetId: ByteVector) = {
           case b:String => b
           case _ => ""
       }
-      if (asset3 != "") then asset1  else 
+      if (asset3 != "") then asset3  else 
         let asset4 = match getString(getTurtleBreederAddress(), assetId.toBase58String()) {
           case c:String => c
           case _ => ""
