@@ -92,6 +92,21 @@
         "value": "RENTING"
       },
       {
+        "key": "allowed_contract_3PE9yT1qVM9hsRkpiV6Y7AKEubafyT5NCuB",
+        "type": "string",
+        "value": "TRTL_INCUBATOR"
+      },
+      {
+        "key": "allowed_contract_3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t",
+        "type": "string",
+        "value": "TRTL_BREEDING"
+      },
+      {
+        "key": "allowed_contract_3PG1QrkrsZaEpo8Bhe34geNNA1d9M8REGrv",
+        "type": "string",
+        "value": "TRTL_STAKING"
+      },
+      {
         "key": "allowed_contract_3PRG9LfW6QZxKdTWB8eEdUia2bH6bHvyx7y",
         "value": null
       },

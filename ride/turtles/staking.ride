@@ -116,6 +116,15 @@ func unstakeNFTInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
 }
 
 @Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("ICU: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
 func calculateFarmPower(assetId:String)={
   if !(assetInfo(assetId.fromBase58String()).value().issuer == getTurtleBreederAddress() 
       ||assetInfo(assetId.fromBase58String()).value().issuer == getTurtleIncubatorAddress()) then throw("This does not seem like a valid Turtle!")else
