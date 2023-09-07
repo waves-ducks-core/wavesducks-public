@@ -5,11 +5,14 @@
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_breederAddress() = "static_breederAddress"
+func staticKey_incubatorAddress() = "static_incubatorAddress"
 func staticKey_babyDuckAddress() = "static_babyDuckAddress"
 func staticKey_farmingAddress() = "static_farmingAddress"
 func staticKey_cfMasterAddress() = "static_cfMasterAddress"
 func staticKey_huntAddress()= "static_huntAddress"
 func staticKey_rebirthAddress() = "static_rebirthAddress"
+func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
+func staticKey_turtleIncubatorAddress() = "static_turtleIncubatorAddress"
 
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
@@ -24,8 +27,6 @@ func tryGetInteger(key: String) = {
         case _ => 0
     }
 }
-
-
 
 func isValidAddress(address: String) = {
   match(addressFromString(address)) {
@@ -45,15 +46,21 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String())
+func getIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String())
 func getBabyDuckAddress() = Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String())
 func getFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_farmingAddress()).fromBase58String())
 func getCfMasterAddress() = Address(tryGetStringExternal(getOracle(),staticKey_cfMasterAddress()).fromBase58String())
 func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
 func getRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
 func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),getHuntAddress(),getRebirthAddress()]
+
+func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
+func getTurtleIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String())
+
+
 func masterTryGetBoolean(key: String) = {
     match getBoolean(getCfMasterAddress(), key) {
         case b:Boolean => b
@@ -81,15 +88,20 @@ func addRefKey(refererAddress: String, refererKey: String) = {
 }
 
 @Callable(i)
+func whitelistAddress(refererAddress:String)={
+  if i.caller != this then throw("RF: Only for admin!") else
+  [
+    BooleanEntry(refererAddress+"_whitelisted", true)
+  ]
+}
+
+@Callable(i)
 func refPayment(refererKey: String) = {
+  let sendFundsBack = ([ScriptTransfer(i.caller, i.payments[0].amount, i.payments[0].assetId)],false)
   let referalAddress = i.originCaller.toString()
-  if (getTrustedAddress().indexOf(i.caller) == unit) then throw("This method can be called only by farming and incubator dApps")else 
-  if ((refererKey == "") && (tryGetString("address_" + referalAddress + "_referedBy") == "")) then {
-    []
-  } else if (masterTryGetBoolean("farm_"+referalAddress)) then {
-    # blocked for collective farms
-    []
-  } else {
+  if (getTrustedAddress().indexOf(i.caller) == unit) then throw("This method can be called only by farming and incubator dApps") else 
+  if ((refererKey == "") && (tryGetString("address_" + referalAddress + "_referedBy") == "")) then sendFundsBack else 
+  if (masterTryGetBoolean("farm_"+referalAddress)) then sendFundsBack else 
 
     let givenReferer = match getString(this, "key_" + refererKey + "_refererAddress") {
       case x: String => x  # if key was a real key
@@ -102,10 +114,9 @@ func refPayment(refererKey: String) = {
     } 
 
     let refAmount = i.payments[0].amount
-
-    if (refererAddress.addressFromString() == unit) then {
-      []
-    } else {
+    if (i.payments[0].assetId != getEggAssetId()) then throw("Don't try to cheat the system!") else
+    if (tryGetBoolean(refererAddress+"_whitelisted")== false) then sendFundsBack else
+    if (refererAddress.addressFromString() == unit) then sendFundsBack else 
       let refererAddressValue = refererAddress.addressFromStringValue() 
       let referalAddressValue = referalAddress.addressFromStringValue()
       let paymentForReferer = refAmount
@@ -113,19 +124,17 @@ func refPayment(refererKey: String) = {
       let refererEarnedReward = "address_" + refererAddress + "_earnedReward"
       let referalDeliveredReward = "referer_" + refererAddress + "_referal_" + referalAddress + "_deliveredReward"
 
-      if (refererAddress == referalAddress) then {
-        []
-      } else {
-        [
+      if (refererAddress == referalAddress) then sendFundsBack else 
+        ([
           StringEntry("address_" + referalAddress + "_referedBy", refererAddress), 
           IntegerEntry(refererEarnedReward, tryGetInteger(refererEarnedReward) + paymentForReferer),
           IntegerEntry(referalDeliveredReward, tryGetInteger(referalDeliveredReward) + paymentForReferer),
           IntegerEntry("referer_"+refererAddress+"_referal_"+referalAddress+"_amount", tryGetInteger("referer_"+refererAddress+"_referal_"+referalAddress+"_amount") + 1),
           ScriptTransfer(refererAddressValue, paymentForReferer, getEggAssetId())
-        ]
-      }
-    }
-  }
+        ],true)
+      
+    
+  
 }
 
 @Callable(i)

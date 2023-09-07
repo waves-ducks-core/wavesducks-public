@@ -130,7 +130,7 @@ func getBidAmount(auctionId: String, bidId: String) = {
 
 
 func checkDataGetPrice(ach: String, breed: String, gen: String, price:Int, rarity: String, ts: Int, signature: String, duckId: String)={
-  let isDuck = gen.contains("DUCK")
+  let isDuck = rarity != ""
   let text = if !isDuck then makeString([gen,price.toString(),ts.toString()],";") else makeString([rarity,breed,ach,gen,price.toString(),ts.toString()], ";") 
   let MSINHOUR = 3_600_000
   if (!sigVerify_8Kb(text.toBytes(), signature.fromBase58String(), getBackendPubKey())) then throw("MCACS: Invalid proof from backend key"+getBackendPubKey().toBase58String()+" "+text+" "+toString(isDuck)) else 

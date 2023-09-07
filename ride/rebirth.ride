@@ -31,7 +31,6 @@ func staticKey_babyDuckAddress() = "static_babyDuckAddress"
 func staticKey_gameDappAddress() = "static_gameDappAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
-func staticKey_metaRaceAddress() = "static_metaRaceAddress"
 func staticKey_huntAddress() = "static_huntAddress"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_refContractAddress() = "static_refContractAddress"
@@ -47,7 +46,6 @@ func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_
 func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),staticKey_gameDappAddress()).fromBase58String())
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String())
-func getMetaraceAddress() = Address(tryGetStringExternal(getOracle(),staticKey_metaRaceAddress()).fromBase58String())
 func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
@@ -121,21 +119,22 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
   if (itemRandom == 1) then {"item_ART-FREEGENE" } else {  
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
-    if (n<150) then { "duckling_2" } else 
-    if (n<200) then { "duckling_10" } else
-    if (n<210) then { "duckling_20" } else
-    if (n<250) then { "incubator" } else
+    if (n<170) then { "duckling_2" } else 
+    if (n<240) then { "duckling_10" } else
+    if (n<260) then { "duckling_20" } else
+    if (n<300) then { "incubator" } else
 
-    if (n<280) then { "item!ART-SNAKE" } else
-    if (n<410) then { "item!ART-KATANA" } else
-    if (n<460) then { "item!ART-ROBODUCK" } else
-    if (n<480) then { "item!ART-CROWN" } else
-    if (n<610) then { "item!ART-SCEPTER" } else
-    if (n<740) then { "item!ART-BUILTBODY" } else
-    if (n<750) then { "item!ART-FEED10" } else
-    if (n<800) then { "item!ART-FIRE_ARMOUR" } else
-    if (n<900) then { "ar" } else
-    { "meta" }
+    if (n<330) then { "item!ART-SNAKE" } else
+    if (n<460) then { "item!ART-KATANA" } else
+    if (n<510) then { "item!ART-ROBODUCK" } else
+    if (n<540) then { "item!ART-CROWN" } else
+    if (n<660) then { "item!ART-SCEPTER" } else
+    if (n<790) then { "item!ART-BUILTBODY" } else
+    if (n<810) then { "item!ART-FEED10" } else
+    if (n<820) then { "item!ART-FEED50" } else
+    if (n<824) then { "item!ART-FEED100" } else
+    if (n<884) then { "item!ART-FIRE_ARMOUR" } else
+    { "ar" }
   }
 }
 
@@ -253,12 +252,6 @@ func finishRebirth(initTx: String) = {
         let assetId = getAccessItemAssetId(getHuntAddress())
         let price = getAccessItemPrice(getHuntAddress())
         strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address], [AttachedPayment(assetId,price)])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      }else if (win == "meta") then {
-        let assetId = getAccessItemAssetId(getMetaraceAddress())
-        let price = getAccessItemPrice(getMetaraceAddress())
-        strict call = invoke(getMetaraceAddress(), "buyAccessItemOther", [address], [AttachedPayment(assetId,price)])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else if (win == "phoenix") then {
