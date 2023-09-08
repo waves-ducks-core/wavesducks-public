@@ -29,6 +29,11 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("BDA: wrong type, expected: Boolean")
+}
+
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_ducklingPrice() = "static_ducklingPrice"
 func staticKey_eggAssetId() = "static_eggAssetId"
@@ -206,9 +211,10 @@ func buyDuckling(refererAddress: String)={
     if (firstPayment.amount != leftToPay) then throw("BBD: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()) else
     let refererRewardForPerch = fraction(leftToPay, 5, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
-        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
+        let toBurn = if refCall then leftToPay-refererRewardForPerch else leftToPay
 
-        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay-refererRewardForPerch)])
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
         
         leftToPay
     }else 0

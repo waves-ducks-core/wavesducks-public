@@ -189,6 +189,11 @@ func asInt(value: Any) = match value {
   case _ => throw("wrong type, expected: Int")
 }
 
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("BDA: wrong type, expected: Boolean")
+}
+
 func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector, asset: Issue)= {
   strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
   let amount = tryGetInteger(getDuckStatsKey(duckGen))
@@ -357,9 +362,11 @@ func startDuckBreeding(refererAddress: String) = {
     if (thirdPayment.amount != leftToPay) then throw("BSDB: To breed you currently need the following amount of EGGlets: " + leftToPay.toString()) else
     let refererRewardForPerch = fraction(leftToPay, 5, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
-        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
 
-        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay-refererRewardForPerch)])
+        let toBurn = if refCall then leftToPay-refererRewardForPerch else leftToPay
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
         
         leftToPay
     }else 0

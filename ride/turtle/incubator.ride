@@ -1,0 +1,225 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_eggAssetId() = "static_eggAssetId"
+
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != feeAmount then throw("BDCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
+
+#TODO: make it configurable through oracle
+let delayForHatching = 2
+
+let typesAmount = 4
+
+#let refContractAddress = base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+#let RefererReward = 5 #percentage
+
+let HatchingStarted = "HATCHING_STARTED"
+let HatchingFinished = "HATCHING_FINISHED"
+
+func isLocked() = {
+  let masterAddress = Address(base58'3PEPftf2kWZDmAaWBjs6BUJa9957kiA2PkU')
+  match getInteger(masterAddress, "egglock") {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func getHatchingStatusKey(address: String, txId: ByteVector) = {
+  # stores the fact of hatching, 
+  # if key exists = hatching started 
+  # if false = not claimed
+  # if true = claimed and nft id will be in the key of getTRTLIdKey
+  address + "_" + txId.toBase58String() +  "_status"
+}
+
+func getHatchingFinishHeightKey(address: String, txId: ByteVector) = {
+  address + "_" + txId.toBase58String() +  "_fh"
+}
+
+func getTRTLIdKey(address: String, txId: ByteVector) = {
+  address + "_" + txId.toBase58String() +  "_di"
+}
+
+func getTRTLStatsKey(genString: String) = {
+  "stats_" + genString + "_amount"
+}
+
+func tryGetInteger(key: String) = {
+    let val = match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+    val
+}
+
+##
+#[
+#  {
+#    "key": "discountCoefficient",
+#    "type": "integer",
+#    "value": 10
+#  }
+#]
+let discountCoefficient = tryGetInteger("discountCoefficient")	
+
+func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int, offset: Int) = {
+  let randomSeedBlock = blockInfoByHeight(hatchingFinishHeight-1).value()
+  let randomHash = sha256(txId + randomSeedBlock.vrf.value())
+  randomHash.toInt(offset*8) % variants
+}
+
+func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
+    let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 0)
+    let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
+    let color = if (colorRandom == 0) then "R"
+      else if (colorRandom == 1) then "D" 
+      else if (colorRandom == 2) then "S" 
+      else "G"
+
+    if (typeRandom == 0) then ("TRTL-AAAAAAAA-G" + color, "8A-G")
+      else if (typeRandom == 1) then ("TRTL-BBBBBBBB-G" + color, "8B-G")
+      else if (typeRandom == 2) then ("TRTL-CCCCCCCC-G" + color, "8C-G")
+      else ("TRTL-DDDDDDDD-G" + color, "8D-G")
+    
+}
+
+func countEggsNeededAmount(totalTRTLsAmount: Int) = {
+  let n = totalTRTLsAmount
+  let g = discountCoefficient
+  let t = typesAmount
+  let price = pow((100 + (n*g)/(10*t)), 2, 5, 1, 2, DOWN)
+  price * 1500000
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("ICU: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)	
+func setDiscount(val: Int) = {	
+  if (i.caller != this) then {	
+    throw("admin_only")	
+  } else {	
+    [IntegerEntry("discountCoefficient", val)]	
+  }	
+}
+
+@Callable(i)
+func startTRTLHatching(refererAddress: String) = {
+  strict feeValidate = checkAdditionalPayment(i.payments[0])
+  #TODO: add validation that feeValidate payment is added!
+  if (isLocked() > 0) then {
+    throw("EGG operations are temporarily locked")
+  } else {
+    let totalTurtleAmount = tryGetInteger("turtle_amount")
+    let eggsNeeded = countEggsNeededAmount(totalTurtleAmount)
+
+    let firstPayment = i.payments[1].value()
+
+    let results = [
+        StringEntry(getHatchingStatusKey(i.originCaller.toString(), i.transactionId), HatchingStarted),
+        IntegerEntry(getHatchingFinishHeightKey(i.originCaller.toString(), i.transactionId), height + delayForHatching),
+        IntegerEntry("turtle_amount", totalTurtleAmount + 1),
+        IntegerEntry("turtle_last_price", eggsNeeded / 1500000)
+      ]
+
+    if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
+    else if (firstPayment.amount < eggsNeeded)  then throw("To hatch a Turtle you currently need the following amount of EGGlets: " + eggsNeeded.toString())
+    else {
+        strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),eggsNeeded)])
+        results ++ [ScriptTransfer(i.caller, firstPayment.amount - eggsNeeded, getEggAssetId())]
+    }
+  }
+}
+
+
+@Callable(i)
+func finishTRTLHatching(txIdStr: String) = {
+  strict feeValidate = checkAdditionalPayment(i.payments[0])
+  #TODO: add validation that feeValidate payment is added!
+  let txId = fromBase58String(txIdStr)
+  let hatchingStatusKey = getHatchingStatusKey(i.caller.toString(), txId)
+  let finishHeightKey = getHatchingFinishHeightKey(i.caller.toString(), txId)
+  let TRTLIdKey = getTRTLIdKey(i.caller.toString(), txId)
+
+  let hatchingTxStatus = getStringValue(this, hatchingStatusKey)
+  let hatchingFinishHeight = getIntegerValue(this, finishHeightKey)
+  
+  if (hatchingTxStatus == HatchingFinished) then {
+    let TRTLId = getStringValue(this, getTRTLIdKey(i.caller.toString(), txId))
+    throw("The Turtle was hatched and claimed already, here is the folowing: " + TRTLId)
+  } else 
+    if (hatchingFinishHeight > height) then throw("Hatching is not finished yet " + (hatchingFinishHeight - height).toString() + " blocks remaining, it will take around " +  (hatchingFinishHeight - height).toString() + " minutes")
+    else {
+      let (TRTLGen, farmGen) = getRandomName(txId, hatchingFinishHeight)
+      let description = "{\"genotype\": \"" + TRTLGen + "\", \"crossbreeding\": true}"
+
+      let asset = Issue(TRTLGen, description, 1, 0, false, unit, hatchingFinishHeight)
+      let assetId = asset.calculateAssetId()
+
+      let amount = tryGetInteger(getTRTLStatsKey(TRTLGen)) + 1
+
+      [
+        StringEntry(hatchingStatusKey, HatchingFinished),
+        StringEntry(TRTLIdKey, assetId.toBase58String()),
+        StringEntry(assetId.toBase58String(), TRTLIdKey),
+        IntegerEntry(getTRTLStatsKey(TRTLGen), amount),
+        IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
+        asset,
+        ScriptTransfer(i.caller, 1, assetId)
+      ]
+    }
+}
+
+# @Callable(i)
+# func reduceRarity(assetId: String, fGen: String) = {
+#   let asset = assetId.fromBase58String()
+#   if (i.caller != Address(rebirthAddress) && i.caller != this) then {
+#     throw("admin or rebirth only")
+#   } else {
+#     let duckGen = assetInfo(asset).value().name
+#     let letter = duckGen.take(6).takeRight(1)
+#     let farmGen = "8"+letter+"-G"
+#     [
+#       IntegerEntry(getDuckStatsKey(duckGen), tryGetInteger(getDuckStatsKey(duckGen)) - 1),
+#       IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
+#     ]
+#   }
+# }
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+
+        

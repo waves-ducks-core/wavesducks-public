@@ -1,0 +1,54 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+#payment;
+#eggId;price;distance + signature
+#distance below 1km => check it
+#eggId => only onique
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_huntMultiplierPrice() = "static_huntMultiplierPrice"
+func staticKey_backendPubKey() = "static_backendPubKey"
+func multiplierTsKey(user: String) = "multiplier_x3_5m_"+user+"_ts"
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getMultiplierPrice() = getIntegerValue(getOracle(),staticKey_huntMultiplierPrice())
+func getBackendPubKey() = getStringValue(getOracle(),staticKey_backendPubKey()).fromBase58String()
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("RCO: admin only") else 
+  [
+    StringEntry(staticKey_oracleAddress(),oracle)
+  ]
+
+}
+
+@Callable(i)
+func buy(timestamp: Int, backendSignature: String)={
+    let backendProof = timestamp.toString()
+    if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), getBackendPubKey())) then throw("RBR: Invalid proof from backend") else
+
+    let addressString = i.caller.toString()
+    let firstPayment = i.payments[0].value()
+    let amount = firstPayment.amount
+    if (isDefined(firstPayment.assetId) ) then throw("MB: You can attach only WAVES") else
+    if amount != getMultiplierPrice() then throw("MB: Please attach the exact asset amount"+getMultiplierPrice().toString()) else
+    [
+        IntegerEntry(multiplierTsKey(addressString),timestamp),
+        ScriptTransfer(getFeeAggregator(),amount,unit)
+    ]
+}

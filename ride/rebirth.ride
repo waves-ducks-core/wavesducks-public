@@ -17,6 +17,11 @@ func tryGetIntExternal(address: Address, key: String) = {
     }
 }
 
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("FAB: wrong type, expected: Boolean")
+}
+
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
@@ -196,9 +201,11 @@ func initRebirth(refererAddress: String) = {
     if (feePayment.amount < leftToPay)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + leftToPay.toString()) else
         let refererRewardForPerch = fraction(leftToPay, 5, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
-        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)])
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
 
-        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay-refererRewardForPerch)])
+        let toBurn = if refCall then leftToPay-refererRewardForPerch else leftToPay
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
         
         leftToPay
   } else 0

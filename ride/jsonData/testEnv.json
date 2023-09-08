@@ -1,0 +1,15 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "TESTENV",
+            "type": "boolean",
+            "value": true
+            
+        }
+    ],
+    "fee": 500000,
+    "feeAssetId": "WAVES"
+}
+
