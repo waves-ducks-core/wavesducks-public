@@ -24,7 +24,7 @@ jobs:
             action_Wrapper,
             marketplace,
             marketplace_Proxy,
-            egg_Dispender,
+            egg_Dispenser,
             ref_Contract,
             rebirth,
             coupons,
