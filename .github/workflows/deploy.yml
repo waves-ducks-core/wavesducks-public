@@ -23,8 +23,11 @@ jobs:
             burn,
             action_Wrapper,
             marketplace,
+            marketplace_Proxy,
+            egg_Dispender,
             ref_Contract,
             rebirth,
+            coupons,
           ]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
@@ -49,7 +52,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sc: [artefacts_ticket_Raffle, artefacts_items, games_hunt]
+        sc:
+          [
+            artefacts_ticket_Raffle,
+            artefacts_items,
+            artefacts_wearables,
+            artefacts_accBooster,
+            games_hunt,
+            turtles_breeder,
+            turtles_incubator,
+            turtle_staking,
+          ]
     runs-on: ubuntu-latest
     name: ${{ matrix.sc }}
     steps:

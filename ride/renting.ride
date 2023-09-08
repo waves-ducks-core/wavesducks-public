@@ -211,10 +211,10 @@ func claimDuckBack(duckId: String)={
   if duckOwner != i.caller.toString() then throw("RCDB: Please don't try to steal someone else duck!") else
   #Make sure that a duck owner does pay his debts
   if tryGetBoolean(key_gamePreFundedItemForDuck(duckId)) 
-  && (
+  && ( size(i.payments) != 1 ||
     i.payments[0].assetId !=  tryGetStringExternal(getHuntAddress(),staticKey_accessItemAssetId()).fromBase58String() ||
      i.payments[0].amount != getIntegerValue(getHuntAddress(),staticKey_accessItemPrice())
-     ) then throw("Please make sure to attach enough funds to pay for your previous spot!")
+     ) then throw("Please make sure to attach enough funds to pay for your previous spot! "+ i.payments[0].amount.toString())
    else
   #Check if duck is IDLE or rented out
   let duckStatus = tryGetString(key_getDuckStatus(duckId))
