@@ -16,12 +16,14 @@ func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_refContractAddress() = "static_refContractAddress"
 
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -118,6 +120,11 @@ func countEggsNeededAmount(totalTRTLsAmount: Int) = {
   price * 1500000
 }
 
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("TI: wrong type, expected: Boolean")
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("ICU: admin only") else 
@@ -146,7 +153,6 @@ func startTRTLHatching(refererAddress: String) = {
     let totalTurtleAmount = tryGetInteger("turtle_amount")
     let eggsNeeded = countEggsNeededAmount(totalTurtleAmount)
 
-    let firstPayment = i.payments[1].value()
 
     let results = [
         StringEntry(getHatchingStatusKey(i.originCaller.toString(), i.transactionId), HatchingStarted),
@@ -155,12 +161,28 @@ func startTRTLHatching(refererAddress: String) = {
         IntegerEntry("turtle_last_price", eggsNeeded / 1500000)
       ]
 
-    if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
-    else if (firstPayment.amount < eggsNeeded)  then throw("To hatch a Turtle you currently need the following amount of EGGlets: " + eggsNeeded.toString())
-    else {
-        strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),eggsNeeded)])
-        results ++ [ScriptTransfer(i.caller, firstPayment.amount - eggsNeeded, getEggAssetId())]
-    }
+    let leftToPay = eggsNeeded
+      strict payment = if leftToPay!=0 then {
+        let firstPayment = i.payments[1].value()
+
+        if (firstPayment.assetId != getEggAssetId()) then throw("TI: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+        if (firstPayment.amount != leftToPay) then throw("TI: To buy a beach you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+        let refererRewardForbeach = fraction(leftToPay, 5, 100)
+        strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForbeach)]).asBoolean()
+
+        let toBurn = if refCall then leftToPay-refererRewardForbeach else leftToPay
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
+        
+        leftToPay
+      }else 0
+
+      let refund = if size(i.payments) == 2 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getEggAssetId())] else []
+
+    
+      results ++ refund
+
   }
 }
 
