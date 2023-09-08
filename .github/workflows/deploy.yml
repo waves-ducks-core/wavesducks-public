@@ -57,10 +57,10 @@ jobs:
             artefacts_ticket_Raffle,
             artefacts_items,
             artefacts_wearables,
-            artefacts_accBooster,
+            artefacts_acc_Booster,
             games_hunt,
-            turtles_breeder,
-            turtles_incubator,
+            turtle_breeder,
+            turtle_incubator,
             turtle_staking,
           ]
     runs-on: ubuntu-latest
