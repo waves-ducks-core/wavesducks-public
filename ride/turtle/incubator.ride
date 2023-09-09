@@ -166,7 +166,7 @@ func startTRTLHatching(refererAddress: String) = {
         let firstPayment = i.payments[1].value()
 
         if (firstPayment.assetId != getEggAssetId()) then throw("TI: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-        if (firstPayment.amount != leftToPay) then throw("TI: To buy a beach you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+        if (firstPayment.amount < leftToPay) then throw("TI: To buy a beach you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
         let refererRewardForbeach = fraction(leftToPay, 5, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
         [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForbeach)]).asBoolean()
