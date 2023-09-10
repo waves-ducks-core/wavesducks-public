@@ -272,5 +272,5 @@ func unstakeNFT(asset: String) = {
 @Callable(i)
 func claimReward () = {
   strict validPayment =  checkAdditionalPayment(i.payments[0])  
-  if (i.payments.size() > 1) then throw("Please don't add extra payments") else claimStakingResult(i.caller)
+  if (i.payments.size() > 1) then throw("Please don't add extra payments") else claimStakingResult(i.caller)++validPayment
   }

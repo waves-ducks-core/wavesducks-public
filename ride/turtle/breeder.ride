@@ -194,7 +194,7 @@ func startTRTLBreeding() = {
           StringEntry(getTRTLParentKey(i.transactionId, 2), secondAssetId),
           StringEntry(getProcessStatusKey(i.caller.toString(), i.transactionId), HatchingStarted),
           IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId), height + delayForHatching)
-        ]
+        ]++feeValidate
       }
     }
   }
@@ -243,7 +243,7 @@ func finishTRTLHatching(txIdStr: String) = {
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ]
+      ]++feeValidate
     }
 }
 

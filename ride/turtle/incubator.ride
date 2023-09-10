@@ -181,7 +181,7 @@ func startTRTLHatching(refererAddress: String) = {
       let refund = if size(i.payments) == 2 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getEggAssetId())] else []
 
     
-      results ++ refund
+      results ++ refund++feeValidate
 
   }
 }
@@ -221,7 +221,7 @@ func finishTRTLHatching(txIdStr: String) = {
         IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
         asset,
         ScriptTransfer(i.caller, 1, assetId)
-      ]
+      ]++feeValidate
     }
 }
 

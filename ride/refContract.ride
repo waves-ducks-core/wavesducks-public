@@ -57,9 +57,10 @@ func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntA
 func getRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
 func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
 func getTurtleIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String())
+func getTurtleStakingAddress() = Address(tryGetStringExternal(getOracle(),"static_turtleStakingAddress").fromBase58String())
 
 func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),
-                            getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress()]
+                            getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress(),getTurtleStakingAddress()]
 
 
 
