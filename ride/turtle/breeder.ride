@@ -169,7 +169,7 @@ func getGen(assetName: String) = {
   let genotype = assetName.drop(5).dropRight(3).split("")
   let generation = assetName.split("")[14]
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "E")
+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E")
 }
 
 @Callable(i)
