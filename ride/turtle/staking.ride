@@ -32,6 +32,7 @@ func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 func staticKey_turtleBeachFee() = "static_turtleBeachFee"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_couponsAddress() = "static_couponsAddress"
 
 func rewardClaimedKey(address: Address) = address.toString() + "_claimed"
 func totalStakedKey() = "total_staked"
@@ -48,6 +49,7 @@ func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -173,9 +175,8 @@ func buyBeach(color: String, refererAddress: String) = {
     } else {
       let exactPrice = getIntegerValue(getOracle(),staticKey_turtleBeachFee())
       let leftToPay = if i.originCaller==i.caller then {
-          #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
-          #exactPrice-amountPaidByCoupons
-            exactPrice
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice/2],[]).asInt()
+          exactPrice-amountPaidByCoupons
         }else {
             exactPrice
         }

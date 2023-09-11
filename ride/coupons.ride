@@ -24,6 +24,8 @@ func tryGetInteger(key: String) = {
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 
 #SC THAT CAN USE COUPONS
+func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
+
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
@@ -32,10 +34,11 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAdd
 func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String())
 func getBreedingAddress() = Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String())
 func getMasterAddress() = Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
+func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
-let scCanUseCoupons = [getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),getGameDappAddress(), getBabyduckAddress(),getBreedingAddress() ]
+let scCanUseCoupons = [getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),getGameDappAddress(), getBabyduckAddress(),getBreedingAddress(), getTurtleStakingAddress() ]
 
 func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
