@@ -20,6 +20,7 @@ func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_turtleIncubator()= "static_turtleIncubatorAddress"
 func staticKey_turtleIncubationFee()= "static_turtleIncubationFee"
 func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_refContractAddress() = "static_refContractAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -27,6 +28,7 @@ func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).
 func getTurtleIncubator() = Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubator()).fromBase58String())
 func getTurtleIncubationFee() = getIntegerValue(getOracle(),staticKey_turtleIncubationFee())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -41,9 +43,14 @@ let delayForHatching = 2
 let HatchingStarted = "BREEDING_STARTED"
 let HatchingFinished = "BREEDING_FINISHED"
 
-let GENS = ["A", "B", "C", "D"]
+let GENS = ["A", "B", "C", "D", "E"]
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
+
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("TI: wrong type, expected: Boolean")
+}
 
 func getProcessStatusKey(address: String, txId: ByteVector) = {
   # stores the fact of hatching, 
@@ -151,6 +158,7 @@ func isSymbolA(accumulated: Int, sym: String) = { if (sym == "A") then {accumula
 func isSymbolB(accumulated: Int, sym: String) = { if (sym == "B") then {accumulated+1} else {accumulated+0} }
 func isSymbolC(accumulated: Int, sym: String) = { if (sym == "C") then {accumulated+1} else {accumulated+0} }
 func isSymbolD(accumulated: Int, sym: String) = { if (sym == "D") then {accumulated+1} else {accumulated+0} }
+func isSymbolE(accumulated: Int, sym: String) = { if (sym == "E") then {accumulated+1} else {accumulated+0} }
 
 func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
@@ -161,20 +169,34 @@ func getGen(assetName: String) = {
   let genotype = assetName.drop(5).dropRight(3).split("")
   let generation = assetName.split("")[14]
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") 
+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "E")
 }
 
 @Callable(i)
-func startTRTLBreeding() = {
+func startTRTLBreeding(refererAddress: String) = {
   #TODO: add validation that feeValidate payment is added!
   if size(i.payments) != 4 then throw("Wrong amount of payments!") else
   strict feeValidate = checkAdditionalPayment(i.payments[0])
   let firstPayment = i.payments[1].value()
   let secondPayment = i.payments[2].value()
   let thirdPayment = i.payments[3].value()
-  if (thirdPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-  if (thirdPayment.amount < getTurtleIncubationFee())  then throw("To breed a Turtle you following amount of EGGlets: " + getTurtleIncubationFee().toString()) else
-  strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),getTurtleIncubationFee())])
+
+  let leftToPay = getTurtleIncubationFee()
+  strict payment = if leftToPay!=0 then {
+
+    if (thirdPayment.assetId != getEggAssetId()) then throw("TB: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+    if (thirdPayment.amount != leftToPay) then throw("TB: To breed a Turtle you following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+    let refererRewardForbeach = fraction(leftToPay, 5, 100)
+    strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForbeach)]).asBoolean()
+
+    let toBurn = if refCall then leftToPay-refererRewardForbeach else leftToPay
+
+    strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
+        
+    leftToPay
+    }else 0
+
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
 
@@ -246,20 +268,6 @@ func finishTRTLHatching(txIdStr: String) = {
       ]++feeValidate
     }
 }
-
-#@Callable(i)
-#func reduceRarity(assetId: String, farmGen: String) = {
-#  let asset = assetId.fromBase58String()
-#  if (i.caller != Address(rebirthAddress) && i.caller != this) then {
-#    throw("admin or rebirth only")
-#  } else {
-#    let duckGen = assetInfo(asset).value().name
-#    [
-#      IntegerEntry(getDuckStatsKey(duckGen), tryGetInteger(getDuckStatsKey(duckGen)) - 1),
-#      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
-#    ]
-#  }
-#}
 
 @Callable(i)
 func configureOracle(oracle: String) = {
