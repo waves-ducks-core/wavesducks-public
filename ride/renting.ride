@@ -124,7 +124,8 @@ func buyGlassesAndPutForRent(durationInMs: Int, percentage: Int) = {
 func rentDuckFromUser(duckId: String, game: String)={
   let genes = assetInfo(duckId.fromBase58String()).value().name.split("")
   let generation = genes[14]
-  let fee = (Generations.indexOf(generation).value()+1) * getIntegerValue(staticKey_depositSteps())
+  let multiplier = if generation == "J" then 8 else (Generations.indexOf(generation).value()+1)
+  let fee = multiplier * getIntegerValue(staticKey_depositSteps())
   let pmt = i.payments[0].value()
   if pmt.assetId.value() != getEggAssetId() then throw("TBT: Please attach the correct payment!") else
   if pmt.amount != fee then throw("RRDFU: Please attach enough refundable deposits!") else
