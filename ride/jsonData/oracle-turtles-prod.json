@@ -28,6 +28,11 @@
             "key": "static_turtleStakingAddress",
             "type": "string",
             "value": "3PG1QrkrsZaEpo8Bhe34geNNA1d9M8REGrv"
+        },
+        {
+            "key": "static_turtleRebirthAddress",
+            "type": "string",
+            "value": "3PM7TWS85ZupzH1k5wYQa4HPJjEn95j5N7P"
         }
         
     ],

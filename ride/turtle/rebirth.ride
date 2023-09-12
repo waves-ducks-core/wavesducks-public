@@ -1,0 +1,228 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case string: String => throw("RAI: wrong type, expected: Int, but got: "+string)
+  case _ => throw("RAI: wrong type, expected: Int")
+}
+
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("FAB: wrong type, expected: Boolean")
+}
+
+func asString(value: Any) = match value {
+  case s: String => s
+  case s: Int => throw("wrong type, expected: String, got: Int")
+  case s: Unit => throw("wrong type, expected: String, got: Unit")
+  case _ => throw("wrong type, expected: String")
+}
+
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_burnAddress() = "static_burnAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_turtleIncubatorAddress() = "static_turtleIncubatorAddress"
+func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
+func staticKey_spiceAssetId() = "static_spiceAssetId"
+func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
+func staticKey_duckStakingAddress() = "static_farmingAddress"
+func staticKey_duckIncubatorAddress() = "static_incubatorAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getDuckStakingAddress() =  Address(tryGetStringExternal(getOracle(), staticKey_duckStakingAddress()).fromBase58String())
+func getDuckIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_duckIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+
+let spiceAmount = 50_0000_0000
+let eggAmount = 1_0000_0000
+let wavesAmount = 2_0000_0000
+
+let delayForHatching = 2
+
+func checkRealTurtle(assetId: ByteVector) = {
+  if (assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer ==getTurtleIncubatorAddress()) then {
+   true
+  } else {
+    throw("not valid NFT")
+  }
+}
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("RCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != feeAmount then throw("RCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
+
+func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, offset: Int) = {
+  let randomSeedBlock = blockInfoByHeight(hatchingFinishHeight-1).value()
+  let randomHash = sha256(txId + randomSeedBlock.vrf.value())
+  randomHash.toInt(offset*8) % options
+}
+
+func getRandomWin(tx: ByteVector, finishHeight: Int) = {
+    #Every % means 10 numbers
+    let n = getRandomNumber(1000, tx, finishHeight, 0)
+    if (n<60) then { "incubator" } else
+    if (n<110) then { "beach_R" } else 
+    if (n<160) then { "beach_S" } else
+    if (n<210) then { "beach_G" } else
+    if (n<260) then { "beach_D" } else
+    if (n<340) then { "perch_G" } else
+    if (n<420) then { "perch_y" } else
+    if (n<500) then { "perch_R" } else
+    if (n<580) then { "perch_B" } else
+    if (n<640) then { "duck_incubator" } else                
+    if (n<680) then { "item!ART-FIRE_HELMET" } else    
+    if (n<720) then { "item!ART-FIRE_SWORD" } else
+    if (n<920) then { "item!ART-FEED10" } else     
+    { "item!ART-FEED100" }   
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("RCU: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+#Payment 0 = turtle
+#payment 1 = waves
+#payment 2 = spice
+#payment 3 = egg/vegg
+@Callable(i)
+func initRebirth(refererAddress: String) = {
+  let pmtTurtle = i.payments[0]
+  let pmtWaves = i.payments[1]
+  let pmtSpice = i.payments[2]
+  let pmtEgg = i.payments[3]
+
+  let assetId = pmtTurtle.assetId.value()
+  let initTx = i.transactionId.toBase58String()
+  let address = i.caller.toString()
+  if (pmtTurtle.amount != 1) then throw("NFT is not attached") else
+  if (pmtWaves.amount != wavesAmount || pmtWaves.assetId != unit) then throw("Wavespayment is not attached or wrong!") else
+  if (pmtSpice.amount != wavesAmount || pmtSpice.assetId != getSpiceAssetId()) then throw("SpicePayment is not attached or wrong!") else
+
+
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[eggAmount/2],[]).asInt()
+  let leftToPay = eggAmount-amountPaidByCoupons
+
+
+  strict payment = if leftToPay!=0 then {
+    let feePayment = pmtEgg.value()
+    if (feePayment.assetId != getEggAssetId()) then throw("You need to attach EGG tokens as fee") else 
+    if (feePayment.amount != leftToPay)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + leftToPay.toString()) else
+        let refererRewardForPerch = fraction(leftToPay, 5, 100)
+        strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
+
+        let toBurn = if refCall then leftToPay-refererRewardForPerch else leftToPay
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
+        
+        leftToPay
+  } else 0
+   
+  strict realTurtle = checkRealTurtle(assetId)  
+  [
+    IntegerEntry("address_" + address + "_initTx_" + initTx + "_finishBlock", height+delayForHatching),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String())
+  ]
+
+  
+}
+
+
+
+@Callable(i)
+func finishRebirth(initTx: String) = {
+  let address = i.caller.toString()
+  let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
+  let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
+  strict validPayment = checkAdditionalPayment(i.payments[0])
+
+
+  if (status != "open") then {
+    throw("rebirth is finished or not open")
+  } else {
+    if (height < finishBlock) then {
+      throw("you cannot finish rebirth, yet")
+    } else {
+      let win = getRandomWin(initTx.fromBase58String(), finishBlock)  
+
+      let txId = initTx
+
+      let result = if (win.indexOf("perch") != unit) then {
+        let color = win.takeRight(1)
+        strict call = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win.indexOf("beach") != unit) then {
+        let color = win.takeRight(1)
+        strict call = invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win == "incubator") then {
+        strict call = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win == "duck_incubator") then {
+        strict call = invoke(getDuckIncubatorAddress(), "issueSpecialDuck", [address, txId], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else if (win.indexOf("item") !=unit) then {
+        let itemName = win.split("!")[1]
+        strict call = invoke(getItemsAddress(), "issueArtefact", [itemName, address], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else{
+        throw("RFB: Some error occured, please contact the admins!")
+      }
+
+      result ++ [
+        StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
+        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish")
+      ]++validPayment
+    }
+  }
+}
