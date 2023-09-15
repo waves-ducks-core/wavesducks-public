@@ -33,6 +33,7 @@ func staticKey_turtleBeachFee() = "static_turtleBeachFee"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 
 func rewardClaimedKey(address: Address) = address.toString() + "_claimed"
 func totalStakedKey() = "total_staked"
@@ -47,6 +48,7 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnA
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
@@ -166,6 +168,20 @@ func calculateFarmPowerAssetName(assetName:String)={
 
 }
 
+@Callable(i)
+func addFreeBeach(address: String, color: String) = {
+  if (["R", "D", "S", "G"].indexOf(color).value() < 0) then {
+    throw("you need to set color properly")
+  } else if (i.caller != getTurtleRebirthAddress() && i.caller != this ) then {
+    throw("rebirth and swop promo only")
+  } else {
+    let perchAmountKey = "address_" + address + "_beachesAvailable_" + color
+    let perchAmount = tryGetInteger(perchAmountKey)
+    ([
+      IntegerEntry(perchAmountKey, perchAmount + 1)
+    ], "")
+  }
+}
 
 @Callable(i)
 func buyBeach(color: String, refererAddress: String) = {

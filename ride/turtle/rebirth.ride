@@ -207,7 +207,7 @@ func finishRebirth(initTx: String) = {
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       } else if (win == "duck_incubator") then {
-        strict call = invoke(getDuckIncubatorAddress(), "issueSpecialDuck", [address, txId], [])
+        strict call = invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else if (win.indexOf("item") !=unit) then {

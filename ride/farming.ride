@@ -25,7 +25,7 @@ func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_incubatorAddress() = "static_incubatorAddress"
 func staticKey_rebirthAddress() = "static_rebirthAddress"
-func staticKey_swopPromoAddress() = "static_swopPromoAddress"
+func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
@@ -46,7 +46,7 @@ func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58Str
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
-func getSwopPromoAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_swopPromoAddress()).fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXWD'
+func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
@@ -370,7 +370,7 @@ func addFreePerch(address: String, color: String) = {
   strict locked =  isLocked()
   if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
     throw("you need to set color properly")
-  } else if (i.caller != getRebirthAddress() && i.caller != this && i.caller != getSwopPromoAddress()) then {
+  } else if (i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != this ) then {
     throw("rebirth and swop promo only")
   } else {
     let perchAmountKey = "address_" + address + "_perchesAvailable_" + color

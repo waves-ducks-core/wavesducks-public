@@ -14,14 +14,17 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
+func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
+
+
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
-func getSwopPromoAddress() =  Address(tryGetStringExternal(getOracle(),"static_swopPromoAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
 func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 
 
 let delayForHatching = 2
@@ -235,7 +238,7 @@ func startDuckHatching(refererAddress: String) = {
 func startDuckHatchingForAddress(address: String) = {
   if (isLocked() > 0) then 
     throw("ISDHFA: EGG operations are temporarily locked")
-   else if (i.caller != getSwopPromoAddress() && i.caller!= this) then throw("ISDHFA: Permission denied") else {
+   else if (i.caller!= this) then throw("ISDHFA: Permission denied") else {
     let totalDucksAmount = tryGetInteger("ducks_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
 
@@ -297,7 +300,7 @@ func issueFreeDuck(address: String, txIdStr: String) = {
 
 @Callable(i)
 func issueFreeDuckDefinedGenes(address: String, txIdStr: String, genes:String) = {
-  if (i.caller != this) then {
+  if (i.caller != this && i.caller != getTurtleRebirthAddress()) then {
     throw("IIFDDG: Admin only!")
   } else {
     let txId = fromBase58String(txIdStr)

@@ -17,6 +17,7 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
@@ -24,6 +25,7 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -133,6 +135,42 @@ func configureOracle(oracle: String) = {
     StringEntry("static_oracleAddress",oracle)
   ]
 
+}
+
+@Callable(i)
+func issueFreeTurtle(address: String, txIdStr: String) = {
+  if (i.caller != getTurtleRebirthAddress()) then {
+    throw("ISFD: rebirth only")
+  } else {
+    let txId = fromBase58String(txIdStr)
+    let hatchingStatusKey = getHatchingStatusKey(address, txId)
+    let finishHeightKey = getHatchingFinishHeightKey(address, txId)
+
+    let totalDucksAmount = tryGetInteger("turtle_amount")
+    let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
+
+    let (TRTLGen, farmGen) = getRandomName(txId, valueOrErrorMessage(transactionHeightById(txId),txIdStr+ " not found "+toBase58String(txId)) + 1)
+    let description = "{\"genotype\": \"" + TRTLGen + "\", \"crossbreeding\": true}"
+
+    let asset = Issue(TRTLGen, description, 1, 0, false, unit, height)
+    let assetId = asset.calculateAssetId()
+
+    let amount = tryGetInteger(getTRTLStatsKey(TRTLGen)) + 1
+
+    let duckIdKey = getTRTLIdKey(address, txId)
+    ([
+      IntegerEntry(getHatchingFinishHeightKey(address, txId), height),
+      IntegerEntry("turtle_amount", totalDucksAmount + 1),
+      IntegerEntry("turtle_last_price", eggsNeeded / 1500000),
+      StringEntry(hatchingStatusKey, HatchingFinished),
+      StringEntry(duckIdKey, assetId.toBase58String()),
+      StringEntry(assetId.toBase58String(), duckIdKey),
+      IntegerEntry(getTRTLStatsKey(TRTLGen), amount),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
+      asset,
+      ScriptTransfer(addressFromString(address).value(), 1, assetId)
+    ], assetId.toBase58String())
+  }
 }
 
 @Callable(i)	
