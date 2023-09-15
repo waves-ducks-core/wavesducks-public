@@ -23,11 +23,6 @@
             "value": "3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ"
         },
         {
-            "key": "static_swopPromoAddress",
-            "type": "string",
-            "value": "3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXWD"
-        },
-        {
             "key": "static_refContractAddress",
             "type": "string",
             "value": "3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe"
