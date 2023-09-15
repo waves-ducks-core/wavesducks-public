@@ -7,6 +7,7 @@ func staticKey_breederAddress() ="static_breederAddress"
 func staticKey_eggAssetId() ="static_eggAssetId"
 func staticKey_trustedContracts() ="static_trustedContracts"
 func staticKey_rebirthAddress() ="static_rebirthAddress"
+func staticKey_turtleRebirthAddress() ="static_turtleRebirthAddress"
 func staticKey_pipelineUser() ="static_pipelineUser"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
@@ -125,6 +126,7 @@ func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_b
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),staticKey_trustedContracts())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
+func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getHuntDistroAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_huntDistroAddress()).fromBase58String())
 func tryGetCosmeticItemPrice(item:String)= {
@@ -394,7 +396,7 @@ func preInit() = {
 
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
-  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getHuntDistroAddress()) then throw("admin only") else 
+  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()) then throw("admin only") else 
      if (i.caller == getHuntDistroAddress() && !type.contains("ART-FIRE_")) then throw("FIRE ITEM ONLY!") else
     let txIdStr = i.transactionId.toBase58String()
     let address = Address(fromBase58String(receiver))

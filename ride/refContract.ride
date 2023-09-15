@@ -13,6 +13,8 @@ func staticKey_huntAddress()= "static_huntAddress"
 func staticKey_rebirthAddress() = "static_rebirthAddress"
 func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 func staticKey_turtleIncubatorAddress() = "static_turtleIncubatorAddress"
+func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
+func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
@@ -57,10 +59,12 @@ func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntA
 func getRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
 func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
 func getTurtleIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String())
-func getTurtleStakingAddress() = Address(tryGetStringExternal(getOracle(),"static_turtleStakingAddress").fromBase58String())
+func getTurtleStakingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String())
+func getTurtleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String())
 
 func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),
-                            getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress(),getTurtleStakingAddress()]
+                            getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress(),getTurtleStakingAddress(),
+                            getTurtleRebirthAddress()]
 
 
 
@@ -103,7 +107,7 @@ func whitelistAddress(refererAddress:String)={
 func refPayment(refererKey: String) = {
   let sendFundsBack = ([ScriptTransfer(i.caller, i.payments[0].amount, i.payments[0].assetId)],false)
   let referalAddress = i.originCaller.toString()
-  if (getTrustedAddress().indexOf(i.caller) == unit) then throw("This method can be called only by farming and incubator dApps") else 
+  if (getTrustedAddress().indexOf(i.caller) == unit) then throw("RC: This method can be called only by farming and incubator dApps") else 
   if ((refererKey == "") && (tryGetString("address_" + referalAddress + "_referedBy") == "")) then sendFundsBack else 
   if (masterTryGetBoolean("farm_"+referalAddress)) then sendFundsBack else 
 
