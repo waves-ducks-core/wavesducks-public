@@ -296,7 +296,7 @@ func takeOffArtefact(duckId:String, artefactType: String) = {
     let hasSweater = tryGetStringExternal(getWearablesAddress(),duckId+"_ART-XSWEATER")
     let isStaked = if tryGetStringExternal(getFarmingAddress(),"address_"+i.originCaller.toString()+"_asset_"+duckId+"_unstaker") == "" then false else true
     strict unstakeDuck = if hasSweater != "" && isStaked then
-                            if isJackpot(duckId.fromBase58String()) then invoke(getFarmingAddress(),"unstakeJackpot",[duckId],[]).asInt() else invoke(getFarmingAddress(),"unstakeNFT",[duckId],[]).asInt()
+                            if isJackpot(duckId.fromBase58String()) then invoke(getFarmingAddress(),"unstakeJackpot",[duckId],i.payments).asInt() else invoke(getFarmingAddress(),"unstakeNFT",[duckId],i.payments).asInt()
                          else 0
     let sendRewards = if unstakeDuck > 0 then [ScriptTransfer(i.originCaller, unstakeDuck, getEggAssetId())] else []
     [

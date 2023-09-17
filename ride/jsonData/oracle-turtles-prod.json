@@ -33,6 +33,24 @@
             "key": "static_turtleRebirthAddress",
             "type": "string",
             "value": "3PM7TWS85ZupzH1k5wYQa4HPJjEn95j5N7P"
+        },
+        {
+            "key": "static_turtleSpiceRebirthPrice",
+            "type": "integer",
+            "value": 2500000000
+            
+        },
+        {
+            "key": "static_turtleWavesRebirthPrice",
+            "type": "integer",
+            "value": 200000000
+            
+        },
+        {
+            "key": "static_turtleEggRebirthPrice",
+            "type": "integer",
+            "value": 150000000
+            
         }
         
     ],

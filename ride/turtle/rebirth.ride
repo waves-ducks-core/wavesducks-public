@@ -52,6 +52,9 @@ func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_duckStakingAddress() = "static_farmingAddress"
 func staticKey_duckIncubatorAddress() = "static_incubatorAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_turtleSpiceRebirthPrice() ="static_turtleSpiceRebirthPrice"
+func staticKey_turtleWavesRebirthPrice() ="static_turtleWavesRebirthPrice"
+func staticKey_turtleEggRebirthPrice() ="static_turtleEggRebirthPrice"
 
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
@@ -68,10 +71,18 @@ func getDuckStakingAddress() =  Address(tryGetStringExternal(getOracle(), static
 func getDuckIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_duckIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => throw("TR: Value not found in sc!")
+    }
+
+}
+
 #TODO: PUT IN ORACLE!!!!!!!!!!!!!!!!!!!!!!!!!!
-let spiceAmount = 50 #50_0000_0000
-let eggAmount = 1 #1_0000_0000
-let wavesAmount = 2 #2_0000_0000
+let spiceAmount = tryGetIntegerExternal(getOracle(),staticKey_turtleSpiceRebirthPrice()) #50_0000_0000 
+let eggAmount = tryGetIntegerExternal(getOracle(),staticKey_turtleEggRebirthPrice()) #1_0000_0000
+let wavesAmount = tryGetIntegerExternal(getOracle(),staticKey_turtleWavesRebirthPrice()) #2_0000_0000
 
 let delayForHatching = 2
 
