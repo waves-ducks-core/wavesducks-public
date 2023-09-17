@@ -108,6 +108,13 @@
             "value": "3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT;3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL"
         },
         {
+            "key": "static_ropeAddress",
+            "type": "string",
+            "value": "3P6dr3R6kKCsiRd1ebPx8XM4r1qdmUyHAN8"
+        },
+            
+        
+        {
             "key": "static_maintenance",
             "type": "string",
             "value": ""

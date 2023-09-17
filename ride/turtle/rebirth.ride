@@ -68,9 +68,10 @@ func getDuckStakingAddress() =  Address(tryGetStringExternal(getOracle(), static
 func getDuckIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_duckIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
-let spiceAmount = 50_0000_0000
-let eggAmount = 1_0000_0000
-let wavesAmount = 2_0000_0000
+#TODO: PUT IN ORACLE!!!!!!!!!!!!!!!!!!!!!!!!!!
+let spiceAmount = 50 #50_0000_0000
+let eggAmount = 1 #1_0000_0000
+let wavesAmount = 2 #2_0000_0000
 
 let delayForHatching = 2
 
@@ -140,7 +141,7 @@ func initRebirth(refererAddress: String) = {
   let address = i.caller.toString()
   if (pmtTurtle.amount != 1) then throw("NFT is not attached") else
   if (pmtWaves.amount != wavesAmount || pmtWaves.assetId != unit) then throw("Wavespayment is not attached or wrong!") else
-  if (pmtSpice.amount != wavesAmount || pmtSpice.assetId != getSpiceAssetId()) then throw("SpicePayment is not attached or wrong!") else
+  if (pmtSpice.amount != spiceAmount || pmtSpice.assetId != getSpiceAssetId()) then throw("SpicePayment is not attached or wrong!") else
 
 
   strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[eggAmount/2],[]).asInt()

@@ -26,6 +26,7 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 #SC THAT CAN USE COUPONS
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
+func staticKey_ropeAddress() = "static_ropeAddress"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -37,14 +38,18 @@ func getBreedingAddress() = Address(tryGetStringExternal(getOracle(),"static_bre
 func getMasterAddress() = Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getRopeAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_ropeAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
-let scCanUseCoupons = [getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),getGameDappAddress(), getBabyduckAddress(),getBreedingAddress(), getTurtleStakingAddress(),getTurtleRebirthAddress() ]
+let scCanUseCoupons = [ getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),
+                        getGameDappAddress(), getBabyduckAddress(),getBreedingAddress(), getTurtleStakingAddress(),
+                        getTurtleRebirthAddress(),getRopeAddress()]
 
 func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
 func couponsUserActiveOld(user:String) = couponsUserActive(user)+"_old"
+func couponsSpendOnSc(sc:String) = sc+"_spend_by_using"
 
 func addCouponsInternal(user:String,amount:Int)={
     let keyOld = couponsUserActiveOld(user)
@@ -123,14 +128,17 @@ func useCoupons(amountTryingToPay:Int)= {
 
     let keySpend = couponsUserSpend(user)
     let keyOld = couponsUserActiveOld(user)
+    let keySpendSc = couponsSpendOnSc(i.caller.toString())
 
 
     let totalSpend = tryGetInteger(keySpend)+amountPaid
+    let totalSpendSc = tryGetInteger(keySpendSc)+amountPaid
     (
         [
             IntegerEntry(keySpend,totalSpend),
             IntegerEntry(keyOld,availableCoupons),
-            IntegerEntry(keyActive,availableCouponsLeft)
+            IntegerEntry(keyActive,availableCouponsLeft),
+            IntegerEntry(keySpendSc,totalSpendSc)
         ],
         amountPaid #Amount paid is the amount a user paid in coupons, so we can reduce this from the actual payment.
     )
