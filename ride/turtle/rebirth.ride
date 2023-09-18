@@ -157,7 +157,8 @@ func initRebirth(refererAddress: String) = {
 
   strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[eggAmount/2],[]).asInt()
   let leftToPay = eggAmount-amountPaidByCoupons
-
+  strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
+        [], [AttachedPayment(getSpiceAssetId(), pmtSpice.amount)])
 
   strict payment = if leftToPay!=0 then {
     let feePayment = pmtEgg.value()
