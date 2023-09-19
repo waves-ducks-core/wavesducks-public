@@ -202,7 +202,7 @@ func finishRebirth(initTx: String) = {
       throw("you cannot finish rebirth, yet")
     } else {
       let win = getRandomWin(initTx.fromBase58String(), finishBlock)  
-      if (win!=unit) then throw(win) else
+      if (win!=initTx) then throw(win) else
       let txId = initTx
 
       let result = if (win.indexOf("perch") != unit) then {
