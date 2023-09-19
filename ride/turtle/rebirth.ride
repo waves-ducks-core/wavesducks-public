@@ -111,7 +111,7 @@ func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, 
 func getRandomWin(tx: ByteVector, finishHeight: Int) = {
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
-    if (n<60) then { "incubator" } else
+    let result = if (n<60) then { "incubator" } else
     if (n<110) then { "beach_R" } else 
     if (n<160) then { "beach_S" } else
     if (n<210) then { "beach_G" } else
@@ -125,6 +125,8 @@ func getRandomWin(tx: ByteVector, finishHeight: Int) = {
     if (n<720) then { "item!ART-FIRE_SHIELD" } else
     if (n<920) then { "item!ART-FEED10" } else     
     { "item!ART-FEED100" }   
+
+    (n,result)
 }
 
 @Callable(i)
@@ -145,7 +147,7 @@ func initRebirth(refererAddress: String) = {
   let pmtTurtle = i.payments[0]
   let pmtWaves = i.payments[1]
   let pmtSpice = i.payments[2]
-  let pmtEgg = i.payments[3]
+
 
   let assetId = pmtTurtle.assetId.value()
   let initTx = i.transactionId.toBase58String()
@@ -161,6 +163,7 @@ func initRebirth(refererAddress: String) = {
         [], [AttachedPayment(getSpiceAssetId(), pmtSpice.amount)])
 
   strict payment = if leftToPay!=0 then {
+    let pmtEgg = i.payments[3]
     let feePayment = pmtEgg.value()
     if (feePayment.assetId != getEggAssetId()) then throw("You need to attach EGG tokens as fee") else 
     if (feePayment.amount != leftToPay)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + leftToPay.toString()) else
@@ -179,7 +182,8 @@ func initRebirth(refererAddress: String) = {
   [
     IntegerEntry("address_" + address + "_initTx_" + initTx + "_finishBlock", height+delayForHatching),
     StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
-    StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String())
+    StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String()),
+    ScriptTransfer(getFeeAggregator(), pmtWaves.amount, unit)
   ]
 
   
@@ -201,8 +205,11 @@ func finishRebirth(initTx: String) = {
     if (height < finishBlock) then {
       throw("you cannot finish rebirth, yet")
     } else {
-      let win = getRandomWin(initTx.fromBase58String(), finishBlock)  
-      #if (win!=initTx) then throw(win) else
+
+      let output = getRandomWin(initTx.fromBase58String(), finishBlock)  
+      let win = output._2
+      let random = output._1
+
       let txId = initTx
 
       let result = if (win.indexOf("perch") != unit) then {
@@ -234,7 +241,8 @@ func finishRebirth(initTx: String) = {
 
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
-        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish")
+        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
       ]++validPayment
     }
   }

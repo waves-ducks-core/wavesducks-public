@@ -12,6 +12,7 @@ func staticKey_pipelineUser() ="static_pipelineUser"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_huntDistroAddress() = "static_huntDistroAddress"
+func staticKey_warsPKey() = "static_warsPKey"
 
 #TODO: make sure to allow coupons contract when we release new items
 func key_artefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
@@ -129,6 +130,8 @@ func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_r
 func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getHuntDistroAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_huntDistroAddress()).fromBase58String())
+func getWarsPKey() =  tryGetStringExternal(getOracle(),staticKey_warsPKey()).fromBase58String()
+
 func tryGetCosmeticItemPrice(item:String)= {
   let key = key_priceCosmetic(item)
     match getInteger(this, key) {
@@ -396,8 +399,8 @@ func preInit() = {
 
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
-  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()) then throw("admin only") else 
-     if (i.caller == getHuntDistroAddress() && !type.contains("ART-FIRE_")) then throw("FIRE ITEM ONLY!") else
+  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("admin only") else 
+     if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_")) then throw("FIRE ITEM ONLY!") else
     let txIdStr = i.transactionId.toBase58String()
     let address = Address(fromBase58String(receiver))
 
