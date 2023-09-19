@@ -117,7 +117,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int) = {
     if (n<210) then { "beach_G" } else
     if (n<260) then { "beach_D" } else
     if (n<340) then { "perch_G" } else
-    if (n<420) then { "perch_y" } else
+    if (n<420) then { "perch_Y" } else
     if (n<500) then { "perch_R" } else
     if (n<580) then { "perch_B" } else
     if (n<640) then { "duck_incubator" } else                
@@ -202,7 +202,7 @@ func finishRebirth(initTx: String) = {
       throw("you cannot finish rebirth, yet")
     } else {
       let win = getRandomWin(initTx.fromBase58String(), finishBlock)  
-      if (win!=initTx) then throw(win) else
+      #if (win!=initTx) then throw(win) else
       let txId = initTx
 
       let result = if (win.indexOf("perch") != unit) then {
