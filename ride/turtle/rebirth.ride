@@ -121,8 +121,8 @@ func getRandomWin(tx: ByteVector, finishHeight: Int) = {
     if (n<500) then { "perch_R" } else
     if (n<580) then { "perch_B" } else
     if (n<640) then { "duck_incubator" } else                
-    if (n<680) then { "item!ART-FIRE_HELMET" } else    
-    if (n<720) then { "item!ART-FIRE_SWORD" } else
+    if (n<680) then { "item!ART-FIRE_TAIL" } else    
+    if (n<720) then { "item!ART-FIRE_SHIELD" } else
     if (n<920) then { "item!ART-FEED10" } else     
     { "item!ART-FEED100" }   
 }
