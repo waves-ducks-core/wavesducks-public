@@ -99,19 +99,18 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
   randomHash.toInt(offset*8) % variants
 }
 
-func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
-    let typeRandom = getRandomNumber(5, txId, hatchingFinishHeight, 0)
+func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
-    let color = if (colorRandom == 0) then "R"
-      else if (colorRandom == 1) then "D" 
-      else if (colorRandom == 2) then "S" 
-      else "G"
+    let color = getElement(["R","D","S","G"],colorRandom)
 
-    if (typeRandom == 0) then ("TRTL-AAAAAAAA-G" + color, "8A-G")
-      else if (typeRandom == 1) then ("TRTL-BBBBBBBB-G" + color, "8B-G")
-      else if (typeRandom == 2) then ("TRTL-CCCCCCCC-G" + color, "8C-G")
-      else if (typeRandom == 3) then ("TRTL-DDDDDDDD-G" + color, "8D-G")
-      else ("TRTL-EEEEEEEE-G" + color, "8E-G")
+    let oldGenes = [("TRTL-AAAAAAAA-G" + color, "8A-G")]
+    let newGenes = [("TRTL-BBBBBBBB-G" + color, "8B-G"),("TRTL-CCCCCCCC-G" + color, "8C-G"),
+                    ("TRTL-DDDDDDDD-G" + color, "8D-G"),("TRTL-EEEEEEEE-G" + color, "8E-G")]
+
+    let toPickFrom = if all then oldGenes++newGenes else newGenes
+    let typeRandom = getRandomNumber(size(toPickFrom), txId, hatchingFinishHeight, 0)
+    
+    getElement(toPickFrom,typeRandom)   
     
 }
 
@@ -149,7 +148,7 @@ func issueFreeTurtle(address: String, txIdStr: String) = {
     let totalDucksAmount = tryGetInteger("turtle_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
 
-    let (TRTLGen, farmGen) = getRandomName(txId, valueOrErrorMessage(transactionHeightById(txId),txIdStr+ " not found "+toBase58String(txId)) + 1)
+    let (TRTLGen, farmGen) = getRandomName(txId, valueOrErrorMessage(transactionHeightById(txId),txIdStr+ " not found "+toBase58String(txId)) + 1, true)
     let description = "{\"genotype\": \"" + TRTLGen + "\", \"crossbreeding\": true}"
 
     let asset = Issue(TRTLGen, description, 1, 0, false, unit, height)
@@ -244,7 +243,7 @@ func finishTRTLHatching(txIdStr: String) = {
   } else 
     if (hatchingFinishHeight > height) then throw("Hatching is not finished yet " + (hatchingFinishHeight - height).toString() + " blocks remaining, it will take around " +  (hatchingFinishHeight - height).toString() + " minutes")
     else {
-      let (TRTLGen, farmGen) = getRandomName(txId, hatchingFinishHeight)
+      let (TRTLGen, farmGen) = getRandomName(txId, hatchingFinishHeight, false)
       let description = "{\"genotype\": \"" + TRTLGen + "\", \"crossbreeding\": true}"
 
       let asset = Issue(TRTLGen, description, 1, 0, false, unit, hatchingFinishHeight)
