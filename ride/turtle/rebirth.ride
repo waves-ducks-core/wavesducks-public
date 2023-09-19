@@ -157,7 +157,7 @@ func initRebirth(refererAddress: String) = {
   if (pmtSpice.amount != spiceAmount || pmtSpice.assetId != getSpiceAssetId()) then throw("SpicePayment is not attached or wrong!") else
 
 
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[eggAmount/2],[]).asInt()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[eggAmount],[]).asInt()
   let leftToPay = eggAmount-amountPaidByCoupons
   strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
         [], [AttachedPayment(getSpiceAssetId(), pmtSpice.amount)])
