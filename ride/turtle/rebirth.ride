@@ -112,13 +112,13 @@ func getRandomWin(tx: ByteVector, finishHeight: Int) = {
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = if (n<60) then { "incubator" } else
-    if (n<110) then { "beach_R" } else 
-    if (n<160) then { "beach_S" } else
-    if (n<210) then { "beach_G" } else
-    if (n<260) then { "beach_D" } else
-    if (n<340) then { "perch_G" } else
-    if (n<420) then { "perch_Y" } else
-    if (n<500) then { "perch_R" } else
+    if (n<130) then { "beach_R" } else 
+    if (n<200) then { "beach_S" } else
+    if (n<270) then { "beach_G" } else
+    if (n<340) then { "beach_D" } else
+    if (n<400) then { "perch_G" } else
+    if (n<460) then { "perch_Y" } else
+    if (n<520) then { "perch_R" } else
     if (n<580) then { "perch_B" } else
     if (n<640) then { "duck_incubator" } else                
     if (n<680) then { "item!ART-FIRE_TAIL" } else    

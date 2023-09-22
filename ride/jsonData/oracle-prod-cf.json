@@ -107,6 +107,12 @@
         "value": "TRTL_STAKING"
       },
       {
+        
+        "key": "allowed_contract_3PM7TWS85ZupzH1k5wYQa4HPJjEn95j5N7P",
+        "type": "string",
+        "value": "TRTL_REBIRTH"
+      },
+      {
         "key": "allowed_contract_3PRG9LfW6QZxKdTWB8eEdUia2bH6bHvyx7y",
         "value": null
       },

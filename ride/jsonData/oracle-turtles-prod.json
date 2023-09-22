@@ -37,19 +37,19 @@
         {
             "key": "static_turtleSpiceRebirthPrice",
             "type": "integer",
-            "value": 2500000000
+            "value": 2200000000
             
         },
         {
             "key": "static_turtleWavesRebirthPrice",
             "type": "integer",
-            "value": 200000000
+            "value": 180000000
             
         },
         {
             "key": "static_turtleEggRebirthPrice",
             "type": "integer",
-            "value": 150000000
+            "value": 120000000
             
         }
         
