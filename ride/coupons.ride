@@ -54,7 +54,7 @@ func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
 func couponsUserActiveOld(user:String) = couponsUserActive(user)+"_old"
 func couponsSpendOnSc(sc:String) = sc+"_spend_by_using"
-func actionPerAddressPerUser(user:String,action:String,dappAddress:String) = dappAddress+"_"+action+"_"+user+"_actions"
+func actionPerAddressPerUserPerDay(user:String,action:String,dappAddress:String, day:String) = dappAddress+"_"+action+"_"+user+"_"+day+"_actions"
 
 func addCouponsInternal(user:String,amount:Int)={
     let keyOld = couponsUserActiveOld(user)
@@ -179,7 +179,7 @@ func recordAction(actionName:String)= {
     if !containsElement(scCanUseCoupons, i.caller) then throw("CRA: Only certain smart contracts can use this reward module!") else #prevents outsider to implement our rewards
 
         let day = calculateDaysSinceStart()
-        let actionKey = actionPerAddressPerUser(i.originCaller.toString(),actionName,i.caller.toString())
+        let actionKey = actionPerAddressPerUserPerDay(i.originCaller.toString(),actionName,i.caller.toString(),day.toString())
         let totalActions = tryGetInteger(actionKey)+1
         [
             IntegerEntry(actionKey,totalActions)
