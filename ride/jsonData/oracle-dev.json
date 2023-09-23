@@ -230,6 +230,11 @@
             "key": "static_huntDistroAddress",
             "type": "string",
             "value": "3P7eZotfwNFYWGm9YeWhTZed1JdLdiszuh7"
+        },
+        {
+            "key": "static_levelSystemAddress",
+            "type": "string",
+            "value": "3P5x9RxuqbMaVFPsaycvXHeFZXPmcswxA1c"
         }
         
     ],

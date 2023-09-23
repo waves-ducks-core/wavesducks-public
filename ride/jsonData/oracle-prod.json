@@ -219,7 +219,15 @@
             "key": "static_rentingAddress",
             "type": "string",
             "value": "3P355gZeQTTSwE5Cynz9FQekvWJRhASBHFC"
+        },
+        {
+            "key": "static_levelSystemAddress",
+            "type": "string",
+            "value": "3P5gckRPNh1ve5mZS4SkFY3T8pYqaApjqCi"
         }
+
+
+        
 
         
         

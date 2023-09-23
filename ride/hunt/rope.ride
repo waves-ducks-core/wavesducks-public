@@ -102,7 +102,8 @@ func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)
       }else 0
 
       let refund = [ScriptTransfer(i.caller, i.payments[0].amount - leftToPay, getEggAssetId())]
-    
+      strict recordAction = invoke(getCouponsAddress(),"recordAction",["ROPE"],[])
+
     if exists != "" then throw("RBR: Rope was already bought for this egg by this user!") else
     [
         StringEntry(eggIdKey(eggId, i.originCaller.toString()),price.toString()+";"+distance.toString())

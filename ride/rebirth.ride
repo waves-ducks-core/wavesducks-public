@@ -232,7 +232,7 @@ func finishRebirth(initTx: String) = {
   let assetRarity = tryGetInteger("address_" + address + "_initTx_" + initTx + "_assetRarity")
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
   strict validPayment = checkAdditionalPayment(i.payments[0])
-
+  strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTH"],[])
   func getAccessItemAssetId(address: Address) = tryGetStringExternal(address,"static_accessItemAssetId").fromBase58String()
   func getAccessItemPrice(address: Address) = tryGetIntExternal(address,"static_accessItemPrice")
 

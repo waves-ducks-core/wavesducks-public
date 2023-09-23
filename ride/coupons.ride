@@ -27,6 +27,8 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 func staticKey_ropeAddress() = "static_ropeAddress"
+func staticKey_levelSystemAddress() = "static_levelSystemAddress"
+func staticKey_spiceAssetId() = "static_spiceAssetId"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -39,17 +41,20 @@ func getMasterAddress() = Address(tryGetStringExternal(getOracle(),"static_cfMas
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getRopeAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_ropeAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getLevelSystemAddress() = Address(tryGetStringExternal(getOracle(),staticKey_levelSystemAddress()).fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
 let scCanUseCoupons = [ getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),
                         getGameDappAddress(), getBabyduckAddress(),getBreedingAddress(), getTurtleStakingAddress(),
-                        getTurtleRebirthAddress(),getRopeAddress()]
+                        getTurtleRebirthAddress(),getRopeAddress(),getLevelSystemAddress()]
 
 func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
 func couponsUserActiveOld(user:String) = couponsUserActive(user)+"_old"
 func couponsSpendOnSc(sc:String) = sc+"_spend_by_using"
+func actionPerAddressPerUser(user:String,action:String,dappAddress:String) = dappAddress+"_"+action+"_"+user+"_actions"
 
 func addCouponsInternal(user:String,amount:Int)={
     let keyOld = couponsUserActiveOld(user)
@@ -62,7 +67,31 @@ func addCouponsInternal(user:String,amount:Int)={
     ]
 }
 
+#First day ever! Saturday, September 23, 2023 0:00:00
+let startTsMs = 1695427200000
+func calculateDaysSinceStart()={
+  let diff = lastBlock.timestamp-startTsMs
+  let daysPassed = diff/ (86400 *1000)
+  daysPassed
+}
 
+func payAction(actionName:String, userAddress: Address, amount: Int)={
+    #If rope on step 5,10,15
+    if actionName == "ROPE"  then{ 
+        if amount == 5 then [ScriptTransfer(userAddress,5000_0000,getSpiceAssetId())] else
+        if amount == 10 then [ScriptTransfer(userAddress,1_5000_0000,getSpiceAssetId())] else
+        if amount == 15 then [ScriptTransfer(userAddress,3_0000_0000,getSpiceAssetId())] else []}
+    #If rebirth, first of the day then give 1 spice
+    else if actionName == "REBIRTH" then {
+        if amount ==1 then [ScriptTransfer(userAddress,1_0000_0000,getSpiceAssetId())] else []
+    }
+    #If levelup task paid always 5 spice
+    else if actionName == "LEVELUP" then {
+        [ScriptTransfer(userAddress,5_0000_0000,getSpiceAssetId())]
+    }
+    #If none from the rewarding tasks
+    else []
+}
 
 @Callable(i)
 func configureOracle(oracle: String) = {
@@ -142,4 +171,18 @@ func useCoupons(amountTryingToPay:Int)= {
         ],
         amountPaid #Amount paid is the amount a user paid in coupons, so we can reduce this from the actual payment.
     )
+}
+
+
+@Callable(i)
+func recordAction(actionName:String)= {
+    if !containsElement(scCanUseCoupons, i.caller) then throw("CRA: Only certain smart contracts can use this reward module!") else #prevents outsider to implement our rewards
+
+        let day = calculateDaysSinceStart()
+        let actionKey = actionPerAddressPerUser(i.originCaller.toString(),actionName,i.caller.toString())
+        let totalActions = tryGetInteger(actionKey)+1
+        [
+            IntegerEntry(actionKey,totalActions)
+        ]++payAction(actionName,i.originCaller,totalActions)
+
 }
