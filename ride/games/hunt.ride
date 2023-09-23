@@ -300,7 +300,7 @@ func buyAccessItemAndLockDuck()={
 func buyAccessItem() = {
   let addressStr = i.originCaller.toString()
   let eggPayment = i.payments[0].value()
-  if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")} else 
+  if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached "+ getAccessItemAssetId().toBase58String())} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
   strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).asString()
     strict validPayment = if i.caller == getRentingAddress() then [] else checkAdditionalPayment(i.payments[1])
