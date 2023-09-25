@@ -245,7 +245,8 @@ func claimDuckBack(duckId: String)={
           ScriptTransfer(addressFromStringValue(duckOwner),1,duckId.fromBase58String()),
           #Delete status
           DeleteEntry(key_getDuckStatus(duckId)),
-          DeleteEntry(key_getDuckRentedBy(duckId))
+          DeleteEntry(key_getDuckRentedBy(duckId)),
+          DeleteEntry(key_gamePreFundedItemForDuck(duckId))
       ]
   else
       #If rented out, check duck last payment

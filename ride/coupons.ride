@@ -85,6 +85,9 @@ func payAction(actionName:String, userAddress: Address, amount: Int)={
     else if actionName == "REBIRTH" then {
         if amount ==1 then [ScriptTransfer(userAddress,1_0000_0000,getSpiceAssetId())] else []
     }
+    else if actionName == "FEEDDUCKLING10" then {
+        if amount ==1 then [ScriptTransfer(userAddress,1_5000_0000,getSpiceAssetId())] else []
+    }
     #If levelup task paid always 5 spice
     else if actionName == "LEVELUP" then {
         [ScriptTransfer(userAddress,5_0000_0000,getSpiceAssetId())]
