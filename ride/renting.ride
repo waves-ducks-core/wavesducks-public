@@ -222,7 +222,8 @@ func claimDuckBack(duckId: String)={
   if duckStatus == "IDLE" then [
       #Send duck back, there is no borg if duck was not rented out
       ScriptTransfer(i.caller,1,duckId.fromBase58String()),
-      DeleteEntry(key_getDuckStatus(duckId))
+      DeleteEntry(key_getDuckStatus(duckId)),
+          DeleteEntry(key_gamePreFundedItemForDuck(duckId))
 
   ] else
 
@@ -264,7 +265,8 @@ func claimDuckBack(duckId: String)={
             ScriptTransfer(addressFromStringValue(duckOwner),1,duckId.fromBase58String()),
             #Delete status
             DeleteEntry(key_getDuckStatus(duckId)),
-            DeleteEntry(key_getDuckRentedBy(duckId))
+            DeleteEntry(key_getDuckRentedBy(duckId)),
+          DeleteEntry(key_gamePreFundedItemForDuck(duckId))
 
           ]
       else throw("RCDB: Renting period is not over and player is active!")
