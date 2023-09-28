@@ -16,7 +16,8 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
 func getBackendPubKey() = getStringValue(getOracle(),"static_backendPubKey").fromBase58String()
 func getMaxDiff() = getIntegerValue(getOracle(),"static_maxProxyDiff")
-
+func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String())
 
 let kTotalLiquidity = "total_liquidity"
 let kInitialized = "INITIALIZED"
@@ -103,6 +104,17 @@ func getAssetFarmingPower(assetId: ByteVector) = {
   }
 }
 
+func getTurtleAssetFarmingPower(assetId: ByteVector) = {
+  let breederAddress = getTurtleBreederAddress()
+  let incubatorAddress = getTurtleIncubatorAddress()
+  
+  if (assetInfo(assetId).value().issuer == breederAddress || assetInfo(assetId).value().issuer == incubatorAddress) then {
+   true
+  } else {
+    throw("MGAFP: _20")
+  }
+}
+
 func getDuckMarketPrice(nftId: ByteVector) = {
   let rarity = getAssetFarmingPower(nftId)
   let breederAddress = tryGetStringExternal(getCfMasterAddress(), kBreederDapp).addressFromStringValue()
@@ -130,8 +142,10 @@ func getBidAmount(auctionId: String, bidId: String) = {
 
 
 func checkDataGetPrice(ach: String, breed: String, gen: String, price:Int, rarity: String, ts: Int, signature: String, duckId: String)={
-  let isDuck = rarity != ""
-  let text = if !isDuck then makeString([gen,price.toString(),ts.toString()],";") else makeString([rarity,breed,ach,gen,price.toString(),ts.toString()], ";") 
+  let isDuck = rarity != "0" && gen != ""
+  let isTurtle = rarity != "0"
+  let text = if isDuck then  makeString([rarity,breed,ach,gen,price.toString(),ts.toString()], ";") else
+             if isTurtle then makeString([rarity,breed,price.toString(),ts.toString()],";")  else makeString([gen,price.toString(),ts.toString()],";")
   let MSINHOUR = 3_600_000
   if (!sigVerify_8Kb(text.toBytes(), signature.fromBase58String(), getBackendPubKey())) then throw("MCACS: Invalid proof from backend key"+getBackendPubKey().toBase58String()+" "+text+" "+toString(isDuck)) else 
   let currentTs = lastBlock.timestamp
@@ -141,6 +155,10 @@ func checkDataGetPrice(ach: String, breed: String, gen: String, price:Int, rarit
     let diff = (duckRarity - parseIntValue(split(rarity,".")[0]))
     if -5> diff || diff > 5 then throw("MCACS: It seems not the correct price info was passed! "+toString(duckRarity)+" "+rarity+ " "+toString(diff)) else
     price
+  else if isTurtle then
+    if getTurtleAssetFarmingPower(duckId.fromBase58String()) == true then
+      price
+    else throw("MCACS: This does not seem a turtle!")
   else
     price
   
@@ -157,12 +175,12 @@ func configureOracle(oracle: String) = {
 
 # params format
 @Callable(i)
-func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, str2: String, ach: String, breed: String, gen: String, price:Int, rarity: String, ts: Int, signature: String) = {
+func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, str2: String, ach: Boolean, breed: Boolean, gen: String, price:Int, rarity: Int, ts: Int, signature: String) = {
   let auctionDappAddress = getAuctionAddr().addressFromStringValue()
   if (getBoolA(getCfMasterAddress(), "farm_" + i.caller.toString()) != true) then throw("_301=") else
   if (function == "initAuction") then {
     let asset = i.payments[0].value()
-    let duckMarketPrice = checkDataGetPrice( ach, breed, gen, price, rarity, ts, signature, asset.assetId.value().toBase58String())
+    let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, asset.assetId.value().toBase58String())
     let maxPriceDiff = fraction(duckMarketPrice, getMaxDiff(), 100)
     let initialPrice = int1
     let buyoutPrice = int2
@@ -181,7 +199,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let auctionId = str1
     let duckAssetId = getDuckIdByAuctionId(auctionId)
     let bidAmount = i.payments[0].value().amount.value()
-    let duckMarketPrice = checkDataGetPrice( ach, breed, gen, price, rarity, ts, signature, duckAssetId)
+    let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
     let maxPriceDiff = fraction(duckMarketPrice, getMaxDiff(), 100)
     if (bidAmount > (duckMarketPrice + maxPriceDiff)) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()+" diff: "+maxPriceDiff.toString()) else
     if (i.payments.size() != 1) then throw("_103") else {
@@ -199,7 +217,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let bidId = str2
     let duckAssetId = getDuckIdByAuctionId(auctionId)
     let bidAmount = getBidAmount(auctionId, bidId)
-    let duckMarketPrice = checkDataGetPrice( ach, breed, gen, price, rarity, ts, signature, duckAssetId)
+    let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
     let maxPriceDiff = fraction(duckMarketPrice, getMaxDiff(), 100)
     if (bidAmount < (duckMarketPrice - maxPriceDiff)) then throw("Price is too low, avg price: " + duckMarketPrice.toString() + ", min. price: " + (duckMarketPrice - maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()) else
     strict acceptBid = invoke(auctionDappAddress, "acceptBid", [auctionId, bidId], [])
@@ -214,7 +232,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let auctionId = str1
     let duckAssetId = getDuckIdByAuctionId(auctionId)
     let bidAmount = i.payments[0].value().amount.value()
-    let duckMarketPrice = checkDataGetPrice( ach, breed, gen, price, rarity, ts, signature, duckAssetId)
+    let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
     let maxPriceDiff = fraction(duckMarketPrice, 15, 100)
     if (bidAmount > (duckMarketPrice + maxPriceDiff)) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()) else
     if (i.payments.size() != 1) then throw("_103") else{
