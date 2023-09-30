@@ -16,8 +16,8 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
 func getBackendPubKey() = getStringValue(getOracle(),"static_backendPubKey").fromBase58String()
 func getMaxDiff() = getIntegerValue(getOracle(),"static_maxProxyDiff")
-func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String())
+func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleBreederAddress").fromBase58String())
 
 let kTotalLiquidity = "total_liquidity"
 let kInitialized = "INITIALIZED"
@@ -111,7 +111,7 @@ func getTurtleAssetFarmingPower(assetId: ByteVector) = {
   if (assetInfo(assetId).value().issuer == breederAddress || assetInfo(assetId).value().issuer == incubatorAddress) then {
    true
   } else {
-    throw("MGAFP: _20")
+    throw("MGTFP: _20")
   }
 }
 
