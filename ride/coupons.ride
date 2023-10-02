@@ -55,6 +55,8 @@ func couponsUserActive(user:String) = user+"_active"
 func couponsUserActiveOld(user:String) = couponsUserActive(user)+"_old"
 func couponsSpendOnSc(sc:String) = sc+"_spend_by_using"
 func actionPerAddressPerUserPerDay(user:String,action:String,dappAddress:String, day:String) = dappAddress+"_"+action+"_"+user+"_"+day+"_actions"
+func actionPerAddressPerUserLastCheckDay(user:String,action:String) = action+"_"+user+"_actions_check_day"
+func actionPerAddressPerUserAmountInARow(user:String,action:String) = action+"_"+user+"_actions_amount_in_row"
 
 func addCouponsInternal(user:String,amount:Int)={
     let keyOld = couponsUserActiveOld(user)
@@ -75,25 +77,59 @@ func calculateDaysSinceStart()={
   daysPassed
 }
 
-func payAction(actionName:String, userAddress: Address, amount: Int)={
+func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:Int)={
+    let checkDayKey = actionPerAddressPerUserLastCheckDay(address,actionName)
+    let daysInRowKey = actionPerAddressPerUserAmountInARow(address,actionName)
+    let lastCheckDay = tryGetInteger(checkDayKey)
+    let daysInRow = tryGetInteger(daysInRowKey)
+    let daysInRowUpdate = if lastCheckDay==day-1 then daysInRow+1 else if lastCheckDay<day-1 then 1 else 0
+    let lastCheckDayUpdate = day
+    let reward = if daysInRowUpdate == 7 then [
+        ScriptTransfer(addressFromStringValue(address),1_0000_0000,getSpiceAssetId()),
+            IntegerEntry(daysInRowKey,0)
+        ] else [
+            IntegerEntry(daysInRowKey,daysInRowUpdate)
+        ]
+    
+    [
+        IntegerEntry(checkDayKey,lastCheckDayUpdate),
+        ScriptTransfer(addressFromStringValue(address),rewardAmount,getSpiceAssetId())
+    ]++reward
+}
+
+func payAction(actionName:String, userAddress: Address, amount: Int, day:Int)={
     #If rope on step 5,10,15
     if actionName == "ROPE"  then{ 
-        if amount == 5 then [ScriptTransfer(userAddress,5000_0000,getSpiceAssetId())] else
-        if amount == 10 then [ScriptTransfer(userAddress,1_5000_0000,getSpiceAssetId())] else
-        if amount == 15 then [ScriptTransfer(userAddress,3_0000_0000,getSpiceAssetId())] else []}
+        let composedKey = actionName+amount.toString()
+        if amount == 5 then hasDoneTask7Days(day,userAddress.toString(),composedKey,5000_0000) else
+        if amount == 10 then hasDoneTask7Days(day,userAddress.toString(),composedKey,1_5000_0000) else
+        if amount == 15 then hasDoneTask7Days(day,userAddress.toString(),composedKey,3_0000_0000) else []}
+    else if actionName == "VEGG50_0000"  then{ 
+        if amount == 1 then hasDoneTask7Days(day,userAddress.toString(),actionName,1000_0000) else []
     #If rebirth, first of the day then give 1 spice
-    else if actionName == "REBIRTH" then {
-        if amount ==1 then [ScriptTransfer(userAddress,1_0000_0000,getSpiceAssetId())] else []
+    }else if actionName == "REBIRTH" then {
+        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,1_0000_0000) else []
     }
     else if actionName == "FEEDDUCKLING10" then {
-        if amount ==1 then [ScriptTransfer(userAddress,1_5000_0000,getSpiceAssetId())] else []
+        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,1_5000_0000) else []
     }
     #If levelup task paid always 5 spice
     else if actionName == "LEVELUP" then {
-        [ScriptTransfer(userAddress,5_0000_0000,getSpiceAssetId())]
+        hasDoneTask7Days(day,userAddress.toString(),actionName,5_0000_0000)
     }
     #If none from the rewarding tasks
     else []
+}
+
+func recordActionInternal(actionName:String, i:Invocation, address:Address)= {
+    if !containsElement(scCanUseCoupons, i.caller) then throw("CRA: Only certain smart contracts can use this reward module!") else #prevents outsider to implement our rewards
+
+        let day = calculateDaysSinceStart()
+        let actionKey = actionPerAddressPerUserPerDay(address.toString(),actionName,i.caller.toString(),day.toString())
+        let totalActions = tryGetInteger(actionKey)+1
+        [
+            IntegerEntry(actionKey,totalActions)
+        ]++payAction(actionName,address,totalActions, day)
 }
 
 @Callable(i)
@@ -108,7 +144,10 @@ func configureOracle(oracle: String) = {
 @Callable(i)
 func addCoupons(user:String,amount:Int) = {
     if i.caller != this && i.callerPublicKey != wAccPKey then throw("CAC: admin only") else 
-    addCouponsInternal(user,amount)
+    if amount > 50_0000 then
+        recordActionInternal("VEGG50_0000",i,i.originCaller)++addCouponsInternal(user,amount)
+    else
+        addCouponsInternal(user,amount)
 
 }
 
@@ -121,8 +160,10 @@ func addCouponsBatch(batch:String) = {
         let user = splitArray[0]
         let amount = parseIntValue(splitArray[1])
         strict burnCall = invoke(getBurnAddress(), "burnByInvoke", [amount],[])
-
-        acc++addCouponsInternal(user,amount)
+        if amount > 50_0000 then
+            acc++recordActionInternal("VEGG50_0000",i,i.originCaller)++addCouponsInternal(user,amount)
+        else
+            acc++addCouponsInternal(user,amount)
 
     }
     FOLD<20>(couponsList, [], handleCoupon)
@@ -179,13 +220,6 @@ func useCoupons(amountTryingToPay:Int)= {
 
 @Callable(i)
 func recordAction(actionName:String)= {
-    if !containsElement(scCanUseCoupons, i.caller) then throw("CRA: Only certain smart contracts can use this reward module!") else #prevents outsider to implement our rewards
-
-        let day = calculateDaysSinceStart()
-        let actionKey = actionPerAddressPerUserPerDay(i.originCaller.toString(),actionName,i.caller.toString(),day.toString())
-        let totalActions = tryGetInteger(actionKey)+1
-        [
-            IntegerEntry(actionKey,totalActions)
-        ]++payAction(actionName,i.originCaller,totalActions)
+    recordActionInternal(actionName,i,i.originCaller)
 
 }
