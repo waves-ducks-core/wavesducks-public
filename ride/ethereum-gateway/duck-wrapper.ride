@@ -113,13 +113,13 @@ func lock() = {
     
     strict isOnPerch = if (assetRarity < 50 || (perchesAvailable == 0 && eggBalance < 1_0000_0000)) then {false} else {
       strict inv1 = if (perchesAvailable > 0) then { unit } else {
-        invoke(getFarmingAddress(), "buyPerch", [assetColor, ""], [AttachedPayment(getEggAssetId(), 1_0000_0000)])
+        invoke(getFarmingAddress(), "buyPerch", [assetColor, ""], [AttachedPayment(unit,1_000_000),AttachedPayment(getEggAssetId(), 1_0000_0000) ])
       }
       strict inv2 = if (perchesAvailable > 0) then { unit } else 
       if (isJackpot == false) then {
-        invoke(getFarmingAddress(), "stakeNFT", [], [AttachedPayment(assetId, 1)])
+        invoke(getFarmingAddress(), "stakeNFT", [], [AttachedPayment(assetId, 1), AttachedPayment(unit,1_000_000)])
       } else {
-        invoke(getFarmingAddress(), "stakeJackpot", [assetColor], [AttachedPayment(assetId, 1)])
+        invoke(getFarmingAddress(), "stakeJackpot", [assetColor], [AttachedPayment(assetId, 1), AttachedPayment(unit,1_000_000)])
       }
       true
     }
@@ -164,7 +164,7 @@ func unlock() = {
   if (tryGetString("duck_" + assetIdStr + "_owner") != addressStr) then {throw("duck is not yours")} 
   else {
     strict assetBalanceBefore = assetBalance(this, getEggAssetId())
-    strict inv1 = if (assetBalance(this, assetId) > 0) then {unit} else {invoke(getFarmingAddress(), unstakeFuncName, [assetIdStr], [])}
+    strict inv1 = if (assetBalance(this, assetId) > 0) then {unit} else {invoke(getFarmingAddress(), unstakeFuncName, [assetIdStr], [AttachedPayment(unit,1_000_000)])}
     strict eggEarned = assetBalance(this, getEggAssetId()) - assetBalanceBefore
 
     strict inv2 = invoke(Address(nftCreationAddressGateway), "burnNFT", [], i.payments)

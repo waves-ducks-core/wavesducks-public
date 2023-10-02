@@ -64,7 +64,8 @@ func addAssetWeightToList(accum: List[Int], item: ByteVector) = { accum ++ [tryG
 func addAssetDecimalsToList(accum: List[Int], item: ByteVector) = { accum ++ [tryGetInteger("static_" + item.getAssetString() + "_decimals")] }
 func addAssetScaleToList(accum: List[Int], item: ByteVector) = { accum ++ [tryGetInteger("static_" + item.getAssetString() + "_scale")] }
 func addIntToList(accum: List[Int], item: String) = { accum ++ [item.parseIntValue()] }
-func reveneuForDayByAsset(day: Int, assetId: String)= "reveneu_day_"+assetId+"_"+day.toString()
+func reveneuForDayByAssetOut(day: Int, assetId: String)= "reveneu_day_"+assetId+"_"+day.toString()
+func volumeForDayByIn(day: Int, assetId: String)= "volume_day_"+assetId+"_"+day.toString()
 
 let T = tryGetInteger("static_tokensAmount")
 let assetIds = FOLD<3>(tryGetString("static_tokenIds").split(","), [], addAssetBytesToList)
@@ -348,11 +349,11 @@ func topUpFunds()={
     let amount = payment.amount
     let aBalance = tryGetInteger("global_"+asset.getAssetString()+"_balance")
     let day = calculateDaysSinceStart()
-    let reveneu = tryGetInteger(reveneuForDayByAsset(day,asset.getAssetString()))
+    let reveneu = tryGetInteger(reveneuForDayByAssetOut(day,asset.getAssetString()))
     [
       IntegerEntry("global_"+asset.getAssetString()+"_balance",aBalance+amount),
       IntegerEntry("days_since_apy", day),
-      IntegerEntry(reveneuForDayByAsset(day,asset.getAssetString()),reveneu+amount)
+      IntegerEntry(reveneuForDayByAssetOut(day,asset.getAssetString()),reveneu+amount)
     ]
 
 }
@@ -548,7 +549,7 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
 
   let AssetOut = assetOut.getAssetBytes()
   let day = calculateDaysSinceStart()
-  let reveneu = tryGetInteger(reveneuForDayByAsset(day,assetOut))
+  let reveneu = tryGetInteger(reveneuForDayByAssetOut(day,assetOut))
 
   strict AssetInBalance = tryGetInteger("global_"+AssetIn+"_balance")
   strict AssetOutBalance = tryGetInteger("global_"+assetOut+"_balance")
@@ -567,6 +568,7 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
     throw("this swap is not allowed")
   }
   else {
+    let volumeKey = volumeForDayByIn(day, AssetIn)
     strict newBalanceIn = AssetInBalance + AmountIn
     strict stake = reentrantInvoke(this,"internal",[true, AmountIn, AssetIn],[])
     strict newBalanceOut = AssetOutBalance - AmountOut
@@ -577,7 +579,8 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
           ScriptTransfer(addressFromStringValue(caller), cleanAmountOut, AssetOut),
           IntegerEntry("global_"+AssetIn+"_balance", newBalanceIn),
           IntegerEntry("days_since_apy", day),
-          IntegerEntry(reveneuForDayByAsset(day,assetOut),reveneu)
+          IntegerEntry(reveneuForDayByAssetOut(day,assetOut),reveneu+feeAmount),
+          IntegerEntry(volumeKey,AmountIn)
         ]
         , 
         (cleanAmountOut,feeAmount)
