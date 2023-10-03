@@ -57,6 +57,8 @@ func couponsSpendOnSc(sc:String) = sc+"_spend_by_using"
 func actionPerAddressPerUserPerDay(user:String,action:String,dappAddress:String, day:String) = dappAddress+"_"+action+"_"+user+"_"+day+"_actions"
 func actionPerAddressPerUserLastCheckDay(user:String,action:String) = action+"_"+user+"_actions_check_day"
 func actionPerAddressPerUserAmountInARow(user:String,action:String) = action+"_"+user+"_actions_amount_in_row"
+func userExperience(user:String) = user+"_experience"
+
 
 func addCouponsInternal(user:String,amount:Int)={
     let keyOld = couponsUserActiveOld(user)
@@ -78,6 +80,9 @@ func calculateDaysSinceStart()={
 }
 
 func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:Int)={
+    let userExperienceKey = userExperience(address)
+    let userExpTilldate = tryGetInteger(userExperienceKey)
+
     let checkDayKey = actionPerAddressPerUserLastCheckDay(address,actionName)
     let daysInRowKey = actionPerAddressPerUserAmountInARow(address,actionName)
     let lastCheckDay = tryGetInteger(checkDayKey)
@@ -86,18 +91,20 @@ func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:
     let lastCheckDayUpdate = day
     let reward = if daysInRowUpdate == 7 then [
         ScriptTransfer(addressFromStringValue(address),1_0000_0000,getSpiceAssetId()),
-            IntegerEntry(daysInRowKey,0)
+        IntegerEntry(daysInRowKey,0)
         ] else [
             IntegerEntry(daysInRowKey,daysInRowUpdate)
         ]
     
     [
         IntegerEntry(checkDayKey,lastCheckDayUpdate),
-        ScriptTransfer(addressFromStringValue(address),rewardAmount,getSpiceAssetId())
+        ScriptTransfer(addressFromStringValue(address),rewardAmount,getSpiceAssetId()),
+        IntegerEntry(userExperienceKey,userExpTilldate+1)
     ]++reward
 }
 
 func payAction(actionName:String, userAddress: Address, amount: Int, day:Int)={
+
     #If rope on step 5,10,15
     if actionName == "ROPE"  then{ 
         let composedKey = actionName+amount.toString()
@@ -116,6 +123,15 @@ func payAction(actionName:String, userAddress: Address, amount: Int, day:Int)={
     #If levelup task paid always 5 spice
     else if actionName == "LEVELUP" then {
         hasDoneTask7Days(day,userAddress.toString(),actionName,5_0000_0000)
+    }
+    else if actionName == "BUY5" then {
+        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,5000_0000) else []
+    }
+    else if actionName == "BUY20" then {
+        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,2_5000_0000) else []
+    }
+    else if actionName == "BUY50" then {
+        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,6_5000_0000) else []
     }
     #If none from the rewarding tasks
     else []

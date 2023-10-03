@@ -19,6 +19,7 @@ func tryGetIntegerExternal(address: Address, key: String) = {
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
+func staticKey_couponsAddress() = "static_couponsAddress"
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 
@@ -33,7 +34,7 @@ func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"stat
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getMarketPlaceProxy() = Address(tryGetStringExternal(getOracle(),"static_marketPlaceProxyAddress").fromBase58String())
 func getBuybackAddress() = Address(tryGetStringExternal(getOracle(),"static_buybackAddress").fromBase58String())
-
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 
 let kGlobalCounter = "GLOBAL_COUNTER"
 
@@ -206,6 +207,9 @@ func instantBuy(auctionId: String) = {
             ScriptTransfer(getFeeAggregatorAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit),
             ScriptTransfer(getBuybackAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit)]
         let caller = if getMarketPlaceProxy() == i.caller then i.originCaller else i.caller
+        strict recordAction = if amount > 50_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY50"],[]) else
+                              if amount > 20_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY20"],[]) else
+                              if amount > 5_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY5"],[]) else nil
         ([
           StringEntry("auction_" + auctionId + "_status", "finished"),
           IntegerEntry("auction_" + auctionId + "_finalPrice", amount),

@@ -18,6 +18,7 @@ func getBackendPubKey() = getStringValue(getOracle(),"static_backendPubKey").fro
 func getMaxDiff() = getIntegerValue(getOracle(),"static_maxProxyDiff")
 func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleBreederAddress").fromBase58String())
+func getItemsAddress() = Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 
 let kTotalLiquidity = "total_liquidity"
 let kInitialized = "INITIALIZED"
@@ -43,11 +44,15 @@ func getInt(key: String) = {
 }
 
 
+func tryGetBooleanExternal(address:Address, key: String) = {
+    match getBoolean(address, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
 func getBool(key: String) = {
-  match getBoolean(this, key) {
-      case b:Boolean => b
-      case _ => unit
-  }
+  tryGetBooleanExternal(this, key)
 }
 
 func getBoolA(a: Address, key: String) = {
@@ -57,11 +62,12 @@ func getBoolA(a: Address, key: String) = {
   }
 }
 
-func getIntA(address: Address, key: String) = {
+func tryGetIntegerExternal(address: Address, key: String) = {
     match getInteger(address, key) {
         case b:Int => b
         case _ => 0
     }
+
 }
 
 func getAuctionAddr() = {
@@ -118,7 +124,7 @@ func getTurtleAssetFarmingPower(assetId: ByteVector) = {
 func getDuckMarketPrice(nftId: ByteVector) = {
   let rarity = getAssetFarmingPower(nftId)
   let breederAddress = tryGetStringExternal(getCfMasterAddress(), kBreederDapp).addressFromStringValue()
-  let sterile = getIntA(breederAddress, "asset_" + nftId.toBase58String() + "_children")
+  let sterile = tryGetIntegerExternal(breederAddress, "asset_" + nftId.toBase58String() + "_children")
   let canBreedText = if sterile > 0 then "0" else "1"
   let val = getInteger(getCfMasterAddress(), "r-" + rarity.toString() + "-b-" + canBreedText)
   match val {
@@ -137,7 +143,7 @@ func getDuckIdByAuctionId(auctionId: String) = {
 
 func getBidAmount(auctionId: String, bidId: String) = {
   let marketAddr = getAuctionAddr()
-  getIntA(marketAddr.addressFromStringValue(), "auction_" + auctionId + "_bid_" + bidId + "_amount")
+  tryGetIntegerExternal(marketAddr.addressFromStringValue(), "auction_" + auctionId + "_bid_" + bidId + "_amount")
 }
 
 
@@ -233,8 +239,10 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let duckAssetId = getDuckIdByAuctionId(auctionId)
     let bidAmount = i.payments[0].value().amount.value()
     let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
-    let maxPriceDiff = fraction(duckMarketPrice, 15, 100)
-    if (bidAmount > (duckMarketPrice + maxPriceDiff)) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()) else
+    let maxPriceDiff =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen)
+                        else duckMarketPrice + fraction(duckMarketPrice, 15, 100)
+
+    if (bidAmount > maxPriceDiff) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()) else
     if (i.payments.size() != 1) then throw("_103") else{
       strict instantBuy = invoke(auctionDappAddress, "instantBuy", [auctionId], [AttachedPayment(value(i.payments[0]).assetId, bidAmount)])
       [
