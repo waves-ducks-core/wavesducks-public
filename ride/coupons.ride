@@ -9,6 +9,13 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
+func tryGetBoolean(key: String) = {
+    match getBoolean(key) {
+        case b:Boolean => b
+        case _ => false
+    }
+
+}
 
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
@@ -104,37 +111,10 @@ func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:
 }
 
 func payAction(actionName:String, userAddress: Address, amount: Int, day:Int)={
-
-    #If rope on step 5,10,15
-    if actionName == "ROPE"  then{ 
-        let composedKey = actionName+amount.toString()
-        if amount == 5 then hasDoneTask7Days(day,userAddress.toString(),composedKey,5000_0000) else
-        if amount == 10 then hasDoneTask7Days(day,userAddress.toString(),composedKey,1_5000_0000) else
-        if amount == 15 then hasDoneTask7Days(day,userAddress.toString(),composedKey,3_0000_0000) else []}
-    else if actionName == "VEGG50_0000"  then{ 
-        if amount == 1 then hasDoneTask7Days(day,userAddress.toString(),actionName,1000_0000) else []
-    #If rebirth, first of the day then give 1 spice
-    }else if actionName == "REBIRTH" then {
-        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,1_0000_0000) else []
-    }
-    else if actionName == "FEEDDUCKLING10" then {
-        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,1_5000_0000) else []
-    }
-    #If levelup task paid always 5 spice
-    else if actionName == "LEVELUP" then {
-        hasDoneTask7Days(day,userAddress.toString(),actionName,5_0000_0000)
-    }
-    else if actionName == "BUY5" then {
-        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,5000_0000) else []
-    }
-    else if actionName == "BUY20" then {
-        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,2_5000_0000) else []
-    }
-    else if actionName == "BUY50" then {
-        if amount ==1 then hasDoneTask7Days(day,userAddress.toString(),actionName,6_5000_0000) else []
-    }
-    #If none from the rewarding tasks
-    else []
+    let composedKey = if tryGetBoolean("TASK_"+actionName+"_EVERY") then actionName else actionName+"_"+amount.toString()
+    if tryGetBoolean("TASK_"+composedKey) then
+        hasDoneTask7Days(day,userAddress.toString(),composedKey,tryGetInteger("TASK_"+composedKey+"_REWARD_DAILY"))
+    else throw(composedKey)
 }
 
 func recordActionInternal(actionName:String, i:Invocation, address:Address)= {

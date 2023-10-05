@@ -1,0 +1,195 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "TASK_ROPE_5",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_ROPE_5_REWARD_DAILY",
+            "type": "integer",
+            "value": 50000000
+            
+        },
+        {
+            "key": "TASK_ROPE_5_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+
+        {
+            "key": "TASK_ROPE_10",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_ROPE_10_REWARD_DAILY",
+            "type": "integer",
+            "value": 150000000
+            
+        },
+        {
+            "key": "TASK_ROPE_10_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+
+        {
+            "key": "TASK_ROPE_15",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_ROPE_15_REWARD_DAILY",
+            "type": "integer",
+            "value": 300000000
+            
+        },
+        {
+            "key": "TASK_ROPE_15_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+
+        {
+            "key": "TASK_VEGG50_0000_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_VEGG50_0000_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 10000000
+            
+        },
+        {
+            "key": "TASK_VEGG50_0000_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+
+        {
+            "key": "TASK_REBIRTH_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_REBIRTH_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+        {
+            "key": "TASK_REBIRTH_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 300000000
+            
+        },
+
+        {
+            "key": "TASK_FEEDDUCKLING10_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_FEEDDUCKLING10_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 150000000
+            
+        },
+        {
+            "key": "TASK_FEEDDUCKLING10_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 300000000
+            
+        },
+
+        {
+            "key": "TASK_BUY5_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_BUY5_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 50000000
+            
+        },
+        {
+            "key": "TASK_BUY5_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+
+        {
+            "key": "TASK_BUY20_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_BUY20_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 250000000
+            
+        },
+        {
+            "key": "TASK_BUY20_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+
+        {
+            "key": "TASK_BUY50_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_BUY50_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 650000000
+            
+        },
+        {
+            "key": "TASK_BUY50_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+
+        {
+            "key": "TASK_LEVELUP",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_LEVELUP_EVERY",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_LEVELUP_REWARD_DAILY",
+            "type": "integer",
+            "value": 500000000
+            
+        },
+        {
+            "key": "TASK_LEVELUP_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 100000000
+            
+        }
+
+        
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}
+
