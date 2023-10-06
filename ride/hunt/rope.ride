@@ -109,3 +109,48 @@ func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)
         StringEntry(eggIdKey(eggId, i.originCaller.toString()),price.toString()+";"+distance.toString())
     ]++validPayment++refund
 }
+
+
+@Callable(i)
+func buyRopeInverted(eggId: String, price: Int, distance: Int, backendSignature: String)={
+
+  let addressString = i.caller.toString()
+  let backendProof = getBackendProof(eggId, price, distance)
+  let exists = tryGetString(eggIdKey(eggId, i.originCaller.toString()))
+  let halfPrice = price/2
+  strict validPayment = checkAdditionalPayment(i.payments[0],price)
+  if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), getBackendPubKey())) then throw("RBR: Invalid proof from backend") else
+    if distance > 1000 then throw("RBR: You can only maximum boost 1000meters distance!") else
+    let leftToPay = if i.originCaller==i.caller then {
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[halfPrice],[]).asInt()
+          halfPrice-amountPaidByCoupons
+        }else {
+            halfPrice
+        }
+    
+      strict payment = if leftToPay!=0 then {
+        let firstPayment = i.payments[1].value()
+
+        if (firstPayment.assetId != getEggAssetId()) then throw("RBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+        if (firstPayment.amount < leftToPay) then throw("RBR: To rope a egg you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+        let refererRewardForbeach = 0 
+        #fraction(leftToPay, 5, 100)
+        #strict refCall = invoke(getRefContractAddress(), "refPayment",
+        #[refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForbeach)]).asBoolean()
+
+        #let toBurn = if refCall then leftToPay-refererRewardForbeach else leftToPay
+        let toBurn = leftToPay
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
+        
+        leftToPay
+      }else 0
+
+      let refund = [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getEggAssetId())]
+      strict recordAction = invoke(getCouponsAddress(),"recordAction",["ROPE"],[])
+
+    if exists != "" then throw("RBR: Rope was already bought for this egg by this user!") else
+    [
+        StringEntry(eggIdKey(eggId, i.originCaller.toString()),price.toString()+";"+distance.toString())
+    ]++validPayment++refund
+}
