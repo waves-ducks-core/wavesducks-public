@@ -62,7 +62,7 @@ func callUnstakeProxy(function: String, ids: String) = {
       let farmingDappAddress = getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue()
 
       func unstakeDuck(accum: Int, nftId: String) = {
-        strict invRes = invoke(farmingDappAddress, function, [nftId], [])
+        strict invRes = invoke(farmingDappAddress, function, [nftId], [AttachedPayment(unit,1000000)])
 
         let reward = match invRes {
           case int: Int =>  int
