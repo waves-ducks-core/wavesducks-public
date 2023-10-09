@@ -128,7 +128,7 @@ func buyRopeInverted(eggId: String, price: Int, distance: Int, backendSignature:
             halfPrice
         }
     
-      strict payment = if leftToPay!=0 then {
+      strict refund = if leftToPay!=0 then {
         let firstPayment = i.payments[1].value()
 
         if (firstPayment.assetId != getEggAssetId()) then throw("RBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
@@ -143,10 +143,9 @@ func buyRopeInverted(eggId: String, price: Int, distance: Int, backendSignature:
 
         strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
         
-        leftToPay
-      }else 0
+        [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getEggAssetId())]
+      }else []
 
-      let refund = [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getEggAssetId())]
       strict recordAction = invoke(getCouponsAddress(),"recordAction",["ROPE"],[])
 
     if exists != "" then throw("RBR: Rope was already bought for this egg by this user!") else
