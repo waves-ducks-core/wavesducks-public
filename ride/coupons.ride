@@ -141,7 +141,7 @@ func configureOracle(oracle: String) = {
 func addCoupons(user:String,amount:Int) = {
     if i.caller != this && i.callerPublicKey != wAccPKey then throw("CAC: admin only") else 
     if amount > 50_0000 then
-        recordActionInternal("VEGG50_0000",i,i.originCaller)++addCouponsInternal(user,amount)
+        recordActionInternal("VEGG500000",i,i.originCaller)++addCouponsInternal(user,amount)
     else
         addCouponsInternal(user,amount)
 
@@ -157,7 +157,7 @@ func addCouponsBatch(batch:String) = {
         let amount = parseIntValue(splitArray[1])
         strict burnCall = invoke(getBurnAddress(), "burnByInvoke", [amount],[])
         if amount > 50_0000 then
-            acc++recordActionInternal("VEGG50_0000",i,i.originCaller)++addCouponsInternal(user,amount)
+            acc++recordActionInternal("VEGG500000",i,i.originCaller)++addCouponsInternal(user,amount)
         else
             acc++addCouponsInternal(user,amount)
 
