@@ -36,6 +36,7 @@ func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 func staticKey_ropeAddress() = "static_ropeAddress"
 func staticKey_levelSystemAddress() = "static_levelSystemAddress"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
+func staticKey_marketplace() = "static_marketplaceAddress"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -50,12 +51,13 @@ func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getRopeAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_ropeAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getLevelSystemAddress() = Address(tryGetStringExternal(getOracle(),staticKey_levelSystemAddress()).fromBase58String())
+func getMarketPlaceAddress() = Address(tryGetStringExternal(getOracle(),staticKey_marketplace()).fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
 let scCanUseCoupons = [ getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),
                         getGameDappAddress(), getBabyduckAddress(),getBreedingAddress(), getTurtleStakingAddress(),
-                        getTurtleRebirthAddress(),getRopeAddress(),getLevelSystemAddress()]
+                        getTurtleRebirthAddress(),getRopeAddress(),getLevelSystemAddress(),getMarketPlaceAddress(),this]
 
 func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
@@ -86,7 +88,7 @@ func calculateDaysSinceStart()={
   daysPassed
 }
 
-func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:Int)={
+func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:Int, rewardAmountWeekly:Int)={
     let userExperienceKey = userExperience(address)
     let userExpTilldate = tryGetInteger(userExperienceKey)
 
@@ -97,7 +99,7 @@ func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:
     let daysInRowUpdate = if lastCheckDay==day-1 then daysInRow+1 else if lastCheckDay<day-1 then 1 else 0
     let lastCheckDayUpdate = day
     let reward = if daysInRowUpdate == 7 then [
-        ScriptTransfer(addressFromStringValue(address),1_0000_0000,getSpiceAssetId()),
+        ScriptTransfer(addressFromStringValue(address),rewardAmountWeekly,getSpiceAssetId()),
         IntegerEntry(daysInRowKey,0)
         ] else [
             IntegerEntry(daysInRowKey,daysInRowUpdate)
@@ -113,8 +115,8 @@ func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:
 func payAction(actionName:String, userAddress: Address, amount: Int, day:Int)={
     let composedKey = if tryGetBoolean("TASK_"+actionName+"_EVERY") then actionName else actionName+"_"+amount.toString()
     if tryGetBoolean("TASK_"+composedKey) then
-        hasDoneTask7Days(day,userAddress.toString(),composedKey,tryGetInteger("TASK_"+composedKey+"_REWARD_DAILY"))
-    else throw(composedKey)
+        hasDoneTask7Days(day,userAddress.toString(),composedKey,tryGetInteger("TASK_"+composedKey+"_REWARD_DAILY"),tryGetInteger("TASK_"+composedKey+"_REWARD_WEEKLY"))
+    else []
 }
 
 func recordActionInternal(actionName:String, i:Invocation, address:Address)= {
@@ -140,8 +142,8 @@ func configureOracle(oracle: String) = {
 @Callable(i)
 func addCoupons(user:String,amount:Int) = {
     if i.caller != this && i.callerPublicKey != wAccPKey then throw("CAC: admin only") else 
-    if amount > 50_0000 then
-        recordActionInternal("VEGG500000",i,i.originCaller)++addCouponsInternal(user,amount)
+    if amount >= 50_0000 then
+        recordActionInternal("VEGG500000",i,addressFromStringValue(user))++addCouponsInternal(user,amount)
     else
         addCouponsInternal(user,amount)
 
@@ -156,8 +158,8 @@ func addCouponsBatch(batch:String) = {
         let user = splitArray[0]
         let amount = parseIntValue(splitArray[1])
         strict burnCall = invoke(getBurnAddress(), "burnByInvoke", [amount],[])
-        if amount > 50_0000 then
-            acc++recordActionInternal("VEGG500000",i,i.originCaller)++addCouponsInternal(user,amount)
+        if amount >= 50_0000 then
+            acc++recordActionInternal("VEGG500000",i,addressFromStringValue(user))++addCouponsInternal(user,amount)
         else
             acc++addCouponsInternal(user,amount)
 
