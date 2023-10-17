@@ -36,13 +36,13 @@ const massTx = transfer(
     senderPublicKey: senderPublicKey,
     assetId: "C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS",
     recipient: recipient,
-    amount: 9571179354,
+    amount: 1423736393,
   },
   null
 );
 let SignedTx = signTx(massTx, masterSeed);
 console.log(SignedTx);
-broadcast(SignedTx).catch((e) => console.log(e));
+//broadcast(SignedTx).catch((e) => console.log(e));
 
 const massTx2 = transfer(
   {
@@ -56,4 +56,4 @@ const massTx2 = transfer(
 );
 let SignedTx2 = signTx(massTx2, masterSeed);
 console.log(SignedTx2);
-broadcast(SignedTx2).catch((e) => console.log(e));
+//broadcast(SignedTx2).catch((e) => console.log(e));

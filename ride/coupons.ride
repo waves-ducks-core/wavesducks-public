@@ -119,11 +119,11 @@ func payAction(actionName:String, userAddress: Address, amount: Int, day:Int)={
     else []
 }
 
-func recordActionInternal(actionName:String, i:Invocation, address:Address)= {
-    if !containsElement(scCanUseCoupons, i.caller) then throw("CRA: Only certain smart contracts can use this reward module!") else #prevents outsider to implement our rewards
+func recordActionInternal(actionName:String, addressCaller: Address, address:Address)= {
+    if !containsElement(scCanUseCoupons, addressCaller) then throw("CRA: Only certain smart contracts can use this reward module!") else #prevents outsider to implement our rewards
 
         let day = calculateDaysSinceStart()
-        let actionKey = actionPerAddressPerUserPerDay(address.toString(),actionName,i.caller.toString(),day.toString())
+        let actionKey = actionPerAddressPerUserPerDay(address.toString(),actionName,addressCaller.toString(),day.toString())
         let totalActions = tryGetInteger(actionKey)+1
         [
             IntegerEntry(actionKey,totalActions)
@@ -143,7 +143,7 @@ func configureOracle(oracle: String) = {
 func addCoupons(user:String,amount:Int) = {
     if i.caller != this && i.callerPublicKey != wAccPKey then throw("CAC: admin only") else 
     if amount >= 50_0000 then
-        recordActionInternal("VEGG500000",i,addressFromStringValue(user))++addCouponsInternal(user,amount)
+        recordActionInternal("VEGG500000",this,addressFromStringValue(user))++addCouponsInternal(user,amount)
     else
         addCouponsInternal(user,amount)
 
@@ -159,7 +159,7 @@ func addCouponsBatch(batch:String) = {
         let amount = parseIntValue(splitArray[1])
         strict burnCall = invoke(getBurnAddress(), "burnByInvoke", [amount],[])
         if amount >= 50_0000 then
-            acc++recordActionInternal("VEGG500000",i,addressFromStringValue(user))++addCouponsInternal(user,amount)
+            acc++recordActionInternal("VEGG500000",this,addressFromStringValue(user))++addCouponsInternal(user,amount)
         else
             acc++addCouponsInternal(user,amount)
 
@@ -218,6 +218,6 @@ func useCoupons(amountTryingToPay:Int)= {
 
 @Callable(i)
 func recordAction(actionName:String)= {
-    recordActionInternal(actionName,i,i.originCaller)
+    recordActionInternal(actionName,i.caller,i.originCaller)
 
 }

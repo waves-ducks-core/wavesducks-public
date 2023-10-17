@@ -1,6 +1,6 @@
 const axios = require("axios");
-const cfAddress = "3P3y8NLGLYDx9obVaBF8je9uPTy2BDaK5n4";
-const senderPublicKey = "9TcFVW8VfeAKMMLqKdzKkRswaPBqRS2ih2BYA3dr1yfY";
+const cfAddress = "";
+const senderPublicKey = "";
 const masterSeed = "";
 const farmDapp = "3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW";
 
