@@ -34,7 +34,7 @@
         {
             "key": "TASK_ROPE_10_REWARD_WEEKLY",
             "type": "integer",
-            "value": 100000000
+            "value": 200000000
             
         },
 
@@ -52,7 +52,25 @@
         {
             "key": "TASK_ROPE_15_REWARD_WEEKLY",
             "type": "integer",
-            "value": 100000000
+            "value": 400000000
+            
+        },
+
+        {
+            "key": "TASK_ROPE_50",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_ROPE_50_REWARD_DAILY",
+            "type": "integer",
+            "value": 1000000000
+            
+        },
+        {
+            "key": "TASK_ROPE_50_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 1000000000
             
         },
 
@@ -64,30 +82,34 @@
         {
             "key": "TASK_VEGG500000_1_REWARD_DAILY",
             "type": "integer",
-            "value": 10000000
+            "value": 20000000
             
         },
         {
             "key": "TASK_VEGG500000_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 100000000
+            "value": 200000000
             
         },
 
         {
-            "key": "TASK_VEGG50_0000_1",
-            "value": null
+            "key": "TASK_VEGG10000000_1",
+            "type": "boolean",
+            "value": true
         },
         {
-            "key": "TASK_VEGG50_0000_1_REWARD_DAILY",
-            "value": null
+            "key": "TASK_VEGG10000000_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 100000000
             
         },
         {
-            "key": "TASK_VEGG50_0000_1_REWARD_WEEKLY",
-            "value": null
+            "key": "TASK_VEGG10000000_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 1000000000
             
         },
+
 
         {
             "key": "TASK_REBIRTH_1",
@@ -108,6 +130,24 @@
         },
 
         {
+            "key": "TASK_REBIRTH_TURTLE_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_REBIRTH_TURTLE_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+        {
+            "key": "TASK_REBIRTH_TURTLE_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 2000000000
+            
+        },
+
+        {
             "key": "TASK_FEEDDUCKLING10_1",
             "type": "boolean",
             "value": true
@@ -121,7 +161,7 @@
         {
             "key": "TASK_FEEDDUCKLING10_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 300000000
+            "value": 1000000000
             
         },
 
@@ -139,7 +179,7 @@
         {
             "key": "TASK_BUY5_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 100000000
+            "value": 500000000
             
         },
 
@@ -157,7 +197,7 @@
         {
             "key": "TASK_BUY20_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 100000000
+            "value": 1000000000
             
         },
 
@@ -175,7 +215,7 @@
         {
             "key": "TASK_BUY50_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 100000000
+            "value": 1500000000
             
         },
 
@@ -198,7 +238,7 @@
         {
             "key": "TASK_LEVELUP_REWARD_WEEKLY",
             "type": "integer",
-            "value": 100000000
+            "value": 2000000000
             
         }
 
