@@ -205,6 +205,11 @@
             
         },
         {
+            "key": "static_capacityAddress",
+            "type": "string",
+            "value": "3P472BzRvamyTwGWD2os6oQNzvy8FYt7uSG"
+        },
+        {
             "key": "static_huntMultiplierPrice",
             "type": "integer",
             "value": 50000000

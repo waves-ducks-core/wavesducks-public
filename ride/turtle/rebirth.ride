@@ -197,7 +197,7 @@ func finishRebirth(initTx: String) = {
   let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
   strict validPayment = checkAdditionalPayment(i.payments[0])
-
+  strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTHTURTLE"],[])
 
   if (status != "open") then {
     throw("rebirth is finished or not open")

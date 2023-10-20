@@ -569,6 +569,7 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
   }
   else {
     let volumeKey = volumeForDayByIn(day, AssetIn)
+    let volume = tryGetInteger(volumeKey)
     strict newBalanceIn = AssetInBalance + AmountIn
     strict stake = reentrantInvoke(this,"internal",[true, AmountIn, AssetIn],[])
     strict newBalanceOut = AssetOutBalance - AmountOut
@@ -580,7 +581,7 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
           IntegerEntry("global_"+AssetIn+"_balance", newBalanceIn),
           IntegerEntry("days_since_apy", day),
           IntegerEntry(reveneuForDayByAssetOut(day,assetOut),reveneu+feeAmount),
-          IntegerEntry(volumeKey,AmountIn)
+          IntegerEntry(volumeKey,volume+AmountIn)
         ]
         , 
         (cleanAmountOut,feeAmount)

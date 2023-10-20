@@ -143,6 +143,11 @@
             "value": "3P57np8oou9yBbg85Nk4FDYTC46exnTsQk1"
         },
         {
+            "key": "static_capacityAddress",
+            "type": "string",
+            "value": "3P8prjYwq9dxRqPiyYAjQpAnuei6eTAerSV"
+        },
+        {
             "key": "static_sicknessAddress",
             "type": "string",
             "value": "3P6r1tQ9fZ72nN2c85JQd86HmFXsFoycSSB"

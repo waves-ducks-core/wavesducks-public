@@ -33,32 +33,59 @@ func asInt(value: Any) = match value {
   case _ => throw("wrong type, expected: Int")
 }
 
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("CAB: wrong type, expected: Boolean")
+}
+
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_breederAddress()= "static_breederAddress"
 func staticKey_huntAddress()= "static_huntAddress"
 func staticKey_eggAssetId()= "static_eggAssetId"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_burnAddress() = "static_burnAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
 func getDuckCapacity(duckId: String) = tryGetInteger(duckCapacityKey(duckId))
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getHuntAddress()= Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 
 func keyDuckOwner(assetId: String) = "duck_" + assetId + "_owner"
 
-func common(nftId: String, payment: AttachedPayment, addedCapacity: Int)={
+func common(nftId: String, payments: List[AttachedPayment], addedCapacity: Int,refererAddress: String)={
     strict children = invoke(getBreederAddress(),"validateAndGetChildren",[nftId],[]).asInt()
-    let eggPayment = payment.value()
     let capacity = getDuckCapacity(nftId)
     let totalCapacity = capacity+addedCapacity
     strict diff = invoke(this,"calculateDiffEggs",[capacity,totalCapacity],[]).asInt()
 
-    let amount = eggPayment.amount
-    if (eggPayment.assetId != getEggAssetId()) then throw("CBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
-    if amount != diff then throw("CBR: Please attach the exact asset amount"+diff.toString()) else
+    strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[diff],[]).asInt()
+
+    let leftToPay = diff-amountPaidByCoupons
+
+    strict paymentLeft = if leftToPay!=0 then {
+    let eggPayment = payments[size(payments)-1].value()
+    if (eggPayment.assetId != getEggAssetId()) then throw("CBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+    if (eggPayment.amount != leftToPay) then throw("CBR: To breed you currently need the following amount of EGGlets: " + leftToPay.toString()) else
+    let refererRewardForPerch = fraction(leftToPay, 5, 100)
+        strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
+
+        let toBurn = if refCall then leftToPay-refererRewardForPerch else leftToPay
+
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
+        
+        leftToPay
+    }else 0
+
     let debug = makeString(
         [
         "oldCapacity=" + capacity.toString(), "newCapacity=" + totalCapacity.toString(), "diffCapacity=" + addedCapacity.toString(),"diffPaid=" + diff.toString()
@@ -118,23 +145,27 @@ func calculateDiffEggs(oldEggs: Int, newEggs: Int)={
 
 
 @Callable(i)
-func addCapacityToDuck(addedCapacity: Int)={
+func addCapacityToDuck(addedCapacity: Int,refererAddress: String)={
     let nftPayment = i.payments[0].value()
-    let validPayment = checkAdditionalPayment(i.payments[2])
+    let validPayment = checkAdditionalPayment(i.payments[1])
     let duckAssetId = nftPayment.assetId.value().toBase58String()
+    strict recordAction = invoke(getCouponsAddress(),"recordAction",["RECHARGE"],[])
+
     if (nftPayment.amount != 1 ) then throw("NFT is not attached") else
-    common(duckAssetId, i.payments[1],addedCapacity)++[
+    common(duckAssetId, i.payments,addedCapacity,refererAddress)++[
         ScriptTransfer(i.caller,1,nftPayment.assetId.value())
     ]++validPayment
 }
 
 
 @Callable(i)
-func addCapacityToDuckInHunt(nftId: String, addedCapacity: Int)={
+func addCapacityToDuckInHunt(nftId: String, addedCapacity: Int,refererAddress: String)={
     let ownerInHunt =tryGetStringExternal(getHuntAddress(),keyDuckOwner(nftId))
-    let validPayment = checkAdditionalPayment(i.payments[1])
+    let validPayment = checkAdditionalPayment(i.payments[0])
+    strict recordAction = invoke(getCouponsAddress(),"recordAction",["RECHARGE"],[])
+
     if ownerInHunt != i.caller.toString() then throw("CBR: You can only add capacity to own ducks!") else
-    common(nftId, i.payments[0],addedCapacity)++validPayment
+    common(nftId, i.payments,addedCapacity,refererAddress)++validPayment
     
 
 }

@@ -130,18 +130,18 @@
         },
 
         {
-            "key": "TASK_REBIRTH_TURTLE_1",
+            "key": "TASK_REBIRTHTURTLE_1",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "TASK_REBIRTH_TURTLE_1_REWARD_DAILY",
+            "key": "TASK_REBIRTHTURTLE_1_REWARD_DAILY",
             "type": "integer",
             "value": 100000000
             
         },
         {
-            "key": "TASK_REBIRTH_TURTLE_1_REWARD_WEEKLY",
+            "key": "TASK_REBIRTHTURTLE_1_REWARD_WEEKLY",
             "type": "integer",
             "value": 2000000000
             

@@ -37,11 +37,13 @@ func staticKey_ropeAddress() = "static_ropeAddress"
 func staticKey_levelSystemAddress() = "static_levelSystemAddress"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
 func staticKey_marketplace() = "static_marketplaceAddress"
+func staticKey_capacityAddress() = "static_capacityAddress"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
-func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String()) 
+func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String())
+func getCapacityAddress() = Address(tryGetStringExternal(getOracle(),staticKey_capacityAddress()).fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String())
 func getBreedingAddress() = Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String())
@@ -57,7 +59,8 @@ let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"sta
 
 let scCanUseCoupons = [ getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),
                         getGameDappAddress(), getBabyduckAddress(),getBreedingAddress(), getTurtleStakingAddress(),
-                        getTurtleRebirthAddress(),getRopeAddress(),getLevelSystemAddress(),getMarketPlaceAddress(),this]
+                        getTurtleRebirthAddress(),getRopeAddress(),getLevelSystemAddress(),getMarketPlaceAddress(),
+                        getCapacityAddress(),this]
 
 func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
@@ -142,7 +145,9 @@ func configureOracle(oracle: String) = {
 @Callable(i)
 func addCoupons(user:String,amount:Int) = {
     if i.caller != this && i.callerPublicKey != wAccPKey then throw("CAC: admin only") else 
-    if amount >= 50_0000 then
+    if amount >= 1000_0000 then 
+        recordActionInternal("VEGG10000000",this,addressFromStringValue(user))++addCouponsInternal(user,amount)
+    else if amount >= 50_0000 then
         recordActionInternal("VEGG500000",this,addressFromStringValue(user))++addCouponsInternal(user,amount)
     else
         addCouponsInternal(user,amount)
@@ -158,7 +163,9 @@ func addCouponsBatch(batch:String) = {
         let user = splitArray[0]
         let amount = parseIntValue(splitArray[1])
         strict burnCall = invoke(getBurnAddress(), "burnByInvoke", [amount],[])
-        if amount >= 50_0000 then
+        if amount >= 1000_0000 then 
+            acc++recordActionInternal("VEGG10000000",this,addressFromStringValue(user))++addCouponsInternal(user,amount)
+        else if amount >= 50_0000 then
             acc++recordActionInternal("VEGG500000",this,addressFromStringValue(user))++addCouponsInternal(user,amount)
         else
             acc++addCouponsInternal(user,amount)
