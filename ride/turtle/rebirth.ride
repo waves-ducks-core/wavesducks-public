@@ -116,11 +116,12 @@ func getRandomWin(tx: ByteVector, finishHeight: Int) = {
     if (n<200) then { "beach_S" } else
     if (n<270) then { "beach_G" } else
     if (n<340) then { "beach_D" } else
-    if (n<400) then { "perch_G" } else
-    if (n<460) then { "perch_Y" } else
-    if (n<520) then { "perch_R" } else
-    if (n<580) then { "perch_B" } else
-    if (n<640) then { "duck_incubator" } else                
+    if (n<395) then { "perch_G" } else
+    if (n<450) then { "perch_Y" } else
+    if (n<505) then { "perch_R" } else
+    if (n<560) then { "perch_B" } else
+    if (n<620) then { "duck_incubator" } else
+    if (n<640) then { "item!ART-FREEGENE" } else                
     if (n<680) then { "item!ART-FIRE_TAIL" } else    
     if (n<720) then { "item!ART-FIRE_SHIELD" } else
     if (n<920) then { "item!ART-FEED10" } else     

@@ -399,8 +399,9 @@ func preInit() = {
 
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
+
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("admin only") else 
-     if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_")) then throw("FIRE ITEM ONLY!") else
+     if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && type != "ART-FREEGENE") then throw("FIRE ITEM ONLY!") else
     let txIdStr = i.transactionId.toBase58String()
     let address = Address(fromBase58String(receiver))
 

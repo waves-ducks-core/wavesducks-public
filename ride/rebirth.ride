@@ -118,18 +118,16 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
   let phoenixOptions = PHOENIXBASEOPTIONS - fraction(PHOENIXBASEOPTIONS / 2, assetRarity, 100)  # chance = 0.1% + 0.1% * rarity (from 0.02 to 1)
 
   let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
-  let itemRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 2)
 
   if (jackpotRandom == 1) then { "phoenix" } else 
-  if (itemRandom == 1) then {"item_ART-FREEGENE" } else {  
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
-    if (n<170) then { "duckling_2" } else 
-    if (n<240) then { "duckling_10" } else
-    if (n<260) then { "duckling_20" } else
+    if (n<170) then { "duckling_10" } else 
+    if (n<240) then { "duckling_20" } else
+    if (n<260) then { "duckling_40" } else
     if (n<300) then { "incubator" } else
-
-    if (n<330) then { "item!ART-SNAKE" } else
+    if (n<320) then { "item!ART-SNAKE" } else
+    if (n<330) then {"item!ART-FREEGENE"} else
     if (n<460) then { "item!ART-KATANA" } else
     if (n<510) then { "item!ART-ROBODUCK" } else
     if (n<540) then { "item!ART-CROWN" } else
@@ -140,7 +138,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
     if (n<824) then { "item!ART-FEED100" } else
     if (n<884) then { "item!ART-FIRE_ARMOUR" } else
     { "ar" }
-  }
+  
 }
 
 
