@@ -148,6 +148,7 @@ func getBidAmount(auctionId: String, bidId: String) = {
 
 
 func checkDataGetPrice(ach: String, breed: String, gen: String, price:Int, rarity: String, ts: Int, signature: String, duckId: String)={
+  if (price == 0) then throw("MCACS: No price calculated, so action not allowed! Please contact admin!") else
   let isDuck = rarity != "0" && gen != ""
   let isTurtle = rarity != "0"
   let text = if isDuck then  makeString([rarity,breed,ach,gen,price.toString(),ts.toString()], ";") else
@@ -186,11 +187,14 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
   if (getBoolA(getCfMasterAddress(), "farm_" + i.caller.toString()) != true) then throw("_301=") else
   if (function == "initAuction") then {
     let asset = i.payments[0].value()
-    let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, asset.assetId.value().toBase58String())
-    let maxPriceDiff = fraction(duckMarketPrice, getMaxDiff(), 100)
+    let calcPrice =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen)
+                        else checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, asset.assetId.value().toBase58String())
+
+    let maxPriceDiff = fraction(calcPrice, getMaxDiff(), 100)
+    
     let initialPrice = int1
     let buyoutPrice = int2
-    if ((initialPrice < (duckMarketPrice - maxPriceDiff)) || buyoutPrice < initialPrice) then throw("Price is too low, avg price: " + duckMarketPrice.toString() + ", min. price: " + (duckMarketPrice - maxPriceDiff).toString() + ", your bid: " + initialPrice.toString()) else
+    if ((initialPrice < (calcPrice - maxPriceDiff)) || buyoutPrice < initialPrice) then throw("Price is too low, avg price: " + calcPrice.toString() + ", min. price: " + (calcPrice - maxPriceDiff).toString() + ", your bid: " + initialPrice.toString()) else
     if (asset.amount.value() != 1) then throw("_103") else {
       strict initAuction = invoke(auctionDappAddress, "initAuction", [initialPrice, buyoutPrice, str1, str2], [AttachedPayment(asset.assetId.value(), 1)])
       [
@@ -207,7 +211,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let bidAmount = i.payments[0].value().amount.value()
     let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
     let maxPriceDiff = fraction(duckMarketPrice, getMaxDiff(), 100)
-    if (bidAmount > (duckMarketPrice + maxPriceDiff)) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()+" diff: "+maxPriceDiff.toString()) else
+    if (bidAmount > (duckMarketPrice)) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice).toString() + ", your bid: " + bidAmount.toString()) else
     if (i.payments.size() != 1) then throw("_103") else {
       strict placeBid = invoke(auctionDappAddress, "placeBid", [auctionId], [AttachedPayment(value(i.payments[0]).assetId, bidAmount)])
       [
@@ -219,13 +223,14 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
 
 
   } else if (function == "acceptBid") then {
+    if true then throw("MCACS: Accepting bids is disabled for Collective Farms!") else
     let auctionId = str1
     let bidId = str2
     let duckAssetId = getDuckIdByAuctionId(auctionId)
     let bidAmount = getBidAmount(auctionId, bidId)
     let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
     let maxPriceDiff = fraction(duckMarketPrice, getMaxDiff(), 100)
-    if (bidAmount < (duckMarketPrice - maxPriceDiff)) then throw("Price is too low, avg price: " + duckMarketPrice.toString() + ", min. price: " + (duckMarketPrice - maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()) else
+    if (bidAmount < (duckMarketPrice)) then throw("Price is too low, avg price: " + duckMarketPrice.toString() + ", min. price: " + (duckMarketPrice).toString() + ", your bid: " + bidAmount.toString()) else
     strict acceptBid = invoke(auctionDappAddress, "acceptBid", [auctionId, bidId], [])
     [
       StringEntry("tx_" + i.transactionId.toBase58String(), auctionId)
@@ -239,10 +244,10 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let duckAssetId = getDuckIdByAuctionId(auctionId)
     let bidAmount = i.payments[0].value().amount.value()
     let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
-    let maxPriceDiff =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen)
+    let maxPrice =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen)
                         else duckMarketPrice + fraction(duckMarketPrice, 15, 100)
 
-    if (bidAmount > maxPriceDiff) then throw("Price is too high, avg price: " + duckMarketPrice.toString() + ", max. price: " + (duckMarketPrice + maxPriceDiff).toString() + ", your bid: " + bidAmount.toString()) else
+    if (bidAmount > maxPrice) then throw("Price is too high, calc price: " + duckMarketPrice.toString() + ", max. price after item check: " + (maxPrice).toString() + ", your buy price: " + bidAmount.toString()) else
     if (i.payments.size() != 1) then throw("_103") else{
       strict instantBuy = invoke(auctionDappAddress, "instantBuy", [auctionId], [AttachedPayment(value(i.payments[0]).assetId, bidAmount)])
       [
