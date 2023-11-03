@@ -6,6 +6,7 @@ func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_extraFee() = "static_extraFee"
+func staticKey_extraFeeRemove() = "static_extraFeeRemove"
 func staticKey_feeAggregator() = "static_feeAggregator"
 
 
@@ -46,9 +47,9 @@ func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_ite
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
 
-func checkAdditionalPayment(payment: AttachedPayment)= {
+func checkAdditionalPayment(payment: AttachedPayment, amountOverride: Int)= {
   if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
-  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  let feeAmount = if amountOverride!= 0 then amountOverride else getIntegerValue(getOracle(),staticKey_extraFee())
   if payment.amount != feeAmount then throw("WCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
   [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
 
@@ -86,7 +87,7 @@ func configureOracle(oracle: String) = {
 func wearItemToDuck() = {
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
-  let validPayment = checkAdditionalPayment(i.payments[2])
+  let validPayment = checkAdditionalPayment(i.payments[2],0)
   let duckId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("WRITD: NFT is not attached") else
@@ -98,8 +99,35 @@ func wearItemToDuck() = {
 }
 
 @Callable(i)
+func removeItemFromDuck(burnItem: Boolean, artefactName:String) = {
+  let wavesFee = if burnItem then 0 else getIntegerValue(getOracle(),staticKey_extraFeeRemove())
+  let duckPayment = i.payments[0].value()
+  let roboDuckPayment = i.payments[1].value()
+  let validPayment = checkAdditionalPayment(i.payments[2],wavesFee)
+
+  let duckId = duckPayment.assetId.value().toBase58String()
+  let roboDuckId = roboDuckPayment.assetId.value().toBase58String()
+
+  if (duckPayment.amount != 1 || roboDuckPayment.amount != 1) then throw("WRITD: NFT is not attached") else
+  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
+  
+  strict artefactNameRoboduck = invoke(getItemsAddress(),"checkArtefactDetails",[roboDuckId],[]).asString()
+  if artefactNameRoboduck != "ART-ROBODUCK" then throw("Only rododuck can remove items!") else
+  if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
+    let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
+    strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
+    if artefactId == "" then throw("Duck not wearing a "+artefactName) else
+    let burn = if burnItem then [Burn(artefactId.fromBase58String(),1)] else [ScriptTransfer(i.caller, 1, artefactId.fromBase58String())]
+      [
+        DeleteEntry(keyArtefactDuck(duckId,artefactName)),
+        ScriptTransfer(i.caller, 1, duckPayment.assetId),
+        Burn(roboDuckId.fromBase58String(),1)
+      ]++burn++validPayment
+}
+
+@Callable(i)
 func wearXItemsToDuck()= {
-  let validPayment = checkAdditionalPayment(i.payments[1])
+  let validPayment = checkAdditionalPayment(i.payments[1],0)
   if size(i.payments) < 3 then throw("WWXITD: Please attach at least 1 item and 1 duck!") else 
   if size(i.payments) > 7 then throw("WWXITD: You can only attach 5 items and one duck!") else
     func handleItem(acc: List[StringEntry|ScriptTransfer], payment: AttachedPayment) = {

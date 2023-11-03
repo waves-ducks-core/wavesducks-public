@@ -220,6 +220,12 @@
             
         },
         {
+            "key": "static_extraFeeRemove",
+            "type": "integer",
+            "value": 10
+            
+        },
+        {
             "key": "static_ammAddress",
             "type": "string",
             "value": "3P5s8fYvGZuf8WGv5SVJYqyo5mbXUhhtKWj"
@@ -243,7 +249,7 @@
         }
         
     ],
-    "fee": 600000,
+    "fee": 700000,
     "feeAssetId": "WAVES",
     "sender":"3P4vXL8gU27PhQv8sMT9jmoQY3oFqJNRWT9",
     "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
