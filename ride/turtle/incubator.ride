@@ -39,11 +39,6 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 #TODO: make it configurable through oracle
 let delayForHatching = 2
 
-let typesAmount = 4
-
-#let refContractAddress = base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
-#let RefererReward = 5 #percentage
-
 let HatchingStarted = "HATCHING_STARTED"
 let HatchingFinished = "HATCHING_FINISHED"
 
@@ -99,20 +94,28 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
   randomHash.toInt(offset*8) % variants
 }
 
+func select(color: String)={
+    let oldGenes = [("TRTL-AAAAAAAA-G" + color, "8A-G"),("TRTL-BBBBBBBB-G" + color, "8B-G")]
+    let newGenes = [("TRTL-CCCCCCCC-G" + color, "8C-G"),("TRTL-DDDDDDDD-G" + color, "8D-G"),
+                    ("TRTL-EEEEEEEE-G" + color, "8E-G"),("TRTL-FFFFFFFF-G" + color, "8F-G")]
+    (oldGenes++newGenes, newGenes)
+}
+
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
     let color = getElement(["R","D","S","G"],colorRandom)
 
-    let oldGenes = [("TRTL-AAAAAAAA-G" + color, "8A-G")]
-    let newGenes = [("TRTL-BBBBBBBB-G" + color, "8B-G"),("TRTL-CCCCCCCC-G" + color, "8C-G"),
-                    ("TRTL-DDDDDDDD-G" + color, "8D-G"),("TRTL-EEEEEEEE-G" + color, "8E-G")]
+    let colorSelect = select(color)
 
-    let toPickFrom = if all then oldGenes++newGenes else newGenes
+    let toPickFrom = if all then colorSelect._1 else colorSelect._2
     let typeRandom = getRandomNumber(size(toPickFrom), txId, hatchingFinishHeight, 0)
     
     getElement(toPickFrom,typeRandom)   
     
 }
+
+let typesAmount = size(select("R")._1)-1
+
 
 func countEggsNeededAmount(totalTRTLsAmount: Int) = {
   let n = totalTRTLsAmount
