@@ -20,6 +20,7 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_peteAddress() = "static_peteAddress"
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 
@@ -35,6 +36,7 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAdd
 func getMarketPlaceProxy() = Address(tryGetStringExternal(getOracle(),"static_marketPlaceProxyAddress").fromBase58String())
 func getBuybackAddress() = Address(tryGetStringExternal(getOracle(),"static_buybackAddress").fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getPeteAddress() = Address(tryGetStringExternal(getOracle(),staticKey_peteAddress()).fromBase58String()) 
 
 let kGlobalCounter = "GLOBAL_COUNTER"
 
@@ -58,6 +60,7 @@ func getGlobalCounter() = {
 }
 
 func getAssetGenotype(assetId: ByteVector) = {
+  if (assetInfo(assetId).value().issuer == getPeteAddress()) then "PETE" else 
   if (assetInfo(assetId).value().issuer == getItemsAddress()) then "ART" else 
   let asset1 = match getString(getIncubatorAddress(), assetId.toBase58String()) {
         case b:String => b
@@ -148,6 +151,7 @@ func initAuction(startPrice: Int, instantPrice: Int, description: String, eggSel
       IntegerEntry("auction_" + auctionId + "_startPrice", startPrice),
       BooleanEntry("auction_" + auctionId + "_isArtefact", assetInfo(assetId).value().issuer == getItemsAddress()),
       BooleanEntry("auction_" + auctionId + "_isTurtle", assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer == getTurtleIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isThird", assetInfo(assetId).value().issuer == getTurtleBreederAddress()),
       IntegerEntry("auction_" + auctionId + "_instantPrice", instantPrice),
       StringEntry("address_" + i.originCaller.toString() + "_auction_" + auctionId + "_lockedNFT", assetId.toBase58String())
     ]

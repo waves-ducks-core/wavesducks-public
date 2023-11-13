@@ -243,6 +243,11 @@
             "value": "3P44yqcpfhPF2iC1nptm2ZJCTaN7VYhz9og"
         },
         {
+            "key": "static_peteAddress",
+            "type": "string",
+            "value": "3PBf2jd3ZEPX7NHQvVarscTjLQ8bk43uAfn"
+        },
+        {
             "key": "static_levelSystemAddress",
             "type": "string",
             "value": "3P5x9RxuqbMaVFPsaycvXHeFZXPmcswxA1c"

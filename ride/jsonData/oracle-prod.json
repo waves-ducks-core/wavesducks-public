@@ -235,14 +235,12 @@
             "key": "static_levelSystemAddress",
             "type": "string",
             "value": "3P5gckRPNh1ve5mZS4SkFY3T8pYqaApjqCi"
+        },
+        {
+            "key": "static_peteAddress",
+            "type": "string",
+            "value": "3PBf2jd3ZEPX7NHQvVarscTjLQ8bk43uAfn"
         }
-
-
-        
-
-        
-        
-        
     ],
     "fee": 700000,
     "feeAssetId": "WAVES",
