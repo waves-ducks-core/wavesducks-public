@@ -88,18 +88,10 @@ func wasUniqueBorn(gen: String) = {
 }
 
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
-  let jackpotRandom = getRandomNumber(100, txId, hatchingFinishHeight, 4)
+  let jackpotRandom = getRandomNumber(500, txId, hatchingFinishHeight, 4)
   let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
-  if (jackpotRandom == 51 && wasUniqueBorn("DUCK-WWWWINAL-JU") == 0) then {
-    ("DUCK-WWWWINAL-JU", "1A1I1L1N4W-J", entry)
-  }else if (jackpotRandom == 19 && wasUniqueBorn("DUCK-WWWCLOWN-JU") == 0) then {
-    ("DUCK-WWWCLOWN-JU", "1C1L1N1O4W-J", entry)
-  }else if (jackpotRandom == 29 && wasUniqueBorn("DUCK-WWDETECT-JU") == 0) then {
-    ("DUCK-WWDETECT-JU", "1C1D2E2T2W-J", entry)
-  }else if (jackpotRandom == 39 && wasUniqueBorn("DUCK-WWWADMIN-JU") == 0) then {
-    ("DUCK-WWWADMIN-JU", "1A1D1I1M1N3W-J", entry)
-  }else if (jackpotRandom == 9 && wasUniqueBorn("DUCK-WWWWFARM-JU") == 0) then {
-    ("DUCK-WWWWFARM-JU", "1A1F1M1R4W-J", entry)
+  if (jackpotRandom == 1) then {
+    ("DUCK-WWWWXMAS-JU", "1A1M1S4W1X-J", entry)
   }else {
     let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 5)
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 6)

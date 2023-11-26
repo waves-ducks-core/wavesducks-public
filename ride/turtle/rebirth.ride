@@ -108,7 +108,18 @@ func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, 
   randomHash.toInt(offset*8) % options
 }
 
+func tryGetBoolean(key: String) = {
+    match getBoolean(key) {
+        case b:Boolean => b
+        case _ => false
+    }
+
+}
+
 func getRandomWin(tx: ByteVector, finishHeight: Int) = {
+  let jackpotEnabled = tryGetBoolean("JACKPOT_ENABLED")
+  let jackpotRandom = getRandomNumber(1000, tx, finishHeight, 1)
+  if (jackpotRandom == 1 && jackpotEnabled) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = if (n<60) then { "incubator" } else
@@ -128,6 +139,76 @@ func getRandomWin(tx: ByteVector, finishHeight: Int) = {
     { "item!ART-FEED100" }   
 
     (n,result)
+}
+
+func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean, backupTxId: String) = {
+  let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
+  let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
+  strict validPayment = checkAdditionalPayment(additionalPayment)
+  strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTHTURTLE"],[])
+
+  if (status != "open") then {
+    throw("rebirth is finished or not open")
+  } else {
+    if (height < finishBlock) then {
+      throw("you cannot finish rebirth, yet")
+    } else {
+
+      let output = getRandomWin(initTx.fromBase58String(), finishBlock)  
+      let win = output._2
+      let random = output._1
+
+      let txId = initTx
+
+      let result = if (win.indexOf("perch") != unit) then {
+        let color = win.takeRight(1)
+              strict call = if !double then  invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
+                                       else  strict first = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
+                                             invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
+
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win.indexOf("beach") != unit) then {
+        let color = win.takeRight(1)
+        strict call = if !double then invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
+                                 else strict first = invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
+                                      invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win == "jackpot") then {
+        strict call = invoke(getTurtleIncubatorAddress(), "issueJackpot", [address, txId, valueOrElse(getString("JACKPOT_NAME"),"WWWWXMAS")], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win == "incubator") then {
+        strict call = if !double then invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+                                 else strict first = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+                                      invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, backupTxId], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win == "duck_incubator") then {
+        strict call = if !double then invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
+                                 else strict first = invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
+                                      invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, backupTxId,"ZZZZZZZZ"], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else if (win.indexOf("item") !=unit) then {
+        let itemName = win.split("!")[1]
+        strict call = if !double then invoke(getItemsAddress(), "issueArtefact", [itemName, address], [])
+                                 else strict first = invoke(getItemsAddress(), "issueArtefact", [itemName, address], [])
+                                      invoke(getItemsAddress(), "issueArtefact", [itemName, address], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else{
+        throw("RFB: Some error occured, please contact the admins!")
+      }
+
+      result ++ [
+        StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
+        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
+      ]++validPayment
+    }
+  }
 }
 
 @Callable(i)
@@ -194,57 +275,21 @@ func initRebirth(refererAddress: String) = {
 
 @Callable(i)
 func finishRebirth(initTx: String) = {
-  let address = i.caller.toString()
-  let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
-  let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
-  strict validPayment = checkAdditionalPayment(i.payments[0])
-  strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTHTURTLE"],[])
-
-  if (status != "open") then {
-    throw("rebirth is finished or not open")
-  } else {
-    if (height < finishBlock) then {
-      throw("you cannot finish rebirth, yet")
-    } else {
-
-      let output = getRandomWin(initTx.fromBase58String(), finishBlock)  
-      let win = output._2
-      let random = output._1
-
-      let txId = initTx
-
-      let result = if (win.indexOf("perch") != unit) then {
-        let color = win.takeRight(1)
-        strict call = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      } else if (win.indexOf("beach") != unit) then {
-        let color = win.takeRight(1)
-        strict call = invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      } else if (win == "incubator") then {
-        strict call = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      } else if (win == "duck_incubator") then {
-        strict call = invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      }else if (win.indexOf("item") !=unit) then {
-        let itemName = win.split("!")[1]
-        strict call = invoke(getItemsAddress(), "issueArtefact", [itemName, address], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      }else{
-        throw("RFB: Some error occured, please contact the admins!")
-      }
-
-      result ++ [
-        StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
-        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
-        IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment
-    }
-  }
+  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false, i.transactionId.toBase58String())
 }
+
+@Callable(i)
+func finishRebirthDouble(initTx: String) = {
+  #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
+  if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
+    let assetId = i.payments[0].assetId.value()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    if boosterType == "ART-GIFT_DOUBL" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,i.transactionId.toBase58String())
+    else
+      throw("Error! Wrong item attached to double rewards!")
+}
+

@@ -182,7 +182,7 @@
         {
             "key": "static_maxProxyDiff",
             "type": "integer",
-            "value": 30
+            "value": 45
         },
         {
             "key": "VOTE_DURATION",

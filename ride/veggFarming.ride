@@ -27,8 +27,8 @@ func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
-func staticKey_incubatorAddress() = "static_turtleIncubatorAddress"
-func staticKey_breederAddress() = "static_turtleBreederAddress"
+func staticKey_incubatorAddress() = "static_incubatorAddress"
+func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_accBoosterAddress() = "static_accBoosterAddress"
@@ -148,9 +148,10 @@ func calculateFarmPower(assetId:String)={
   let uniqueList = FOLD<8>(genotype, [], uniqueArrayFilter)
   let totalGenes = if gen == "U" then 8 else size(uniqueList)
   let power = pow(15,1,totalGenes,0,2,DOWN)
-  
-  let multiplier = (height-3750000)/(60*24*30*3)
-  let finalPower = power*multiplier
+  #3 months = 90 days = 1%/day roughly
+  let multiplier = (height-3750000)*100/(60*24*30*3)
+  #TODO make this percentage multiplier
+  let finalPower = power*multiplier/100
   ([
     IntegerEntry("DEBUG_"+assetName, finalPower),
     IntegerEntry("DEBUG_COEFFICIENT_"+assetName, multiplier)
@@ -168,8 +169,9 @@ func calculateFarmPowerAssetName(assetName:String)={
   let totalGenes = if gen == "U" then 8 else size(uniqueList)
   let power = pow(15,1,totalGenes,0,1,DOWN)
   
-  let multiplier = (height-3750000)/(60*24*30*3)
-  let finalPower = power*multiplier
+  let multiplier = (height-3750000)*100/(60*24*30*3)
+  #TODO make this percentage multiplier
+  let finalPower = power*multiplier/100
   ([
     IntegerEntry("DEBUG_"+assetName, finalPower),
     IntegerEntry("DEBUG_COEFFICIENT_"+assetName, multiplier)
@@ -267,7 +269,7 @@ func stakeNFT(jColor: String) = {
 
 @Callable(i)
 func topUpReward (amount: Int) = {
-  #TODO: Only couponsDapp can topup!!!
+  if i.caller != getCouponsAddress() then throw("VFTUP: Only couponsdapp can do topup!") else
   let resHandleStaking = handleStakingTopUp(amount) 
     (
       resHandleStaking, 

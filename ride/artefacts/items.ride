@@ -13,6 +13,7 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_huntDistroAddress() = "static_huntDistroAddress"
 func staticKey_warsPKey() = "static_warsPKey"
+func statisKey_duplicatorFee() = "static_duplicatorFee"
 
 #TODO: make sure to allow coupons contract when we release new items
 func key_artefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
@@ -70,12 +71,6 @@ let artefacts = [
   "ART-XTREE"
 ]
 
-let issueList = [
-    "ART-FIXGENE",
-    "ART-FREEGENE", 
-    "ART-MIRROR"
-]
-
 let allArtefact = artefacts++oldArtefacts
 
 
@@ -107,12 +102,12 @@ func getRandomNumber(variants: Int, txId: ByteVector, finishHeight: Int, offset:
 }
 
 func getRandomArtefact(boxId: ByteVector, h: Int) = {
-  let randomNumber = getRandomNumber(6, boxId, h, 1)
+  let randomNumber = getRandomNumber(artefacts.size(), boxId, h, 1)
   artefacts[randomNumber]
 }
 
 func getRandomGenes(txId: ByteVector, h: Int) = {
-  let randomNumber = getRandomNumber(6, txId, h, 2)
+  let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
   freeGenes[randomNumber]
 }
 
@@ -135,12 +130,13 @@ func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getHuntDistroAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_huntDistroAddress()).fromBase58String())
 func getWarsPKey() =  tryGetStringExternal(getOracle(),staticKey_warsPKey()).fromBase58String()
+func getDuplicatorFee() = tryGetInteger(statisKey_duplicatorFee())
 
 func tryGetCosmeticItemPrice(item:String)= {
   let key = key_priceCosmetic(item)
     match getInteger(this, key) {
       case a:Int => a
-      case _ => throw("ITGCIP: This item is not available in the store!")
+      case _ => throw("ITGCIP: "+item+" is not available in the store!")
     }
 }
 
@@ -175,6 +171,67 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
   let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
   if payment.amount != feeAmount then throw("WCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
   [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
+
+
+
+func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments:List[AttachedPayment],
+ feeAmount: Int, feeAssetId: ByteVector|Unit, recipient: Address, instantFinish: Boolean,
+ txId: String)={
+  if size(payments) != amountBaseItem+1 then throw("IID: Please attach "+(amountBaseItem+2).toString()+" payments!") else
+  func isBaseItem(accumulated: (List[Burn],Int), pay: AttachedPayment) = {
+    let assetId = pay.assetId.value()
+    strict artefact = invoke(this,"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    if (artefact == baseItem) then 
+      (accumulated._1++[Burn(assetId,1)],accumulated._2+1)
+      else
+      (accumulated._1,accumulated._2+0)
+       
+  }
+  let totalBaseItem = FOLD<8>(payments, ([],0), isBaseItem)
+  if totalBaseItem._2 != amountBaseItem then throw("IID: Please attach "+amountBaseItem.toString()+" artefacts of type "+baseItem) else
+  let feePayment =  payments[amountBaseItem]
+  if feePayment.assetId != feeAssetId then throw("IID: You miss a payment with the fee!") else
+  if feePayment.amount != feeAmount then throw("IID: You did not attach the correct fee amount!") else
+
+  let artefact = Issue(endItem, "NFT artefact of Waves Ducks game: "+endItem, 1, 0, false, unit, 0)
+  let artefactId = artefact.calculateAssetId()
+
+  let instant = if instantFinish then 
+  ([
+    artefact,
+    StringEntry("artefact_" + artefactId.toBase58String() + "_type", endItem),
+    ScriptTransfer(recipient, 1, artefactId)
+  ],artefactId.toBase58String())
+  else ([],"")
+  ([
+
+    BooleanEntry("merge_"+txId+"_instant", instantFinish),
+    ScriptTransfer(getFeeAggregator(), feeAmount, feePayment.assetId),
+    StringEntry("merge_"+txId+"_reward", endItem),
+    BooleanEntry("merge_"+txId+"_finished", !instantFinish)
+    
+  ]++instant._1++totalBaseItem._1,instant._2)
+}
+
+#TODO: PUT CONFIG IN SC
+#let katanaParams = (8,"ART-FIRE_SWORD",5000_0000, unit, true)
+func getAmountBaseItem(baseItem: String) = getIntegerValue("merge_"+baseItem+"_amount")
+func getEndItem(baseItem: String) = getStringValue("merge_"+baseItem+"_endItem")
+func getPrice(baseItem: String) = getIntegerValue("merge_"+baseItem+"_price")
+func getInstant(baseItem: String) = getBooleanValue("merge_"+baseItem+"_instant")
+func getAsset(baseItem: String) = {
+  let asset = getStringValue("merge_"+baseItem+"_asset")
+  if asset == "WAVES" then unit else asset.fromBase58String()
+}
+
+@Callable(i)
+func instanMergeItem(baseItem: String)={
+  if baseItem !="ART-KATANA" then throw("IID: Only Katana can be merged!") else
+  let params = (getAmountBaseItem(baseItem),getEndItem(baseItem),getPrice(baseItem), getAsset(baseItem), getInstant(baseItem))
+  itemMerger(baseItem,params._1,params._2,i.payments,params._3,params._4,i.caller, params._5, i.transactionId.toBase58String())
+
 
 }
 
@@ -288,6 +345,46 @@ func calculateFarmingPowerBoost(duckId: String, address: String)={
   )
 }
 
+
+@Callable(i)
+func itemDuplicator()={
+  if size(i.payments) != 4 then throw("IID: Three payments are needed!") else
+  let duplicatorPayment = i.payments[0].value()
+  let itemPayment = i.payments[1].value()
+  let eggPayment = i.payments[2].value()
+  let validPayment = checkAdditionalPayment(i.payments[3])
+
+  let duplicatorAssetId = duplicatorPayment.assetId.value().toBase58String()
+  if duplicatorPayment.amount != 1 then throw("IID: Duplicator NFT is not attached") else
+  
+  let itemAssetId = itemPayment.assetId.value().toBase58String()
+  if itemPayment.amount != 1 then throw("IID: Item NFT is not attached") else
+
+  let eggAssetId = eggPayment.assetId.value()
+  if eggAssetId != getEggAssetId() then throw("IID: Please attach eggs!") else
+  if (eggPayment.amount < getDuplicatorFee())  then throw("IID: to duplicate an items you need the following amount of egglets: " + getDuplicatorFee().toString())else
+
+  strict duplicatorArtefact = invoke(this,"checkArtefactDetails",[duplicatorAssetId],[]).asString()
+  if duplicatorArtefact != "ART-ITEM_DUPLI" then  throw("IID: You need to attach a ART-ITEM_DUPLI artefact") else
+
+  strict artefactName = invoke(this,"checkArtefactDetails",[itemAssetId],[]).asString()
+
+  let artefact = Issue(artefactName, "NFT artefact of Waves Ducks game: "+artefactName, 1, 0, false, unit, 0)
+  let artefactId = artefact.calculateAssetId()
+
+  ([
+    artefact,
+    StringEntry("artefact_" + artefactId.toBase58String() + "_type", artefactName),
+    Burn(duplicatorPayment.assetId.value(),1),
+    ScriptTransfer(i.originCaller,1,itemPayment.assetId),
+    ScriptTransfer(i.originCaller, 1, artefactId),
+    ScriptTransfer(getFeeAggregator(),eggPayment.amount,eggPayment.assetId)
+    
+  ]++validPayment,artefactId.toBase58String())
+  
+
+}
+
 @Callable(i)
 func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = {
   let firstPayment = i.payments[0].value()
@@ -327,7 +424,7 @@ func freeGene(txIdStr: String) = {
   let processFinishHeight = getIntegerValue(getBreederAddress(), finishHeightKey)
 
   let selectedGene = getRandomGenes(txId,processFinishHeight)
-  let randomPosition = getRandomNumber(7, txId, processFinishHeight, 3)
+  let randomPosition = getRandomNumber(8, txId, processFinishHeight, 3)
 
   strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txId, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
   
@@ -404,11 +501,11 @@ func preInit() = {
 func issueArtefact(type: String, receiver: String) = {
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("admin only") else 
-     if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !containsElement(issueList, type) ) then throw("FIRE ITEM ONLY!") else
+     if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let txIdStr = i.transactionId.toBase58String()
     let address = Address(fromBase58String(receiver))
 
-    let artefact = Issue(type, "NFT artefact of Waves Ducks game. Drop #2.", 1, 0, false, unit, 0)
+    let artefact = Issue(type, "NFT artefact of Waves Ducks game.", 1, 0, false, unit, 0)
     let artefactId = artefact.calculateAssetId()
 
     ([
@@ -429,29 +526,6 @@ func setLock(n: Int) = {
     throw("admin only")
   }
 }
-
-@Callable(i)
-func buyArtefact() = {
-  if (lastBlock.timestamp > 1639742400000) then throw("There are no active sales now... ") else 
-  if (tryGetInteger("global_locked") > 0) then {
-    throw("contract is temporarily locked")
-  } else if (tryGetInteger("global_artAmount") >= artefactsLimit) then {
-    throw("SOLDOUT!!! Hurray!")
-  } else if(lastBlock.timestamp < 1639605600000 && i.caller != Address(devAddress)) then throw("Too early...") else {
-
-    let firstPayment = i.payments[0].value()
-    if (firstPayment.assetId != getEggAssetId()) then throw("You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
-    else if (firstPayment.amount < eggsNeeded)  then throw("To hatch a duck you currently need the following amount of EGGlets: " + eggsNeeded.toString())
-    else {
-      [
-        StringEntry(i.caller.toString() + "_" + i.transactionId.toBase58String() + "_status", "started"),
-        IntegerEntry(i.caller.toString() + "_" + i.transactionId.toBase58String() + "_finishHeight", height + 2),
-        IntegerEntry("global_artAmount", tryGetInteger("global_artAmount") + 1)
-      ]
-    }
-  }
-}
-
 
 @Callable(i)
 func addItemToStore(price: Int, item: String,maxSales: Int, sale:Boolean,pricesset:String,growthPercentage: Int,startTs:Int,endTs: Int)={
@@ -476,29 +550,7 @@ func setGlobalArtAmount(newAmount: Int) = {
   }else throw("Permission denied")
 }
 
-@Callable(i)
-func claimArtefact(boxIdStr: String) = {
-  let txId = fromBase58String(boxIdStr)
-  let statusKey = i.caller.toString() + "_" + boxIdStr + "_status"
-  let heightKey = i.caller.toString() + "_" + boxIdStr + "_finishHeight"
 
-  if (getStringValue(statusKey) != "started") then {throw("claimed already")} 
-  else if (getIntegerValue(heightKey) > height) then {throw("you cannot claim yet")}
-  else {
-    let artType = getRandomArtefact(txId, getIntegerValue(heightKey))
-
-    let asset = Issue(artType, "Artefact of Waves Ducks metaverse.", 1, 0, false, unit, getIntegerValue(heightKey))
-    let assetId = asset.calculateAssetId()
-
-    [
-      StringEntry(statusKey, artType),
-      StringEntry(i.caller.toString() + "_" + boxIdStr + "_artefactId", assetId.toBase58String()),
-      StringEntry(assetId.toBase58String() + "_type", artType),
-      asset,
-      ScriptTransfer(i.caller, 1, assetId)
-    ]
-  }
-}
 
 @Verifier(tx)
 func verify() = {

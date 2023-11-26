@@ -170,6 +170,73 @@ func isTestEnv()={
 }
 
 
+func finishRebirthInternal(initTx: String, address: String, payment: AttachedPayment, double: Boolean, backupTxId: String) = {
+  let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
+  let assetRarity = tryGetInteger("address_" + address + "_initTx_" + initTx + "_assetRarity")
+  let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
+  strict validPayment = checkAdditionalPayment(payment)
+  strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTH"],[])
+  func getAccessItemAssetId(address: Address) = tryGetStringExternal(address,"static_accessItemAssetId").fromBase58String()
+  func getAccessItemPrice(address: Address) = tryGetIntExternal(address,"static_accessItemPrice")
+
+  if (status != "open") then {
+    throw("rebirth is finished or not open")
+  } else {
+    if (height < finishBlock) then {
+      throw("you cannot finish rebirth, yet")
+    } else {
+      let win = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity)  
+
+      let txId = initTx
+
+      let result = if (win.indexOf("perch") != unit) then {
+        let color = win.takeRight(1)
+        strict call = if !double then  invoke(getFarmingAddress(), "addFreePerch", [address, color], [])
+                                 else  strict first = invoke(getFarmingAddress(), "addFreePerch", [address, color], [])
+                                       invoke(getFarmingAddress(), "addFreePerch", [address, color], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win == "incubator") then {
+        strict call = if !double then invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                                 else strict first = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                                      invoke(getIncubatorAddress(), "issueFreeDuck", [address, backupTxId], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win == "ar") then {
+        let assetId = getAccessItemAssetId(getHuntAddress())
+        let price = getAccessItemPrice(getHuntAddress())
+        strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address], [AttachedPayment(assetId,price)])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else if (win == "phoenix") then {
+        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, valueOrElse(getString("JACKPOT_NAME"),"WWWWWWWP")], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win.indexOf("duckling") !=unit) then {
+        let level = parseIntValue(win.split("_")[1])
+        let levelFinal = if double then 2* level else level
+        strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,levelFinal], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      } else if (win.indexOf("item") !=unit) then {
+        let itemName = win.split("!")[1]
+        strict call = if !double then invoke(getItemsAddress(), "issueArtefact", [itemName, address], [])
+                                 else strict first = invoke(getItemsAddress(), "issueArtefact", [itemName, address], [])
+                                      invoke(getItemsAddress(), "issueArtefact", [itemName, address], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+
+      }else{
+        throw("RFB: Some error occured, please contact the admins!")
+      }
+
+      result ++ [
+        StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
+        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish")
+      ]++validPayment
+    }
+  }
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("RCU: admin only") else 
@@ -225,64 +292,22 @@ func initRebirth(refererAddress: String) = {
 
 @Callable(i)
 func finishRebirth(initTx: String) = {
-  let address = i.caller.toString()
-  let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
-  let assetRarity = tryGetInteger("address_" + address + "_initTx_" + initTx + "_assetRarity")
-  let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
-  strict validPayment = checkAdditionalPayment(i.payments[0])
-  strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTH"],[])
-  func getAccessItemAssetId(address: Address) = tryGetStringExternal(address,"static_accessItemAssetId").fromBase58String()
-  func getAccessItemPrice(address: Address) = tryGetIntExternal(address,"static_accessItemPrice")
+ finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false,i.transactionId.toBase58String())
+}
 
-  if (status != "open") then {
-    throw("rebirth is finished or not open")
-  } else {
-    if (height < finishBlock) then {
-      throw("you cannot finish rebirth, yet")
-    } else {
-      let win = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity)  
-
-      let txId = initTx
-
-      let result = if (win.indexOf("perch") != unit) then {
-        let color = win.takeRight(1)
-        strict call = invoke(getFarmingAddress(), "addFreePerch", [address, color], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      } else if (win == "incubator") then {
-        strict call = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      } else if (win == "ar") then {
-        let assetId = getAccessItemAssetId(getHuntAddress())
-        let price = getAccessItemPrice(getHuntAddress())
-        strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address], [AttachedPayment(assetId,price)])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      }else if (win == "phoenix") then {
-        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      } else if (win.indexOf("duckling") !=unit) then {
-        let level = parseIntValue(win.split("_")[1])
-        strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,level], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      } else if (win.indexOf("item") !=unit) then {
-        let itemName = win.split("!")[1]
-        strict call = invoke(getItemsAddress(), "issueArtefact", [itemName, address], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
-      }else{
-        throw("RFB: Some error occured, please contact the admins!")
-      }
-
-      result ++ [
-        StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
-        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish")
-      ]++validPayment
-    }
-  }
+@Callable(i)
+func finishRebirthDouble(initTx: String) = {
+  #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
+  if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
+    let assetId = i.payments[0].assetId.value()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    if boosterType == "ART-GIFT_DOUBL" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,i.transactionId.toBase58String())
+    else
+      throw("Error! Wrong item attached to double rewards!")
 }
 
 @Verifier(tx)

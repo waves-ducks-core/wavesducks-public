@@ -1,0 +1,34 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "merge_ART-KATANA_amount",
+            "type": "integer",
+            "value": 8
+        },
+        {
+            "key": "merge_ART-KATANA_endItem",
+            "type": "string",
+            "value": "ART-FIRE_SWORD"
+        },
+        {
+            "key": "merge_ART-KATANA_price",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "merge_ART-KATANA_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-KATANA_asset",
+            "type": "string",
+            "value": "WAVES"
+        }  
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}
+

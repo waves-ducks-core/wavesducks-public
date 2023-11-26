@@ -1,0 +1,34 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "ART-FIXGENE_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FREEGENE_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-MIRROR_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FAWKESMASK_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-PILGRIMHAT",
+            "type": "boolean",
+            "value": true
+        }
+
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}

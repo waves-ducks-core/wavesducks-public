@@ -13,8 +13,11 @@ func staticKey_backendPubKey() = "static_backendPubKey"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_burnAddress() ="static_burnAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_extraFee() = "static_extraFee"
 
 func eggIdKey(eggId: String, user: String) = "eggId_"+eggId+"_"+user
+func boosterIdKey(type: String, user: String, height: Int) = "booster_"+type+"_"+user+"_"+height.toString()
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -34,6 +37,7 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
 
 func getBackendProof(eggId: String, price: Int, distance: Int) = {
@@ -57,6 +61,11 @@ func asInt(value: Any) = match value {
   case _ => throw("FAI: wrong type, expected: Int")
 }
 
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("wrong type, expected: String")
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("RCO: admin only") else 
@@ -68,46 +77,20 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)={
+  throw("Deprecated method! Please use buyRopeInverted")
+}
 
-  let addressString = i.caller.toString()
-  let backendProof = getBackendProof(eggId, price, distance)
-  let exists = tryGetString(eggIdKey(eggId, i.originCaller.toString()))
-  let halfPrice = price/2
-  strict validPayment = checkAdditionalPayment(i.payments[1],price)
-  if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), getBackendPubKey())) then throw("RBR: Invalid proof from backend") else
-    if distance > 1000 then throw("RBR: You can only maximum boost 1000meters distance!") else
-    let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[halfPrice],[]).asInt()
-          halfPrice-amountPaidByCoupons
-        }else {
-            halfPrice
-        }
-    
-      strict payment = if leftToPay!=0 then {
-        let firstPayment = i.payments[0].value()
+@Callable(i)
+func useBooster()={
+  strict validPayment = checkAdditionalPayment(i.payments[0],getIntegerValue(getOracle(),staticKey_extraFee()))
+  if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
+  let assetId = i.payments[1].assetId.value()
+  strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+  [
+      Burn(assetId,1),
+      StringEntry(boosterIdKey(boosterType, i.caller.toString(),height),assetId.toBase58String())
+  ]++validPayment
 
-        if (firstPayment.assetId != getEggAssetId()) then throw("RBR: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-        if (firstPayment.amount < leftToPay) then throw("RBR: To rope a egg you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
-        let refererRewardForbeach = 0 
-        #fraction(leftToPay, 5, 100)
-        #strict refCall = invoke(getRefContractAddress(), "refPayment",
-        #[refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForbeach)]).asBoolean()
-
-        #let toBurn = if refCall then leftToPay-refererRewardForbeach else leftToPay
-        let toBurn = leftToPay
-
-        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
-        
-        leftToPay
-      }else 0
-
-      let refund = [ScriptTransfer(i.caller, i.payments[0].amount - leftToPay, getEggAssetId())]
-      strict recordAction = invoke(getCouponsAddress(),"recordAction",["ROPE"],[])
-
-    if exists != "" then throw("RBR: Rope was already bought for this egg by this user!") else
-    [
-        StringEntry(eggIdKey(eggId, i.originCaller.toString()),price.toString()+";"+distance.toString())
-    ]++validPayment++refund
 }
 
 

@@ -1,0 +1,20 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "JACKPOT_NAME",
+            "type": "string",
+            "value": "WWWWXMAS"
+            
+        },
+        {
+            "key": "JACKPOT_ENABLED",
+            "type": "boolean",
+            "value": true
+            
+        }
+    ],
+    "fee": 500000,
+    "feeAssetId": "WAVES"
+}
