@@ -141,7 +141,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int) = {
     (n,result)
 }
 
-func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean, backupTxId: String) = {
+func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean) = {
   let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
   strict validPayment = checkAdditionalPayment(additionalPayment)
@@ -182,13 +182,14 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       } else if (win == "incubator") then {
         strict call = if !double then invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
                                  else strict first = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
-                                      invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, backupTxId], [])
+                                      invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       } else if (win == "duck_incubator") then {
         strict call = if !double then invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
                                  else strict first = invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
-                                      invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, backupTxId,"ZZZZZZZZ"], [])
+                                      invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else if (win.indexOf("item") !=unit) then {
@@ -275,7 +276,7 @@ func initRebirth(refererAddress: String) = {
 
 @Callable(i)
 func finishRebirth(initTx: String) = {
-  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false, initTx)
+  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false)
 }
 
 @Callable(i)
@@ -288,7 +289,7 @@ func finishRebirthDouble(initTx: String) = {
       [
         Burn(assetId,1)
       ]++
-      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,initTx)
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true)
     else
       throw("Error! Wrong item attached to double rewards!")
 }
