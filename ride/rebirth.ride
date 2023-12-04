@@ -229,11 +229,17 @@ func finishRebirthInternal(initTx: String, address: String, payment: AttachedPay
 
       } else if (win.indexOf("item") !=unit) then {
         let itemName = win.split("!")[1]
-        strict call = if !double then invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
-                                 else strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
-                                      invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
+        strict result = if !double then {
+          strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+          [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+            }
+                                 else {strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+                                      strict second = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
+                                      [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                                      StringEntry("address_" + address + "_initTx_" + initTx + "_result", second.asString())]
+                                      }
+        
+        result
       }else{
         throw("RFB: Some error occured, please contact the admins!")
       }
