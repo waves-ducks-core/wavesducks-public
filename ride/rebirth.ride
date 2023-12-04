@@ -292,7 +292,7 @@ func initRebirth(refererAddress: String) = {
 
 @Callable(i)
 func finishRebirth(initTx: String) = {
- finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false,i.transactionId.toBase58String())
+ finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false,initTx)
 }
 
 @Callable(i)
@@ -305,7 +305,7 @@ func finishRebirthDouble(initTx: String) = {
       [
         Burn(assetId,1)
       ]++
-      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,i.transactionId.toBase58String())
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,initTx)
     else
       throw("Error! Wrong item attached to double rewards!")
 }

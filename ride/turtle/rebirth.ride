@@ -193,9 +193,9 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
 
       }else if (win.indexOf("item") !=unit) then {
         let itemName = win.split("!")[1]
-        strict call = if !double then invoke(getItemsAddress(), "issueArtefact", [itemName, address], [])
-                                 else strict first = invoke(getItemsAddress(), "issueArtefact", [itemName, address], [])
-                                      invoke(getItemsAddress(), "issueArtefact", [itemName, address], [])
+        strict call = if !double then invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+                                 else strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+                                      invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       }else{
@@ -275,7 +275,7 @@ func initRebirth(refererAddress: String) = {
 
 @Callable(i)
 func finishRebirth(initTx: String) = {
-  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false, i.transactionId.toBase58String())
+  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false, initTx)
 }
 
 @Callable(i)
@@ -288,7 +288,7 @@ func finishRebirthDouble(initTx: String) = {
       [
         Burn(assetId,1)
       ]++
-      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,i.transactionId.toBase58String())
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,initTx)
     else
       throw("Error! Wrong item attached to double rewards!")
 }
