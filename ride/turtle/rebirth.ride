@@ -162,42 +162,89 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
 
       let result = if (win.indexOf("perch") != unit) then {
         let color = win.takeRight(1)
-              strict call = if !double then  invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
-                                       else  strict first = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
-                                             invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
-
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+        strict result = if !double then  
+					strict first = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
+			        [
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+					]
+			else  
+					strict first = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
+                    strict second = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
+					[
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+					]
+		result
 
       } else if (win.indexOf("beach") != unit) then {
         let color = win.takeRight(1)
-        strict call = if !double then invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
-                                 else strict first = invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
-                                      invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
+        strict result = if !double then 
+					strict first = invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
+					[
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+					]
+            else 
+					strict first = invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
+                    strict second = invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
+					[
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+					]
+        
+		result
       } else if (win == "jackpot") then {
         strict call = invoke(getTurtleIncubatorAddress(), "issueJackpot", [address, txId, valueOrElse(getString("JACKPOT_NAME"),"WWWWXMAS")], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+        [
+			StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())
+		]
 
       } else if (win == "incubator") then {
-        strict call = if !double then invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
-                                 else strict first = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
-                                      invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+        strict result = if !double then 
+					strict first = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+					[
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+					]
+			else 	
+					strict first = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+                    strict second = invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
+        			[
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+					]
+		result
 
       } else if (win == "duck_incubator") then {
-        strict call = if !double then invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
-                                 else strict first = invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
-                                      invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+        strict result = if !double then 
+					strict first = invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
+					[
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+					]
+            else 	
+					strict first = invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
+                    strict second = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+					[
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+					]
 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
-
+        
+		result
       }else if (win.indexOf("item") !=unit) then {
         let itemName = win.split("!")[1]
-        strict call = if !double then invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
-                                 else strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
-                                      invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+        strict result = if !double then 
+					strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+					[
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+					]
+            else 	
+					strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+                    strict second = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
+					[
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+					]
+        
+		result
 
       }else{
         throw("RFB: Some error occured, please contact the admins!")
@@ -293,4 +340,3 @@ func finishRebirthDouble(initTx: String) = {
     else
       throw("Error! Wrong item attached to double rewards!")
 }
-
