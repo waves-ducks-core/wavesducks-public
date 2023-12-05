@@ -173,7 +173,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
 					[
 						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
 						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
-						StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
 					]
 		result
 
@@ -190,7 +190,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
 					[
 						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
 						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
-						StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
 						
 					]
         
