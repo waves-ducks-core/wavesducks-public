@@ -172,7 +172,8 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                     strict second = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
 					[
 						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win),
 					]
 		result
 
@@ -188,7 +189,9 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                     strict second = invoke(getTurtleStakingAddress(), "addFreeBeach", [address, color], [])
 					[
 						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win),
+						
 					]
         
 		result
@@ -209,7 +212,8 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                     strict second = invoke(getDuckIncubatorAddress(), "issueFreeDuckDefinedGenes", [address, txId,"ZZZZZZZZ"], [])
         			[
 						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "duck_incubator")
 					]
 		result
 
@@ -224,7 +228,8 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                     strict second = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
 					[
 						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "incubator")
 					]
 
         
@@ -241,7 +246,8 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                     strict second = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
 					[
 						StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
+						StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+						StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
 					]
         
 		result
