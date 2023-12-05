@@ -191,53 +191,75 @@ func finishRebirthInternal(initTx: String, address: String, payment: AttachedPay
 
       let result = if (win.indexOf("perch") != unit) then {
         let color = win.takeRight(1)
-        strict result = if !double then {strict first = invoke(getFarmingAddress(), "addFreePerch", [address, color], [])
-                                      [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]}
-                                 else  {strict first = invoke(getFarmingAddress(), "addFreePerch", [address, color], [])
-                                       strict second = invoke(getFarmingAddress(), "addFreePerch", [address, color], [])
-                                      [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-                                      StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())
-                                      ]}
+        strict result = if !double then 
+				strict first = invoke(getFarmingAddress(), "addFreePerch", [address, color], [])
+                [
+					StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+				]
+            else  
+				strict first = invoke(getFarmingAddress(), "addFreePerch", [address, color], [])
+                strict second = invoke(getFarmingAddress(), "addFreePerch", [address, color], [])
+                [
+					StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                    StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+					StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+                ]
+				
         result
       } else if (win == "incubator") then {
-        strict result = if !double then { 
-                                          strict first = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
-                                          [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
-        }else {
-          strict first = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
-          strict second = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,100], [])
-          [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-          StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString())] 
-        }
+        strict result = if !double then 
+				strict first = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                [
+					StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+				]
+			else
+				strict first = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+				strict second = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,100], [])
+				[
+					StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+					StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+					StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "duckling_100")
+				] 
+        
         result
 
       } else if (win == "ar") then {
-        let assetId = getAccessItemAssetId(getHuntAddress())
+		let assetId = getAccessItemAssetId(getHuntAddress())
         let price = getAccessItemPrice(getHuntAddress())
         strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address], [AttachedPayment(assetId,price)])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+        [
+			StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())
+		]
 
       }else if (win == "phoenix") then {
         strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, valueOrElse(getString("JACKPOT_NAME"),"WWWWWWWP")], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+        [
+			StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())
+		]
 
       } else if (win.indexOf("duckling") !=unit) then {
         let level = parseIntValue(win.split("_")[1])
         let levelFinal = if double then 2* level else level
         strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,levelFinal], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+        [
+			StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())
+		]
 
       } else if (win.indexOf("item") !=unit) then {
         let itemName = win.split("!")[1]
         strict result = if !double then {
-          strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
-          [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
-            }
-                                 else {strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
-                                      strict second = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
-                                      [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-                                      StringEntry("address_" + address + "_initTx_" + initTx + "_result", second.asString())]
-                                      }
+			strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+			[
+				StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+			]
+        else 
+			strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+            strict second = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
+            [
+				StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                StringEntry("address_" + address + "_initTx_" + initTx + "_result", second.asString()),
+				StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+			]
         
         result
       }else{
