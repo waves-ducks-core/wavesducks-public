@@ -247,7 +247,7 @@ func finishRebirthInternal(initTx: String, address: String, payment: AttachedPay
 
       } else if (win.indexOf("item") !=unit) then {
         let itemName = win.split("!")[1]
-        strict result = if !double then {
+        strict result = if !double then 
 			strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
 			[
 				StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
@@ -329,7 +329,7 @@ func initRebirth(refererAddress: String) = {
 
 @Callable(i)
 func finishRebirth(initTx: String) = {
- finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false)
+ finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false)
 }
 
 @Callable(i)
