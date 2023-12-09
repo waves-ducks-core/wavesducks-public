@@ -151,7 +151,7 @@ func initAuction(startPrice: Int, instantPrice: Int, description: String, eggSel
       IntegerEntry("auction_" + auctionId + "_startPrice", startPrice),
       BooleanEntry("auction_" + auctionId + "_isArtefact", assetInfo(assetId).value().issuer == getItemsAddress()),
       BooleanEntry("auction_" + auctionId + "_isTurtle", assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer == getTurtleIncubatorAddress()),
-      BooleanEntry("auction_" + auctionId + "_isThird", assetInfo(assetId).value().issuer == getTurtleBreederAddress()),
+      BooleanEntry("auction_" + auctionId + "_isThird", assetInfo(assetId).value().issuer == getPeteAddress()),
       IntegerEntry("auction_" + auctionId + "_instantPrice", instantPrice),
       StringEntry("address_" + i.originCaller.toString() + "_auction_" + auctionId + "_lockedNFT", assetId.toBase58String())
     ]
