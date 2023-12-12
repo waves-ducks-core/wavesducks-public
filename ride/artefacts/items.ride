@@ -31,6 +31,7 @@ func key_lastPriceCosmetic(item:String)= "direct_cosmetic_"+item+"_last_price"
 func key_startTsCosmetic(item:String) = "direct_cosmetic_"+item+"_startTs"
 func key_endTsCosmetic(item:String) = "direct_cosmetic_"+item+"_endTs"
 func key_processFinishHeight(address: String, txId: ByteVector) = address + "_" + txId.toBase58String() +  "_fh"
+func staticKey_couponsAddress() = "static_couponsAddress"
 
 
 let devAddress = base58'3P44yqcpfhPF2iC1nptm2ZJCTaN7VYhz9og'
@@ -73,6 +74,13 @@ let artefacts = [
 
 let allArtefact = artefacts++oldArtefacts
 
+let boosters = [
+  "ART-TINSEL",
+  "ART-FEED10",
+  "ART-GNGR_BREAD",
+  "ART-SNOWBALL",
+  "ART-GIFT_DOUBL"
+]
 
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
@@ -93,6 +101,14 @@ func tryGetInteger(key: String) = {
         case a:Int => a
         case _ => 0
     }
+}
+
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
 }
 
 func getRandomNumber(variants: Int, txId: ByteVector, finishHeight: Int, offset: Int) = {
@@ -131,6 +147,7 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getHuntDistroAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_huntDistroAddress()).fromBase58String())
 func getWarsPKey() =  tryGetStringExternal(getOracle(),staticKey_warsPKey()).fromBase58String()
 func getDuplicatorFee() = tryGetInteger(statisKey_duplicatorFee())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 
 func tryGetCosmeticItemPrice(item:String)= {
   let key = key_priceCosmetic(item)
@@ -174,7 +191,16 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 
 }
 
+func issueItem(type: String, nonce: Int, address: Address)={
+    let artefact = Issue(type, "NFT artefact of Waves Ducks game.", 1, 0, false, unit, nonce)
+    let artefactId = artefact.calculateAssetId()
 
+    ([
+      artefact,
+      StringEntry("artefact_" + artefactId.toBase58String() + "_type", type),
+      ScriptTransfer(address, 1, artefactId)
+    ],artefactId.toBase58String())
+}
 
 func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments:List[AttachedPayment],
  feeAmount: Int, feeAssetId: ByteVector|Unit, recipient: Address, instantFinish: Boolean,
@@ -199,11 +225,7 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
   let artefactId = artefact.calculateAssetId()
 
   let instant = if instantFinish then 
-  ([
-    artefact,
-    StringEntry("artefact_" + artefactId.toBase58String() + "_type", endItem),
-    ScriptTransfer(recipient, 1, artefactId)
-  ],artefactId.toBase58String())
+  issueItem(endItem,0,recipient)
   else ([],"")
   ([
 
@@ -226,6 +248,52 @@ func getAsset(baseItem: String) = {
   if asset == "WAVES" then unit else asset.fromBase58String()
 }
 
+
+
+func userExperience(user:String) = user+"_experience"
+
+func finishShakeItBabyInternal(initTx: String, address: String, payment: AttachedPayment)={
+  let expUser = tryGetIntegerExternal(getCouponsAddress(),userExperience(address))
+  let multiplier = min([(expUser/100+1),6])
+  let finish = getIntegerValue("address_" + address + "_initTx_" + initTx + "_finishBlock")
+  if height < finish then throw("Please wait till the shaking is finished!") else
+  func handleMint(acc:List[StringEntry|Issue], index: Int) = {
+      if index <=multiplier then
+      let randomPosition = getRandomNumber(boosters.size(), initTx.fromBase58String(), finish, index)
+      acc ++ issueItem(getElement(boosters,randomPosition), index-1,addressFromStringValue(address))._1
+      else
+      acc
+  }
+
+  FOLD<6>([1,2,3,4,5,6], [], handleMint)
+}
+
+@Callable(i)
+func startShakeItBaby()={
+  let itemPayment = i.payments[0].value()
+  let validPayment = checkAdditionalPayment(i.payments[1])
+  let itemAssetId = itemPayment.assetId.value().toBase58String()
+  if itemPayment.amount != 1 then throw("IID: Item NFT is not attached") else
+
+  strict globeArtefact = invoke(this,"checkArtefactDetails",[itemAssetId],[]).asString()
+  if globeArtefact != "ART-SNW_GLBES" then  throw("IID: You need to attach a ART-SNW_GLBES artefact") else
+  let address = i.caller.toString()
+  let initTx = i.transactionId.toBase58String()
+  [
+    Burn(itemPayment.assetId.value(),1),
+    IntegerEntry("address_" + address + "_initTx_" + initTx + "_finishBlock", height+2),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", itemAssetId)
+
+  ]
+}
+
+@Callable(i)
+func finishShakeItBaby(initTx: String) = {
+ finishShakeItBabyInternal(initTx, i.caller.toString(),i.payments[0])
+}
+
+#TODO: maybe extract this to a seperate SC?
 @Callable(i)
 func instanMergeItem(baseItem: String)={
   if baseItem !="ART-KATANA" then throw("IID: Only Katana can be merged!") else
@@ -408,8 +476,6 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
 
 }
 
-
-
 @Callable(i)
 func freeGene(txIdStr: String) = {
   let firstPayment = i.payments[0].value()
@@ -502,17 +568,9 @@ func issueArtefact(type: String, receiver: String) = {
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("admin only") else 
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
-    let txIdStr = i.transactionId.toBase58String()
     let address = Address(fromBase58String(receiver))
 
-    let artefact = Issue(type, "NFT artefact of Waves Ducks game.", 1, 0, false, unit, 0)
-    let artefactId = artefact.calculateAssetId()
-
-    ([
-      artefact,
-      StringEntry("artefact_" + artefactId.toBase58String() + "_type", type),
-      ScriptTransfer(address, 1, artefactId)
-    ],artefactId.toBase58String())
+    issueItem(type,0,address)
   
 }
 
@@ -521,17 +579,11 @@ func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("admin only") else 
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
-    let txIdStr = i.transactionId.toBase58String()
     let address = Address(fromBase58String(receiver))
 
-    let artefact = Issue(type, "NFT artefact of Waves Ducks game.", 1, 0, false, unit, nonce)
-    let artefactId = artefact.calculateAssetId()
+    let issueResult = issueItem(type,nonce,address)
 
-    ([
-      artefact,
-      StringEntry("artefact_" + artefactId.toBase58String() + "_type", type),
-      ScriptTransfer(address, 1, artefactId)
-    ],artefactId.toBase58String())
+    issueResult
   
 }
 
