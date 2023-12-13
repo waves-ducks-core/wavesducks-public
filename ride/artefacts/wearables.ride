@@ -18,6 +18,8 @@ let wearables = [
 ]
 
 func keyArtefactDuck(duckId: String, wearable: String) = duckId+"_"+wearable
+func keyTypesDuck(duckId: String, type: String) = duckId+"_"+type
+
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -25,6 +27,7 @@ func tryGetStringExternal(address: Address, key: String) = {
         case _ => ""
     }
 }
+
 
 
 func tryGetString(key: String) = {
@@ -63,15 +66,26 @@ func tryGetCosmeticItem(item:String)= {
     }
 }
 
+func tryGetType(wearable: String)= {
+  tryGetStringExternal(getItemsAddress(), "type_cosmetic_"+wearable)
+  }
+
+
 func wearItem(assetIdWearAble: String, duckId: String)={
   strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetIdWearAble],[]).asString()
   if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
     let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
     strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
     if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
+      let type = tryGetType(artefactName)
+      let typeOnDuck = if type != "" then tryGetString(keyTypesDuck(duckId,type))!= "" else throw("Type undefined, please contact admins "+artefactName)
+      if typeOnDuck then throw("You can only attach 1 from each type to your duck!") else 
+
+      let typeResult = if type != "" then [StringEntry(keyTypesDuck(duckId,type), assetIdWearAble)] else []
       [
         StringEntry(keyArtefactDuck(duckId,artefactName), assetIdWearAble)
-      ]
+        
+      ]++typeResult
 }
 
 @Callable(i)
@@ -117,12 +131,15 @@ func removeItemFromDuck(burnItem: Boolean, artefactName:String) = {
     let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
     strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
     if artefactId == "" then throw("Duck not wearing a "+artefactName) else
+    let type = tryGetType(artefactName)
+    let typeResult = if type != "" then [DeleteEntry(keyTypesDuck(duckId,type))] else []
     let burn = if burnItem then [Burn(artefactId.fromBase58String(),1)] else [ScriptTransfer(i.caller, 1, artefactId.fromBase58String())]
       [
         DeleteEntry(keyArtefactDuck(duckId,artefactName)),
         ScriptTransfer(i.caller, 1, duckPayment.assetId),
         Burn(roboDuckId.fromBase58String(),1)
-      ]++burn++validPayment
+        
+      ]++burn++validPayment++typeResult
 }
 
 @Callable(i)
@@ -145,17 +162,3 @@ func wearXItemsToDuck()= {
     }
     FOLD<6>(i.payments, [], handleItem)++validPayment
 }
-
-#@Callable(i)
-#func removeItemFromDuck(artefactName: String)={
-#  let firstPayment = i.payments[0].value()
-#  let duckId = firstPayment.assetId.value().toBase58String()
-#  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-#  let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
-#  if !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRIFD: Only true cosmetics can be removed!") else
-#  if artefactId=="" then throw("WRIFD: this duck does not wear a "+artefactName)else
-#  [
-#    DeleteEntry(keyArtefactDuck(duckId,artefactName)),
-#    ScriptTransfer(i.caller, 1, artefactId.fromBase58String())
-#  ]
-#}
