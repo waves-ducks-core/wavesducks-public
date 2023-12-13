@@ -179,7 +179,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 @Callable(i)
 func issueFreeTurtle(address: String, txIdStr: String) = {
   if (i.caller != getTurtleRebirthAddress()) then {
-    throw("ISFD: rebirth only")
+    throw("TISFD: rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
     let hatchingStatusKey = getHatchingStatusKey(address, txId)
