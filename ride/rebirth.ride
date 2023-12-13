@@ -126,8 +126,11 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
     if (n<240) then { "duckling_20" } else
     if (n<260) then { "duckling_40" } else
     if (n<300) then { "incubator" } else
-    if (n<320) then { "item!ART-SNAKE" } else
-    if (n<330) then {"item!ART-FREEGENE"} else
+    if (n<310) then { "item!ART-SLEDGE" } else
+    if (n<320) then { "item!ART-ITEM_DUPLI" } else
+    if (n<330) then {"item!ART-XMAS_STBLE"} else
+    if (n<380) then {"item!ART-SNOWBALL"} else
+    if (n<430) then {"item!ART-GNGR_BREAD"} else
     if (n<460) then { "item!ART-KATANA" } else
     if (n<510) then { "item!ART-ROBODUCK" } else
     if (n<540) then { "item!ART-CROWN" } else
