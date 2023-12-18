@@ -304,6 +304,52 @@ func instanMergeItem(baseItem: String)={
 }
 
 @Callable(i)
+func directBuyItemMultiple(itemName:String, itemAmount: Int)={
+  let array = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+  let basePrice = tryGetCosmeticItemPrice(itemName)
+  let grow = tryGetInteger(key_growPercentageCosmetic(itemName))
+  let startTs = tryGetInteger(key_startTsCosmetic(itemName))
+  let endTs = tryGetInteger(key_endTsCosmetic(itemName))
+  if startTs != 0 && startTs> lastBlock.timestamp then throw("IDBI: The sale did not start yet!") else
+  if endTs != 0 && endTs < lastBlock.timestamp then throw("IDBI: The sale has already finished!") else
+  if !tryGetBoolean(key_saleCosmetic(itemName)) then throw("IDBI: Item not for sale anymore"+key_saleCosmetic(itemName)) else
+  let maxSalesValue = tryGetInteger(key_maxSalesCosmetic(itemName))
+  let soldValue = tryGetInteger(key_soldCosmetic(itemName))
+  if itemAmount > array.size() then throw("IDBI: Max amount to issue is "+array.size().toString()) else
+  let price = if grow == 0 then basePrice*itemAmount else throw("IDBI: Items that grow in price can not be bought in batch!")
+  if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("IDBI: Max editions sold!") else
+
+  let assetId = if tryGetString(key_priceAssetCosmetic(itemName))=="" then getEggAssetId() else
+  if tryGetString(key_priceAssetCosmetic(itemName))=="WAVES" then unit  else 
+  tryGetString(key_priceAssetCosmetic(itemName)).fromBase58String()
+  
+  let validPayment = checkAdditionalPayment(i.payments[0])
+  let firstPayment = i.payments[1].value()
+  let amount = firstPayment.amount
+  if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
+  if amount != price then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
+  
+  let txIdStr = i.transactionId.toBase58String()
+  let address = i.originCaller
+
+  func handleMint(acc:List[StringEntry|Issue], index: Int) = {
+      if index <itemAmount then
+      acc ++ issueItem(itemName, index,address)._1
+      else
+      acc
+  }
+
+  let issues = FOLD<15>(array, [], handleMint)
+  [
+    IntegerEntry(key_lastPriceCosmetic(itemName), basePrice),
+    IntegerEntry(key_soldCosmetic(itemName), soldValue+itemAmount),
+    ScriptTransfer(getFeeAggregator(),amount,assetId)
+  ]++validPayment++issues
+
+
+}
+
+@Callable(i)
 func directBuyItem(itemName:String)={
   let basePrice = tryGetCosmeticItemPrice(itemName)
   let grow = tryGetInteger(key_growPercentageCosmetic(itemName))
@@ -320,15 +366,12 @@ func directBuyItem(itemName:String)={
   let assetId = if tryGetString(key_priceAssetCosmetic(itemName))=="" then getEggAssetId() else
   if tryGetString(key_priceAssetCosmetic(itemName))=="WAVES" then unit  else 
   tryGetString(key_priceAssetCosmetic(itemName)).fromBase58String()
-  
-  let amountPaidByCoupons = 0
-  let leftToPay = price-amountPaidByCoupons
 
   let validPayment = checkAdditionalPayment(i.payments[0])
   let firstPayment = i.payments[1].value()
   let amount = firstPayment.amount
   if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
-  if amount != leftToPay then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
+  if amount != price then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
   
   let txIdStr = i.transactionId.toBase58String()
   let address = i.originCaller
