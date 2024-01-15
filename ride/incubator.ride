@@ -88,11 +88,11 @@ func wasUniqueBorn(gen: String) = {
 }
 
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
-  let jackpotRandom = getRandomNumber(500, txId, hatchingFinishHeight, 4)
+  let jackpotRandom = getRandomNumber(200, txId, hatchingFinishHeight, 4)
   let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
-  if (jackpotRandom == 1) then {
-    ("DUCK-WWWWXMAS-JU", "1A1M1S4W1X-J", entry)
-  }else {
+  #if (jackpotRandom == 1) then {
+  #  ("DUCK-WWWWXMAS-JU", "1A1M1S4W1X-J", entry)
+  #}else {
     let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 5)
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 6)
     let color = if (colorRandom == 0) then "Y"
@@ -104,7 +104,7 @@ func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
       else if (typeRandom == 1) then ("DUCK-MMMMMMMM-G" + color, "8M-G", entry)
       else if (typeRandom == 2) then ("DUCK-NNNNNNNN-G" + color, "8N-G", entry)
       else ("DUCK-OOOOOOOO-G" + color, "8O-G", entry)
-  }
+  #}
 }
 
 func countEggsNeededAmount(totalDucksAmount: Int) = {

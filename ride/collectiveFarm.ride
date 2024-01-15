@@ -189,16 +189,16 @@ func lockInvestments() = {
   }
 }
 
-@Callable(i)
-func unlockInvestments() = {
-  if (i.caller != this) then {
-    throw("You cannot lock this contract")
-  } else {
-      [
-        BooleanEntry(kLockedInvestments, false)
-      ]
-  }
-}
+#@Callable(i)
+#func unlockInvestments() = {
+#  if (i.caller != this) then {
+#    throw("You cannot lock this contract")
+#  } else {
+#      [
+#        BooleanEntry(kLockedInvestments, false)
+#      ]
+#  }
+#}
 
 @Callable(i)
 func provideLiquidity() = {

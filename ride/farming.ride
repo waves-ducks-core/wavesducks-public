@@ -153,11 +153,6 @@ func getLastKnownAssetFarmingPower(address: String, assetId: String) = {
   tryGetInteger("address_"+address+"_asset_"+assetId+"_farmingPower")
 }
 
-func getAssetsByGen(gen: String) = {
-  let s = tryGetString("assets_"+gen)
-  if (s == "") then {[]} else {s.split(",")}
-}
-
 func calcInterest(previousInterest: Int, previousInterestHeight: Int, totalFarmingPower: Int) = {
   # interest = amount of EGGlets you would earn if staked 1 percent of farming power since the very first block of farming
   previousInterest + scale * getRewardPerBlock() * (height-previousInterestHeight) / totalFarmingPower

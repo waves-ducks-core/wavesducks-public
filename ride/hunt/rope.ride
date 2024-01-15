@@ -83,7 +83,7 @@ func buyRope(eggId: String, price: Int, distance: Int, backendSignature: String)
 @Callable(i)
 func useBooster()={
   strict validPayment = checkAdditionalPayment(i.payments[0],getIntegerValue(getOracle(),staticKey_extraFee()))
-  if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
+  if !(size(i.payments) == 2 && i.payments[1].amount==1) then throw("Invalid payment") else 
   let assetId = i.payments[1].assetId.value()
   strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
   [

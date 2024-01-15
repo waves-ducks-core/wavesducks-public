@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -118,7 +118,7 @@ func tryGetBoolean(key: String) = {
 
 func getRandomWin(tx: ByteVector, finishHeight: Int) = {
   let jackpotEnabled = tryGetBoolean("JACKPOT_ENABLED")
-  let jackpotRandom = getRandomNumber(300, tx, finishHeight, 1)
+  let jackpotRandom = getRandomNumber(150, tx, finishHeight, 1)
   if (jackpotRandom == 1 && jackpotEnabled) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
