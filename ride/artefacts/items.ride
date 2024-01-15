@@ -13,7 +13,7 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_huntDistroAddress() = "static_huntDistroAddress"
 func staticKey_warsPKey() = "static_warsPKey"
-func statisKey_duplicatorFee() = "static_duplicatorFee"
+func staticKey_duplicatorFee() = "static_duplicatorFee"
 
 #TODO: make sure to allow coupons contract when we release new items
 func key_artefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
@@ -146,7 +146,7 @@ func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getHuntDistroAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_huntDistroAddress()).fromBase58String())
 func getWarsPKey() =  tryGetStringExternal(getOracle(),staticKey_warsPKey()).fromBase58String()
-func getDuplicatorFee() = tryGetInteger(statisKey_duplicatorFee())
+func getDuplicatorFee() = tryGetIntegerExternal(getOracle(),staticKey_duplicatorFee())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 
 func tryGetCosmeticItemPrice(item:String)= {
@@ -207,6 +207,7 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
  txId: String)={
   if size(payments) != amountBaseItem+1 then throw("IID: Please attach "+(amountBaseItem+2).toString()+" payments!") else
   func isBaseItem(accumulated: (List[Burn],Int), pay: AttachedPayment) = {
+    if pay.assetId == unit then (accumulated._1,accumulated._2+0) else
     let assetId = pay.assetId.value()
     strict artefact = invoke(this,"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
     if (artefact == baseItem) then 
@@ -215,7 +216,7 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
       (accumulated._1,accumulated._2+0)
        
   }
-  let totalBaseItem = FOLD<8>(payments, ([],0), isBaseItem)
+  let totalBaseItem = FOLD<10>(payments, ([],0), isBaseItem)
   if totalBaseItem._2 != amountBaseItem then throw("IID: Please attach "+amountBaseItem.toString()+" artefacts of type "+baseItem) else
   let feePayment =  payments[amountBaseItem]
   if feePayment.assetId != feeAssetId then throw("IID: You miss a payment with the fee!") else
@@ -257,15 +258,18 @@ func finishShakeItBabyInternal(initTx: String, address: String, payment: Attache
   let multiplier = min([(expUser/100+1),6])
   let finish = getIntegerValue("address_" + address + "_initTx_" + initTx + "_finishBlock")
   if height < finish then throw("Please wait till the shaking is finished!") else
+  if tryGetString("address_" + address + "_initTx_" + initTx + "_status") != "open" then throw("FSI: Only open status can be finished!") else
   func handleMint(acc:List[StringEntry|Issue], index: Int) = {
       if index <=multiplier then
       let randomPosition = getRandomNumber(boosters.size(), initTx.fromBase58String(), finish, index)
-      acc ++ issueItem(getElement(boosters,randomPosition), index-1,addressFromStringValue(address))._1
+      let win = getElement(boosters,randomPosition)
+      acc ++ issueItem(win, index-1,addressFromStringValue(address))._1++
+      [StringEntry("address_"+address+"_initTx_"+initTx+"_win"+(index-1).toString(),win)]
       else
       acc
   }
 
-  FOLD<6>([1,2,3,4,5,6], [], handleMint)
+  FOLD<6>([1,2,3,4,5,6], [], handleMint)++[StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish")]
 }
 
 @Callable(i)
@@ -296,7 +300,7 @@ func finishShakeItBaby(initTx: String) = {
 #TODO: maybe extract this to a seperate SC?
 @Callable(i)
 func instanMergeItem(baseItem: String)={
-  if baseItem !="ART-KATANA" then throw("IID: Only Katana can be merged!") else
+  if tryGetString("merge_"+baseItem+"_endItem") ==  "" then throw("IID: Only certain items can be merged!") else
   let params = (getAmountBaseItem(baseItem),getEndItem(baseItem),getPrice(baseItem), getAsset(baseItem), getInstant(baseItem))
   itemMerger(baseItem,params._1,params._2,i.payments,params._3,params._4,i.caller, params._5, i.transactionId.toBase58String())
 
@@ -305,7 +309,8 @@ func instanMergeItem(baseItem: String)={
 
 @Callable(i)
 func directBuyItemMultiple(itemName:String, itemAmount: Int)={
-  let array = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+  let array = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,
+                15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]
   let basePrice = tryGetCosmeticItemPrice(itemName)
   let grow = tryGetInteger(key_growPercentageCosmetic(itemName))
   let startTs = tryGetInteger(key_startTsCosmetic(itemName))
@@ -339,7 +344,7 @@ func directBuyItemMultiple(itemName:String, itemAmount: Int)={
       acc
   }
 
-  let issues = FOLD<15>(array, [], handleMint)
+  let issues = FOLD<30>(array, [], handleMint)
   [
     IntegerEntry(key_lastPriceCosmetic(itemName), basePrice),
     IntegerEntry(key_soldCosmetic(itemName), soldValue+itemAmount),
@@ -459,7 +464,7 @@ func calculateFarmingPowerBoost(duckId: String, address: String)={
 
 @Callable(i)
 func itemDuplicator()={
-  if size(i.payments) != 4 then throw("IID: Three payments are needed!") else
+  if size(i.payments) != 4 then throw("IID: Four payments are needed!") else
   let duplicatorPayment = i.payments[0].value()
   let itemPayment = i.payments[1].value()
   let eggPayment = i.payments[2].value()

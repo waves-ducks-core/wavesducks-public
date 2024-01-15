@@ -240,6 +240,11 @@
             "key": "static_peteAddress",
             "type": "string",
             "value": "3PBf2jd3ZEPX7NHQvVarscTjLQ8bk43uAfn"
+        },
+        {
+            "key": "static_duplicatorFee",
+            "type": "integer",
+            "value": 1000000000
         }
     ],
     "fee": 700000,

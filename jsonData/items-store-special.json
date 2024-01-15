@@ -80,34 +80,6 @@
             "type": "integer",
             "value": 0
         },
-
-        {
-            "key": "direct_cosmetic_ART-BORZOI",
-            "type": "integer",
-            "value": 1500000000
-        },
-        {
-            "key": "direct_cosmetic_ART-BORZOI_priceAsset",
-            "type": "string",
-            "value": "WAVES"
-        },
-        {
-            "key": "direct_cosmetic_ART-BORZOI_max_sales",
-            "type": "integer",
-            "value": 30
-        },
-        {
-            "key": "direct_cosmetic_ART-BORZOI_sale",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "direct_cosmetic_ART-BORZOI_growing_percentage",
-            "type": "integer",
-            "value": 8
-        },
-        
-
         {
             "key": "direct_cosmetic_ART-CUPID",
             "type": "integer",

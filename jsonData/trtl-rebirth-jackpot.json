@@ -1,17 +1,16 @@
 {
     "type": 12,
-    "version": 1,
+    "version": 2,
     "data": [
         {
             "key": "JACKPOT_NAME",
-            "type": "string",
-            "value": "WWWWXMAS"
+            "value": null
             
         },
         {
             "key": "JACKPOT_ENABLED",
             "type": "boolean",
-            "value": true
+            "value": false
             
         }
     ],
