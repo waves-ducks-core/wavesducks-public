@@ -1,6 +1,6 @@
 {
     "type": 12,
-    "version": 1,
+    "version": 2,
     "data": [
         {
             "key": "ART-FIXGENE_issue",
@@ -18,16 +18,10 @@
             "value": true
         },
         {
-            "key": "ART-FAWKESMASK_issue",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "ART-PILGRIMHAT",
+            "key": "ART-FEED10",
             "type": "boolean",
             "value": true
         }
-
     ],
     "fee": 600000,
     "feeAssetId": "WAVES"
