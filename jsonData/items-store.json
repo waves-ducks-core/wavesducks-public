@@ -716,26 +716,6 @@
             "value": 5
         },
         {
-            "key": "direct_cosmetic_ART-ROBODUCK",
-            "type": "integer",
-            "value": 50000000
-        },
-        {
-            "key": "direct_cosmetic_ART-ROBODUCK_max_sales",
-            "type": "integer",
-            "value": 0
-        },
-        {
-            "key": "direct_cosmetic_ART-ROBODUCK_sale",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "direct_cosmetic_ART-ROBODUCK_growing_percentage",
-            "type": "integer",
-            "value": 5
-        },
-        {
             "key": "direct_cosmetic_ART-TURTLE",
             "type": "integer",
             "value": 50000000

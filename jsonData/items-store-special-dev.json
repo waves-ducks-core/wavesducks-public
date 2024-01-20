@@ -34,52 +34,7 @@
             "value": 8000000
         },
 
-        {
-            "key": "direct_cosmetic_ART-SNOWMAN_priceAsset",
-            "type": "string",
-            "value": "HSHP7YmvCX9vtKYfoTfcEd9hr8bnFm1PzoBrQRNy8q1q"
-        },
-        {
-            "key": "direct_cosmetic_ART-SNOWMAN_max_sales",
-            "type": "integer",
-            "value": 500
-        },
-        {
-            "key": "direct_cosmetic_ART-SNOWMAN_sale",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "direct_cosmetic_ART-SNOWMAN_growing_percentage",
-            "type": "integer",
-            "value": 5
-        },
-        {
-            "key": "direct_cosmetic_ART-CURE",
-            "type": "integer",
-            "value": 10000000
-        },
-
-        {
-            "key": "direct_cosmetic_ART-CURE_priceAsset",
-            "type": "string",
-            "value": "HSHP7YmvCX9vtKYfoTfcEd9hr8bnFm1PzoBrQRNy8q1q"
-        },
-        {
-            "key": "direct_cosmetic_ART-CURE_max_sales",
-            "type": "integer",
-            "value": 0
-        },
-        {
-            "key": "direct_cosmetic_ART-CURE_sale",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "direct_cosmetic_ART-CURE_growing_percentage",
-            "type": "integer",
-            "value": 0
-        },
+       
 
         {
             "key": "direct_cosmetic_ART-FIRE_HELMET",

@@ -187,8 +187,9 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
   if (getBoolA(getCfMasterAddress(), "farm_" + i.caller.toString()) != true) then throw("_301=") else
   if (function == "initAuction") then {
     let asset = i.payments[0].value()
-    let calcPrice =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen)
-                        else checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, asset.assetId.value().toBase58String())
+    let checkDataPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, asset.assetId.value().toBase58String())
+    let calcPrice =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then min([tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen),checkDataPrice])
+                        else checkDataPrice
 
     let maxPriceDiff = fraction(calcPrice, getMaxDiff(), 100)
     

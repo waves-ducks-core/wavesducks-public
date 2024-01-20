@@ -88,7 +88,7 @@
         {
             "key": "TASK_VEGG500000_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 200000000
+            "value": 100000000
             
         },
 
@@ -100,13 +100,13 @@
         {
             "key": "TASK_VEGG10000000_1_REWARD_DAILY",
             "type": "integer",
-            "value": 100000000
+            "value": 50000000
             
         },
         {
             "key": "TASK_VEGG10000000_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 1000000000
+            "value": 500000000
             
         },
 
@@ -161,7 +161,7 @@
         {
             "key": "TASK_FEEDDUCKLING10_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 1000000000
+            "value": 800000000
             
         },
 
@@ -197,7 +197,7 @@
         {
             "key": "TASK_RECHARGE_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 100000000
+            "value": 50000000
             
         },
 

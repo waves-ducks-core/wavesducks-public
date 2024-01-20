@@ -26,6 +26,58 @@
             "key": "merge_ART-KATANA_asset",
             "type": "string",
             "value": "WAVES"
+        },
+        
+        {
+            "key": "merge_ART-TINSEL_amount",
+            "type": "integer",
+            "value": 9
+        },
+        {
+            "key": "merge_ART-TINSEL_endItem",
+            "type": "string",
+            "value": "ART-STINSEL"
+        },
+        {
+            "key": "merge_ART-TINSEL_price",
+            "type": "integer",
+            "value": 3000000
+        },
+        {
+            "key": "merge_ART-TINSEL_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-TINSEL_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        
+        {
+            "key": "merge_ART-STINSEL_amount",
+            "type": "integer",
+            "value": 9
+        },
+        {
+            "key": "merge_ART-STINSEL_endItem",
+            "type": "string",
+            "value": "ART-XTINSEL"
+        },
+        {
+            "key": "merge_ART-STINSEL_price",
+            "type": "integer",
+            "value": 3000000
+        },
+        {
+            "key": "merge_ART-STINSEL_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-STINSEL_asset",
+            "type": "string",
+            "value": "WAVES"
         }  
     ],
     "fee": 600000,

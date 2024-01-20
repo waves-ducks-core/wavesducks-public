@@ -218,6 +218,7 @@ func useCoupons(amountTryingToPay:Int)= {
     let keyOld = couponsUserActiveOld(user)
     let keySpendSc = couponsSpendOnSc(i.caller.toString())
 
+    strict topUp = invoke(getVeggFarmingAddress(), "topUpReward", [amountPaid/100*25],[])
 
     let totalSpend = tryGetInteger(keySpend)+amountPaid
     let totalSpendSc = tryGetInteger(keySpendSc)+amountPaid

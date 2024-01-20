@@ -111,7 +111,7 @@ func stakeDuckHouse()={
 func unstakeDuckHouse(duckHouseId: String)={
     let caller = i.caller.toString()
     let duckHouseOwner = tryGetString(keyOwner(duckHouseId))
-    let validPayment = checkAdditionalPayment(i.payments[1])
+    let validPayment = checkAdditionalPayment(i.payments[0])
     if duckHouseOwner == "" then throw("This duckhouse is not staked!") else
     if duckHouseOwner != caller then throw("This duckhouse is not yours!") else
     if tryGetInteger(occupiedSpotsDucksHouse(duckHouseId)) != 0 then throw("Please first remove your ducks from the duckhouse") else

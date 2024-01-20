@@ -251,7 +251,23 @@
             "key": "static_levelSystemAddress",
             "type": "string",
             "value": "3P5x9RxuqbMaVFPsaycvXHeFZXPmcswxA1c"
+        },
+        {
+            "key": "static_veggPerchFee",
+            "type": "integer",
+            "value": 200000000
+        },
+        {
+            "key": "static_veggFarmingAddress",
+            "type": "string",
+            "value": "3P4Hyw1LiE1UKxFADBkBsMrVRdQcKaByRio"
+        },
+        {
+            "key": "static_duplicatorFee",
+            "type": "integer",
+            "value": 1000000000
         }
+
         
     ],
     "fee": 700000,

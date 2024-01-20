@@ -1,6 +1,6 @@
 {
     "type": 12,
-    "version": 1,
+    "version": 2,
     "data": [
         {
             "key": "ART-FIXGENE_issue",
@@ -18,12 +18,17 @@
             "value": true
         },
         {
-            "key": "ART-FAWKESMASK_issue",
+            "key": "ART-FEED10_issue",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "ART-PILGRIMHAT",
+            "key": "ART-SNW_GLBES_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-GIFT_DOUBL_issue",
             "type": "boolean",
             "value": true
         }

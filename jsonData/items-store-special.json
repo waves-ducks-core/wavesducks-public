@@ -28,32 +28,7 @@
             "type": "integer",
             "value": 0
         },
-        {
-            "key": "direct_cosmetic_ART-SNOWMAN",
-            "type": "integer",
-            "value": 400000000
-        },
-
-        {
-            "key": "direct_cosmetic_ART-SNOWMAN_priceAsset",
-            "type": "string",
-            "value": "WAVES"
-        },
-        {
-            "key": "direct_cosmetic_ART-SNOWMAN_max_sales",
-            "type": "integer",
-            "value": 500
-        },
-        {
-            "key": "direct_cosmetic_ART-SNOWMAN_sale",
-            "type": "boolean",
-            "value": false
-        },
-        {
-            "key": "direct_cosmetic_ART-SNOWMAN_growing_percentage",
-            "type": "integer",
-            "value": 5
-        },
+        
 
         {
             "key": "direct_cosmetic_ART-CUST-COSM",
@@ -80,70 +55,7 @@
             "type": "integer",
             "value": 0
         },
-
-        {
-            "key": "direct_cosmetic_ART-BORZOI",
-            "type": "integer",
-            "value": 1500000000
-        },
-        {
-            "key": "direct_cosmetic_ART-BORZOI_priceAsset",
-            "type": "string",
-            "value": "WAVES"
-        },
-        {
-            "key": "direct_cosmetic_ART-BORZOI_max_sales",
-            "type": "integer",
-            "value": 30
-        },
-        {
-            "key": "direct_cosmetic_ART-BORZOI_sale",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "direct_cosmetic_ART-BORZOI_growing_percentage",
-            "type": "integer",
-            "value": 8
-        },
-        
-
-        {
-            "key": "direct_cosmetic_ART-CUPID",
-            "type": "integer",
-            "value": 1000000000
-        },
-        {
-            "key": "direct_cosmetic_ART-CUPID_priceAsset",
-            "type": "string",
-            "value": "WAVES"
-        },
-        {
-            "key": "direct_cosmetic_ART-CUPID_max_sales",
-            "type": "integer",
-            "value": 0
-        },
-        {
-            "key": "direct_cosmetic_ART-CUPID_sale",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "direct_cosmetic_ART-CUPID_growing_percentage",
-            "type": "integer",
-            "value": 7
-        },
-        {
-            "key": "direct_cosmetic_ART-CUPID_startTs",
-            "type": "integer",
-            "value": 1676367021000
-        },
-        {
-            "key": "direct_cosmetic_ART-CUPID_endTs",
-            "type": "integer",
-            "value": 1676503821000
-        },
-
+       
 
         {
             "key": "direct_cosmetic_ART-FIRE_HELMET",
