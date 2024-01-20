@@ -17,6 +17,7 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
+func staticKey_refContractAddress() = "static_refContractAddress"
 let  keyGlobalLastInterest = "global_lastCheck_interest"
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
@@ -41,6 +42,7 @@ func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),staticKey_du
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -192,13 +194,13 @@ func calculateFarmPower(assetId:String)={
   let uniqueList = FOLD<8>(genotype, [], uniqueArrayFilter)
   let totalGenes = if gen == "U" then 8 else size(uniqueList)
 
-  let basePower = tryGetInteger(assetId+"_basePower")
-  let power = if basePower > 0  then basePower else pow(15,1,totalGenes,0,2,DOWN)
+  let power =  pow(15,1,totalGenes,0,2,DOWN)
 
   #3 months = 90 days = 1%/day roughly
   let multiplier = (height-3750000)*100/(60*24*30*3)
   #TODO make this percentage multiplier
-  let finalPower = power*multiplier/100
+  let basePower = tryGetInteger(assetId+"_basePower")
+  let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
   ([
     IntegerEntry("DEBUG_"+assetName, finalPower),
@@ -206,7 +208,7 @@ func calculateFarmPower(assetId:String)={
     IntegerEntry("DEBUG_FPRARITY_"+assetName, finalPowerRarity),
     IntegerEntry("DEBUG_BASEPOWER_"+assetName, basePower),
     IntegerEntry("DEBUG_COEFFICIENT_"+assetName, multiplier)
-  ],(finalPowerRarity,power))
+  ],(finalPowerRarity,finalPower))
 
 }
 
@@ -231,12 +233,11 @@ func buyPerch(colorI: String, refererAddress: String) = {
 
         if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
         if (firstPayment.amount != exactPrice) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + exactPrice.toString()+ " "+i.caller.toString()) else
-        #let refererRewardForPerch = fraction(exactPrice, 5, 100)
-        #strict refCall = invoke(getRefContractAddress(), "refPayment",
-        #[refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
+        let refererRewardForPerch = fraction(exactPrice, 5, 100)
+        strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
 
-        #let toBurn = if refCall then exactPrice-refererRewardForPerch else exactPrice
-        let toBurn = exactPrice
+        let toBurn = if refCall then exactPrice-refererRewardForPerch else exactPrice
         strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
         
       
@@ -297,6 +298,7 @@ func topUpReward (amount: Int) = {
 #claim rewards
 @Callable(i)
 func claimReward (assetId: String) = {
-  strict validPayment =  checkAdditionalPayment(i.payments[0])  
+  strict validPayment =  checkAdditionalPayment(i.payments[0])
+  if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else    
   if (i.payments.size() > 1) then throw("Please don't add extra payments") else claimStakingResult(i.caller.toString(), assetId)++validPayment
   }

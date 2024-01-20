@@ -16,6 +16,7 @@ func staticKey_turtleIncubatorAddress() = "static_turtleIncubatorAddress"
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 func staticKey_capacityAddress() = "static_capacityAddress"
+func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
 
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
@@ -63,10 +64,11 @@ func getTurtleIncubatorAddress() = Address(tryGetStringExternal(getOracle(),stat
 func getTurtleStakingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String())
 func getTurtleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String())
 func getCapacityAddress() = Address(tryGetStringExternal(getOracle(),staticKey_capacityAddress()).fromBase58String()) 
+func getVeggFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_veggFarmingAddress()).fromBase58String())
 
 func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),
                             getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress(),getTurtleStakingAddress(),
-                            getTurtleRebirthAddress(),getCapacityAddress()]
+                            getTurtleRebirthAddress(),getCapacityAddress(),getVeggFarmingAddress()]
 
 
 

@@ -245,6 +245,16 @@
             "key": "static_duplicatorFee",
             "type": "integer",
             "value": 1000000000
+        },
+        {
+            "key": "static_veggPerchFee",
+            "type": "integer",
+            "value": 200000000
+        },
+        {
+            "key": "static_veggFarmingAddress",
+            "type": "string",
+            "value": "3P7s9drVRL4Kw3edKv5RhNd5Qrwxu1cU3d3"
         }
     ],
     "fee": 700000,

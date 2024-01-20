@@ -18,10 +18,21 @@
             "value": true
         },
         {
-            "key": "ART-FEED10",
+            "key": "ART-FEED10_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-SNW_GLBES_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-GIFT_DOUBL_issue",
             "type": "boolean",
             "value": true
         }
+
     ],
     "fee": 600000,
     "feeAssetId": "WAVES"
