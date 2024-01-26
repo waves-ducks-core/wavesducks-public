@@ -5,7 +5,7 @@
         {
             "key": "merge_ART-KATANA_amount",
             "type": "integer",
-            "value": 8
+            "value": 9
         },
         {
             "key": "merge_ART-KATANA_endItem",
@@ -41,7 +41,7 @@
         {
             "key": "merge_ART-TINSEL_price",
             "type": "integer",
-            "value": 3000000
+            "value": 10000000
         },
         {
             "key": "merge_ART-TINSEL_instant",
@@ -51,7 +51,7 @@
         {
             "key": "merge_ART-TINSEL_asset",
             "type": "string",
-            "value": "WAVES"
+            "value": "C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS"
         },
         
         {
@@ -67,7 +67,7 @@
         {
             "key": "merge_ART-STINSEL_price",
             "type": "integer",
-            "value": 3000000
+            "value": 15000000
         },
         {
             "key": "merge_ART-STINSEL_instant",

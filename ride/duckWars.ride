@@ -16,17 +16,27 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
-func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
+func oracleAddressKey() = "static_oracleAddress"
+func breederAddressKey() = "static_breederAddress"
+func incubatorAddressKey() = "static_incubatorAddress"
+func eggAssetIdKey() = "static_eggAssetId"
+func wearablesAddressKey() = "static_wearablesAddress"
+func farmingAddressKey() = "static_farmingAddress"
+func couponsAddressKey() = "static_couponsAddress"
+func rebirthAddressKey() = "static_rebirthAddress"
+func burnAddressKey() = "static_burnAddress"
 
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getOracle() = Address(tryGetString(oracleAddressKey()).fromBase58String())
 
-func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getWearablesAddress() = Address(tryGetStringExternal(getOracle(),"static_wearablesAddress").fromBase58String())
-func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddress").fromBase58String())
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
-func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String())
-func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getBreederAddress() =  Address(tryGetStringExternal(getOracle(), breederAddressKey()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+
+func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(), incubatorAddressKey()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getEggAssetId() = tryGetStringExternal(getOracle(), eggAssetIdKey()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getWearablesAddress() = Address(tryGetStringExternal(getOracle(), wearablesAddressKey()).fromBase58String())
+func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(), farmingAddressKey()).fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(), couponsAddressKey()).fromBase58String()) 
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(), rebirthAddressKey()).fromBase58String())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(), burnAddressKey()).fromBase58String())
 
 
 let MANTLENAME = "mantle"

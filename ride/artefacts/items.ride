@@ -207,7 +207,7 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
  txId: String)={
   if size(payments) != amountBaseItem+1 then throw("IID: Please attach "+(amountBaseItem+2).toString()+" payments!") else
   func isBaseItem(accumulated: (List[Burn],Int), pay: AttachedPayment) = {
-    if pay.assetId == unit then (accumulated._1,accumulated._2+0) else
+    if pay.assetId == unit|| pay.assetId == getEggAssetId() then (accumulated._1,accumulated._2+0) else
     let assetId = pay.assetId.value()
     strict artefact = invoke(this,"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
     if (artefact == baseItem) then 
@@ -228,12 +228,13 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
   let instant = if instantFinish then 
   issueItem(endItem,0,recipient)
   else ([],"")
+  
   ([
 
     BooleanEntry("merge_"+txId+"_instant", instantFinish),
     ScriptTransfer(getFeeAggregator(), feeAmount, feePayment.assetId),
     StringEntry("merge_"+txId+"_reward", endItem),
-    BooleanEntry("merge_"+txId+"_finished", !instantFinish)
+    BooleanEntry("merge_"+txId+"_finished", instantFinish)
     
   ]++instant._1++totalBaseItem._1,instant._2)
 }
@@ -302,6 +303,7 @@ func finishShakeItBaby(initTx: String) = {
 func instanMergeItem(baseItem: String)={
   if tryGetString("merge_"+baseItem+"_endItem") ==  "" then throw("IID: Only certain items can be merged!") else
   let params = (getAmountBaseItem(baseItem),getEndItem(baseItem),getPrice(baseItem), getAsset(baseItem), getInstant(baseItem))
+  strict grantExp = invoke(getCouponsAddress(),"increaseExp",[i.caller.toString()],[])
   itemMerger(baseItem,params._1,params._2,i.payments,params._3,params._4,i.caller, params._5, i.transactionId.toBase58String())
 
 

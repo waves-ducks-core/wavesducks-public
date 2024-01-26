@@ -244,7 +244,7 @@
         {
             "key": "static_duplicatorFee",
             "type": "integer",
-            "value": 1000000000
+            "value": 400000000
         },
         {
             "key": "static_veggPerchFee",

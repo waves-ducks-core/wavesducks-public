@@ -113,8 +113,9 @@
         "value": "TRTL_REBIRTH"
       },
       {
-        "key": "allowed_contract_3PRG9LfW6QZxKdTWB8eEdUia2bH6bHvyx7y",
-        "value": null
+        "key": "allowed_contract_3P7s9drVRL4Kw3edKv5RhNd5Qrwxu1cU3d3",
+        "type": "string",
+        "value": "VEGG_FARMING"
       },
       {
         "key": "COUPONS_ADDRESS",

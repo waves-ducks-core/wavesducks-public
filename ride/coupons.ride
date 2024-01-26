@@ -39,6 +39,7 @@ func staticKey_spiceAssetId() = "static_spiceAssetId"
 func staticKey_marketplace() = "static_marketplaceAddress"
 func staticKey_capacityAddress() = "static_capacityAddress"
 func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -56,6 +57,7 @@ func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId
 func getLevelSystemAddress() = Address(tryGetStringExternal(getOracle(),staticKey_levelSystemAddress()).fromBase58String())
 func getMarketPlaceAddress() = Address(tryGetStringExternal(getOracle(),staticKey_marketplace()).fromBase58String())
 func getVeggFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_veggFarmingAddress()).fromBase58String())
+func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
@@ -238,4 +240,16 @@ func useCoupons(amountTryingToPay:Int)= {
 func recordAction(actionName:String)= {
     recordActionInternal(actionName,i.caller,i.originCaller)
 
+}
+
+
+@Callable(i)
+func increaseExp(address: String)={
+    if i.caller != getItemsAddress() then [] else
+    let userExperienceKey = userExperience(address)
+    let userExpTilldate = tryGetInteger(userExperienceKey)
+    
+    [
+        IntegerEntry(userExperienceKey,userExpTilldate+1)
+    ]
 }
