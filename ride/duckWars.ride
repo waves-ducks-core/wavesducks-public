@@ -173,45 +173,44 @@ func issueFreeMantle(address: String, type: String, level: Int) = {
 
 @Callable(i)
 func buyArtefact(type: String) = {
-  throw("WBA: Artefacts buying is disabled for now")
-  # if (type != MANTLENAME) then throw("WBA: You can buy only mantles now") 
-  # else {
-  #   let MANTLEPRICE = 1_000_000
-  #   #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[MANTLEPRICE],[]).asInt()
-  #   strict amountPaidByCoupons = 0    
-  #   let leftToPay = MANTLEPRICE-amountPaidByCoupons
-  #   strict payment = if leftToPay!=0 then {
-  #     let firstPayment = i.payments[0].value()
-  #     if (firstPayment.assetId != getEggAssetId()) then throw("WBA: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-  #     if (firstPayment.amount != leftToPay) then throw("WBA: To buy a mantle you currently need the following amount of EGGlets: " + leftToPay.toString()) else
-  #     leftToPay
-  #   }else 0
+  if (type != MANTLENAME) then throw("WBA: You can buy only mantles now") 
+  else {
+    let MANTLEPRICE = 1_000_000
+    #strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[MANTLEPRICE],[]).asInt()
+    strict amountPaidByCoupons = 0    
+    let leftToPay = MANTLEPRICE*100-amountPaidByCoupons
+    strict payment = if leftToPay!=0 then {
+      let firstPayment = i.payments[0].value()
+      if (firstPayment.assetId != getEggAssetId()) then throw("WBA: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+      if (firstPayment.amount != leftToPay) then throw("WBA: To buy a mantle you currently need the following amount of EGGlets: " + leftToPay.toString()) else
+      leftToPay
+    }else 0
     
 
-  #     let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false)
-  #     let mantleNftId = issueMantleNFT.calculateAssetId()
+      let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false)
+      let mantleNftId = issueMantleNFT.calculateAssetId()
 
-  #     let kMantleLevel = keyArtefactLevel(MANTLENAME, i.caller.toString(), mantleNftId)
-  #     let kMantleExists = keyArtefactExists(MANTLENAME, mantleNftId)
-  #     let kMantleOwner = keyArtefactOwner(MANTLENAME, mantleNftId)
-  #     let kMantleStatus = keyArtefactStatus(MANTLENAME, mantleNftId)
-  #     let kArtefactType = keyArtefactType(mantleNftId)
-  #     let kMantleInvested = keyArtefactInvested(MANTLENAME, mantleNftId.toBase58String())
-  #     let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, i.caller.toString(), mantleNftId)
-  #     let kOnlyArtefactLevel = keyOnlyArtefactLevel(mantleNftId)
+      let kMantleLevel = keyArtefactLevel(MANTLENAME, i.caller.toString(), mantleNftId)
+      let kMantleExists = keyArtefactExists(MANTLENAME, mantleNftId)
+      let kMantleOwner = keyArtefactOwner(MANTLENAME, mantleNftId)
+      let kMantleStatus = keyArtefactStatus(MANTLENAME, mantleNftId)
+      let kArtefactType = keyArtefactType(mantleNftId)
+      let kMantleInvested = keyArtefactInvested(MANTLENAME, mantleNftId.toBase58String())
+      let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, i.caller.toString(), mantleNftId)
+      let kOnlyArtefactLevel = keyOnlyArtefactLevel(mantleNftId)
 
-  #     [
-  #       IntegerEntry(kMantleLevel, 1),
-  #       IntegerEntry(kMantleInvested, MANTLEPRICE),
-  #       BooleanEntry(kMantleExists, true),
-  #       StringEntry(kMantleOwner, i.caller.toString()),
-  #       StringEntry(kMantleStatus, STATUSFREE),
-  #       StringEntry(kArtefactType, MANTLENAME),
-  #       StringEntry(kArtefactOwnerAndStatus, STATUSFREE),
-  #       IntegerEntry(kOnlyArtefactLevel, 1)
-  #     ]
+      [
+        IntegerEntry(kMantleLevel, 1),
+        IntegerEntry(kMantleInvested, MANTLEPRICE),
+        BooleanEntry(kMantleExists, true),
+        StringEntry(kMantleOwner, i.caller.toString()),
+        StringEntry(kMantleStatus, STATUSFREE),
+        StringEntry(kArtefactType, MANTLENAME),
+        StringEntry(kArtefactOwnerAndStatus, STATUSFREE),
+        IntegerEntry(kOnlyArtefactLevel, 1)
+      ]
     
-  # } 
+  } 
 }
 
 @Callable(i)

@@ -160,6 +160,20 @@ func addCoupons(user:String,amount:Int) = {
 }
 
 @Callable(i)
+func resetCheater(user:String) = {
+    if i.caller != this && i.callerPublicKey != wAccPKey then throw("CAC: admin only") else 
+    let keyOld = couponsUserActiveOld(user)
+    let key = couponsUserActive(user)
+    let couponsOld = tryGetInteger(key)
+    let coupons = -100000000
+    [
+        IntegerEntry(keyOld,couponsOld),
+        IntegerEntry(key,coupons)
+    ]
+
+}
+
+@Callable(i)
 func addCouponsFarming(user:String,amount:Int) = {
     if i.caller != getVeggFarmingAddress() then throw("Method only for farming sc!") else
         addCouponsInternal(user,amount)
