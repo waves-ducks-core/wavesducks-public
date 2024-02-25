@@ -23,25 +23,31 @@ func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_incubatorAddress() = "static_incubatorAddress"
 func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_accBoosterAddress() = "static_accBoosterAddress"
-func staticKey_duckWrapper() = "static_duckWrapper"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 let keyGlobalEarned =  "global_earnings"
-func staticKey_veggPerchFee() = "static_veggPerchFee"
-
+func staticKey_perchFee() = "static_perchFee"
+func staticKey_rebirthAddress() = "static_rebirthAddress"
+func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
 func totalStakedKey() = "total_staked"
+func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
+
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
-func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),staticKey_duckWrapper()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakingContracts())
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -112,7 +118,6 @@ func getAssetOrigin(generation: String) = {
   if (generation == "G") then {getIncubatorAddress()} else {getBreederAddress()}
 }
 
-#TODO: count in items in calculating staking power
 func getAssetRarity(genotype: String, generation: String) = {
   let quantity = valueOrErrorMessage(getInteger(getAssetOrigin(generation), "stats_"+genotype+"_quantity"),"stats_"+genotype+"_quantity not found")
   let power = pow(10000 / quantity, 4, 5, 1, 2, FLOOR)
@@ -153,11 +158,12 @@ func claimStakingResult (address: String, asset: String) = {
     let reward = if (lastCheckInterest > 0)
         then fraction((currentInterest - lastCheckInterest), stakedAmount, Scale)
         else 0
-        strict invokeResult = if (reward >0 ) then  invoke(getCouponsAddress(),"addCouponsFarming",[address, reward],[]) else unit
-      [
+
+      ([
+        ScriptTransfer(Address(address.fromBase58String()), reward , getEggAssetId()),
         IntegerEntry(keyLastCheckInterest(address, asset), currentInterest), 
         IntegerEntry(rewardClaimedKey(address, asset), (tryGetInteger(rewardClaimedKey(address,asset))) + reward)
-      ]++fpUpdate
+      ]++fpUpdate, reward)
     }
 
 func asBoolean(value: Any) = match value {
@@ -167,24 +173,30 @@ func asBoolean(value: Any) = match value {
 
 func calculatePerchPrice(address: String)= {
   let hasArtefactStaked = tryGetStringExternal(getAccBoosterAddress(),"ART-XMISTL_" + address + "_owner")
-  let perchPrice = getIntegerValue(getOracle(),staticKey_veggPerchFee())
+  let perchPrice = getIntegerValue(getOracle(),staticKey_perchFee())
   if hasArtefactStaked == ""
   then
     perchPrice
   else
-    perchPrice
-    #perchPrice/10*9
+    perchPrice/10*9
 
+}
+
+func isProxyStakingSc(address: String)={
+  let allowedContracts = getProxyStaking()
+  let allowedContractsList = allowedContracts.split(";")
+  allowedContractsList.indexOf(address) !=unit
 }
 
 #TODO: count userfarmingboosts, add in multiplier for rarity!
 @Callable(i)
 func calculateFarmPower(assetId:String)={
   if !(assetInfo(assetId.fromBase58String()).value().issuer == getBreederAddress() 
-      ||assetInfo(assetId.fromBase58String()).value().issuer == getIncubatorAddress()) then throw("This does not seem like a valid Duck!")else
+      ||assetInfo(assetId.fromBase58String()).value().issuer == getIncubatorAddress()) then throw("This does not seem like a valid Duck!") else
   let assetName = assetInfo(assetId.fromBase58String()).value().name
   let gen = assetName.takeRight(1)
   let isJackpot = assetName.takeRight(1) == "U"
+  #TODO: add bonusses to the rarity
   let rarity = getAssetRarityComplete(isJackpot,assetName)
 
   let genotype = assetName.drop(5).dropRight(3).split("")
@@ -201,13 +213,17 @@ func calculateFarmPower(assetId:String)={
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
+  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,i.originCaller.toString()],[]).asInt()
+  #Recalculate bonusses every claim
+  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100
   ([
     IntegerEntry("DEBUG_"+assetName, finalPower),
     IntegerEntry("DEBUG_RARITY"+assetName, rarity),
     IntegerEntry("DEBUG_FPRARITY_"+assetName, finalPowerRarity),
     IntegerEntry("DEBUG_BASEPOWER_"+assetName, basePower),
-    IntegerEntry("DEBUG_COEFFICIENT_"+assetName, multiplier)
-  ],(finalPowerRarity,finalPower))
+    IntegerEntry("DEBUG_COEFFICIENT_"+assetName, multiplier),
+    IntegerEntry("DEBUG_BOOST_"+assetName, farmBoost)
+  ],(finalPowerRarityBoost,finalPower))
 
 }
 
@@ -228,15 +244,21 @@ func buyPerch(colorI: String, refererAddress: String) = {
       throw("you need to set color properly")
     } else {
       let exactPrice = calculatePerchPrice(i.caller.toString())
+        let leftToPay = if i.originCaller==i.caller then {
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+          exactPrice-amountPaidByCoupons
+        }else {
+            exactPrice
+        }
         let firstPayment = if size(i.payments) == 2 then  i.payments[1].value() else  i.payments[0].value()
 
         if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-        if (firstPayment.amount != exactPrice) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + exactPrice.toString()+ " "+i.caller.toString()) else
-        let refererRewardForPerch = fraction(exactPrice, 5, 100)
+        if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+        let refererRewardForPerch = fraction(leftToPay, 5, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
         [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
 
-        let toBurn = if refCall then exactPrice-refererRewardForPerch else exactPrice
+        let toBurn = if refCall then leftToPay-refererRewardForPerch else leftToPay
         strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
         
       
@@ -252,41 +274,97 @@ func buyPerch(colorI: String, refererAddress: String) = {
   
 }
 
+@Callable(i)
+func addFreePerch(address: String, color: String, amount: Int) = {
+  if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
+    throw("you need to set color properly")
+  } else if (i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != this ) then {
+    throw("rebirth and admin only")
+  } else {
+    let perchAmountKey = "address_" + address + "_perchesAvailable_" + color
+    let perchAmount = tryGetInteger(perchAmountKey)
+    ([
+      IntegerEntry(perchAmountKey, perchAmount + amount)
+    ], "")
+  }
+}
 
 @Callable(i)
-func stakeNFT(jColor: String) = {
+func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolean) = {
+  if stakeWithoutPerch && !isProxyStakingSc(i.caller.toString()) then throw("You can't stake without a perch") else
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let pmt = i.payments[1].value()
   let assetId = pmt.assetId.value()
   let assetName = assetInfo(assetId).value().name.value()
   let isJackpot = assetName.takeRight(1) == "U"
   let address = i.caller.toString()
+  let perchAddress = if usePerchOrigin then i.originCaller.toString() else address
   let rarity = getAssetRarityComplete(isJackpot,assetName)
 
-  if rarity < 70 then throw("Only ducks with a rarity above 70 can be locked!") else
-
-  let color = if isJackpot then jColor else assetName.takeRight(1)
-  let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
-
+  strict perches = 
+  if stakeWithoutPerch then []
+  else
+    let color = if isJackpot then jColor else assetName.takeRight(1)
+    let availablePerches = tryGetInteger("address_"+perchAddress+"_perchesAvailable_"+color)
+      if (availablePerches <= 0) then throw("no perches available for the color " + color) else 
+      [
+      IntegerEntry("address_"+perchAddress+"_perchesAvailable_"+color, availablePerches - 1),
+      StringEntry("address_"+assetId.toBase58String()+"_perchColor", color)
+      ]
+  
   if (pmt.amount != 1) then throw("NFT is not attached") else
-  if (availablePerches <= 0) then throw("no perches available for the color " + color) else 
+  
     strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asIntTuple()
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower._1),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower._1),
-      IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1),
       StringEntry(assetId.toBase58String()+"_owner",address),
+      BooleanEntry(assetId.toBase58String()+"_use_origin",usePerchOrigin),
+      StringEntry(assetId.toBase58String()+"_original_caller",i.originCaller.toString()),
       IntegerEntry(assetFarmingPower(address,assetId.toBase58String()),farmingPower._1),
       IntegerEntry(assetId.toBase58String()+"_basePower",farmingPower._2),
-      StringEntry("address_"+address+"_asset_"+assetId.toBase58String()+"_perchColor", color)
-    ]++claimStakingResult(address,assetId.toBase58String())++validPayment
+      BooleanEntry(assetId.toBase58String()+"_without_perch",stakeWithoutPerch)
+
+    ]
+    ++validPayment
+    ++perches
     
 }
 
 @Callable(i)
-func topUpReward (amount: Int) = {
-  if i.caller != getCouponsAddress() then throw("VFTUP: Only couponsdapp can do topup!") else
-  let resHandleStaking = handleStakingTopUp(amount) 
+func unstakeNFT(asset: String)={
+  let address = i.caller.toString()
+  strict validPayment = checkAdditionalPayment(i.payments[0])
+  let assetFP = tryGetInteger(assetFarmingPower(address,asset))
+  let color = tryGetString("address_"+address+"_asset_"+asset+"_perchColor")
+  let withoutPerch = tryGetBoolean(asset+"_without_perch")
+  strict perches = if withoutPerch then [] else 
+    let usePerchOrigin = tryGetBoolean(asset+"_use_origin")
+    let perchOwner = if usePerchOrigin then i.originCaller.toString() else address
+    [
+      IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color)+1)
+    ]
+  let result = claimStakingResult(address,asset)
+  ([
+    IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())-assetFP),
+    IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))-assetFP),
+    DeleteEntry(asset+"_owner"),
+    DeleteEntry(assetFarmingPower(address,asset)),
+    DeleteEntry("address_"+address+"_asset_"+asset+"_perchColor"),
+    DeleteEntry(asset+"_original_caller"),
+    DeleteEntry(asset+"_use_origin"),
+    DeleteEntry(asset+"_without_perch")
+  ]
+  ++validPayment
+  ++perches
+  ++result._1, result._2)
+  }
+
+@Callable(i)
+func topUpReward () = {
+  let firstPayment = i.payments[0].value()
+  if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+  let resHandleStaking = handleStakingTopUp(firstPayment.amount) 
     (
       resHandleStaking, 
       true
@@ -299,5 +377,11 @@ func topUpReward (amount: Int) = {
 func claimReward (assetId: String) = {
   strict validPayment =  checkAdditionalPayment(i.payments[0])
   if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else    
-  if (i.payments.size() > 1) then throw("Please don't add extra payments") else claimStakingResult(i.caller.toString(), assetId)++validPayment
+  if (i.payments.size() > 1) then throw("Please don't add extra payments") else 
+  let result = claimStakingResult(i.caller.toString(), assetId)
+  
+  (
+    validPayment++result._1, 
+    result._2
+  )
   }

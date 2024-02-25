@@ -43,6 +43,11 @@
             "value": "3PH75p2rmMKCV2nyW4TsAdFgFtmc61mJaqA"
         },
         {
+            "key": "static_farmingAddressNew",
+            "type": "string",
+            "value": "3P9aopM5MRxr6g3B7orbz31dJmTsNZVpKMp"
+        },
+        {
             "key": "static_babyDuckAddress",
             "type": "string",
             "value": "3PKwLVb8jYk58oYbfXxs2dUjD3YEKeqGWrX"
