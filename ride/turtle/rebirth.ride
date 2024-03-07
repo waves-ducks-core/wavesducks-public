@@ -122,21 +122,27 @@ func getRandomWin(tx: ByteVector, finishHeight: Int) = {
   if (jackpotRandom == 1 && jackpotEnabled) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
-    let result = if (n<60) then { "incubator" } else
-    if (n<130) then { "beach_R" } else 
-    if (n<200) then { "beach_S" } else
-    if (n<270) then { "beach_G" } else
-    if (n<340) then { "beach_D" } else
-    if (n<395) then { "perch_G" } else
-    if (n<450) then { "perch_Y" } else
-    if (n<505) then { "perch_R" } else
-    if (n<560) then { "perch_B" } else
-    if (n<620) then { "duck_incubator" } else
-    if (n<640) then { "item!ART-FREEGENE" } else                
-    if (n<680) then { "item!ART-FIRE_TAIL" } else    
-    if (n<720) then { "item!ART-FIRE_SHIELD" } else
-    if (n<920) then { "item!ART-FEED10" } else     
-    { "item!ART-FEED100" }   
+    let result = 
+    if (n<40) then { "item!ART-FIRE_SHIELD" } else
+        if (n<80) then { "item!ART-FIRE_TAIL" } else    
+    if (n<100) then { "item!ART-FREEGENE" } else                
+    if (n<170) then { "beach_R" } else 
+    if (n<240) then { "beach_S" } else
+    if (n<310) then { "beach_G" } else
+    if (n<380) then { "beach_D" } else
+    if (n<400) then { "item!ART-FEED5" } else    
+    if (n<600) then { "item!ART-FEED10" } else    
+    if (n<620) then { "item!ART-FEED15" } else    
+    if (n<640) then { "item!ART-FEED20" } else    
+    if (n<660) then { "item!ART-FEED25" } else    
+    if (n<680) then { "item!ART-FEED50" } else    
+    if (n<760) then { "item!ART-FEED100" } else    
+    if (n<790) then { "perch_G" } else
+    if (n<820) then { "perch_Y" } else
+    if (n<850) then { "perch_R" } else
+    if (n<880) then { "perch_B" } else
+    if (n<940) then { "incubator" } else
+    { "duck_incubator" }
 
     (n,result)
 }

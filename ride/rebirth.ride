@@ -122,23 +122,28 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
   if (jackpotRandom == 1) then { "phoenix" } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
-    if (n<170) then { "duckling_10" } else 
-    if (n<240) then { "duckling_20" } else
-    if (n<260) then { "duckling_40" } else
-    if (n<300) then { "incubator" } else
-    if (n<320) then { "item!ART-SNAKE" } else
-    if (n<330) then {"item!ART-FREEGENE"} else
-    if (n<460) then { "item!ART-KATANA" } else
-    if (n<510) then { "item!ART-ROBODUCK" } else
-    if (n<540) then { "item!ART-CROWN" } else
-    if (n<660) then { "item!ART-SCEPTER" } else
-    if (n<790) then { "item!ART-BUILTBODY" } else
-    if (n<810) then { "item!ART-FEED10" } else
-    if (n<820) then { "item!ART-FEED50" } else
-    if (n<824) then { "item!ART-FEED100" } else
-    if (n<884) then { "item!ART-FIRE_ARMOUR" } else
-    { "ar" }
-  
+    if (n<10) then {"item!ART-FREEGENE"} else
+    if (n<126) then { "ar" } else
+    if (n<186) then { "item!ART-FIRE_ARMOUR" } else
+    if (n<206) then { "item!ART-FEED5" } else    
+    if (n<226) then { "item!ART-FEED10" } else    
+    if (n<246) then { "item!ART-FEED15" } else    
+    if (n<266) then { "item!ART-FEED20" } else    
+    if (n<286) then { "item!ART-FEED25" } else    
+    if (n<296) then { "item!ART-FEED50" } else   
+    if (n<300) then { "item!ART-FEED100" } else
+    if (n<310) then { "item!ART-CROWN" } else
+    if (n<350) then { "incubator" } else
+    if (n<460) then { "item!ART-BUILTBODY" } else
+    if (n<480) then { "item!ART-SNAKE" } else
+    if (n<530) then { "item!ART-ROBODUCK" } else
+    if (n<640) then { "item!ART-KATANA" } else
+    if (n<740) then { "item!ART-SCEPTER" } else
+
+    if (n<910) then { "duckling_10" } else 
+    if (n<980) then { "duckling_20" } else
+    { "duckling_40" }
+
 }
 
 
