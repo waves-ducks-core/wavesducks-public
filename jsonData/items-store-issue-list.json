@@ -18,17 +18,27 @@
             "value": true
         },
         {
+            "key": "ART-FEED5_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
             "key": "ART-FEED10_issue",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "ART-SNW_GLBES_issue",
+            "key": "ART-FEED15_issue",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "ART-GIFT_DOUBL_issue",
+            "key": "ART-FEED20_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FEED25_issue",
             "type": "boolean",
             "value": true
         }
