@@ -6,7 +6,6 @@ func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_ammAddress() = "static_ammAddress"
 
 func getOracle() = Address(getStringValue(this,staticKey_oracleAddress()).fromBase58String())
-func getAmm() = Address(getStringValue(getOracle(),staticKey_ammAddress()).fromBase58String())
 
 func getAssetBytes(assetIdStr: String) = {
   if (assetIdStr == "WAVES") then {unit} else {assetIdStr.fromBase58String()}
@@ -22,9 +21,14 @@ func getTokenBalance(assetId: ByteVector|Unit) = {
 
 func addAssetBytesToList(accum: List[ByteVector], item: String) = { accum ++ [item.getAssetBytes()] }
 
+func convertStringIntoAmm(amm: String) ={
+  let amms = getStringValue(getOracle(),staticKey_ammAddress())
+  let list = amms.split(",")
+  if  containsElement(list, amm) then addressFromString(amm).value() else throw("BCO: AMM not found")
+}
 @Callable(i)
-func generateAndStakeIndex() = {
-  let mainAddress = getAmm()
+func generateAndStakeIndex(amm: String) = {
+  let mainAddress = convertStringIntoAmm(amm)
   let assetIds = FOLD<10>(getStringValue(mainAddress, "static_tokenIds").split(","), [], addAssetBytesToList)
   let baseAssetId = getStringValue(mainAddress, "static_baseTokenId").getAssetBytes()
   let secondaryAssetIds = assetIds.removeByIndex(assetIds.indexOf(baseAssetId).value())
@@ -40,8 +44,8 @@ func generateAndStakeIndex() = {
 }
 
 @Callable(i)
-func unstakeAndRedeemIndex(amount: Int) = {
-  let mainAddress = getAmm()
+func unstakeAndRedeemIndex(amm: String,amount: Int) = {
+  let mainAddress = convertStringIntoAmm(amm)
   let assetIds = FOLD<10>(getStringValue(mainAddress, "static_tokenIds").split(","), [], addAssetBytesToList)
   let baseAssetId = getStringValue(mainAddress, "static_baseTokenId").getAssetBytes()
   let secondaryAssetIds = assetIds.removeByIndex(assetIds.indexOf(baseAssetId).value())
