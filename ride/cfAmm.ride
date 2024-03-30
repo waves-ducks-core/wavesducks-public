@@ -2,7 +2,7 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let startTsMs = 1679961601000
+let startTsMs = 1711065540000
 
 func calculateDaysSinceStart()={
   let diff = lastBlock.timestamp-startTsMs
@@ -68,10 +68,10 @@ func reveneuForDayByAssetOut(day: Int, assetId: String)= "reveneu_day_"+assetId+
 func volumeForDayByIn(day: Int, assetId: String)= "volume_day_"+assetId+"_"+day.toString()
 
 let T = tryGetInteger("static_tokensAmount")
-let assetIds = FOLD<3>(tryGetString("static_tokenIds").split(","), [], addAssetBytesToList)
-let AssetsWeights = FOLD<3>(assetIds, [], addAssetWeightToList)
-let Decimals = FOLD<3>(assetIds, [], addAssetDecimalsToList)
-let Scales = FOLD<3>(assetIds, [], addAssetScaleToList)
+let assetIds = FOLD<10>(tryGetString("static_tokenIds").split(","), [], addAssetBytesToList)
+let AssetsWeights = FOLD<10>(assetIds, [], addAssetWeightToList)
+let Decimals = FOLD<10>(assetIds, [], addAssetDecimalsToList)
+let Scales = FOLD<10>(assetIds, [], addAssetScaleToList)
 let stakeId = tryGetString("last_stake_id")
 
 let Fee = tryGetInteger("static_fee")
@@ -85,6 +85,16 @@ let PoolTokenDecimals = 8 # if (T > 4) then {8} else {T + 2}
 let PoolTokenScale = pow(10, 0, PoolTokenDecimals, 0, 0, HALFUP)
 
 let earnedAssets = assetIds
+
+func burnFees()={
+  if tryGetString( "static_oracle") != "" then
+    match getBoolean(getOracleAddress(), "amm_burn_"+this.toString()) {
+        case x: Boolean => x
+        case _ => false
+    }
+  else false
+
+}
 
 func isShutdown() = {
   let shutdown = if tryGetString( "static_oracle") != "" then
@@ -130,7 +140,7 @@ func getMinPIssued(payments: List[AttachedPayment]) = {
     if (PIssued == 0) then {throw("one of the tokens amounts is too low")}
     else if ((accum == 0) || (PIssued < accum)) then {PIssued} else {accum}
   }
-  let minPIssed = FOLD<3>(payments, 0, handler)
+  let minPIssed = FOLD<10>(payments, 0, handler)
   minPIssed
 }
 
@@ -139,11 +149,11 @@ func checkTokensValidity(payments: List[AttachedPayment]) = {
   func handler1(accum: List[ByteVector], payment: AttachedPayment) = {
     accum ++ [payment.assetId]
   }
-  strict ids = FOLD<3>(payments, [], handler1)
+  strict ids = FOLD<10>(payments, [], handler1)
   func handler2(accum: Int, assetId: ByteVector|Unit) = {
     if (ids.indexOf(assetId) != unit) then {accum+1} else {throw("asset not attached: " + assetId.getAssetString())}
   }
-  strict checks = FOLD<3>(assetIds, 0, handler2)
+  strict checks = FOLD<10>(assetIds, 0, handler2)
   true
 }
 
@@ -176,7 +186,7 @@ func handlePoolTokensAdd(PIssued: Int, payments: List[AttachedPayment], userAddr
     func handler(accum: Int, payment: AttachedPayment) = {
       if (payment.assetId == tokenId) then {payment.amount} else {accum}
     }
-    FOLD<3>(payments, 0, handler)
+    FOLD<10>(payments, 0, handler)
   }
 
   #TODO: Optimize it, pass the payment list for looping, since it's alreayd checked if enough assets are available
@@ -200,7 +210,7 @@ func handlePoolTokensAdd(PIssued: Int, payments: List[AttachedPayment], userAddr
     ]
   }
 
-  FOLD<3>(assetIds, [], handleTokenChange)
+  FOLD<10>(assetIds, [], handleTokenChange)
 }
 
 func handlePoolTokensRedeem(PRedeemed: Int, userAddress: Address) = {
@@ -221,7 +231,7 @@ func handlePoolTokensRedeem(PRedeemed: Int, userAddress: Address) = {
     ]
   }
 
-  FOLD<3>(assetIds, [], handleTokenRedeem)
+  FOLD<10>(assetIds, [], handleTokenRedeem)
 }
 
 
@@ -302,7 +312,7 @@ func claimResult(address: Address) = {
     ]
   }
   
-  let accum = FOLD<3>(earnedAssets, [], handler)
+  let accum = FOLD<10>(earnedAssets, [], handler)
   accum ++ [
     IntegerEntry(addressStr+"_lastClaim", lastBlock.timestamp)
   ]
@@ -364,10 +374,10 @@ func preInit(assetIdsStr: String, assetWeightsStr: String, baseTokenIdStr: Strin
   else if (poolDomain.size() > 13) then {throw("too large pool domain")}
   else {
     let assetIdsStrLi = assetIdsStr.split(",")
-    let assetIdsLi = FOLD<3>(assetIdsStrLi, [], addAssetBytesToList)
+    let assetIdsLi = FOLD<10>(assetIdsStrLi, [], addAssetBytesToList)
 
     let assetWeightsStrLi = assetWeightsStr.split(",")
-    let assetWeightsSum = FOLD<3>(assetWeightsStrLi, 0, sum)
+    let assetWeightsSum = FOLD<10>(assetWeightsStrLi, 0, sum)
 
     func addTokenDataEntries(accum: List[IntegerEntry], assetNum: Int) = {
       if (assetNum >= assetIdsLi.size()) then {
@@ -386,7 +396,7 @@ func preInit(assetIdsStr: String, assetWeightsStr: String, baseTokenIdStr: Strin
     }
 
     if (assetWeightsSum != 100) then {throw("sum of token weights must be equal to 100")} else {
-      FOLD<3>([0,1,2], [], addTokenDataEntries) ++ [
+      FOLD<10>([0,1,2], [], addTokenDataEntries) ++ [
         StringEntry("static_tokenIds", assetIdsStr),
         StringEntry("static_tokenWeights", assetWeightsStr),
         IntegerEntry("static_tokensAmount", assetIdsLi.size()),
@@ -409,7 +419,7 @@ func init(oracle: String) = {
         IntegerEntry("global_" + n.assetId.getAssetString() + "_balance", n.amount)
       ]
     }
-    FOLD<3>(i.payments, [], handler)
+    FOLD<10>(i.payments, [], handler)
   }
 
   func calculatePoolTokensAmount(payments: List[AttachedPayment]) = {
@@ -418,10 +428,10 @@ func init(oracle: String) = {
       func handler2(accum: Int, n: ByteVector|Unit) = {
         if (n == assetId) then {assetIds.indexOf(n).value()} else {accum}
       }
-      let Token = FOLD<3>(assetIds, 1, handler2)
+      let Token = FOLD<10>(assetIds, 1, handler2)
       fraction(accum, pow(pmt.amount, Decimals[Token], AssetsWeights[Token], AssetsWeightsDecimals, 8, FLOOR), Scale8)
     }
-    FOLD<3>(payments, PoolTokenScale, handler)
+    FOLD<10>(payments, PoolTokenScale, handler)
   }
 
   if (tryGetInteger("global_wasInited") > 0) then {  # PROD: > 0
@@ -525,9 +535,15 @@ func swap(assetOut: String, minimum: Int) ={
   strict cleanAmountOut = invokeSwap._1 
   strict feeAmount = invokeSwap._2
 
-  strict topUp = [ScriptTransfer(getFeesAccount(),fraction(feeAmount,2,4),assetOut.getAssetBytes())]
+  strict feesManagement = if burnFees() && assetOut!= "WAVES" then
+    [
+      Burn(assetOut.getAssetBytes().value(), fraction(feeAmount,2,4)),
+      IntegerEntry("global_"+assetOut+"_burned", tryGetInteger("global_"+assetOut+"_burned")+fraction(feeAmount,2,4))
+    ]
+  else
+    [ScriptTransfer(getFeesAccount(),fraction(feeAmount,2,4),assetOut.getAssetBytes())]
 
-  (topUp,cleanAmountOut)
+  (feesManagement,cleanAmountOut)
 }
 
 @Callable(i)

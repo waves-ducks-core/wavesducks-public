@@ -475,6 +475,17 @@
             "key": "type_cosmetic_ART-PLR_BEAR",
             "type": "string",
             "value": "PET"
+        },
+        {
+            "key": "type_cosmetic_ART-LAMB",
+            "type": "string",
+            "value": "PET"
+        }
+        ,
+        {
+            "key": "type_cosmetic_ART-BUNNY",
+            "type": "string",
+            "value": "PET"
         }
     ],
     "fee": 700000,

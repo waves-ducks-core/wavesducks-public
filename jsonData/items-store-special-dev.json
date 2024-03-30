@@ -85,6 +85,26 @@
             "key": "direct_cosmetic_ART-FIRE_TAIL_sale",
             "type": "boolean",
             "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-BUNNY",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "direct_cosmetic_ART-BUNNY_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-LAMB",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "direct_cosmetic_ART-LAMB_sale",
+            "type": "boolean",
+            "value": true
         }
        
     ],

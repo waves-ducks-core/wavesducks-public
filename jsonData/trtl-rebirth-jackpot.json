@@ -4,13 +4,14 @@
     "data": [
         {
             "key": "JACKPOT_NAME",
-            "value": null
+            "type": "string",
+            "value": "WWEASTER"
             
         },
         {
             "key": "JACKPOT_ENABLED",
             "type": "boolean",
-            "value": false
+            "value": true
             
         }
     ],
