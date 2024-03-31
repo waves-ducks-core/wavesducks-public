@@ -91,22 +91,20 @@ func configureOracle(oracle: String, type: String) = {
   if i.caller != this then throw("admin only") else 
   let setup = if type == "ART-BIGHOUSE" then [ 
             IntegerEntry(staticKey_boost(),15), IntegerEntry(staticKey_maxDucks(),10),
-            StringEntry(staticKey_type(),"ART-BIGHOUSE"),
             BooleanEntry(staticKey_stakeWithoutPerch(),true)
         ] else 
         if type == "ART-HOUSE" then [ 
             IntegerEntry(staticKey_boost(),30),IntegerEntry(staticKey_maxDucks(),4),
-            StringEntry(staticKey_type(),"ART-HOUSE"),
             BooleanEntry(staticKey_stakeWithoutPerch(),false)
         ] else
         if type == "ART-XMAS_STBLE" then [
             IntegerEntry(staticKey_boost(),5), IntegerEntry(staticKey_maxDucks(),6),
-            StringEntry(staticKey_type(),"ART-XMAS_STBLE"),
             BooleanEntry(staticKey_stakeWithoutPerch(),false)
         ]
         else throw("Unknown type!")
   [
-    StringEntry(staticKey_oracleAddress(),oracle)
+    StringEntry(staticKey_oracleAddress(),oracle),
+    StringEntry(staticKey_type(),type)
   ]++setup
 
 }
