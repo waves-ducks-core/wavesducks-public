@@ -396,7 +396,7 @@ func preInit(assetIdsStr: String, assetWeightsStr: String, baseTokenIdStr: Strin
     }
 
     if (assetWeightsSum != 100) then {throw("sum of token weights must be equal to 100")} else {
-      FOLD<10>([0,1,2], [], addTokenDataEntries) ++ [
+      FOLD<10>([0,1,2,3,4,5,6,7,8,9], [], addTokenDataEntries) ++ [
         StringEntry("static_tokenIds", assetIdsStr),
         StringEntry("static_tokenWeights", assetWeightsStr),
         IntegerEntry("static_tokensAmount", assetIdsLi.size()),
