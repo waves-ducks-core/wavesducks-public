@@ -82,6 +82,11 @@
         "value": "NATIVE_POOL"
       },
       {
+        "key": "allowed_contract_3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV",
+        "type": "string",
+        "value": "CF_POOL"
+      },
+      {
         "key": "allowed_contract_3PJwsxCtCXTxex5dPSFjYGp95mxF1BDJDnq",
         "type": "string",
         "value": "LAYER2_POOL"
