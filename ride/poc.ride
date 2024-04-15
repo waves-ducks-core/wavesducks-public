@@ -1,0 +1,127 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int, offset: Int) = {
+  let randomSeedBlock = blockInfoByHeight(hatchingFinishHeight-1).value()
+  let randomHash = sha256_16Kb(txId + randomSeedBlock.vrf.value())
+  randomHash.toInt(offset) % variants
+}
+
+func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int) = {
+  let randomNum = getRandomNumber(2, txId, hatchingFinishHeight, step)
+  let gen = if (randomNum == 0) then gen1 else gen2
+  gen
+}
+
+func tryGetInteger(key: String) = {
+    let val = match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+    val
+}
+
+func isSymbol(acc: (Int, String), sym: String) = { if (sym == acc._2) then {(acc._1+1, acc._2)} else {(acc._1+0, acc._2)} }
+
+func getAmountOrClear(amount: String) = {
+  if (amount.contains("0")) then {""} else {amount}
+}
+func charList() = {
+["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+}
+func nrOfTypeGenes(gen:String)={
+  let genotype = gen.drop(5).dropRight(3).split("")
+  let parts1=genotype[0]+genotype[1]
+  let parts2=genotype[2]+genotype[3]
+  let parts3=genotype[4]+genotype[5]
+  let parts4=genotype[6]+genotype[7]
+  let parts5=genotype[8]+genotype[9]
+  let parts6=genotype[10]+genotype[11]
+  let parts7=genotype[12]+genotype[13]
+  let parts8=genotype[14]+genotype[15]
+  let parts=[parts1,parts2,parts3,parts4,parts5,parts6,parts7,parts8]
+  func sortPartsByType(acc: (List[String],List[String],List[String],List[String]), part: String) ={
+    let splitParts = part.split("")
+    if splitParts[0] == "T" then
+      (acc._1:+splitParts[1], acc._2,acc._3,acc._4)
+    else if splitParts[0] == "D" then
+      (acc._1,acc._2:+splitParts[1],acc._3,acc._4)
+    else if splitParts[0] == "C" then
+      (acc._1,acc._2,acc._3:+splitParts[1],acc._4)
+    else if splitParts[0] == "H" then
+      (acc._1,acc._2,acc._3,acc._4:+splitParts[1])
+    else throw("UNKNOWN TYPE")
+  }
+  strict result = FOLD<8>(parts, ([],[],[],[]), sortPartsByType)
+
+  func composeStringTurtle(acc: String,char: String)={
+    let charCount = FOLD<8>(result._1, (0,char), isSymbol)
+    acc+getAmountOrClear(toString(charCount._1)+char)
+  }
+  func composeStringDuck(acc: String,char: String)={
+    let charCount = FOLD<8>(result._2, (0,char), isSymbol)
+    acc+getAmountOrClear(toString(charCount._1)+char)
+  }
+    func composeStringCat(acc: String,char: String)={
+    let charCount = FOLD<8>(result._3, (0,char), isSymbol)
+    acc+getAmountOrClear(toString(charCount._1)+char)
+  }
+    func composeStringDog(acc: String,char: String)={
+    let charCount = FOLD<8>(result._4, (0,char), isSymbol)
+    acc+getAmountOrClear(toString(charCount._1)+char)
+  }
+  let turtleGens = FOLD<26>(charList(), "", composeStringTurtle)
+  let duckGens = FOLD<26>(charList(), "", composeStringDuck)
+  let catGens = FOLD<26>(charList(), "", composeStringCat)
+  let hondGens = FOLD<26>(charList(), "", composeStringDog)
+  ([
+    StringEntry("DEBUG_TURTLE", turtleGens),
+    StringEntry("DEBUG_DUCK", duckGens),
+    StringEntry("DEBUG_CAT", catGens),
+    StringEntry("DEBUG_HOND", hondGens)
+  ], "T:"+turtleGens+"_D:"+duckGens+"_C:"+catGens+"_H:"+hondGens
+  )
+}
+
+@Callable(i)
+func poc(assetIdStr: String)={
+  let asset = assetIdStr.fromBase58String()
+  let parsedAssetInfo = assetInfo(asset).value()
+  let body = parsedAssetInfo.description
+  [
+  StringEntry("DEBUG_"+assetIdStr, body)
+  ]
+
+}
+
+
+@Callable(i)
+func pocNameGen(name1: String, name2: String, txId: String, finishHeight: Int)={
+let colorRandom = getRandomNumber(4, txId.fromBase58String(), finishHeight, 11)
+let color = if (colorRandom == 0) then "R"
+    else if (colorRandom == 1) then "D" 
+    else if (colorRandom == 2) then "S" 
+    else "G"
+let parent1Gen = name1.split("")
+let parent2Gen = name2.split("")
+let gen = "MTNT-"
+  +getRandomGen(parent1Gen[0]+parent1Gen[5], parent2Gen[0]+parent2Gen[5], 0, txId.fromBase58String(), finishHeight)
+  +getRandomGen(parent1Gen[0]+parent1Gen[6], parent2Gen[0]+parent2Gen[6], 1, txId.fromBase58String(), finishHeight)
+  +getRandomGen(parent1Gen[0]+parent1Gen[7], parent2Gen[0]+parent2Gen[7], 2, txId.fromBase58String(), finishHeight)
+  +getRandomGen(parent1Gen[0]+parent1Gen[8], parent2Gen[0]+parent2Gen[8], 3, txId.fromBase58String(), finishHeight)
+  +getRandomGen(parent1Gen[0]+parent1Gen[9], parent2Gen[0]+parent2Gen[9], 4, txId.fromBase58String(), finishHeight)
+  +getRandomGen(parent1Gen[0]+parent1Gen[10], parent2Gen[0]+parent2Gen[10], 5, txId.fromBase58String(), finishHeight)
+  +getRandomGen(parent1Gen[0]+parent1Gen[11], parent2Gen[0]+parent2Gen[11], 6, txId.fromBase58String(), finishHeight)
+  +getRandomGen(parent1Gen[0]+parent1Gen[12], parent2Gen[0]+parent2Gen[12], 7, txId.fromBase58String(), finishHeight)
+  +"-G"+color
+let rarityCalc = nrOfTypeGenes(gen)
+[
+  IntegerEntry("DEBUG_amount", tryGetInteger("DEBUG_amount")+1),
+  IntegerEntry("DEBUG_rarity:"+rarityCalc._2, tryGetInteger("DEBUG_rarity:"+rarityCalc._2)+1),
+  StringEntry("DEBUG_parent1", name1),
+  StringEntry("DEBUG_parent2", name2),
+  StringEntry("DEBUG_name", "MTNT-"+toString(tryGetInteger("DEBUG_amount")+1)),
+  StringEntry("DEBUG_result", gen)
+]++rarityCalc._1
+}

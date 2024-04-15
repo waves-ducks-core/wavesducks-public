@@ -7,7 +7,6 @@ let perchPrice = 100 * 1000000
 let scale = 10000
 let scale2 = 1000000
 
-func isSickDuck(duckId:String) = duckId+"_sick"
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -24,10 +23,7 @@ func tryGetString(key: String) = {
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_incubatorAddress() = "static_incubatorAddress"
-func staticKey_rebirthAddress() = "static_rebirthAddress"
-func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 func staticKey_breederAddress() = "static_breederAddress"
-func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_metaRaceAddress() = "static_metaRaceAddress"
 func staticKey_accBoosterAddress() = "static_accBoosterAddress"
@@ -35,31 +31,20 @@ func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
 func staticKey_maintenance() = "static_maintenance"
 #TODO add last 4 also here
 func staticKey_cfMasterAddress() = "static_cfMasterAddress"
-func staticKey_duckWrapper() = "static_duckWrapper"
-func staticKey_couponsAddress() = "static_couponsAddress"
-func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
-func staticKey_huntAddress() = "static_huntAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
-func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getMetaraceAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_metaRaceAddress()).fromBase58String())
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
 func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakingContracts())
 func getMaintenance() =  tryGetStringExternal(getOracle(),staticKey_maintenance())
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_cfMasterAddress()).fromBase58String())
-func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),staticKey_duckWrapper()).fromBase58String())
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
-func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
-func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
 
 let RefererReward = 5 #percentage
 
@@ -319,108 +304,24 @@ func init() = {
 
 @Callable(i)
 func buyPerch(colorI: String, refererAddress: String) = {
-    strict locked =  isLocked()
-    strict validPayment = if i.caller == getHuntAddress() || i.caller == getMetaraceAddress() then [] else checkAdditionalPayment(i.payments[0])
-    let color = if colorI == "U" then "B" else colorI
-    if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
-      throw("you need to set color properly")
-    } else {
-      let exactPrice = calculatePerchPrice(i.caller.toString())
-      let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
-          exactPrice-amountPaidByCoupons
-        }else {
-            exactPrice
-        }
-      strict payment = if leftToPay!=0 then {
-        let firstPayment = if size(i.payments) == 2 then  i.payments[1].value() else  i.payments[0].value()
-
-        if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-        if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
-        let refererRewardForPerch = fraction(leftToPay, RefererReward, 100)
-        strict refCall = invoke(getRefContractAddress(), "refPayment",
-        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
-
-        let toBurn = if refCall then leftToPay-refererRewardForPerch else leftToPay
-
-        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
-        
-        leftToPay
-      }else 0
-      
-
-      let perchAmountKey = "address_" + i.caller.toString() + "_perchesAvailable_" + color
-      let perchAmount = tryGetInteger(perchAmountKey)
-
-      [
-        IntegerEntry(perchAmountKey, perchAmount + 1)
-      ]++validPayment
-      
-    }
+    throw("FBN: function is disabled, migration to new sc ongoing")
   
 }
 
 @Callable(i)
 func addFreePerch(address: String, color: String) = {
-  strict locked =  isLocked()
-  if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
-    throw("you need to set color properly")
-  } else if (i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != this ) then {
-    throw("rebirth and swop promo only")
-  } else {
-    let perchAmountKey = "address_" + address + "_perchesAvailable_" + color
-    let perchAmount = tryGetInteger(perchAmountKey)
-    ([
-      IntegerEntry(perchAmountKey, perchAmount + 1)
-    ], "")
-  }
+    throw("FBN: function is disabled, migration to new sc ongoing")
 }
 
 @Callable(i)
 func stakeNFT() = {
-  strict locked = isLocked()
-  strict validPayment = if i.caller == getHuntAddress() || i.caller == getMetaraceAddress() then [] else checkAdditionalPayment(i.payments[1])
-  let pmt = i.payments[0].value()
-  let assetId = i.payments[0].value().assetId.value()
-  let realCaller = i.caller.toString()
-  let address = if isProxyStakingSc(i.caller.toString())  then i.originCaller.toString() else realCaller
-
-  let color = assetInfo(assetId).value().name.takeRight(1)
-  let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
-
-  if (pmt.amount != 1) then throw("NFT is not attached") else
-  if (availablePerches <= 0) then {
-      throw("no perches available for the color " + color)
-  } else {
-    let (assetGen, assetFarmingPower) = getAssetFarmingPower(assetId,address)
-
-      
-
-    getStakeResult(address, assetId, assetFarmingPower, realCaller) ++ [
-      IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1)
-    ]++validPayment
-  }
+    throw("FBN: function is disabled, migration to new sc ongoing")
     
 }
 
 @Callable(i)
 func stakeNFTWithoutPerch() = {
-  strict locked = isLocked()
-  let dappToCall = i.caller.toString()
-  if !isProxyStakingSc(dappToCall) then throw("FSNWP: Only trusted smart contracts can stake without a perch!") else
-    let pmt = i.payments[0].value()
-    let assetId = i.payments[0].value().assetId.value()
-    let address = i.originCaller.toString()
-
-    if (pmt.amount != 1) then throw("NFT is not attached") else
-    let (assetGen, assetFarmingPower) = getAssetFarmingPower(assetId,address)
-    let asset = assetId.toBase58String()
-
-    let realCaller = i.caller.toString()
-
-    getStakeResult(address, assetId, assetFarmingPower, realCaller) ++ [
-      BooleanEntry("address_"+address+"_asset_"+asset+"_without_perch", true)
-      ]
+    throw("FBN: function is disabled, migration to new sc ongoing")
   
 }
 
@@ -443,34 +344,7 @@ func unstakeNFTWithoutClaim(asset: String) = {
 
 @Callable(i)
 func stakeJackpot(color: String) = {
-    strict locked = isLocked()
-    strict validPayment = if i.caller == getHuntAddress() || i.caller == getMetaraceAddress() then [] else checkAdditionalPayment(i.payments[1])
-    let pmt = i.payments[0].value()
-    let assetId = pmt.assetId.value()
-    let realCaller = i.caller.toString()
-    let address = if isProxyStakingSc(i.caller.toString())  then i.originCaller.toString() else realCaller
-    let availablePerches = tryGetInteger("address_"+address+"_perchesAvailable_"+color)
-
-    let assetIssuer = assetInfo(assetId).value().issuer
-
-    if (pmt.amount != 1) then throw("NFT is not attached") else
-    if (assetIssuer == getIncubatorAddress() || assetIssuer == getBreederAddress()) then {
-      if (assetInfo(assetId).value().name.value().takeRight(1) != "U") then {
-        throw("jackpot only")
-      } else {
-        if (availablePerches <= 0) then {
-          throw("FSJ: no perches available for the color " + color)
-        } else {
-          let farmingPower = getAssetFarmingPower(assetId,address)
-          getStakeResult(address, assetId, farmingPower._2,realCaller) ++ [
-            IntegerEntry("address_"+address+"_perchesAvailable_"+color, availablePerches - 1),
-            StringEntry("address_"+address+"_asset_"+assetId.toBase58String()+"_perchColor", color)
-          ]++validPayment
-        }
-      }
-    } else {
-        throw("asset is not valid")
-    }
+    throw("FBN: function is disabled, migration to new sc ongoing")
   
 }
 
