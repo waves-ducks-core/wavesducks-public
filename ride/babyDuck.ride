@@ -332,9 +332,9 @@ func turnDucklingIntoDuck() = {
   let address = i.caller.toString()
   let txId = i.transactionId.toBase58String()
   let lastIssuedDucklingTs = tryGetInteger(KGlobalIssuedTimestamp)
-  let fiveMinInMs = 1 * 60 * 1000
+  let fiveMinInMs = 1 * 30 * 1000
   let timeDiff = lastBlock.timestamp - (lastIssuedDucklingTs+fiveMinInMs);
-  if (lastIssuedDucklingTs > 0 && timeDiff < 0) then throw("BTD: Can issue ducklings only once per 1 minutes, please wait for " + fraction(timeDiff, 1, 1000).toString() + " sec.") else 
+  if (lastIssuedDucklingTs > 0 && timeDiff < 0) then throw("BTD: Can issue ducklings only once per 30s, please wait for " + fraction(timeDiff, 1, 1000).toString() + " sec.") else 
   if (i.payments.size() != 2) then throw("BTD: Bad payment attached (asset[s] or amount)") else {
   if (i.payments[0].amount != 1) then throw("BTD: Please attach a nft!")else 
     

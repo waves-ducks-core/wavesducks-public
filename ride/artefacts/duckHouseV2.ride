@@ -141,7 +141,7 @@ func unstakeDuckHouse(duckHouseId: String)={
 #TODO: DUCKS ADDED THROUGH XMAS STABLE SHOULD BE LOCKED FOR 7 DAYS FOR SECURITY REASONS
 @Callable(i)
 func stakeDuck(duckHouseId: String, JColor: String)={
-    let assetId = i.payments[0].value().assetId.value()
+    let assetId = i.payments[1].value().assetId.value()
     let address = i.caller.toString()
     let duckHouseOwner = tryGetString(keyOwner(duckHouseId))
     if duckHouseOwner == "" then throw("This duckhouse is not staked!") else
@@ -150,7 +150,7 @@ func stakeDuck(duckHouseId: String, JColor: String)={
     if filledSpots == maxDucks() then throw("No space in duck house left!") else
     strict boostDuck = invoke(getItemsAddress(),"manipulateBoost",[boost(),assetId.toBase58String()],[])
 
-    strict stakeDuck = invoke(getFarmingAddress(),static_stakeCall(),[JColor,true,!tryGetBoolean(staticKey_stakeWithoutPerch())],i.payments)
+    strict stakeDuck = invoke(getFarmingAddress(),static_stakeCall(),[JColor,true,tryGetBoolean(staticKey_stakeWithoutPerch())],i.payments)
     [
         IntegerEntry(occupiedSpotsDucksHouse(duckHouseId),filledSpots+1),
         StringEntry(keyDuckHouse(assetId.toBase58String()),duckHouseId)

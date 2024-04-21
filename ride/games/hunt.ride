@@ -137,14 +137,6 @@ func lockDuckInternal(addressStr:String,takeSpotsFrom:String, pmt: AttachedPayme
 
     let eggAssetId = getEggAssetId()
 
-    #strict inv1 = if (perchesAvailable > 0) then { unit } else {
-    #  invoke(getFarmingAddress(), "buyPerch", [assetColor, ""], [AttachedPayment(eggAssetId, 1_0000_0000)])
-    #}
-
-    #strict inv2 = if isJackpot == false then 
-    #  invoke(getFarmingAddress(), "stakeNFT", [], [AttachedPayment(assetId, 1)])  else
-    #  invoke(getFarmingAddress(), "stakeJackpot", [assetColor], [AttachedPayment(assetId, 1)])
-
     [
       IntegerEntry(kSpotsBusy, spotsBusy + 1),
       StringEntry(keyDuckOwner(assetId), addressStr),
@@ -192,11 +184,6 @@ func unstakeDuck(assetIdStr: String, addressStr: String,addSpotsTowards: String)
   if (tryGetString(kDuckOwner) != addressStr) then {throw("3UD: The duck is not yours")} 
   else if (remainingForUnlock > 0) then {throw("3UD: You need to wait to unlock " + (remainingForUnlock / 1000).toString() + " seconds")}
   else {
-    let isV2 = tryGetBoolean(keyDuckV2(addressStr, assetIdStr))
-    strict doUnstake = if isV2 then [] else
-      let unstakeFuncName = if isJackpot == true then "unstakeJackpotWithoutClaimEgg" else "unstakeNFTWithoutClaim" 
-      strict inv1 = invoke(getFarmingAddress(), unstakeFuncName, [assetIdStr], [])  # TODO: jackpot unstaking
-      []
     [
       ScriptTransfer(Address(addressStr.fromBase58String()), 1, assetId),
       DeleteEntry(keyLockedDuckStatus(addressStr, assetIdStr)), 
@@ -206,37 +193,7 @@ func unstakeDuck(assetIdStr: String, addressStr: String,addSpotsTowards: String)
   }
 }
 
-# func updateSettingInternal(i: Invocation, key: String, value: Int | String | Boolean | ByteVector) = {
-#   if (i.caller != this) then throw("Only administrator can call this method") else {
-#     match (value) {
-#         case int: Int => [IntegerEntry(key, int)]
-#         case s: String => [StringEntry(key, s)]
-#         case b: Boolean => [BooleanEntry(key, b)]
-#         case bv: ByteVector => [BinaryEntry(key, bv)]
-#         case _ => throw("Bad value type")
-#       }
-#   }
-# }
 
-# @Callable(i)
-# func updateSettingInt(key: String, value: Int) = {
-#   updateSettingInternal(i,key, value)
-# }
-
-# @Callable(i)
-# func updateSettingStr(key: String, value: String) = {
-#   updateSettingInternal(i,key, value)
-# }
-
-# @Callable(i)
-# func updateSettingBoolean(key: String, value: Boolean) = {
-#   updateSettingInternal(i,key, value)
-# }
-
-# @Callable(i)
-# func updateSettingByteVector(key: String, value: ByteVector) = {
-#   updateSettingInternal(i,key, value)
-# }
 
 @Callable(i)
 func buyAccessItemInternal(addressStr:String)= {
@@ -274,28 +231,6 @@ func deleteSetting(key: String) = {
     else [DeleteEntry(key)]
 }
 
-# @Callable(i)
-# func buyBooster() = {
-#   let kBoughtLevel = keyBoughtBoosterLevel(i.caller.toString())
-#   let boughtBoosterLevel = tryGetInteger(kBoughtLevel)
-#   let newLevel = boughtBoosterLevel + 1
-#   let pmt = i.payments[0].value()
-#   let price = getBosterPriceForLevel(newLevel)
-#   let expectedAssetId = getBosterBuyAssetId()
-#   if (pmt.amount != price) then throw("3BB: Bad price, it should be: " + price.toString()) else 
-#   if (pmt.assetId != expectedAssetId) then throw("3BB: Bad payment attached, it should be: " + expectedAssetId.toBase58String())
-#   else {
-#     let name = getBosterNameForLevel(newLevel)
-#     let boosterItem = Issue(getGameName()+"-" + name, "[Booster] "+getLongGameName()+" booster for the game, level = " + newLevel.toString(), 1, 0, false)
-#     let boosterItemAssetId = boosterItem.calculateAssetId()
-#     [
-#       boosterItem,
-#       IntegerEntry(kBoughtLevel, newLevel),
-#       ScriptTransfer(i.caller, 1, boosterItemAssetId)
-#     ]
-#   }
-
-# }
 
 @Callable(i)
 func buyAccessItemAndLockDuck()={

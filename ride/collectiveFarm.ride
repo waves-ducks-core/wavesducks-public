@@ -328,7 +328,7 @@ func verify() = {
       case inv:InvokeScriptTransaction => {
         let acceptedCallsStaking = ["stakeFarmTokens","claimReward","withdrawFarmTokens","voteToLiquidate"]
         let acceptedCallsThis = ["callUnstakeProxy","claimCeoFee","lockInvestments","unlockInvestments"]
-        if ((inv.function == "unstakeNFT" || inv.function == "unstakeJackpot")&& inv.dApp.addressFromRecipient() == getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue() )then throw("You cannot call these functions directly") else
+        if (inv.function == "unstakeNFT" && inv.dApp.addressFromRecipient() == getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue() )then throw("You cannot call these functions directly") else
         if (inv.dApp.addressFromRecipient() == this &&inv.function == "initMasterKey" && mAccPKeyString=="")then sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
         else if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false && sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())== false) then throw("_100") else
         if (checkStarted == false) then throw("_14") else

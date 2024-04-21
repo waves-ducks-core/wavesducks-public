@@ -199,7 +199,6 @@ func topUpRewards(duckIdAndAmountsList: List[String], assetId: String)={
 
 }
 
-
 #User needs to be able to claim his duck back
 ## 1) After duration is over user need to be able to claim duck back
 ## 2) After duck didnt get rewards for 3000 blocks
@@ -299,6 +298,26 @@ func sendDuckBack(duckId: String)={
 
 }
 
+@Callable(i)
+func sendDuckBackOther(duckId: String)={
+  if i.caller != this then throw("RUO: admin only") else
+  let rentedBy = tryGetString(key_getDuckRentedBy(duckId))
+  let duckOwner = tryGetString(key_getDuckOwner(duckId))
+  let refundFeeKey = key_getRefundableFee(rentedBy,duckId)
+  let amountRentedKey =  key_getTotalRented(rentedBy)
+  let newAmountRented = getIntegerValue(this,amountRentedKey)-1
+    [
+      
+    #Send borg back
+    ScriptTransfer(rentedBy.addressFromStringValue(),tryGetInteger(refundFeeKey),getEggAssetId()),
+    DeleteEntry(refundFeeKey),
+    #set duck idle
+    StringEntry(key_getDuckStatus(duckId),"IDLE"),
+    #Delete status
+    DeleteEntry(key_getDuckRentedBy(duckId)),
+    IntegerEntry(amountRentedKey,newAmountRented)
+  ]
+}
 
 @Callable(i)
 func configureOracle(oracle: String) = {

@@ -6,14 +6,14 @@
     "chainId": 87,
     "proofs": [
     ],
-    "dApp": "3P4Hyw1LiE1UKxFADBkBsMrVRdQcKaByRio",
+    "dApp": "3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD",
     "payment": [],
     "call": {
       "function": "configureOracle",
       "args": [
         {
           "type": "string",
-          "value": "3P4vXL8gU27PhQv8sMT9jmoQY3oFqJNRWT9"
+          "value": "3PJgZ6AK1WVCpdCmEZpesHmaKvrQDdXG5og"
         }
       ]
     }

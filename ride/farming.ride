@@ -34,6 +34,8 @@ func staticKey_cfMasterAddress() = "static_cfMasterAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 
+func staticKey_farmingNew() = "static_farmingAddressNew"
+
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -45,6 +47,8 @@ func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakin
 func getMaintenance() =  tryGetStringExternal(getOracle(),staticKey_maintenance())
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_cfMasterAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+
+func getNewFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_farmingNew()).fromBase58String())
 
 let RefererReward = 5 #percentage
 
@@ -287,6 +291,17 @@ func isTestEnv()={
 }
 
 @Callable(i)
+func removePerches(address: String)={
+  if i.caller != getNewFarmingAddress() then throw("FRP: admin only") else
+  [
+    DeleteEntry("address_"+address+"_perchesAvailable_B"),
+    DeleteEntry("address_"+address+"_perchesAvailable_R"),
+    DeleteEntry("address_"+address+"_perchesAvailable_G"),
+    DeleteEntry("address_"+address+"_perchesAvailable_Y")
+  ]
+}
+
+@Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("FCO: admin only") else 
   [
@@ -397,30 +412,4 @@ func claimReward(asset: String) = {
 }
 
 
-@Verifier(tx)
-func verify() = {
-  if isTestEnv() then 
-      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-  else
-    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
-    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
-    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
 
-    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
-        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
-        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
-        else 0
-    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
-        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
-        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
-        else 0
-    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
-        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
-        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
-        else 0
-    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
-
-    match (tx) {
-        case _ => signaturesCount >= 2
-    }
-}
