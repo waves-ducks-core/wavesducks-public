@@ -43,6 +43,11 @@
             "value": "3PH75p2rmMKCV2nyW4TsAdFgFtmc61mJaqA"
         },
         {
+            "key": "static_farmingAddressNew",
+            "type": "string",
+            "value": "3P7i87v9nfk6Tft8YumLrJJPLRjRrALk4iL"
+        },
+        {
             "key": "static_babyDuckAddress",
             "type": "string",
             "value": "3PKwLVb8jYk58oYbfXxs2dUjD3YEKeqGWrX"
@@ -100,12 +105,12 @@
         {
             "key": "static_trustedContracts",
             "type": "string",
-            "value": "3PKX8mjwxxJGmC6uUV7opAwMmFUN61JnmG9;3PG7U7XXBt4yLq3toAtcxmXjYZNergS29uQ;3PHUMZkr66B38WxHV1boULaEjjF7giGgVy7;3P7GafyRyfQu58o6iQk5fHbkgVkQwVNPJoQ"
+            "value": "3PKX8mjwxxJGmC6uUV7opAwMmFUN61JnmG9;3PG7U7XXBt4yLq3toAtcxmXjYZNergS29uQ;3PHUMZkr66B38WxHV1boULaEjjF7giGgVy7;3P7GafyRyfQu58o6iQk5fHbkgVkQwVNPJoQ;3PHK4X9r8U6GYQBADf6iXaz9VnL2yFU2ERr;3P7s4tnbS4tahPn6tWHySS8qeNjZhAaWhL9;3PFTdVX3PmuKiBF75jAG8DUtDRM13uYDLS5"
         },
         {
             "key": "static_proxyStakingContracts",
             "type": "string",
-            "value": "3PKX8mjwxxJGmC6uUV7opAwMmFUN61JnmG9;3P7GafyRyfQu58o6iQk5fHbkgVkQwVNPJoQ;3PCoF5ZnsQJKAJJCoSqUcVVqJ2Dm4fvn9ar"
+            "value": "3PKX8mjwxxJGmC6uUV7opAwMmFUN61JnmG9;3P7GafyRyfQu58o6iQk5fHbkgVkQwVNPJoQ;3PCoF5ZnsQJKAJJCoSqUcVVqJ2Dm4fvn9ar;3PFTdVX3PmuKiBF75jAG8DUtDRM13uYDLS5;3P7s4tnbS4tahPn6tWHySS8qeNjZhAaWhL9;3PHK4X9r8U6GYQBADf6iXaz9VnL2yFU2ERr"
         },
         {
             "key": "static_maintenance",
@@ -271,6 +276,11 @@
             "key": "static_duplicatorFee",
             "type": "integer",
             "value": 1000000000
+        },
+        {
+            "key": "static_perchFee",
+            "type": "integer",
+            "value": 100000000
         }
 
         

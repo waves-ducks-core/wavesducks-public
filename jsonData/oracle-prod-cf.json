@@ -1,131 +1,155 @@
 {
-    "type": 12,
-    "sender": "3PDktsxDVEcoobpEBJcausnKo4enhcWUDEF",
-    "senderPublicKey": "23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T",
-    "fee": 500000,
-    "feeAssetId": null,
-    "version": 2,
-    "data": [
+  "type": 12,
+  "sender": "3PDktsxDVEcoobpEBJcausnKo4enhcWUDEF",
+  "senderPublicKey": "23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T",
+  "fee": 500000,
+  "feeAssetId": null,
+  "version": 2,
+  "data": [
+    {
+      "key": "allowed_contract_3P3Gtbq2raMqBkks8tr6sTZH9uHCoVTBfQ8",
+      "type": "string",
+      "value": "HUNT"
+    },
+    {
+      "key": "allowed_contract_3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw",
+      "type": "string",
+      "value": "WEARABLES"
+    },
+    {
+      "key": "allowed_contract_3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv",
+      "type": "string",
+      "value": "INCUBATOR"
+    },
+    {
+      "key": "allowed_contract_3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb",
+      "type": "string",
+      "value": "BREEDING"
+    },
+    {
+      "key": "allowed_contract_3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD",
+      "type": "string",
+      "value": "FARMING"
+    },
+          {
+      "key": "allowed_contract_3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW",
+      "value": null
+    },
+    {
+      "key": "allowed_contract_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ",
+      "type": "string",
+      "value": "REBIRTH"
+    },
+    {
+      "key": "allowed_contract_3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg",
+      "type": "string",
+      "value": "DUCKLING"
+    },
+    {
+      "key": "allowed_contract_3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT",
+      "type": "string",
+      "value": "WARS"
+    },
+    {
+      "key": "allowed_contract_3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR",
+      "type": "string",
+      "value": "ITEMS"
+    },
+    {
+      "key": "allowed_contract_3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD",
+      "type": "string",
+      "value": "ACCOUNT_BOOSTERS"
+    },
+    {
+      "key": "allowed_contract_3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo",
+      "type": "string",
+      "value": "DH1"
+    },
+    {
+      "key": "allowed_contract_3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL",
+      "type": "string",
+      "value": "DH2"
+    },
+          {
+      "key": "allowed_contract_3PBPQYB9EMuMFNy6jZCk1jvembMPkKBv1v1",
+      "type": "string",
+      "value": "SDH"
+    },
+    {
+      "key": "allowed_contract_3PDEbskwA7AXaWN9Nyh1PQxJyNxDjXFPubY",
+      "type": "string",
+      "value": "BDH"
+    },
+
+    {
+      "key": "allowed_contract_3PPyYYmEkvneaAoBPLCe3BEmtzTiKdco91x",
+      "type": "string",
+      "value": "XST"
+    },
+    {
+      "key": "allowed_contract_3PKdgEHMR7HzTQdXkHqTPRUWtBXhYF1NihS",
+      "type": "string",
+      "value": "BREEDING_BABYDUCK"
+    },
+    {
+      "key": "allowed_contract_3P472BzRvamyTwGWD2os6oQNzvy8FYt7uSG",
+      "type": "string",
+      "value": "RECHARGE_CAPACITY"
+    },
+    {
+      "key": "allowed_contract_3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ",
+      "type": "string",
+      "value": "NATIVE_POOL"
+    },
+    {
+      "key": "allowed_contract_3PJwsxCtCXTxex5dPSFjYGp95mxF1BDJDnq",
+      "type": "string",
+      "value": "LAYER2_POOL"
+    },
+    {
+      "key": "allowed_contract_3P355gZeQTTSwE5Cynz9FQekvWJRhASBHFC",
+      "type": "string",
+      "value": "RENTING"
+    },
+    {
+      "key": "allowed_contract_3PE9yT1qVM9hsRkpiV6Y7AKEubafyT5NCuB",
+      "type": "string",
+      "value": "TRTL_INCUBATOR"
+    },
+    {
+      "key": "allowed_contract_3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t",
+      "type": "string",
+      "value": "TRTL_BREEDING"
+    },
+    {
+      "key": "allowed_contract_3PG1QrkrsZaEpo8Bhe34geNNA1d9M8REGrv",
+      "type": "string",
+      "value": "TRTL_STAKING"
+    },
+    {
+      
+      "key": "allowed_contract_3PM7TWS85ZupzH1k5wYQa4HPJjEn95j5N7P",
+      "type": "string",
+      "value": "TRTL_REBIRTH"
+    },
+    {
+      "key": "allowed_contract_3P7s9drVRL4Kw3edKv5RhNd5Qrwxu1cU3d3",
+      "type": "string",
+      "value": "VEGG_FARMING"
+    },
+    {
+      "key": "COUPONS_ADDRESS",
+      "type": "string",
+      "value": "3P5W1D4UuSZrNfeZFJZcD5wT2avfbHbzTvS"
+    },
       {
-        "key": "allowed_contract_3P3Gtbq2raMqBkks8tr6sTZH9uHCoVTBfQ8",
-        "type": "string",
-        "value": "HUNT"
-      },
-      {
-        "key": "allowed_contract_3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw",
-        "type": "string",
-        "value": "WEARABLES"
-      },
-      {
-        "key": "allowed_contract_3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv",
-        "type": "string",
-        "value": "INCUBATOR"
-      },
-      {
-        "key": "allowed_contract_3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb",
-        "type": "string",
-        "value": "BREEDING"
-      },
-      {
-        "key": "allowed_contract_3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW",
-        "type": "string",
-        "value": "FARMING"
-      },
-      {
-        "key": "allowed_contract_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ",
-        "type": "string",
-        "value": "REBIRTH"
-      },
-      {
-        "key": "allowed_contract_3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg",
-        "type": "string",
-        "value": "DUCKLING"
-      },
-      {
-        "key": "allowed_contract_3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT",
-        "type": "string",
-        "value": "WARS"
-      },
-      {
-        "key": "allowed_contract_3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR",
-        "type": "string",
-        "value": "ITEMS"
-      },
-      {
-        "key": "allowed_contract_3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD",
-        "type": "string",
-        "value": "ACCOUNT_BOOSTERS"
-      },
-      {
-        "key": "allowed_contract_3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo",
-        "type": "string",
-        "value": "DH1"
-      },
-      {
-        "key": "allowed_contract_3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL",
-        "type": "string",
-        "value": "DH2"
-      },
-      {
-        "key": "allowed_contract_3PKdgEHMR7HzTQdXkHqTPRUWtBXhYF1NihS",
-        "type": "string",
-        "value": "BREEDING_BABYDUCK"
-      },
-      {
-        "key": "allowed_contract_3P472BzRvamyTwGWD2os6oQNzvy8FYt7uSG",
-        "type": "string",
-        "value": "RECHARGE_CAPACITY"
-      },
-      {
-        "key": "allowed_contract_3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ",
-        "type": "string",
-        "value": "NATIVE_POOL"
-      },
-      {
-        "key": "allowed_contract_3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV",
-        "type": "string",
-        "value": "CF_POOL"
-      },
-      {
-        "key": "allowed_contract_3PJwsxCtCXTxex5dPSFjYGp95mxF1BDJDnq",
-        "type": "string",
-        "value": "LAYER2_POOL"
-      },
-      {
-        "key": "allowed_contract_3P355gZeQTTSwE5Cynz9FQekvWJRhASBHFC",
-        "type": "string",
-        "value": "RENTING"
-      },
-      {
-        "key": "allowed_contract_3PE9yT1qVM9hsRkpiV6Y7AKEubafyT5NCuB",
-        "type": "string",
-        "value": "TRTL_INCUBATOR"
-      },
-      {
-        "key": "allowed_contract_3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t",
-        "type": "string",
-        "value": "TRTL_BREEDING"
-      },
-      {
-        "key": "allowed_contract_3PG1QrkrsZaEpo8Bhe34geNNA1d9M8REGrv",
-        "type": "string",
-        "value": "TRTL_STAKING"
-      },
-      {
-        
-        "key": "allowed_contract_3PM7TWS85ZupzH1k5wYQa4HPJjEn95j5N7P",
-        "type": "string",
-        "value": "TRTL_REBIRTH"
-      },
-      {
-        "key": "allowed_contract_3P7s9drVRL4Kw3edKv5RhNd5Qrwxu1cU3d3",
-        "type": "string",
-        "value": "VEGG_FARMING"
-      },
-      {
-        "key": "COUPONS_ADDRESS",
-        "type": "string",
-        "value": "3P5W1D4UuSZrNfeZFJZcD5wT2avfbHbzTvS"
+          "key": "FARMING_DAPP",
+          "type": "string",
+          "value": "3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD"
+
       }
-    ]
-  }
+  ]
+}
+
+
+
