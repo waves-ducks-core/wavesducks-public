@@ -505,6 +505,7 @@ func itemDuplicator()={
 
 @Callable(i)
 func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = {
+  if parentFixedGene != 1 && parentFixedGene != 2 then throw("FG: Parent fixed gene can be only 1 or 2") else
   let firstPayment = i.payments[0].value()
   let validPayment = checkAdditionalPayment(i.payments[1])
   let firstAssetId = firstPayment.assetId.value().toBase58String()

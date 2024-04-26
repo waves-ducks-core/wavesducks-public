@@ -103,7 +103,7 @@ func buyRopeInverted(eggId: String, price: Int, distance: Int, backendSignature:
   let halfPrice = price/2
   strict validPayment = checkAdditionalPayment(i.payments[0],price)
   if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), getBackendPubKey())) then throw("RBR: Invalid proof from backend") else
-    if distance > 1000 then throw("RBR: You can only maximum boost 1000meters distance!") else
+    if distance > 1200 then throw("RBR: You can only maximum boost 1200 meters distance!") else
     let leftToPay = if i.originCaller==i.caller then {
           strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[halfPrice],[]).asInt()
           halfPrice-amountPaidByCoupons

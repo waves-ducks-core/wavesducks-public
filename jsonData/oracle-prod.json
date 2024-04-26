@@ -204,12 +204,16 @@
             "value": 1500000000
             
         },
-        {
-            "key": "static_ammAddress",
-            "type": "string",
-            "value": "3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ"
-            
-        },
+            {
+              "key": "amm_burn_3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "key": "static_ammAddress",
+              "type": "string",
+              "value": "3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ,3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV"
+            },
         {
             "key": "static_capacityAddress",
             "type": "string",

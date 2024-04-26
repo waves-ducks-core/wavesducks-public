@@ -41,6 +41,11 @@
             "key": "ART-FEED25_issue",
             "type": "boolean",
             "value": true
+        },
+        {
+            "key": "ART-FEED25_issue",
+            "type": "boolean",
+            "value": true
         }
 
     ],
