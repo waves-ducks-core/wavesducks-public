@@ -137,11 +137,11 @@ func getAssetRarityComplete(isJackpot: Boolean, assetName: String)={
   rarity
 }
 
-func updateFarmingPower(address: String, asset:String) ={
+func updateFarmingPower(address: String, asset:String, originCaller: String) ={
   let totalStaked = tryGetInteger(totalStakedKey())
   let totalStakedUser = tryGetInteger(totalStakedUserKey(address))
   let currentFP = tryGetInteger(assetFarmingPower(address,asset))
-  let newFP = invoke(this,"calculateFarmPower",[asset],[]).asIntTuple()
+  let newFP = invoke(this,"calculateFarmPower",[asset, originCaller],[]).asIntTuple()
   if currentFP != 0 then
   [
       IntegerEntry(totalStakedKey(),totalStaked-currentFP+newFP._1),
@@ -150,11 +150,11 @@ func updateFarmingPower(address: String, asset:String) ={
   ] else []
 }
 
-func claimStakingResult (address: String, asset: String, recalc: Boolean, walletToReceive: String) = {
+func claimStakingResult (address: String, asset: String, recalc: Boolean, walletToReceive: String,bonusCaller:String) = {
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let lastCheckInterest = tryGetInteger(keyLastCheckInterest(address, asset))
     let stakedAmount = tryGetInteger(assetFarmingPower(address, asset))
-    strict fpUpdate = if recalc then updateFarmingPower(address, asset) else []
+    strict fpUpdate = if recalc then updateFarmingPower(address, asset,bonusCaller) else []
     let reward = if (lastCheckInterest > 0)
         then fraction((currentInterest - lastCheckInterest), stakedAmount, Scale)
         else 0
@@ -188,9 +188,10 @@ func isProxyStakingSc(address: String)={
   allowedContractsList.indexOf(address) !=unit
 }
 
+
 #TODO: count userfarmingboosts, add in multiplier for rarity!
 @Callable(i)
-func calculateFarmPower(assetId:String)={
+func calculateFarmPower(assetId:String, bonusAddress: String)={
   if !(assetInfo(assetId.fromBase58String()).value().issuer == getBreederAddress() 
       ||assetInfo(assetId.fromBase58String()).value().issuer == getIncubatorAddress()) then throw("This does not seem like a valid Duck!") else
   let assetName = assetInfo(assetId.fromBase58String()).value().name
@@ -213,7 +214,7 @@ func calculateFarmPower(assetId:String)={
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
-  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,i.originCaller.toString()],[]).asInt()
+  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).asInt()
   #Recalculate bonusses every claim
   let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100
   ([
@@ -336,8 +337,8 @@ func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolea
   
   if (pmt.amount != 1) then throw("NFT is not attached") else
   
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asIntTuple()
-    strict result = claimStakingResult(address,assetId.toBase58String(), false, address)
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).asIntTuple()
+    strict result = claimStakingResult(address,assetId.toBase58String(), false, address, i.originCaller.toString())
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower._1),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower._1),
@@ -359,7 +360,7 @@ func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolea
 func unstakeNFT(asset: String)={
   let address = i.caller.toString()
   if tryGetString(asset+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else 
-  strict result = claimStakingResult(address,asset,false,address)
+  strict result = claimStakingResult(address,asset,false,address, i.originCaller.toString())
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let color = tryGetString("address_"+address+"_asset_"+asset+"_perchColor")
   let withoutPerch = tryGetBoolean(asset+"_without_perch")
@@ -406,7 +407,8 @@ func claimReward (assetId: String) = {
   if (i.payments.size() > 1) then throw("Please don't add extra payments") else 
   let toReceive = if i.originCaller != getCfMasterAddress() then i.caller.toString() else tryGetString(assetId+"_original_caller")
   let owner = if i.originCaller != getCfMasterAddress() then i.caller.toString() else tryGetString(assetId+"_owner")
-  let result = claimStakingResult(owner, assetId,true, toReceive)
+  let origin = if i.originCaller != getCfMasterAddress() then i.originCaller.toString() else tryGetString(assetId+"_original_caller")
+  let result = claimStakingResult(owner, assetId,true, toReceive, origin)
   
   (
     validPayment++result._1, 
