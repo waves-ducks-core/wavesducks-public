@@ -162,7 +162,7 @@ func claimStakingResult (address: String, asset: String, recalc: Boolean, wallet
       ([
         ScriptTransfer(addressFromStringValue(walletToReceive), reward , getEggAssetId()),
         IntegerEntry(keyLastCheckInterest(address, asset), currentInterest), 
-        IntegerEntry(rewardClaimedKey(address, asset), (tryGetInteger(rewardClaimedKey(address,asset))) + reward)
+        IntegerEntry(rewardClaimedKey(walletToReceive, asset), (tryGetInteger(rewardClaimedKey(walletToReceive,asset))) + reward)
       ]++fpUpdate, reward)
     }
 
