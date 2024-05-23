@@ -1,0 +1,47 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+func staticKey_mutantIncubatorAddress() = "static_mutantIncubatorAddress"
+func staticKey_oracleAddress() = "static_oracleAddress"
+
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getMutantBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantIncubatorAddress()).fromBase58String()) 
+
+func asRarity(value: Any) = match value {
+  case strIntTuple: (String,Int) => strIntTuple
+  case _ => throw("BAI: wrong type, expected: strIntTuple")
+}
+
+func determineClasses(assetName: String)={
+  let genotype = assetName.drop(5).dropRight(3).split("")
+  let classes = [genotype[0],genotype[2],genotype[4],genotype[6],genotype[8],genotype[10],genotype[12],genotype[14]]
+  (
+    containsElement(classes,"T"),
+    containsElement(classes,"D")
+  )
+}
+
+@Callable(i)
+func calculateFarmPower(assetId:String)={
+  if !(assetInfo(assetId.fromBase58String()).value().issuer == getMutantBreederAddress()) then throw("This does not seem like a valid Turtle!")else
+  let assetName = assetInfo(assetId.fromBase58String()).value().name
+  strict asRarityResult = invoke(getMutantBreederAddress(), "getRarity", [assetName],[]).asRarity()
+  let totalGenes = asRarityResult._2
+  let power = pow(15,1,totalGenes,0,2,DOWN)
+
+  ([
+    IntegerEntry("DEBUG_"+assetName, power)
+  ],power)
+
+}
