@@ -169,14 +169,13 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       let result = if (win.indexOf("perch") != unit) then {
         let color = win.takeRight(1)
               strict call = if !double then  
-                strict first = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
+                strict first = invoke(getDuckStakingAddress(), "addFreePerch", [address, color,1], [])
                 [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
               else  
-                strict first = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
-                strict second = invoke(getDuckStakingAddress(), "addFreePerch", [address, color], [])
+                strict first = invoke(getDuckStakingAddress(), "addFreePerch", [address, color,2], [])
                 [
                   StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.asString()),
                   StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
                 ]
 

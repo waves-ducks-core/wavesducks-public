@@ -75,13 +75,22 @@ func nrOfTypeGenes(gen:String)={
   let duckGens = FOLD<26>(charList(), "", composeStringDuck)
   let catGens = FOLD<26>(charList(), "", composeStringCat)
   let hondGens = FOLD<26>(charList(), "", composeStringDog)
+  let finishedTurtleGens = if (turtleGens == "") then "" else "T:"+turtleGens+"_"
+  let finishedDuckGens = if (duckGens == "") then "" else "D:"+duckGens+"_"
+  let finishedCatGens = if (catGens == "") then "" else "C:"+catGens+"_"
+  let finishedHondGens = if (hondGens == "") then "" else "H:"+hondGens+"_"
   ([
     StringEntry("DEBUG_TURTLE", turtleGens),
     StringEntry("DEBUG_DUCK", duckGens),
     StringEntry("DEBUG_CAT", catGens),
     StringEntry("DEBUG_HOND", hondGens)
-  ], "T:"+turtleGens+"_D:"+duckGens+"_C:"+catGens+"_H:"+hondGens
+  ], finishedTurtleGens+finishedDuckGens+finishedCatGens+hondGens
   )
+}
+
+@Callable(i)
+func pocFarmPowers(name: String)={
+  []
 }
 
 @Callable(i)
@@ -116,12 +125,16 @@ let gen = "MTNT-"
   +getRandomGen(parent1Gen[0]+parent1Gen[12], parent2Gen[0]+parent2Gen[12], 7, txId.fromBase58String(), finishHeight)
   +"-G"+color
 let rarityCalc = nrOfTypeGenes(gen)
+
+let asset = Issue("MTNT-"+toString(tryGetInteger("amount")+1), gen, 1, 0, false, unit, finishHeight)
+let assetId = asset.calculateAssetId()
 [
-  IntegerEntry("DEBUG_amount", tryGetInteger("DEBUG_amount")+1),
-  IntegerEntry("DEBUG_rarity:"+rarityCalc._2, tryGetInteger("DEBUG_rarity:"+rarityCalc._2)+1),
-  StringEntry("DEBUG_parent1", name1),
-  StringEntry("DEBUG_parent2", name2),
-  StringEntry("DEBUG_name", "MTNT-"+toString(tryGetInteger("DEBUG_amount")+1)),
-  StringEntry("DEBUG_result", gen)
+  IntegerEntry("amount", tryGetInteger("amount")+1),
+  IntegerEntry("rarity:"+rarityCalc._2, tryGetInteger("rarity:"+rarityCalc._2)+1),
+  StringEntry(assetId.toBase58String()+"_parent1", name1),
+  StringEntry(assetId.toBase58String()+"_parent2", name2),
+  StringEntry(assetId.toBase58String()+"_name", "MTNT-"+toString(tryGetInteger("amount")+1)),
+  StringEntry(assetId.toBase58String()+"_result", gen),
+  asset
 ]++rarityCalc._1
 }

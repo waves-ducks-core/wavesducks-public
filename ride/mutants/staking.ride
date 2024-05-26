@@ -1,8 +1,7 @@
 {-# STDLIB_VERSION 5 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
-func staticKey_mutantIncubatorAddress() = "static_mutantIncubatorAddress"
-func staticKey_oracleAddress() = "static_oracleAddress"
+func getReveneuTypes() = ["EGG","SPICE","VEGG","FEED"]
 
 
 func tryGetStringExternal(address: Address, key: String) = {
@@ -11,16 +10,73 @@ func tryGetStringExternal(address: Address, key: String) = {
         case _ => ""
     }
 }
+
+func staticKey_mutantIncubatorAddress() = "static_mutantIncubatorAddress"
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_accBoosterAddress() = "static_accBoosterAddress"
+#This should be 4 egg/vegg
+func staticKey_mutariumFee() = "static_mutariumFee"
+func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_burnAddress() = "static_burnAddress"
+
+func rewardClaimedKey(address: Address, reveneuType: String) = address.toString() + "_claimed_"+reveneuType
+func totalStakedKey(reveneuType: String) = "total_staked_"+reveneuType
+func totalStakedUserKey(address:String, reveneuType: String) = "total_staked_"+address
+func keyGlobalLastInterest(reveneuType: String) = "global_lastCheck_interest_"+reveneuType
+func keyLastCheckInterest(address: Address, reveneuType: String) =  address.toString() + "_lastCheck_interest_"+reveneuType
+func keyGlobalEarned(reveneuType: String) =  "global_earnings_"+reveneuType
+func staticKey_extraFee() = "static_extraFee"
+func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
+
+
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getMutantBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantIncubatorAddress()).fromBase58String()) 
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 
+func asIntTuple(value: Any) = match value {
+  case int: (Int,Int) => int
+  case _ => throw("FAI: wrong type, expected: (Int,Int)")
+}
+
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("FAB: wrong type, expected: Boolean")
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("FAI: wrong type, expected: Int")
+}
 func asRarity(value: Any) = match value {
   case strIntTuple: (String,Int) => strIntTuple
   case _ => throw("BAI: wrong type, expected: strIntTuple")
+}
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("FCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != feeAmount then throw("FCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
 }
 
 func determineClasses(assetName: String)={
@@ -32,16 +88,186 @@ func determineClasses(assetName: String)={
   )
 }
 
+func calculatePerchPrice(address: String)= {
+  let hasArtefactStaked = tryGetStringExternal(getAccBoosterAddress(),"ART-XMISTL_" + address + "_owner")
+  let perchPrice = getIntegerValue(getOracle(),staticKey_mutariumFee())
+  if hasArtefactStaked == ""
+  then
+    perchPrice
+  else
+    perchPrice/10*9
+
+}
+
+func claimStakingResult (address: String, asset: String, recalc: Boolean, reveneuType: String) = {
+  #TODO; Implement claiming from the different classes
+  []
+    #let currentInterest = tryGetInteger(keyGlobalLastInterest)
+    #let lastCheckInterest = tryGetInteger(keyLastCheckInterest(address, asset))
+    #let stakedAmount = tryGetInteger(assetFarmingPower(address, asset))
+    #strict fpUpdate = if recalc then updateFarmingPower(address, asset,bonusCaller) else []
+    #let reward = if (lastCheckInterest > 0)
+    #    then fraction((currentInterest - lastCheckInterest), stakedAmount, Scale)
+    #    else 0
+
+    #  ([
+    #    ScriptTransfer(addressFromStringValue(walletToReceive), reward , getEggAssetId()),
+    #    IntegerEntry(keyLastCheckInterest(address, asset), currentInterest), 
+    #    IntegerEntry(rewardClaimedKey(walletToReceive, asset), (tryGetInteger(rewardClaimedKey(walletToReceive,asset))) + reward)
+    #  ]++fpUpdate, reward)
+  }
+
+func setKeysReveneuType(address: String, assetId: ByteVector, reveneuType: String, fp: Int) = {
+      [
+      IntegerEntry(totalStakedKey(reveneuType),tryGetInteger(totalStakedKey(reveneuType))+fp),
+      IntegerEntry(totalStakedUserKey(address,reveneuType),tryGetInteger(totalStakedUserKey(address, reveneuType))+fp)
+      ]
+}
+
+func deterMineClassAndClaimType(address: String, assetId: String, assetName: String, recalc: Boolean) = {
+  let (isT, isD) = determineClasses(assetName)
+  let tKeys = if isT then {
+    claimStakingResult(address, assetId,recalc, "SPICE")++
+    claimStakingResult(address, assetId,recalc, "FEED")
+  } else []
+  let dKeys = if isD then {
+    claimStakingResult(address, assetId, recalc, "EGG")++
+    claimStakingResult(address, assetId, recalc, "VEGG")
+  } else []
+  tKeys++dKeys
+}
+
+func deterMineClassAndSetType(address: String, assetId: ByteVector, fp: Int, assetName: String) = {
+  let (isT, isD) = determineClasses(assetName)
+  let tKeys = if isT then {
+    setKeysReveneuType(address, assetId, "SPICE", fp)++
+    setKeysReveneuType(address, assetId, "FEED", fp)
+  } else []
+  let dKeys = if isD then {
+    setKeysReveneuType(address, assetId, "EGG", fp)++
+    setKeysReveneuType(address, assetId, "VEGG", fp)
+  } else []
+  tKeys++dKeys
+}
+
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("ACO: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
 @Callable(i)
 func calculateFarmPower(assetId:String)={
-  if !(assetInfo(assetId.fromBase58String()).value().issuer == getMutantBreederAddress()) then throw("This does not seem like a valid Turtle!")else
+  if !(assetInfo(assetId.fromBase58String()).value().issuer == getMutantBreederAddress()) then throw("This does not seem like a valid Mutant!")else
   let assetName = assetInfo(assetId.fromBase58String()).value().name
   strict asRarityResult = invoke(getMutantBreederAddress(), "getRarity", [assetName],[]).asRarity()
-  let totalGenes = asRarityResult._2
+  let totalGenes = asRarityResult._1.dropRight(2).split("").size()/2
   let power = pow(15,1,totalGenes,0,2,DOWN)
 
+  #3 months = 90 days = 1%/day roughly
+  let multiplier = (height-3750000)*100/(60*24*30*3)
+  #TODO make this percentage multiplier
+  let basePower = tryGetInteger(assetId+"_basePower")
+  let finalPower = if basePower > 0  then basePower else power*multiplier/100
+  let finalPowerRarity = finalPower*asRarityResult._2/100
   ([
-    IntegerEntry("DEBUG_"+assetName, power)
-  ],power)
+  ],(finalPowerRarity,finalPower))
 
+}
+
+@Callable(i)
+func redeemMutuarium()={
+  []
+}
+
+@Callable(i)
+func buyMutuarium(color: String, refererAddress: String) = {
+    strict validPayment = checkAdditionalPayment(i.payments[0])
+    if (["D","G"].indexOf(color).value() > 0) then {
+      throw("you can not buy this Mutarium")
+    }else
+    if (["A", "B", "C"].indexOf(color).value() < 0) then {
+      throw("you need to set color properly")
+    } else {
+      let exactPrice = calculatePerchPrice(i.caller.toString())
+        let leftToPay = if i.originCaller==i.caller then {
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+          exactPrice-amountPaidByCoupons
+        }else {
+            exactPrice
+        }
+        strict payment = if leftToPay!=0 then {
+        let firstPayment = if size(i.payments) == 2 then  i.payments[1].value() else  i.payments[0].value()
+
+        if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+        if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+        let refererRewardForPerch = fraction(leftToPay, 5, 100)
+        strict refCall = invoke(getRefContractAddress(), "refPayment",
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
+
+        let toBurn = if refCall then leftToPay-refererRewardForPerch else leftToPay
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),toBurn)])
+            leftToPay
+      }else 0
+      
+
+      let perchAmountKey = "address_" + i.caller.toString() + "_mutariumAvailable_" + color
+      let perchAmount = tryGetInteger(perchAmountKey)
+
+      [
+        IntegerEntry(perchAmountKey, perchAmount + 1)
+      ]++validPayment
+      
+    }
+  
+}
+
+@Callable(i)
+func stakeNFT() = {
+  strict validPayment = checkAdditionalPayment(i.payments[0])
+  let pmt = i.payments[1].value()
+  let assetId = pmt.assetId.value()
+  let assetName = assetInfo(assetId).value().name.value()
+  let address = i.caller.toString()
+
+  let color = assetName.takeRight(1)
+  let availablePerches = tryGetInteger("address_"+address+"_mutariumAvailable_"+color)
+  let perches = if (availablePerches <= 0) then throw("no perches available for the color " + color) else 
+    [
+    IntegerEntry("address_"+address+"_mutariumAvailable_"+color, availablePerches - 1),
+    StringEntry("address_"+address+"_asset_"+assetId.toBase58String()+"_perchColor", color)
+    ]
+  
+  if (pmt.amount != 1) then throw("NFT is not attached") else
+  
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).asIntTuple()
+    strict result = deterMineClassAndClaimType(address,assetId.toBase58String(),assetName,false)
+    [
+      StringEntry(assetId.toBase58String()+"_owner",address),
+      IntegerEntry(assetId.toBase58String()+"_basePower",farmingPower._2),
+      IntegerEntry(assetFarmingPower(address,assetId.toBase58String()),farmingPower._2)
+    ]
+    ++deterMineClassAndSetType(address, assetId, farmingPower._2, assetName)
+    ++validPayment
+    ++perches
+    ++result
+}
+
+@Callable(i)
+func topUpReward () = {
+  []
+}
+
+@Callable(i)
+func unstakeNFT(asset: String) = {
+  []
+}
+
+@Callable(i)
+func claimReward () = {
+[]
 }

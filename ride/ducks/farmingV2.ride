@@ -322,7 +322,6 @@ func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolea
   let isJackpot = assetName.takeRight(1) == "U"
   let address = i.caller.toString()
   let perchAddress = if usePerchOrigin then i.originCaller.toString() else address
-  let rarity = getAssetRarityComplete(isJackpot,assetName)
 
   strict perches = 
   if stakeWithoutPerch then []
