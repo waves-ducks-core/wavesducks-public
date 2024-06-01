@@ -4,6 +4,7 @@
 
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 
@@ -43,6 +44,7 @@ func tryGetStringExternal(address: Address, key: String) = {
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getMutantFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String())
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -125,10 +127,20 @@ func oneTimeUseFeed() ={
     if !artefactName.contains("ART-FEED") then throw("You can't use this artafect to earn feedlimit!") else
         let invoker = i.caller.toString()
         let amount = drop(artefactName,8)
+        let intValue = parseIntValue(amount)
+        strict topup = invoke(getMutantFarmingAddress(), "topUpReward", ["FEED",intValue/2], [])
         [
-          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+parseIntValue(amount)),
+          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+intValue),
           Burn(assetId,1)
         ]++validPayment
+}
+
+@Callable(i)
+func addFeedLimit(amount: Int, address: String) ={
+  if i.caller != getMutantFarmingAddress() then throw("admin only") else
+    [
+      IntegerEntry(keyFeedLimit(address), tryGetInteger(keyFeedLimit(address))+amount)
+    ]
 }
 
 
