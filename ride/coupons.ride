@@ -40,6 +40,7 @@ func staticKey_marketplace() = "static_marketplaceAddress"
 func staticKey_capacityAddress() = "static_capacityAddress"
 func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -58,6 +59,7 @@ func getLevelSystemAddress() = Address(tryGetStringExternal(getOracle(),staticKe
 func getMarketPlaceAddress() = Address(tryGetStringExternal(getOracle(),staticKey_marketplace()).fromBase58String())
 func getVeggFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_veggFarmingAddress()).fromBase58String())
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
@@ -235,6 +237,7 @@ func useCoupons(amountTryingToPay:Int)= {
     let keySpendSc = couponsSpendOnSc(i.caller.toString())
 
     strict topUp = invoke(getVeggFarmingAddress(), "topUpReward", [amountPaid/100*25],[])
+    strict topUp2 = invoke(getMutantFarmingAddress(), "topUpReward", ["VEGG",amountPaid/100*15],[])
 
     let totalSpend = tryGetInteger(keySpend)+amountPaid
     let totalSpendSc = tryGetInteger(keySpendSc)+amountPaid
