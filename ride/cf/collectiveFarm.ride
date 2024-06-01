@@ -1,0 +1,362 @@
+{-# STDLIB_VERSION 6 #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+{-# CONTENT_TYPE DAPP #-}
+
+let keyMAccPKey = "master_pk"
+let keyBackupPKey = "back_pk"
+let warsPKey = "wars_pk"
+
+func getStr(key: String) = {
+  match getString(this, key) {
+      case b:String => b
+      case _ => ""
+  }
+}
+
+
+let mAccPKeyString = getStr(keyMAccPKey)
+let backupPKeyString = getStr(keyBackupPKey)
+func getBackupKey() = if backupPKeyString== "" then this.bytes else backupPKeyString.fromBase58String()
+let mAccPKey = mAccPKeyString.fromBase58String()
+
+let mAccAddr = addressFromPublicKey(mAccPKey)
+
+let feePercent = getIntegerValue(mAccAddr, "f_" + this.toString() + "_fee")
+let stakingAddress = valueOrErrorMessage(getString(mAccAddr, "f_" + this.toString() + "_stake_address"),"f_" + this.toString() + "_stake_address not defined").addressFromStringValue()
+
+
+
+let wAccPKey = valueOrErrorMessage(getString(mAccAddr, warsPKey),warsPKey + " not defined").fromBase58String()
+
+let kTotalLiquidity = "total_liquidity"
+let kInitialized = "INITIALIZED"
+let kLiquidityThreshold = "LIQUIDITY_THRESHOLD"
+let kTotalFarmingReward = "total_farming_reward"
+let kShareAssetId = "SHARE_ASSET_ID"
+let kIncubatorDapp = "INCUBATOR_DAPP"
+let kBreederDapp = "BREEDER_DAPP"
+let kFarmingDapp = "FARMING_DAPP"
+let kMarketProxyDapp = "MARKETPLACE_PROXY_DAPP"
+let kAuctionDapp = "AUCTION_DAPP"
+let kLocked = "LOCKED"
+let kCeoCollectedFee = "ceo_collected_fee"
+let kCeoCollectedFeeOverall = "ceo_fee_overall"
+let kLockedInvestments = "locked_investments"
+
+let keyTotalCompound = "total_compound"
+let keyGlobalStaked = "global_staked"
+
+func getInt(key: String) = {
+  match getInteger(this, key) {
+      case b:Int => b
+     case _ => 0
+  }
+}
+
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => unit
+  }
+}
+
+func getStrA(a: Address, k: String) = {
+  match getString(a, k) {
+      case b:String => b
+      case _ => ""
+  }
+}
+
+func tryGetBoolean(a: Address, key: String) = {
+    match getBoolean(a, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
+
+func getIntA(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func getVoteHeightKey() = "VOTE_HEIGHT_START"
+func resultVoteKey(height: String) = "LIQUIDATED_"+height
+
+func isLiquidated()={
+  let voteHeight = getIntA(stakingAddress, getVoteHeightKey())
+  if voteHeight ==0 then false else
+  tryGetBoolean(stakingAddress, resultVoteKey(voteHeight.toString()))
+}
+
+
+func getMarketProxyAddr() = {
+  getStrA(mAccAddr, kMarketProxyDapp)
+}
+
+
+
+func getEggId() = {
+  getStringValue(mAccAddr, "EGG_ASSET_ID").fromBase58String()
+}
+func getShareAssetId() = {
+  getStr(kShareAssetId).fromBase58String()
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
+
+@Callable(i)
+func initMasterKey(publicKey: String)={
+  if (i.caller != this) then {
+    throw("You cannot do this action")
+  } else if mAccPKeyString != "" then {
+      throw("Master public key already set, you can't override!")
+  }else{
+      [
+      StringEntry(keyMAccPKey,publicKey)
+      ]
+  }
+  
+
+}
+
+@Callable(i)
+func initBackupKey(publicKey: String)={
+  if (i.caller != mAccPKey.addressFromPublicKey()) then {
+    throw("You cannot do this action")
+  }else {
+      [
+      StringEntry(keyBackupPKey,publicKey)
+      ]
+  }
+  
+
+}
+
+@Callable(i)
+func initCollectiveFarm(name: String, minimumThreshold: Int, migration: Boolean, totalFarmingReward: Int,totalLiquidity: Int, totalFarmToken: Int) = {
+  if mAccPKeyString == "" then {
+      throw("First initiatie a master public key!")
+  }else if (i.callerPublicKey != mAccPKey) then {
+      throw("_1")
+  }else if (getBool(kInitialized) != unit) then {
+      throw("_2")
+  } else if (migration==false && (i.payments[0].amount != 1000_0000 || i.payments[0].assetId != getEggId()) ) then {
+      throw("_20")
+  } else {
+      let shareTokens = if (migration) then totalFarmToken else 1000_0000
+      let shareToken = Issue(name, "Team token for the \"" + name + "\" collective farm", shareTokens, 8, true)
+      let totLiquidity = if (migration) then totalLiquidity else 1000_0000
+      let totFarmingReward = if (migration) then [IntegerEntry(kTotalFarmingReward, totalFarmingReward)] else []
+      
+      [
+        StringEntry(kShareAssetId, shareToken.calculateAssetId().toBase58String()),
+        BooleanEntry(kInitialized, true),
+        IntegerEntry(kTotalLiquidity, totLiquidity),
+        shareToken,
+        ScriptTransfer(i.caller, shareTokens, shareToken.calculateAssetId()),
+        BooleanEntry(kLocked, false),
+        IntegerEntry(kLiquidityThreshold, minimumThreshold)
+      ]++totFarmingReward
+  }
+}
+
+@Callable(i)
+func setLock(s: Boolean) = {
+  if (i.callerPublicKey != mAccPKey) then {
+    throw("_21")
+  } else {
+      [
+        BooleanEntry(kLocked, s)
+      ]
+  }
+}
+
+
+@Callable(i)
+func lockInvestments() = {
+  if (i.caller != this) then {
+    throw("You cannot lock this contract")
+  } else {
+      [
+        BooleanEntry(kLockedInvestments, true)
+      ]
+  }
+}
+
+#@Callable(i)
+#func unlockInvestments() = {
+#  if (i.caller != this) then {
+#    throw("You cannot lock this contract")
+#  } else {
+#      [
+#        BooleanEntry(kLockedInvestments, false)
+#      ]
+#  }
+#}
+
+@Callable(i)
+func provideLiquidity() = {
+  if isLiquidated() then throw("CPL: CF is liquidated!") else
+  let eggAssetId = getEggId()
+  if (i.callerPublicKey != wAccPKey && i.callerPublicKey != mAccPKey && getBool(kLockedInvestments) == true) then throw("Contract is locked for investments by it's CEO. Please invest in another collective farm.") else
+  if (getBool(kLocked) == true) then throw("_22") else
+  if (i.payments[0].assetId != eggAssetId) then throw("_4") else
+  if (i.payments[0].amount < 100_0000) then throw("Min amount to invest is 0.01 EGG")
+  else {
+    let totalLiquidity = getInt(kTotalLiquidity)
+    let shareTokensToGive = i.payments[0].amount # decimals difference
+
+    let shareTokensId = getStr(kShareAssetId).fromBase58String()
+
+    let reissue = Reissue(getShareAssetId(), shareTokensToGive, true)
+    let kParticipated = "account_" + i.caller.toString() + "_participated"
+    let alreadyParticipated = getBool(kParticipated)
+    ([
+      reissue,
+      ScriptTransfer(i.caller, shareTokensToGive, shareTokensId),
+      IntegerEntry(kTotalLiquidity, totalLiquidity + i.payments[0].amount.value() ),
+      BooleanEntry(kParticipated, true)
+    ],
+    shareTokensToGive
+    )
+  }
+}
+
+@Callable(i)
+func claimFarmingRewardProxy(ids: String) = {
+  if isLiquidated() then throw("CCFRP: CF is liquidated!") else
+  if (i.callerPublicKey != mAccPKey) then throw("_23")
+  else {
+    let eggAssetId = getEggId()
+    let shareAssetId = getShareAssetId()
+
+    let farmingDapp = getStrA(mAccAddr, kFarmingDapp).addressFromStringValue()
+
+    func claimReward(accum: Int, nftId: String) = {
+      strict invRes = invoke(farmingDapp, "claimReward", [nftId], [])
+      match invRes {
+        case int: Int => accum + int
+        case _ => throw("_5")
+      }
+    }
+
+    let nftIds = ids.split(";")
+    let foldResult = FOLD<10>(nftIds, 0, claimReward)
+    let claimedReward = match foldResult {
+      case int: Int => int
+      case _ => throw("_6")
+    }
+    let totalFarmingReward = getInt(kTotalFarmingReward)
+    let farmCeoFeeSize = fraction(claimedReward, feePercent, 100)
+    let currentCeoFee = getInt(kCeoCollectedFee)
+    let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
+    let amountToPay = claimedReward-farmCeoFeeSize
+    
+    strict topUp = invoke(stakingAddress,"topUpReward",[],[
+                          AttachedPayment(eggAssetId,amountToPay)]
+                          )
+    [
+      IntegerEntry(kTotalFarmingReward, totalFarmingReward + amountToPay),
+      IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
+      IntegerEntry(kCeoCollectedFeeOverall, ceoFeeOverall + farmCeoFeeSize)
+    ]
+  }
+}
+
+@Callable(i)
+func claimCeoFee(address1: String, address2: String, address1Share: Int, address2Share: Int) = {
+  if isLiquidated() then throw("CCCF: CF is liquidated!") else
+  if(address1Share <0 ) then throw("Share 1 can't be negative") else
+  if(address2Share <0 ) then throw("Share 2 can't be negative") else  
+  if (address1Share + address2Share != 100) then throw("Sum of shares should be 100") else
+  if (getBool(kLocked) == true) then throw("_22") else
+  if (i.caller == this) then {
+    let currentCeoCollectedFee = getInt(kCeoCollectedFee)
+    let address1Reward = if (address2 == "") then currentCeoCollectedFee else fraction(currentCeoCollectedFee, address1Share, 100)
+    let address2Reward = if (address2 == "") then 0 else fraction(currentCeoCollectedFee, address2Share, 100)
+    let scriptTransferAddress2 = if (address2 == "") then [] else [ScriptTransfer(address2.addressFromStringValue(), address2Reward, getEggId())]
+    scriptTransferAddress2++
+    [
+      ScriptTransfer(address1.addressFromStringValue(), address1Reward, getEggId()),
+      IntegerEntry(kCeoCollectedFee, 0)
+    ]
+  } else throw("Only manager can call the contract")
+}
+
+@Callable(i)
+func callUnstakeProxy(function: String, assetId: String) = {
+  if isLiquidated() then throw("CCUP: CF is liquidated!") else
+  if (getBool(kLocked) == true) then throw("Contract is locked now") else
+  if (function != "unstakeNFT" && function != "unstakeJackpot") then throw("Bad function name") else
+  if (i.caller != this) then throw("Can be called only by the account") else {
+    let eggAssetId = getEggId()
+    let shareAssetId = getShareAssetId()
+    let farmingDappAddress = getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue()
+    strict unstakedReward = invoke(farmingDappAddress, function, [assetId], [AttachedPayment(unit,1000000)])
+
+    let reward = match unstakedReward {
+      case int: Int =>  int
+      case _ => throw("Error during unstaking")
+    }
+
+
+    let currentCeoFee = getInt(kCeoCollectedFee)
+    let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
+    let farmCeoFeeSize = fraction(reward, feePercent, 100)
+
+    let amountToPay = reward-farmCeoFeeSize
+    strict topUp = invoke(stakingAddress,"topUpReward",[],[
+                          AttachedPayment(eggAssetId,amountToPay)]
+                          )
+    [
+      IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
+      IntegerEntry(kCeoCollectedFeeOverall, ceoFeeOverall + farmCeoFeeSize)
+    ]
+  }
+}
+
+@Verifier(tx)
+func verify() = {
+  let checkStarted = getInt(kTotalLiquidity) >= getInt(kLiquidityThreshold)
+  match (tx) {
+      case inv:InvokeScriptTransaction => {
+        let acceptedCallsStaking = ["stakeFarmTokens","claimReward","withdrawFarmTokens","voteToLiquidate"]
+        let acceptedCallsThis = ["callUnstakeProxy","claimCeoFee","lockInvestments","unlockInvestments"]
+        if (inv.function == "unstakeNFT" && inv.dApp.addressFromRecipient() == getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue() )then throw("You cannot call these functions directly") else
+        if (inv.dApp.addressFromRecipient() == this &&inv.function == "initMasterKey" && mAccPKeyString=="")then sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
+        else if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false && sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())== false) then throw("_100") else
+        if (checkStarted == false) then throw("_14") else
+        if (getBool(kLocked) == true) then throw("_22") else
+        # Avoid scam with high fees => allow only Waves and minimal amount
+        if (inv.fee > 900000 || inv.feeAssetId != unit) then {
+          throw("_15: to much fee")
+        } else if (inv.payments.size() > 4) then {
+          throw("_17: to big payment size")
+        } else if (inv.dApp.addressFromRecipient() == this && containsElement(acceptedCallsThis,inv.function)) then {
+          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
+        } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
+          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
+        } else if (inv.dApp.addressFromRecipient() == stakingAddress && containsElement(acceptedCallsStaking,inv.function) ) then {
+          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
+        }else {
+          let dappToCall = inv.dApp.addressFromRecipient().toString()
+          let allowedContract = getStrA(mAccAddr, "allowed_contract_"+dappToCall)
+          if (allowedContract=="FARMING" && inv.function == "claimReward") then false
+          else allowedContract != ""
+        }
+      }
+      case ss: SetScriptTransaction => {
+        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
+      }
+      case mt: MassTransferTransaction => {
+        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
+      }
+      case _ => false
+    }
+}
