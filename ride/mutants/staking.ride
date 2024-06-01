@@ -2,7 +2,7 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 func getReveneuTypes() = ["EGG","SPICE","VEGG","FEED"]
-
+let Scale = 100000000
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -17,16 +17,19 @@ func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_accBoosterAddress() = "static_accBoosterAddress"
 #This should be 4 egg/vegg
 func staticKey_mutariumFee() = "static_mutariumFee"
+func staticKey_babyDuckAddress() = "static_babyDuckAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_spiceAssetId() = "static_spiceAssetId"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_burnAddress() = "static_burnAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
 
-func rewardClaimedKey(address: Address, reveneuType: String) = address.toString() + "_claimed_"+reveneuType
+func rewardClaimedKey(address: String, asset: String, reveneuType: String) = address +"_asset_"+asset + "_claimed_"+reveneuType
 func totalStakedKey(reveneuType: String) = "total_staked_"+reveneuType
 func totalStakedUserKey(address:String, reveneuType: String) = "total_staked_"+address
 func keyGlobalLastInterest(reveneuType: String) = "global_lastCheck_interest_"+reveneuType
-func keyLastCheckInterest(address: Address, reveneuType: String) =  address.toString() + "_lastCheck_interest_"+reveneuType
+func keyLastCheckInterest(address: String, asset: String, reveneuType: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest_"+reveneuType
 func keyGlobalEarned(reveneuType: String) =  "global_earnings_"+reveneuType
 func staticKey_extraFee() = "static_extraFee"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -40,10 +43,13 @@ func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58Str
 func getMutantBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantIncubatorAddress()).fromBase58String()) 
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
+func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(), staticKey_babyDuckAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String())
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
 func asIntTuple(value: Any) = match value {
   case int: (Int,Int) => int
@@ -62,6 +68,13 @@ func asInt(value: Any) = match value {
 func asRarity(value: Any) = match value {
   case strIntTuple: (String,Int) => strIntTuple
   case _ => throw("BAI: wrong type, expected: strIntTuple")
+}
+
+func asString(value: Any) = match value {
+  case s: String => s
+  case s: Int => throw("wrong type, expected: String, got: Int")
+  case s: Unit => throw("wrong type, expected: String, got: Unit")
+  case _ => throw("wrong type, expected: String")
 }
 
 func tryGetInteger(key: String) = {
@@ -99,28 +112,60 @@ func calculatePerchPrice(address: String)= {
 
 }
 
-func claimStakingResult (address: String, asset: String, recalc: Boolean, reveneuType: String) = {
-  #TODO; Implement claiming from the different classes
-  []
-    #let currentInterest = tryGetInteger(keyGlobalLastInterest)
-    #let lastCheckInterest = tryGetInteger(keyLastCheckInterest(address, asset))
-    #let stakedAmount = tryGetInteger(assetFarmingPower(address, asset))
-    #strict fpUpdate = if recalc then updateFarmingPower(address, asset,bonusCaller) else []
-    #let reward = if (lastCheckInterest > 0)
-    #    then fraction((currentInterest - lastCheckInterest), stakedAmount, Scale)
-    #    else 0
+func updateFarmingPower(address: String, asset:String,reveneuType: String) ={
+  
+  let totalStaked = tryGetInteger(totalStakedKey(reveneuType))
+  let totalStakedUser = tryGetInteger(totalStakedUserKey(address,reveneuType))
+  let currentFP = tryGetInteger(assetFarmingPower(address,asset))
+  let newFP = invoke(this,"calculateFarmPower",[asset, address],[]).asIntTuple()
+  if currentFP != 0 then
+  [
+      IntegerEntry(totalStakedKey(reveneuType),totalStaked-currentFP+newFP._1),
+      IntegerEntry(totalStakedUserKey(address,reveneuType),totalStakedUser-currentFP+newFP._1),
+      IntegerEntry(assetFarmingPower(address,asset),newFP._1)
+  ] else []
+}
 
-    #  ([
-    #    ScriptTransfer(addressFromStringValue(walletToReceive), reward , getEggAssetId()),
-    #    IntegerEntry(keyLastCheckInterest(address, asset), currentInterest), 
-    #    IntegerEntry(rewardClaimedKey(walletToReceive, asset), (tryGetInteger(rewardClaimedKey(walletToReceive,asset))) + reward)
-    #  ]++fpUpdate, reward)
+func claimStakingResult (address: String, assetId: String, recalc: Boolean, reveneuType: String) = {
+  #TODO; Implement claiming from the different classes
+  
+    let currentInterest = tryGetInteger(keyGlobalLastInterest(reveneuType))
+    let lastCheckInterest = tryGetInteger(keyLastCheckInterest(address, assetId,reveneuType))
+    let stakedAmount = tryGetInteger(assetFarmingPower(address, assetId))
+    strict fpUpdate = if recalc then updateFarmingPower(address, assetId,reveneuType) else []
+    let reward = if (lastCheckInterest > 0)
+        then fraction((currentInterest - lastCheckInterest), stakedAmount, Scale)
+        else 0
+
+      #TODO: check the reveneuType, and do adapted payments, for spice and egg its easy, for feed and vegg we need to do sc invoke
+      let specifiqueKeys = if reveneuType == "SPICE" then
+      [ScriptTransfer(addressFromStringValue(address), reward , getSpiceAssetId())] else
+      if reveneuType == "EGG" then
+      [ScriptTransfer(addressFromStringValue(address), reward , getEggAssetId())] else
+      if reveneuType == "FEED" then
+      [] else
+      if reveneuType == "VEGG" then
+      strict invokeResult = if (reward >0 ) then  invoke(getCouponsAddress(),"addCouponsFarming",[address, reward],[]) else unit
+      [] else
+      throw("Unknown reveneuType")
+      
+      [
+        IntegerEntry(keyLastCheckInterest(address, assetId,reveneuType), currentInterest), 
+        IntegerEntry(rewardClaimedKey(address, assetId,reveneuType), (tryGetInteger(rewardClaimedKey(address,assetId, reveneuType))) + reward)
+      ]++fpUpdate++specifiqueKeys
   }
 
 func setKeysReveneuType(address: String, assetId: ByteVector, reveneuType: String, fp: Int) = {
       [
       IntegerEntry(totalStakedKey(reveneuType),tryGetInteger(totalStakedKey(reveneuType))+fp),
       IntegerEntry(totalStakedUserKey(address,reveneuType),tryGetInteger(totalStakedUserKey(address, reveneuType))+fp)
+      ]
+}
+
+func updateKeysReveneuType(address: String, assetId: ByteVector, reveneuType: String, fp: Int) = {
+      [
+        IntegerEntry(totalStakedKey(reveneuType),tryGetInteger(totalStakedKey(reveneuType))-fp),
+        IntegerEntry(totalStakedUserKey(address,reveneuType),tryGetInteger(totalStakedUserKey(address,reveneuType))-fp)
       ]
 }
 
@@ -150,6 +195,31 @@ func deterMineClassAndSetType(address: String, assetId: ByteVector, fp: Int, ass
   tKeys++dKeys
 }
 
+func deterMineClassAndUpdateType(address: String, assetId: ByteVector, fp: Int, assetName: String) = {
+  let (isT, isD) = determineClasses(assetName)
+  let tKeys = if isT then {
+    updateKeysReveneuType(address, assetId, "SPICE", fp)++
+    updateKeysReveneuType(address, assetId, "FEED", fp)
+  } else []
+  let dKeys = if isD then {
+    updateKeysReveneuType(address, assetId, "EGG", fp)++
+    updateKeysReveneuType(address, assetId, "VEGG", fp)
+  } else []
+  tKeys++dKeys
+}
+
+func handleStakingTopUp (amount: Int, reveneuType: String) = {
+    let currentInterest = tryGetInteger(keyGlobalLastInterest(reveneuType))
+    let totalStakedAmount = tryGetInteger(totalStakedKey(reveneuType))
+    let interestDelta = if (totalStakedAmount > 0)
+        then fraction(amount, Scale, totalStakedAmount)
+        else 0
+    [
+      IntegerEntry(keyGlobalEarned(reveneuType), (tryGetInteger(keyGlobalEarned(reveneuType)) + amount)), 
+      IntegerEntry(keyGlobalLastInterest(reveneuType), (currentInterest + interestDelta))
+      
+    ]
+}
 
 @Callable(i)
 func configureOracle(oracle: String) = {
@@ -181,7 +251,19 @@ func calculateFarmPower(assetId:String)={
 
 @Callable(i)
 func redeemMutuarium()={
-  []
+  let validPayment = checkAdditionalPayment(i.payments[1])
+  if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
+    let assetId = i.payments[0].assetId.value()
+    strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    if !artefactName.contains("ART-MUTARIUM-") then throw("You can't use this artafect to redeem mutarium!") else
+        let color = artefactName.takeRight(1)
+        let perchAmountKey = "address_" + i.caller.toString() + "_mutariumAvailable_" + color
+        let perchAmount = tryGetInteger(perchAmountKey)
+
+        [
+          IntegerEntry(perchAmountKey, perchAmount + 1),
+          Burn(assetId,1)
+        ]++validPayment
 }
 
 @Callable(i)
@@ -258,16 +340,53 @@ func stakeNFT() = {
 }
 
 @Callable(i)
-func topUpReward () = {
-  []
+func topUpReward (reveneuType: String, amount: Int) = {
+  if reveneuType == "SPICE" then 
+      if i.payments[0].assetId!= getSpiceAssetId() then throw("Please attach spice!") else
+      handleStakingTopUp(i.payments[0].amount, reveneuType) 
+      else
+  if reveneuType == "EGG" then 
+    let firstPayment = i.payments[0].value()
+    if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
+    handleStakingTopUp(firstPayment.amount, reveneuType) 
+   else
+  if reveneuType == "FEED" then     
+    if i.caller != getAccBoosterAddress() then throw("VFTUP: Only accBoosterDapp can do topup!") else
+    handleStakingTopUp(amount, reveneuType) 
+    else
+  if reveneuType == "VEGG" then 
+    if i.caller != getCouponsAddress() then throw("VFTUP: Only couponsdapp can do topup!") else
+    handleStakingTopUp(amount, reveneuType) 
+   else
+  throw("Unknown reveneuType")
 }
 
 @Callable(i)
-func unstakeNFT(asset: String) = {
-  []
+func unstakeNFT(assetId: String) = {
+  let address = i.caller.toString()
+  if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else
+  let assetName = assetInfo(assetId.fromBase58String()).value().name.value()   
+  strict result = deterMineClassAndClaimType(address,assetId,assetName,false)
+  strict validPayment = checkAdditionalPayment(i.payments[0])
+  let color = tryGetString("address_"+address+"_asset_"+assetId+"_perchColor")
+  strict assetFP = tryGetInteger(assetFarmingPower(address,assetId))
+  let updateKeys = deterMineClassAndUpdateType(address, assetId.fromBase58String(), assetFP, assetName)
+  [
+    IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color)+1),
+    DeleteEntry(assetId+"_owner"),
+    DeleteEntry(assetFarmingPower(address,assetId)),
+    DeleteEntry("address_"+address+"_asset_"+assetId+"_perchColor"),
+    ScriptTransfer(Address(address.fromBase58String()),1, assetId.fromBase58String())
+  ]
+  ++updateKeys
+  ++validPayment
+  ++result
+  
 }
 
 @Callable(i)
-func claimReward () = {
-[]
-}
+func claimReward (assetId: String) = {
+  strict validPayment =  checkAdditionalPayment(i.payments[0])
+  let assetName = assetInfo(assetId.fromBase58String()).value().name.value()  
+  if (i.payments.size() > 1) then throw("Please don't add extra payments") else deterMineClassAndClaimType(i.caller.toString(),assetId,assetName, true)++validPayment
+  }
