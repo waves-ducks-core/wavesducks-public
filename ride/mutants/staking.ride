@@ -269,10 +269,10 @@ func redeemMutuarium()={
 @Callable(i)
 func buyMutuarium(color: String, refererAddress: String) = {
     strict validPayment = checkAdditionalPayment(i.payments[0])
-    if (["D","G"].indexOf(color).value() > 0) then {
+    if (["D","G"].indexOf(color)!= unit) then {
       throw("you can not buy this Mutarium")
     }else
-    if (["A", "B", "C"].indexOf(color).value() < 0) then {
+    if (["A", "B", "C"].indexOf(color) == unit) then {
       throw("you need to set color properly")
     } else {
       let exactPrice = calculatePerchPrice(i.caller.toString())
@@ -283,7 +283,8 @@ func buyMutuarium(color: String, refererAddress: String) = {
             exactPrice
         }
         strict payment = if leftToPay!=0 then {
-        let firstPayment = if size(i.payments) == 2 then  i.payments[1].value() else  i.payments[0].value()
+        if size(i.payments)!=2 then throw("You need to attach 2 payments") else
+        let firstPayment = i.payments[1].value()
 
         if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
         if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
