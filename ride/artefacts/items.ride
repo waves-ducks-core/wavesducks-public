@@ -504,54 +504,6 @@ func itemDuplicator()={
 }
 
 @Callable(i)
-func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = {
-  if parentFixedGene != 1 && parentFixedGene != 2 then throw("FG: Parent fixed gene can be only 1 or 2") else
-  let firstPayment = i.payments[0].value()
-  let validPayment = checkAdditionalPayment(i.payments[1])
-  let firstAssetId = firstPayment.assetId.value().toBase58String()
-  if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(this,"checkArtefactDetails",[firstAssetId],[]).asString()
-  if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
-
-  let txId = fromBase58String(txIdStr)
-
-  let finishHeightKey = key_processFinishHeight(i.caller.toString(), txId)
-  let processFinishHeight = getIntegerValue(getBreederAddress(), finishHeightKey)
-
-  strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txId, processFinishHeight,parentFixedGene,positionFixedGene,"",0],[]).asString()
-  
-  strict call = invoke(getBreederAddress(), "finishDuckHatchingItems", [txIdStr, duckGenesString], [i.payments[1],i.payments[2]])
-  [
-    Burn(firstPayment.assetId.value(),1)
-  ]
-
-}
-
-@Callable(i)
-func freeGene(txIdStr: String) = {
-  let firstPayment = i.payments[0].value()
-  let firstAssetId = firstPayment.assetId.value().toBase58String()
-  if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(this,"checkArtefactDetails",[firstAssetId],[]).asString()
-  if artefact != "ART-FREEGENE" then  throw("You need to attach a ART-FREEGENE artefact") else
-  
-  let txId = fromBase58String(txIdStr)
-
-  let finishHeightKey = key_processFinishHeight(i.caller.toString(), txId)
-  let processFinishHeight = getIntegerValue(getBreederAddress(), finishHeightKey)
-
-  let selectedGene = getRandomGenes(txId,processFinishHeight)
-  let randomPosition = getRandomNumber(8, txId, processFinishHeight, 3)
-
-  strict duckGenesString = invoke(getBreederAddress(),"generateDuck",[txId, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
-  
-  strict call = invoke(getBreederAddress(), "finishDuckHatchingItems", [txIdStr, duckGenesString], [i.payments[1],i.payments[2]])
-  [
-    Burn(firstPayment.assetId.value(),1)
-  ]
-}
-
-@Callable(i)
 func copyDuck()= {
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
@@ -618,7 +570,9 @@ func preInit() = {
 func issueArtefact(type: String, receiver: String) = {
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("admin only") else 
-     if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
+    if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) 
+              && !type.contains("ART-FIRE_") 
+              && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let address = Address(fromBase58String(receiver))
 
     issueItem(type,0,address)
