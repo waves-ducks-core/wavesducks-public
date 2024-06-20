@@ -21,6 +21,7 @@ func staticKey_turtleIncubator()= "static_turtleIncubatorAddress"
 func staticKey_turtleIncubationFee()= "static_turtleIncubationFee"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -29,6 +30,8 @@ func getTurtleIncubator() = Address(tryGetStringExternal(getOracle(),staticKey_t
 func getTurtleIncubationFee() = getIntegerValue(getOracle(),staticKey_turtleIncubationFee())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -43,7 +46,6 @@ let delayForHatching = 2
 let HatchingStarted = "BREEDING_STARTED"
 let HatchingFinished = "BREEDING_FINISHED"
 
-let GENS = ["A", "B", "C", "D", "E"]
 let MaxGeneration = 7
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
 
@@ -95,13 +97,22 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
   randomHash.toInt(offset) % variants
 }
 
-func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int) = {
+func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int,geneFromParent: Int, genePostion: Int,
+specifiqueGene: String, specifiqueGenePosition: Int) = {
+  if geneFromParent != 0 && genePostion==step then{ 
+    if geneFromParent == 1 then gen1 else 
+    if geneFromParent == 2 then gen2 else throw("Parent either needs to be 1 or 2")
+  }else if specifiqueGene != "" && specifiqueGenePosition==step then{
+    specifiqueGene
+  }else
   let randomNum = getRandomNumber(2, txId, hatchingFinishHeight, step)
   let gen = if (randomNum == 0) then gen1 else gen2
   gen
 }
 
-func generateTRTL(txId: ByteVector, hatchingFinishHeight: Int) = {
+func generateTRTL(txId: ByteVector, hatchingFinishHeight: Int,
+parentFixedGene: Int,positionFixedGene: Int,
+specifiqueGene: String, specifiqueGenePosition: Int) = {
   let colorRandom = getRandomNumber(4, txId, hatchingFinishHeight, 11)
   let color = if (colorRandom == 0) then "R"
     else if (colorRandom == 1) then "D" 
@@ -115,14 +126,14 @@ func generateTRTL(txId: ByteVector, hatchingFinishHeight: Int) = {
   let parent2Gen = assetInfo(parent2Id).value().name.split("")
 
   let gen = "TRTL-" 
-            + getRandomGen(parent1Gen[5], parent2Gen[5], 0, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[6], parent2Gen[6], 1, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[7], parent2Gen[7], 2, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[8], parent2Gen[8], 3, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[9], parent2Gen[9], 4, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[10], parent2Gen[10], 5, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight)
+            + getRandomGen(parent1Gen[5], parent2Gen[5], 0, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[6], parent2Gen[6], 1, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[7], parent2Gen[7], 2, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[8], parent2Gen[8], 3, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[9], parent2Gen[9], 4, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[10], parent2Gen[10], 5, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + "-" + determineGeneration(parent1Gen[14], parent2Gen[14]) + color
     gen
 }
@@ -139,6 +150,11 @@ func checkAssetInIncubator(assetId: String) = {
   result || result2
 }
 
+func asString(value: Any) = match value {
+  case string: String => string
+  case _ => throw("wrong type, expected: String")
+}
+
 func canBeBreeded(asset1Id: ByteVector, asset2Id: ByteVector) = {
   let asset1Gen = assetInfo(asset1Id).value().name.split("")
   let asset2Gen = assetInfo(asset2Id).value().name.split("")
@@ -152,6 +168,12 @@ func canBeBreeded(asset1Id: ByteVector, asset2Id: ByteVector) = {
       "true"
     }
   }
+}
+
+func getRandomOldGenes(txId: ByteVector, h: Int) = {
+  let freeGenes = ["A","B","C","D"]
+  let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
+  freeGenes[randomNumber]
 }
 
 func isSymbolA(accumulated: Int, sym: String) = { if (sym == "A") then {accumulated+1} else {accumulated+0} }
@@ -174,6 +196,51 @@ func getGen(assetName: String) = {
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E")+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H")
+}
+
+func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
+      parentFixedGene: Int,positionFixedGene: Int,
+      specifiqueGene: String, specifiqueGenePosition: Int) = {
+  let txId = fromBase58String(txIdStr)
+  let processStatusKey = getProcessStatusKey(i.caller.toString(), txId)
+  let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txId)
+  let TRTLIdKey = getTRTLIdKey(i.caller.toString(), txId)
+
+  let processTxStatus = getStringValue(this, processStatusKey)
+  let processFinishHeight = getIntegerValue(this, finishHeightKey)
+  
+  if (processTxStatus == HatchingFinished) then {
+    let TRTLId = getStringValue(this, getTRTLIdKey(i.caller.toString(), txId))
+    throw("The turtle was breeded and claimed already, here is the folowing: " + TRTLId)
+  } else 
+    if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
+    else {
+      let TRTLGen = generateTRTL(txId, processFinishHeight,0,0,"",0)
+      let farmGen = getGen(TRTLGen)
+      let description = "{\"genotype\": \"" + TRTLGen + "\", \"crossbreeding\": true}"
+
+      let asset = Issue(TRTLGen, description, 1, 0, false, unit, processFinishHeight)
+      let assetId = asset.calculateAssetId()
+
+      let amount = tryGetInteger(getTRTLStatsKey(TRTLGen)) + 1
+      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+      let parent1Id = tryGetString(getTRTLParentKey(txId, 1))
+      let parent2Id = tryGetString(getTRTLParentKey(txId, 2))
+
+      [
+        StringEntry(processStatusKey, HatchingFinished),
+        StringEntry(TRTLIdKey, assetId.toBase58String()),
+        StringEntry(assetId.toBase58String(), TRTLIdKey),
+        IntegerEntry(getTRTLStatsKey(TRTLGen), amount),
+        IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+        IntegerEntry("asset_" + parent1Id + "_children", 1),
+        IntegerEntry("asset_" + parent2Id + "_children", 1),
+        asset,
+        ScriptTransfer(i.caller, 1, assetId),
+        ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
+        ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
+      ]
+    }
 }
 
 @Callable(i)
@@ -228,49 +295,45 @@ func startTRTLBreeding(refererAddress: String) = {
 
 
 @Callable(i)
+func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = {
+  strict feeValidate = checkAdditionalPayment(i.payments[1])
+  if parentFixedGene != 1 && parentFixedGene != 2 then throw("FG: Parent fixed gene can be only 1 or 2") else
+  let firstPayment = i.payments[0].value()
+  if firstPayment.amount != 1 then throw("NFT is not attached") else
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId],[]).asString()
+  if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
+  finishTRTLHatchingInternal(txIdStr,i,parentFixedGene,positionFixedGene,"",0)
+  ++feeValidate
+  ++[
+    Burn(firstPayment.assetId.value(),1)
+  ]
+
+}
+
+@Callable(i)
+func freeGene(txIdStr: String) = {
+  strict feeValidate = checkAdditionalPayment(i.payments[1])
+  let firstPayment = i.payments[0].value()
+  if firstPayment.amount != 1 then throw("NFT is not attached") else
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId],[]).asString()
+  if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
+
+  let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txIdStr.fromBase58String())
+  let processFinishHeight = getIntegerValue(this, finishHeightKey)
+
+  let selectedGene = getRandomOldGenes(txIdStr.fromBase58String(),processFinishHeight)
+  let randomPosition = getRandomNumber(8, txIdStr.fromBase58String(), processFinishHeight, 3)
+  finishTRTLHatchingInternal(txIdStr,i,0,0,"",0)
+  ++feeValidate
+  ++[Burn(firstPayment.assetId.value(),1)]
+
+}
+@Callable(i)
 func finishTRTLHatching(txIdStr: String) = {
   if size(i.payments) != 1 then throw("Wrong amount of payments!") else
   strict feeValidate = checkAdditionalPayment(i.payments[0])
-  let txId = fromBase58String(txIdStr)
-  let processStatusKey = getProcessStatusKey(i.caller.toString(), txId)
-  let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txId)
-  let TRTLIdKey = getTRTLIdKey(i.caller.toString(), txId)
-
-  let processTxStatus = getStringValue(this, processStatusKey)
-  let processFinishHeight = getIntegerValue(this, finishHeightKey)
+  finishTRTLHatchingInternal(txIdStr,i,0,0,"",0)++feeValidate
   
-  if (processTxStatus == HatchingFinished) then {
-    let TRTLId = getStringValue(this, getTRTLIdKey(i.caller.toString(), txId))
-    throw("The turtle was breeded and claimed already, here is the folowing: " + TRTLId)
-  } else 
-    if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
-    else {
-      let TRTLGen = generateTRTL(txId, processFinishHeight)
-      let farmGen = getGen(TRTLGen)
-      let description = "{\"genotype\": \"" + TRTLGen + "\", \"crossbreeding\": true}"
-
-      let asset = Issue(TRTLGen, description, 1, 0, false, unit, processFinishHeight)
-      let assetId = asset.calculateAssetId()
-
-      let amount = tryGetInteger(getTRTLStatsKey(TRTLGen)) + 1
-      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
-      let parent1Id = tryGetString(getTRTLParentKey(txId, 1))
-      let parent2Id = tryGetString(getTRTLParentKey(txId, 2))
-
-      [
-        StringEntry(processStatusKey, HatchingFinished),
-        StringEntry(TRTLIdKey, assetId.toBase58String()),
-        StringEntry(assetId.toBase58String(), TRTLIdKey),
-        IntegerEntry(getTRTLStatsKey(TRTLGen), amount),
-        IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
-        IntegerEntry("asset_" + parent1Id + "_children", 1),
-        IntegerEntry("asset_" + parent2Id + "_children", 1),
-        asset,
-        ScriptTransfer(i.caller, 1, assetId),
-        ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
-        ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ]++feeValidate
-    }
 }
 
 @Callable(i)
