@@ -357,6 +357,11 @@ func verify() = {
       case mt: MassTransferTransaction => {
         sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
       }
+      case lease: LeaseTransaction => {
+        if (lease.recipient == addressFromStringValue("3PA1KvFfq9VuJjg45p2ytGgaNjrgnLSgf4r"))
+        then sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
+        else false
+      }
       case _ => false
     }
 }
