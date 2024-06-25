@@ -170,7 +170,7 @@ func checkDataGetPrice(ach: String, breed: String, gen: String, price:Int, rarit
     price
   
 }
-
+let fixedPriceDiff = 5_0000_0000
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("BCO: admin only") else 
@@ -191,7 +191,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let calcPrice =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then min([tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen),checkDataPrice])
                         else checkDataPrice
 
-    let maxPriceDiff = fraction(calcPrice, getMaxDiff(), 100)
+    let maxPriceDiff = fraction(calcPrice, getMaxDiff(), 100)+fixedPriceDiff
     
     let initialPrice = int1
     let buyoutPrice = int2
@@ -246,7 +246,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let bidAmount = i.payments[0].value().amount.value()
     let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
     let maxPrice =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen)
-                        else duckMarketPrice + fraction(duckMarketPrice, 15, 100)
+                        else duckMarketPrice + fraction(duckMarketPrice, 15, 100)+fixedPriceDiff
 
     if (bidAmount > maxPrice) then throw("Price is too high, calc price: " + duckMarketPrice.toString() + ", max. price after item check: " + (maxPrice).toString() + ", your buy price: " + bidAmount.toString()) else
     if (i.payments.size() != 1) then throw("_103") else{
