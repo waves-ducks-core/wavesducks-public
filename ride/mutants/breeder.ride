@@ -207,7 +207,8 @@ func finishHatchingInternal(txId: String, owner: String)={
       let farmGen = nrOfTypeGenes(gen)
       let rarityFromName = getRarityFromName(gen)
 
-      let amount = tryGetInteger(getStatsKey(gen)) + 1
+      let amountGen = tryGetInteger(getStatsKey(gen)) + 1
+	    let amount = tryGetInteger(getStatsKey_amount())+1
 
       let asset = Issue("MTNT-"+toString(amount), gen, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
@@ -225,12 +226,12 @@ func finishHatchingInternal(txId: String, owner: String)={
         StringEntry(processStatusKey, hatchingFinished()),
         StringEntry(IdKey, assetId.toBase58String()),
         StringEntry(assetId.toBase58String(), IdKey),
-        IntegerEntry(getStatsKey(gen), amount),
+        IntegerEntry(getStatsKey(gen), amountGen),
+		    IntegerEntry(getStatsKey_amount(), amount),
         IntegerEntry("stats_"+farmGen._2+"_quantity", quantity+1),
         IntegerEntry("stats_"+rarityFromName+"_rarity", rarity+1),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
-        IntegerEntry("stats_amount", tryGetInteger("stats_amount")+1),
         asset,
         transferOrBurn,
         transferOrBurnParent1,
