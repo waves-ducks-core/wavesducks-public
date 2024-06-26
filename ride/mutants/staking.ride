@@ -233,7 +233,7 @@ func configureOracle(oracle: String) = {
 @Callable(i)
 func calculateFarmPower(assetId:String)={
   if !(assetInfo(assetId.fromBase58String()).value().issuer == getMutantBreederAddress()) then throw("This does not seem like a valid Mutant!")else
-  let assetName = assetInfo(assetId.fromBase58String()).value().name
+  let assetName = assetInfo(assetId.fromBase58String()).value().description
   strict asRarityResult = invoke(getMutantBreederAddress(), "getRarity", [assetName],[]).asRarity()
   let totalGenes = asRarityResult._1.dropRight(2).split("").size()/2
   let power = pow(15,1,totalGenes,0,2,DOWN)
@@ -314,7 +314,7 @@ func stakeNFT() = {
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let pmt = i.payments[1].value()
   let assetId = pmt.assetId.value()
-  let assetName = assetInfo(assetId).value().name.value()
+  let assetName = assetInfo(assetId).value().description.value()
   let address = i.caller.toString()
 
   let color = assetName.takeRight(1)
