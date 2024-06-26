@@ -117,7 +117,7 @@ func updateFarmingPower(address: String, asset:String,reveneuType: String) ={
   let totalStaked = tryGetInteger(totalStakedKey(reveneuType))
   let totalStakedUser = tryGetInteger(totalStakedUserKey(address,reveneuType))
   let currentFP = tryGetInteger(assetFarmingPower(address,asset))
-  let newFP = invoke(this,"calculateFarmPower",[asset, address],[]).asIntTuple()
+  let newFP = invoke(this,"calculateFarmPower",[asset],[]).asIntTuple()
   if currentFP != 0 then
   [
       IntegerEntry(totalStakedKey(reveneuType),totalStaked-currentFP+newFP._1),
@@ -327,7 +327,7 @@ func stakeNFT() = {
   
   if (pmt.amount != 1) then throw("NFT is not attached") else
   
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).asIntTuple()
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asIntTuple()
     strict result = deterMineClassAndClaimType(address,assetId.toBase58String(),assetName,false)
     [
       StringEntry(assetId.toBase58String()+"_owner",address),
