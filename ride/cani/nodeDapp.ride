@@ -1,0 +1,38 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+func staticKey_oracleAddress() = "static_oracleAddress"
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func staticKey_canineStakingAddress()= "static_canineStakingAddress"
+func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
+func getCanineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineStakingAddress()).fromBase58String())
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("ICU: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
+func transferRewardsToCanineStaking() = {
+  if i.caller != this then throw("ICU: admin only") else 
+  let balance = wavesBalance(this).available-900000
+  let topup = balance/10*9
+  let fee = balance - topup
+  strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance/10*9)])
+  ([
+    ScriptTransfer(getFeeAggregatorAddress(), fee, unit)
+  ],balance)
+}

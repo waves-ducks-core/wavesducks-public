@@ -1,0 +1,49 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+
+        {
+            "key": "static_canineIncubationFee",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "static_caninePerchFee",
+            "type": "integer",
+            "value": 300000000
+        },
+        {
+            "key": "static_canineIncubatorAddress",
+            "type": "string",
+            "value": "3P4YUDVTsDtqBkdtonR2T79yddwjSTuRg71"
+        },
+        {
+            "key": "static_canineRebirthAddress",
+            "type": "string",
+            "value": ""
+        },
+        {
+            "key": "static_canineStakingAddress",
+            "type": "string",
+            "value": "3PFjynLTApECwzmbdQ45eRRMSmkMw6n4V7s"
+        },
+        {
+            "key": "static_nodeAddress",
+            "type": "string",
+            "value": "3P68kRWurF65CrFLhD66cqp9Gzm7jr7AMTj"
+            
+        },
+        {
+            "key": "static_canineBreederAddress",
+            "type": "string",
+            "value": "3PFWCFZLxTbCiPFwuXWFJsCyv4pcPP8dP6t"
+        }
+        
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES",
+    "sender":"3P4vXL8gU27PhQv8sMT9jmoQY3oFqJNRWT9",
+    "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
+}
+
