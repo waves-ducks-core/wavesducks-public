@@ -27,10 +27,31 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func transferRewardsToCanineStaking() = {
-  if i.caller != this then throw("ICU: admin only") else 
-  let balance = wavesBalance(this).available-900000
+  #if i.caller != this then throw("ICU: admin only") else 
+  let balance = wavesBalance(this).available-1500000
   let topup = balance/10*9
   let fee = balance - topup
+  strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance/10*9)])
+  ([
+    ScriptTransfer(getFeeAggregatorAddress(), fee, unit)
+  ],balance)
+}
+
+
+@Callable(i)
+func claimAndLiquidateLP() = {
+  let processBlocksDapp = addressFromStringValue("3PJVm7xLPabmYohbnvdgGDYHMwnZxF2x18m")
+  let wxPool = addressFromStringValue("3P68zNiufsu1viZpu1aY3cdahRRKcvV5N93")
+  let wavesdLP = "HYogWffUjS8Uw4bYA1Dn3qrGmJerMqkf139aJcHhk8yq".fromBase58String()
+
+  #strict processBlocks = invoke( processBlocksDapp, "processBlocks", [],[])
+  strict claimLP = invoke(processBlocksDapp, "claimLP", [],[])
+
+  strict liquidateLP = invoke(wxPool, "swap", [0,"WAVES",this.toString()],[AttachedPayment(wavesdLP,assetBalance(this,wavesdLP))])
+
+  let balance = wavesBalance(this).available-1500000
+  let fee = balance/10
+  let topup = balance - fee
   strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance/10*9)])
   ([
     ScriptTransfer(getFeeAggregatorAddress(), fee, unit)

@@ -194,7 +194,8 @@ func handleStakingTopUp (totalAmount: Int) = {
         else 0
     [
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + payoutAmount)), 
-      IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta))
+      IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta)),
+      IntegerEntry("global_WAVES_balance",tryGetInteger("global_WAVES_balance")+compoundAmount)
       
     ]++stakeUnstake(true, compoundAmount)
 }
