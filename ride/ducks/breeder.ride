@@ -268,6 +268,13 @@ func getRandomGenes(txId: ByteVector, h: Int) = {
 }
 
 
+func finishDuckHatchingItems(txIdStr: String, duckGenesString: String, payment1: AttachedPayment, payment2: AttachedPayment, owner: String) = {
+  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],[payment1,payment2]).asString()
+  let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
+  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
+  finishDuckHatch(txIdStr, owner, duckGenesString)
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("admin only") else 
@@ -418,15 +425,7 @@ func startDuckBreeding(refererAddress: String) = {
     
 }
 
-@Callable(i)
-func finishDuckHatchingItems(txIdStr: String, duckGenesString: String) = {
-  if (i.caller != getItemsAddress() && duckGenesString != "" ) then throw("Only items can create fixed genes") else 
-  let owner = i.originCaller.toString()
-  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
-  let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
-  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
-  finishDuckHatch(txIdStr, owner, duckGenesString)
-}
+
 
 @Callable(i)
 func finishDuckHatching(txIdStr: String) = {
@@ -447,7 +446,6 @@ func finishDuckHatchingAdmin(txIdStr: String, owner: String) = {
 func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = {
   if parentFixedGene != 1 && parentFixedGene != 2 then throw("FG: Parent fixed gene can be only 1 or 2") else
   let firstPayment = i.payments[0].value()
-  let validPayment = checkAdditionalPayment(i.payments[1])
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
   strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstAssetId],[]).asString()
@@ -460,10 +458,10 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
 
   strict duckGenesString = invoke(this,"generateDuck",[txId, processFinishHeight,parentFixedGene,positionFixedGene,"",0],[]).asString()
   
-  strict call = invoke(this, "finishDuckHatchingItems", [txIdStr, duckGenesString], [i.payments[1],i.payments[2]])
+  let strictFinish = finishDuckHatchingItems(txIdStr, duckGenesString, i.payments[1],i.payments[2], i.originCaller.toString())
   [
     Burn(firstPayment.assetId.value(),1)
-  ]
+  ]++strictFinish
 
 }
 
@@ -485,10 +483,10 @@ func freeGene(txIdStr: String) = {
 
   strict duckGenesString = invoke(this,"generateDuck",[txId, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
   
-  strict call = invoke(this, "finishDuckHatchingItems", [txIdStr, duckGenesString], [i.payments[1],i.payments[2]])
+  let strictFinish = finishDuckHatchingItems(txIdStr, duckGenesString, i.payments[1],i.payments[2], i.originCaller.toString())
   [
     Burn(firstPayment.assetId.value(),1)
-  ]
+  ]++strictFinish
 }
 
 @Callable(i)

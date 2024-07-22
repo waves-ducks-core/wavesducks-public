@@ -207,9 +207,7 @@ func getUnstakeResult(address: String, assetId: ByteVector, color: String, calle
   let isWithoutPerch = tryGetBoolean("address_"+address+"_asset_"+asset+"_without_perch")
   let rewardAfterSickNess = reward
   let appendPerches = if isWithoutPerch then [DeleteEntry("address_"+address+"_asset_"+asset+"_without_perch")] else [IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color) + 1)]
-  let sendTx = if claimEggs then ([
-            ScriptTransfer(caller, rewardAfterSickNess * 1000000, getEggAssetId())
-          ],rewardAfterSickNess * 1000000) else ([],0)
+
     ([
       IntegerEntry("total_farmingPower", tryGetInteger("total_farmingPower") - assetFarmingPower),
       IntegerEntry("total_lastCheckInterest", getCurrentInterest()),
@@ -222,7 +220,7 @@ func getUnstakeResult(address: String, assetId: ByteVector, color: String, calle
       IntegerEntry("address_"+address+"_asset_"+asset+"_lastCheckFarmedAmount", tryGetInteger("address_"+address+"_asset_"+asset+"_lastCheckFarmedAmount") + assetRewardDelta)
     ]++appendPerches ++ [
             ScriptTransfer(caller, 1, assetId)
-          ]++sendTx._1, sendTx._2)
+          ], 0)
 }
 
 func calculatePerchPrice(address: String)= {
@@ -317,28 +315,6 @@ func init() = {
   }
 }
 
-@Callable(i)
-func buyPerch(colorI: String, refererAddress: String) = {
-    throw("FBN: function is disabled, migration to new sc ongoing")
-  
-}
-
-@Callable(i)
-func addFreePerch(address: String, color: String) = {
-    throw("FBN: function is disabled, migration to new sc ongoing")
-}
-
-@Callable(i)
-func stakeNFT() = {
-    throw("FBN: function is disabled, migration to new sc ongoing")
-    
-}
-
-@Callable(i)
-func stakeNFTWithoutPerch() = {
-    throw("FBN: function is disabled, migration to new sc ongoing")
-  
-}
 
 @Callable(i)
 func unstakeNFT(asset: String) = {
@@ -355,13 +331,6 @@ func unstakeNFTWithoutClaim(asset: String) = {
   
 }
 
-
-
-@Callable(i)
-func stakeJackpot(color: String) = {
-    throw("FBN: function is disabled, migration to new sc ongoing")
-  
-}
 
 @Callable(i)
 func unstakeJackpot(asset: String) = {
@@ -381,33 +350,4 @@ func unstakeJackpotWithoutClaimEgg(asset: String) = {
   
 }
 
-@Callable(i)
-func claimReward(asset: String) = {
-  strict locked = isLocked()
-  strict validPayment = if i.originCaller == getCfMasterAddress() then [] else checkAdditionalPayment(i.payments[0])
-  let address = if i.originCaller == getCfMasterAddress() then i.caller.toString() else i.originCaller.toString()
-
-
-    let assetId = asset.fromBase58String()
-
-    let assetFarmingPower = getLastKnownAssetFarmingPower(address, asset)
-    let assetRewardDelta = calcAssetRewardDelta(address, asset, assetFarmingPower)
-    
-
-    let farmedAmount = assetRewardDelta + tryGetInteger("address_"+address+"_asset_"+asset+"_lastCheckFarmedAmount")
-    let withdrawnAmount = tryGetInteger("address_"+address+"_asset_"+asset+"_withdrawnAmount")
-
-    let reward = (farmedAmount - withdrawnAmount) / (scale * 100)
-
-    if (reward <= 0) then throw("FCR: you have no EGGs to withdraw") else 
-      (
-        [
-        IntegerEntry("address_"+address+"_asset_"+asset+"_withdrawnAmount", tryGetInteger("address_"+address+"_asset_"+asset+"_withdrawnAmount") + reward * scale2),
-        ScriptTransfer(Address(address.fromBase58String()), reward * 1000000, getEggAssetId())
-        ]++validPayment,
-        reward * 1000000
-      )
-    
-  
-}
 
