@@ -48,6 +48,7 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
+func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getDucklingPrice() = tryGetIntegerExternal(getOracle(),staticKey_ducklingPrice())
@@ -61,6 +62,7 @@ func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticK
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getCanineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 let backendPubKey = getStringValue(getOracle(),staticKey_backendPubKey()).fromBase58String()
 
@@ -228,7 +230,7 @@ func buyDuckling(refererAddress: String)={
 
 @Callable(i)
 func issueFreeDuckling(address: String, txIdStr: String, percentage: Int) = {
-  if i.caller != this && i.caller != getRebirthAddress() then throw("BIFD: You can't issue free duckling") else
+  if i.caller != this && i.caller != getRebirthAddress() && i.caller != getCanineRebirthAddress() then throw("BIFD: You can't issue free duckling") else
   let asset = Issue("BABY-11111111-GZ", "", 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
     ([

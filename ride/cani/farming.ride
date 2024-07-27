@@ -29,6 +29,7 @@ func staticKey_feeAggregator() = "static_feeAggregator"
 let keyGlobalEarned =  "global_earnings"
 func staticKey_perchFee() = "static_caninePerchFee"
 func totalStakedKey() = "total_staked"
+func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
@@ -40,6 +41,7 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnA
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getNodeAccount()=addressFromStringValue(valueOrErrorMessage(getString(getOracle(),"static_nodeAddress"), "node_address not found!"))
+func getCanieRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -291,7 +293,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
 func addFreePerch(address: String, color: String, amount: Int) = {
   if (["A", "B", "C", "D"].indexOf(color).value() < 0) then {
     throw("you need to set color properly")
-  } else if (i.caller != this ) then {
+  } else if (i.caller != this  && i.caller != getCanieRebirthAddress()) then {
     throw("rebirth and admin only")
   } else {
     let perchAmountKey = "address_" + address + "_perchesAvailable_" + color

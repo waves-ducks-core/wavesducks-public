@@ -22,6 +22,8 @@ func staticKey_canineIncubationFee()= "static_canineIncubationFee"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -31,6 +33,8 @@ func getCanineIncubationFee() = getIntegerValue(getOracle(),staticKey_canineIncu
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getCaniRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -174,6 +178,11 @@ func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
 }
 
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
+
 func getGen(assetName: String) = {
   # getGen("TRTL-ABCDDCBA-GY") -> 2A2B2C2D-G
   let genotype = assetName.drop(5).dropRight(3).split("")
@@ -233,6 +242,20 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
 }
 
 @Callable(i)
+func reduceRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getCaniRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) - 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
+    ]
+  }
+}
+
+@Callable(i)
 func getGenFromName(assetName: String) = {
     let genotype = assetName.drop(5).dropRight(3).split("")
     let generation = assetName.split("")[14]
@@ -248,15 +271,17 @@ func getGenFromName(assetName: String) = {
 @Callable(i)
 func startBreeding(refererAddress: String) = {
   #TODO: add validation that feeValidate payment is added!
-  if size(i.payments) != 4 then throw("Wrong amount of payments!") else
+  if size(i.payments) != 4  && size(i.payments) != 3 then throw("Wrong amount of payments!") else
   strict feeValidate = checkAdditionalPayment(i.payments[0])
   let firstPayment = i.payments[1].value()
   let secondPayment = i.payments[2].value()
-  let thirdPayment = i.payments[3].value()
-
-  let leftToPay = getCanineIncubationFee()
+  
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getCanineIncubationFee()],[]).asInt()
+  let leftToPay = getCanineIncubationFee()-amountPaidByCoupons
+  if leftToPay == 0 && size(i.payments) == 4 then throw("You need to attach 3 payments") else
   strict payment = if leftToPay!=0 then {
-
+    
+    let thirdPayment = i.payments[3].value()
     if (thirdPayment.assetId != getEggAssetId()) then throw("TB: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
     if (thirdPayment.amount != leftToPay) then throw("TB: To breed a Turtle you following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
     let refererRewardForbeach = fraction(leftToPay, 5, 100)

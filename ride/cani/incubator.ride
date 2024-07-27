@@ -27,7 +27,6 @@ func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticK
 func getCaniRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_caniRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getCaniFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_caniFarmingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 
-
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
   let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
@@ -127,6 +126,22 @@ func countEggsNeededAmount(totalCANIsAmount: Int) = {
 func asBoolean(value: Any) = match value {
   case boolean: Boolean => boolean
   case _ => throw("TI: wrong type, expected: Boolean")
+}
+
+@Callable(i)
+func reduceRarity(assetId: String, fGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getCaniRebirthAddress() && i.caller != this) then {
+    throw("IRR: admin or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    let letter = duckGen.take(6).takeRight(1)
+    let farmGen = "8"+letter+"-G"
+    [
+      IntegerEntry(getCANIStatsKey(duckGen), tryGetInteger(getCANIStatsKey(duckGen)) - 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
+    ]
+  }
 }
 
 @Callable(i)

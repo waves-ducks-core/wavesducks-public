@@ -14,6 +14,11 @@
             "value": 300000000
         },
         {
+            "key": "static_canineWavesRebirthPrice",
+            "type": "integer",
+            "value": 800000000
+        },
+        {
             "key": "static_canineIncubatorAddress",
             "type": "string",
             "value": "3PD6L4yr52Lac9qeqXNoi4mAiiak5ZBnx5D"
@@ -21,7 +26,7 @@
         {
             "key": "static_canineRebirthAddress",
             "type": "string",
-            "value": ""
+            "value": "3P4Anrwd7rKDGyxXZRaocXVbKtg8TKEzf6D"
         },
         {
             "key": "static_canineStakingAddress",

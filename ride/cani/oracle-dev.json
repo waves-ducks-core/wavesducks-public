@@ -2,7 +2,7 @@
     "type": 12,
     "version": 1,
     "data": [
-
+        
         {
             "key": "static_canineIncubationFee",
             "type": "integer",
@@ -14,6 +14,11 @@
             "value": 300000000
         },
         {
+            "key": "static_canineWavesRebirthPrice",
+            "type": "integer",
+            "value": 8
+        },
+        {
             "key": "static_canineIncubatorAddress",
             "type": "string",
             "value": "3P4YUDVTsDtqBkdtonR2T79yddwjSTuRg71"
@@ -21,7 +26,7 @@
         {
             "key": "static_canineRebirthAddress",
             "type": "string",
-            "value": ""
+            "value": "3PAvZSshLfaefR3atDSDu6siNfLMbi3dpJJ"
         },
         {
             "key": "static_canineStakingAddress",

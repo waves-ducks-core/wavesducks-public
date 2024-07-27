@@ -22,6 +22,7 @@ func staticKey_turtleIncubationFee()= "static_turtleIncubationFee"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_couponsAddress() = "static_couponsAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -31,6 +32,7 @@ func getTurtleIncubationFee() = getIntegerValue(getOracle(),staticKey_turtleIncu
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -243,6 +245,11 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
     }
 }
 
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("wrong type, expected: Int")
+}
+
 @Callable(i)
 func startTRTLBreeding(refererAddress: String) = {
   #TODO: add validation that feeValidate payment is added!
@@ -252,7 +259,9 @@ func startTRTLBreeding(refererAddress: String) = {
   let secondPayment = i.payments[2].value()
   let thirdPayment = i.payments[3].value()
 
-  let leftToPay = getTurtleIncubationFee()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getTurtleIncubationFee()/2],[]).asInt()
+  let leftToPay = getTurtleIncubationFee()-amountPaidByCoupons
+
   strict payment = if leftToPay!=0 then {
 
     if (thirdPayment.assetId != getEggAssetId()) then throw("TB: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
@@ -300,7 +309,7 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
   if parentFixedGene != 1 && parentFixedGene != 2 then throw("FG: Parent fixed gene can be only 1 or 2") else
   let firstPayment = i.payments[0].value()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId],[]).asString()
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).asString()
   if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
   finishTRTLHatchingInternal(txIdStr,i,parentFixedGene,positionFixedGene,"",0)
   ++feeValidate
@@ -315,8 +324,8 @@ func freeGene(txIdStr: String) = {
   strict feeValidate = checkAdditionalPayment(i.payments[1])
   let firstPayment = i.payments[0].value()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId],[]).asString()
-  if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).asString()
+  if artefact != "ART-FREEGENE" then  throw("You need to attach a ART-FREEGENE artefact") else
 
   let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txIdStr.fromBase58String())
   let processFinishHeight = getIntegerValue(this, finishHeightKey)
