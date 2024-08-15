@@ -14,6 +14,7 @@ func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_huntDistroAddress() = "static_huntDistroAddress"
 func staticKey_warsPKey() = "static_warsPKey"
 func staticKey_duplicatorFee() = "static_duplicatorFee"
+func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 
 #TODO: make sure to allow coupons contract when we release new items
 func key_artefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
@@ -143,6 +144,7 @@ func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),staticKey_trustedContracts())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
 func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String())
+func getCanineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getHuntDistroAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_huntDistroAddress()).fromBase58String())
 func getWarsPKey() =  tryGetStringExternal(getOracle(),staticKey_warsPKey()).fromBase58String()
@@ -443,7 +445,7 @@ func checkArtefactDetails(assetId: String) = {
 
 @Callable(i)
 func configureOracle(oracle: String) = {
-  if i.caller != this then throw("admin only") else 
+  if i.caller != this then throw("IC: admin only") else 
   [
     StringEntry(staticKey_oracleAddress(),oracle)
   ]
@@ -569,7 +571,7 @@ func preInit() = {
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
 
-  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("admin only") else 
+  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("IIA: admin only") else 
     if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) 
               && !type.contains("ART-FIRE_") 
               && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
@@ -582,7 +584,7 @@ func issueArtefact(type: String, receiver: String) = {
 @Callable(i)
 func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
 
-  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("admin only") else 
+  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("IIAI: admin only") else 
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let address = Address(fromBase58String(receiver))
 
