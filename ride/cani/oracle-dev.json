@@ -6,7 +6,7 @@
         {
             "key": "static_canineIncubationFee",
             "type": "integer",
-            "value": 1
+            "value": 100000000
         },
         {
             "key": "static_caninePerchFee",
