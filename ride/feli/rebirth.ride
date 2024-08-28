@@ -1,0 +1,311 @@
+{-# STDLIB_VERSION 6 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case string: String => throw("RAI: wrong type, expected: Int, but got: "+string)
+  case _ => throw("RAI: wrong type, expected: Int")
+}
+
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("FAB: wrong type, expected: Boolean")
+}
+
+func asString(value: Any) = match value {
+  case s: String => s
+  case s: Int => throw("wrong type, expected: String, got: Int")
+  case s: Unit => throw("wrong type, expected: String, got: Unit")
+  case _ => throw("wrong type, expected: String")
+}
+
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_canineIncubatorAddress() = "static_felineIncubatorAddress"
+func staticKey_canineBreederAddress() = "static_felineBreederAddress"
+func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_canineStakingAddress() = "static_felineStakingAddress"
+func staticKey_duckStakingAddress() = "static_farmingAddressNew"
+func staticKey_duckIncubatorAddress() = "static_incubatorAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_canineWavesRebirthPrice() = "static_felinePeteRebirthPrice"
+func staticKey_turtleIncubatorAddress() = "static_turtleIncubatorAddress"
+func staticKey_babyDuckAddress() = "static_babyDuckAddress"
+func staticKey_peteAssetId() = "static_peteAssetId"
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getCanineBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getCanineIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getCanineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getDuckStakingAddress() =  Address(tryGetStringExternal(getOracle(), staticKey_duckStakingAddress()).fromBase58String())
+func getDuckIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_duckIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
+func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => throw("TR: Value not found in sc!")
+    }
+
+}
+
+#TODO: PUT IN ORACLE!!!!!!!!!!!!!!!!!!!!!!!!!!
+let wavesAmount = tryGetIntegerExternal(getOracle(),staticKey_canineWavesRebirthPrice()) #2_0000_0000
+
+let delayForHatching = 2
+
+func checkReal(assetId: ByteVector) = {
+  if (assetInfo(assetId).value().issuer == getCanineBreederAddress() || assetInfo(assetId).value().issuer ==getCanineIncubatorAddress()) then {
+   assetInfo(assetId).value().issuer
+  } else {
+    throw("not valid NFT")
+  }
+}
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("RCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != feeAmount then throw("RCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
+
+func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, offset: Int) = {
+  let randomSeedBlock = blockInfoByHeight(hatchingFinishHeight-1).value()
+  let randomHash = sha256(txId + randomSeedBlock.vrf.value())
+  randomHash.toInt(offset*8) % options
+}
+
+func tryGetBoolean(key: String) = {
+    match getBoolean(key) {
+        case b:Boolean => b
+        case _ => false
+    }
+
+}
+
+func getRandomWin(tx: ByteVector, finishHeight: Int) = {
+  #let jackpotEnabled = tryGetBoolean("JACKPOT_ENABLED")
+  #let jackpotRandom = getRandomNumber(300, tx, finishHeight, 1)
+  #if (jackpotRandom == 1 && jackpotEnabled) then { (jackpotRandom,"jackpot") } else 
+    #Every % means 10 numbers
+    let n = getRandomNumber(1000, tx, finishHeight, 0)
+    let result = 
+    if (n<100) then { "battleground_A" } else
+    if (n<200) then { "battleground_B" } else
+    if (n<300) then { "battleground_C" } else
+    if (n<400) then { "battleground_D" } else
+    if (n<450) then { "incubator" } else    
+    if (n<490) then { "duckling_40" } else
+    if (n<540) then { "duckling_20" } else
+    if (n<640) then { "item!ART-FEED5" } else    
+    if (n<710) then { "item!ART-FEED10" } else    
+    if (n<740) then { "item!ART-FEED15" } else    
+    if (n<770) then { "item!ART-FEED20" } else    
+    if (n<790) then { "item!ART-FEED25" } else    
+    if (n<810) then { "item!ART-FEED50" } else    
+    if (n<830) then { "item!ART-FEED100" } else  
+    if (n<860) then { "item!ART-MUTARIUM-G"} else
+    if (n<890) then { "item!ART-MUTARIUM-D"} else
+    if (n<910) then { "item!ART-FREEGENE" } else    
+    if (n<930) then { "item!ART-FIXGENE" } else   
+    if (n<980) then { "trtl_incubator" } else
+    { "item!ART-FEED500" }
+
+    (n,result)
+}
+
+func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean) = {
+  let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
+  let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
+  strict validPayment = checkAdditionalPayment(additionalPayment)
+  #strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTHTURTLE"],[])
+
+  if (status != "open") then {
+    throw("rebirth is finished or not open")
+  } else {
+    if (height < finishBlock) then {
+      throw("you cannot finish rebirth, yet")
+    } else {
+
+      let output = getRandomWin(initTx.fromBase58String(), finishBlock)  
+      let win = output._2
+      let random = output._1
+
+      let txId = initTx
+
+      #TODO: change into docking
+      strict result =  if (win.indexOf("ground") != unit) then {
+        let color = win.takeRight(1)
+        strict call = if !double then 
+              strict first = invoke(getCanineStakingAddress(), "addFreePerch", [address, color,1], [])
+              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+            else
+              strict first = invoke(getCanineStakingAddress(), "addFreePerch", [address, color,2], [])
+                            #TODO; use a batch method 
+                [
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+                ]
+        call
+
+      #} else if (win == "jackpot") then {
+      #  strict call = invoke(getTurtleIncubatorAddress(), "issueJackpot", [address, txId, valueOrElse(getString("JACKPOT_NAME"),"WWWWXMAS")], []) 
+      #  [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+      #TODO: turn into issueFreeCanine, on double, issue free turtle aswell
+      } else if (win == "incubator") then {
+        strict call = if !double then 
+            strict first =invoke(getCanineIncubatorAddress(), "issueFree", [address, txId], [])
+            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+          else 
+            strict first = invoke(getCanineIncubatorAddress(), "issueFree", [address, txId], [])
+            strict second = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+            [
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "incubator")
+            ]
+
+        call
+      #TODO: turn into issueFreeTurtle, on double, issue free canine aswell
+      } else if (win.indexOf("duckling") !=unit) then {
+        let level = parseIntValue(win.split("_")[1])
+        let levelFinal = if double then 2* level else level
+        strict call = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,levelFinal], []) 
+        [
+			StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())
+		]
+
+      } else if (win == "trtl_incubator") then {
+        strict call = if !double then 
+            strict first = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+          else 
+            strict first = invoke(getTurtleIncubatorAddress(), "issueFreeTurtle", [address, txId], [])
+            strict second = invoke(getCanineIncubatorAddress(), "issueFree", [address, txId], [])
+            [
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "trtl_incubator")
+            ]
+        call
+      #TODO; should work
+      }else if (win.indexOf("item") !=unit) then {
+        let itemName = win.split("!")[1]
+        strict call = if !double then 
+                strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+                [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+
+            else 
+                strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+                strict second = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
+                [
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+                ]
+          call
+      }else{
+        throw("RFB: Some error occured, please contact the admins! "+win)
+      }
+
+      result ++ [
+        StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
+        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
+      ]++validPayment
+    }
+  }
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("RCU: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+#Payment 0 = turtle
+#payment 1 = waves
+#TODO: send 1/4th to fee aggregator and 3/4th to canine lock sc
+
+@Callable(i)
+func initRebirth() = {
+  let pmtCanine = i.payments[0]
+  let pmtPete = i.payments[1]
+  strict extra = checkAdditionalPayment(i.payments[2])
+
+  let assetId = pmtCanine.assetId.value()
+  let initTx = i.transactionId.toBase58String()
+  let address = i.caller.toString()
+  if (pmtCanine.amount != 1) then throw("NFT is not attached") else
+  if (pmtPete.amount != wavesAmount || pmtPete.assetId != getPeteAssetId()) then throw("Pete payment is not attached or wrong!") else
+  let sendToAggreGator = pmtPete.amount/4
+  let topup = pmtPete.amount - sendToAggreGator
+
+  strict addMore = invoke(getCanineStakingAddress(), "addPeteAndStakeMore", [], [AttachedPayment(getPeteAssetId(), topup)])
+
+   
+  let issuer = checkReal(assetId)
+  strict gen = invoke(getCanineBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
+  strict call = invoke(issuer, "reduceRarity", [assetId.toBase58String(), gen], [])
+
+  [
+    IntegerEntry("address_" + address + "_initTx_" + initTx + "_finishBlock", height+delayForHatching),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String()),
+    ScriptTransfer(getFeeAggregator(), sendToAggreGator, getPeteAssetId())
+  ]++extra
+
+  
+}
+
+
+
+@Callable(i)
+func finishRebirth(initTx: String) = {
+  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false)
+}
+
+@Callable(i)
+func finishRebirthDouble(initTx: String) = {
+  #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
+  if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
+    let assetId = i.payments[0].assetId.value()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    if boosterType == "ART-GIFT_DOUBL" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true)
+    else
+      throw("Error! Wrong item attached to double rewards!")
+}

@@ -17,6 +17,11 @@ func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 func staticKey_capacityAddress() = "static_capacityAddress"
 func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
+func staticKey_felineFarmingAddress() = "static_felineStakingAddress"
+func staticKey_canineFarmingAddress() = "static_canineStakingAddress"
+func staticKey_canineBreederAddress() = "static_canineBreederAddress"
+func staticKey_felineBreederAddress() = "static_felineBreederAddress"
 
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
@@ -65,10 +70,18 @@ func getTurtleStakingAddress() = Address(tryGetStringExternal(getOracle(),static
 func getTurtleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String())
 func getCapacityAddress() = Address(tryGetStringExternal(getOracle(),staticKey_capacityAddress()).fromBase58String()) 
 func getVeggFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_veggFarmingAddress()).fromBase58String())
+func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getFelineFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineFarmingAddress()).fromBase58String())
+func getCanineFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineFarmingAddress()).fromBase58String())
+func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String())
+func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
 
 func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),
                             getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress(),getTurtleStakingAddress(),
-                            getTurtleRebirthAddress(),getCapacityAddress(),getVeggFarmingAddress()]
+                            getTurtleRebirthAddress(),getCapacityAddress(),getVeggFarmingAddress(), 
+                            #getMutantFarmingAddress(), 
+                            getFelineFarmingAddress(), 
+                            getCanineFarmingAddress(), getCanineBreederAddress(), getFelineBreederAddress()]
 
 
 

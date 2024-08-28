@@ -41,6 +41,9 @@ func staticKey_capacityAddress() = "static_capacityAddress"
 func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
+func staticKey_canineBreederAddress() = "static_canineBreederAddress"
+func staticKey_felineBreederAddress() = "static_felineBreederAddress"
+func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -60,14 +63,25 @@ func getMarketPlaceAddress() = Address(tryGetStringExternal(getOracle(),staticKe
 func getVeggFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_veggFarmingAddress()).fromBase58String())
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-
+func getCanineFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_canineStakingAddress").fromBase58String())
+func getFelineFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_felineStakingAddress").fromBase58String())
+func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String())
+func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
+func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
 let scCanUseCoupons = [ getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),
                         getGameDappAddress(), getBabyduckAddress(),getBreedingAddress(), getTurtleStakingAddress(),
                         getTurtleRebirthAddress(),getRopeAddress(),getLevelSystemAddress(),getMarketPlaceAddress(),
-                        getCapacityAddress(),this]
+                        getCapacityAddress()
+                        ,getMutantFarmingAddress()
+                        ,getCanineFarmingAddress()
+                        ,getFelineFarmingAddress()
+                        ,getCanineBreederAddress()
+                        ,getFelineBreederAddress()
+                        ,getTurtleBreederAddress()
+                        ,this]
 
 func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
@@ -177,7 +191,9 @@ func resetCheater(user:String) = {
 
 @Callable(i)
 func addCouponsFarming(user:String,amount:Int) = {
-    if i.caller != getVeggFarmingAddress() then throw("Method only for farming sc!") else
+    if i.caller != getVeggFarmingAddress() 
+    #&& i.caller != getMutantFarmingAddress() 
+    then throw("Method only for farming sc!") else
         addCouponsInternal(user,amount)
 
 }
@@ -237,7 +253,8 @@ func useCoupons(amountTryingToPay:Int)= {
     let keySpendSc = couponsSpendOnSc(i.caller.toString())
 
     strict topUp = invoke(getVeggFarmingAddress(), "topUpReward", [amountPaid/100*25],[])
-    strict topUp2 = invoke(getMutantFarmingAddress(), "topUpReward", ["VEGG",amountPaid/100*15],[])
+    #strict topUp2 = if invokingSc == getMutantFarmingAddress() then unit else
+    # invoke(getMutantFarmingAddress(), "topUpReward", ["VEGG",amountPaid/100*15],[])
 
     let totalSpend = tryGetInteger(keySpend)+amountPaid
     let totalSpendSc = tryGetInteger(keySpendSc)+amountPaid

@@ -6,6 +6,7 @@
 func makePayment() = {
   let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
   let farmingContractAddress = base58'3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD'
+  let nodeDappAddress = base58'3PGZMJGVbWM8taptaK8sbxE2Ja7k54HKUJS'
   let klastRefillHeight = "lastRefillHeight"
 
   let lastRefillHeight = match getInteger(klastRefillHeight) {
@@ -18,6 +19,7 @@ func makePayment() = {
   if (height - lastRefillHeight < timeFrame) then throw("Cannot refill yet, needs " + (timeFrame - (height - lastRefillHeight)).toString() + " blocks")
   else {
     strict burnCall = invoke(Address(farmingContractAddress), "topUpReward", [],[AttachedPayment(eggAssetId,amount)])
+    strict nodeCall = invoke(Address(nodeDappAddress), "transferRewardsToCanineStaking", [],[])
     [
       IntegerEntry(klastRefillHeight, height),
       ScriptTransfer(i.caller, 1_000_000, eggAssetId)

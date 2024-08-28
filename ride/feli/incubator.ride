@@ -1,0 +1,315 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_peteAssetId() = "static_peteAssetId"
+func staticKey_refContractAddress() = "static_refContractAddress"
+func staticKey_felinesRebirthAddress() = "static_felinesRebirthAddress"
+func staticKey_felinesStakingAddress() = "static_felineStakingAddress"
+func staticKey_canineRebirthAddress() = "static_felineRebirthAddress"
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getFelineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felinesRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getFelineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felinesStakingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getFeliRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
+
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != feeAmount then throw("BDCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
+
+#TODO: make it configurable through oracle
+let delayForHatching = 2
+
+let HatchingStarted = "HATCHING_STARTED"
+let HatchingFinished = "HATCHING_FINISHED"
+
+func isLocked() = {
+  let masterAddress = Address(base58'3PEPftf2kWZDmAaWBjs6BUJa9957kiA2PkU')
+  match getInteger(masterAddress, "egglock") {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func getHatchingStatusKey(address: String, txId: ByteVector) = {
+  # stores the fact of hatching, 
+  # if key exists = hatching started 
+  # if false = not claimed
+  # if true = claimed and nft id will be in the key of getFelineIdKey
+  address + "_" + txId.toBase58String() +  "_status"
+}
+
+func getHatchingFinishHeightKey(address: String, txId: ByteVector) = {
+  address + "_" + txId.toBase58String() +  "_fh"
+}
+
+func getFelineIdKey(address: String, txId: ByteVector) = {
+  address + "_" + txId.toBase58String() +  "_di"
+}
+
+func getFelineStatsKey(genString: String) = {
+  "stats_" + genString + "_amount"
+}
+
+func tryGetInteger(key: String) = {
+    let val = match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+    val
+}
+
+##
+#[
+#  {
+#    "key": "discountCoefficient",
+#    "type": "integer",
+#    "value": 10
+#  }
+#]
+let discountCoefficient = tryGetInteger("discountCoefficient")	
+
+func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int, offset: Int) = {
+  let randomSeedBlock = blockInfoByHeight(hatchingFinishHeight-1).value()
+  let randomHash = sha256(txId + randomSeedBlock.vrf.value())
+  randomHash.toInt(offset*8) % variants
+}
+
+func select(color: String)={
+    let oldGenes = []
+    let newGenes = [("FELI-AAAAAAAA-G" + color, "8A-G"),("FELI-BBBBBBBB-G" + color, "8B-G"),("FELI-CCCCCCCC-G" + color, "8C-G"),("FELI-DDDDDDDD-G" + color, "8D-G")]
+    (oldGenes++newGenes, newGenes)
+}
+func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
+    let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
+    let color = getElement(["A","B","C","D"],colorRandom)
+
+    let colorSelect = select(color)
+
+    let toPickFrom = if all then colorSelect._1 else colorSelect._2
+    let typeRandom = getRandomNumber(size(toPickFrom), txId, hatchingFinishHeight, 0)
+    
+    getElement(toPickFrom,typeRandom)   
+    
+}
+
+let typesAmount = size(select("R")._1)-1
+
+
+func countEggsNeededAmount(totalFelinesAmount: Int) = {
+  let n = totalFelinesAmount
+  let g = discountCoefficient
+  let t = typesAmount
+  let price = pow((100 + (n*g)/(10*t)), 2, 5, 1, 2, DOWN)+1000
+  price * 1500000
+}
+
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("TI: wrong type, expected: Boolean")
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("ICU: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
+func reduceRarity(assetId: String, fGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getFeliRebirthAddress() && i.caller != this) then {
+    throw("IRR: admin or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    let letter = duckGen.take(6).takeRight(1)
+    let farmGen = "8"+letter+"-G"
+    [
+      IntegerEntry(getFelineStatsKey(duckGen), tryGetInteger(getFelineStatsKey(duckGen)) - 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
+    ]
+  }
+}
+
+@Callable(i)
+func issueJackpot(address: String, txIdStr: String, gen: String) = {
+  if (i.caller != getFelineRebirthAddress() && i.caller != this) then {
+    throw("ISJ: admin or rebirth only")
+  } else {
+    let txId = fromBase58String(txIdStr)
+    let hatchingStatusKey = getHatchingStatusKey(address, txId)
+    let finishHeightKey = getHatchingFinishHeightKey(address, txId)
+
+    let totalDucksAmount = tryGetInteger("felines_amount")
+    let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
+
+    let (duckGen, farmGen) = ("Feline-"+gen+"-JU", "8W-J")
+    let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+
+    let asset = Issue(duckGen, description, 1, 0, false, unit, height)
+    let assetId = asset.calculateAssetId()
+
+    let duckIdKey = getFelineIdKey(address, txId)
+    let valueDuckIdKeyExits = tryGetString(duckIdKey)
+    if valueDuckIdKeyExits != "" then throw("ISJ: You will override following duckId :"+duckIdKey+" make sure that your txId is unique!") else
+    ([
+      IntegerEntry(getHatchingFinishHeightKey(address, txId), height),
+      IntegerEntry("felines_amount", totalDucksAmount + 1),
+      IntegerEntry("felines_last_price", eggsNeeded / 1000000),
+    
+      StringEntry(hatchingStatusKey, HatchingFinished),
+      StringEntry(duckIdKey, assetId.toBase58String()),
+      StringEntry(assetId.toBase58String(), duckIdKey),
+      IntegerEntry(getFelineStatsKey(duckGen), tryGetInteger(getFelineStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
+      asset,
+      ScriptTransfer(addressFromString(address).value(), 1, assetId)
+    ], assetId.toBase58String())
+  }
+}
+
+@Callable(i)
+func issueFree(address: String, txIdStr: String) = {
+  if (i.caller != getFelineRebirthAddress()) then {
+    throw("TISFD: rebirth only")
+  } else {
+    let txId = fromBase58String(txIdStr)
+    let hatchingStatusKey = getHatchingStatusKey(address, txId)
+    let finishHeightKey = getHatchingFinishHeightKey(address, txId)
+
+    let totalDucksAmount = tryGetInteger("felines_amount")
+    let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
+
+    let (FelineGen, farmGen) = getRandomName(txId, valueOrErrorMessage(transactionHeightById(txId),txIdStr+ " not found "+toBase58String(txId)) + 1, true)
+    let description = "{\"genotype\": \"" + FelineGen + "\", \"crossbreeding\": true}"
+
+    let asset = Issue(FelineGen, description, 1, 0, false, unit, height)
+    let assetId = asset.calculateAssetId()
+
+    let amount = tryGetInteger(getFelineStatsKey(FelineGen)) + 1
+
+    let duckIdKey = getFelineIdKey(address, txId)
+    ([
+      IntegerEntry(getHatchingFinishHeightKey(address, txId), height),
+      IntegerEntry("felines_amount", totalDucksAmount + 1),
+      IntegerEntry("felines_last_price", eggsNeeded / 1500000),
+      StringEntry(hatchingStatusKey, HatchingFinished),
+      StringEntry(duckIdKey, assetId.toBase58String()),
+      StringEntry(assetId.toBase58String(), duckIdKey),
+      IntegerEntry(getFelineStatsKey(FelineGen), amount),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
+      asset,
+      ScriptTransfer(addressFromString(address).value(), 1, assetId)
+    ], assetId.toBase58String())
+  }
+}
+
+@Callable(i)	
+func setDiscount(val: Int) = {	
+  if (i.caller != this) then {	
+    throw("admin_only")	
+  } else {	
+    [IntegerEntry("discountCoefficient", val)]	
+  }	
+}
+
+@Callable(i)
+func startHatching(refererAddress: String) = {
+  strict feeValidate = checkAdditionalPayment(i.payments[0])
+  #TODO: add validation that feeValidate payment is added!
+  if (isLocked() > 0) then {
+    throw("EGG operations are temporarily locked")
+  } else {
+    let totalFelineAmount = tryGetInteger("felines_amount")
+    let eggsNeeded = countEggsNeededAmount(totalFelineAmount)
+
+
+    let results = [
+        StringEntry(getHatchingStatusKey(i.originCaller.toString(), i.transactionId), HatchingStarted),
+        IntegerEntry(getHatchingFinishHeightKey(i.originCaller.toString(), i.transactionId), height + delayForHatching),
+        IntegerEntry("felines_amount", totalFelineAmount + 1),
+        IntegerEntry("felines_last_price", eggsNeeded / 1500000)
+      ]
+
+    let leftToPay = eggsNeeded
+    let firstPayment = i.payments[1].value()
+    if (firstPayment.assetId != getPeteAssetId()) then throw("TB: You can attach only EGG tokens with the following asset id: " + getPeteAssetId().toBase58String()) else 
+    if (firstPayment.amount < leftToPay) then throw("TB: To breed a Feline you following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+    strict addMore = invoke(getFelineStakingAddress(), "addPeteAndStakeMore", [], [AttachedPayment(getPeteAssetId(), leftToPay)])
+
+    let refund = if size(i.payments) == 2 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getPeteAssetId())] else []
+
+      results ++ refund++feeValidate
+
+  }
+}
+
+
+@Callable(i)
+func finishHatching(txIdStr: String) = {
+  strict feeValidate = checkAdditionalPayment(i.payments[0])
+  #TODO: add validation that feeValidate payment is added!
+  let txId = fromBase58String(txIdStr)
+  let hatchingStatusKey = getHatchingStatusKey(i.caller.toString(), txId)
+  let finishHeightKey = getHatchingFinishHeightKey(i.caller.toString(), txId)
+  let FelineIdKey = getFelineIdKey(i.caller.toString(), txId)
+
+  let hatchingTxStatus = getStringValue(this, hatchingStatusKey)
+  let hatchingFinishHeight = getIntegerValue(this, finishHeightKey)
+  
+  if (hatchingTxStatus == HatchingFinished) then {
+    let FelineId = getStringValue(this, getFelineIdKey(i.caller.toString(), txId))
+    throw("The Feline was hatched and claimed already, here is the folowing: " + FelineId)
+  } else 
+    if (hatchingFinishHeight > height) then throw("Hatching is not finished yet " + (hatchingFinishHeight - height).toString() + " blocks remaining, it will take around " +  (hatchingFinishHeight - height).toString() + " minutes")
+    else {
+      let (FelineGen, farmGen) = getRandomName(txId, hatchingFinishHeight, false)
+      let description = "{\"genotype\": \"" + FelineGen + "\", \"crossbreeding\": true}"
+
+      let asset = Issue(FelineGen, description, 1, 0, false, unit, hatchingFinishHeight)
+      let assetId = asset.calculateAssetId()
+
+      let amount = tryGetInteger(getFelineStatsKey(FelineGen)) + 1
+
+      [
+        StringEntry(hatchingStatusKey, HatchingFinished),
+        StringEntry(FelineIdKey, assetId.toBase58String()),
+        StringEntry(assetId.toBase58String(), FelineIdKey),
+        IntegerEntry(getFelineStatsKey(FelineGen), amount),
+        IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
+        asset,
+        ScriptTransfer(i.caller, 1, assetId)
+      ]++feeValidate
+    }
+}
+
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+
+        
