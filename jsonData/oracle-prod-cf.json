@@ -97,6 +97,11 @@
       "value": "RECHARGE_CAPACITY"
     },
     {
+      "key": "allowed_contract_3P3zkxHhAzRzV9PBLB14JXG4ZEEPv4LtDyQ",
+      "type": "string",
+      "value": "PETE_POOL"
+    },
+    {
       "key": "allowed_contract_3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ",
       "type": "string",
       "value": "NATIVE_POOL"
@@ -138,6 +143,27 @@
       "value": "VEGG_FARMING"
     },
     {
+      "key": "allowed_contract_3PCBQJP8XEK5sgziA9pu3AHKnegmBxxojaY",
+      "type": "string",
+      "value": "CANI_STAKING"
+    },
+    {
+      
+      "key": "allowed_contract_3PQdwhdjWHZ1hacy2dLPnRafi86cTvuJPNX",
+      "type": "string",
+      "value": "CANI_BREED"
+    },
+    {
+      "key": "allowed_contract_3PD6L4yr52Lac9qeqXNoi4mAiiak5ZBnx5D",
+      "type": "string",
+      "value": "CANI_INCUBATE"
+    },
+    {
+      "key": "allowed_contract_3P4Anrwd7rKDGyxXZRaocXVbKtg8TKEzf6D",
+      "type": "string",
+      "value": "CANI_REBIRTH"
+    },
+    {
       "key": "COUPONS_ADDRESS",
       "type": "string",
       "value": "3P5W1D4UuSZrNfeZFJZcD5wT2avfbHbzTvS"
@@ -146,6 +172,30 @@
           "key": "FARMING_DAPP",
           "type": "string",
           "value": "3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD"
+
+      },
+      {
+          "key": "FELI_INC",
+          "type": "string",
+          "value": "3P9SJwLFhgRQG5jAQinzZFyPzE9cP3oyu8Q"
+
+      },
+      {
+          "key": "FELI_BR",
+          "type": "string",
+          "value": "3PKhghDw2necJLA6mGuQuC4juWzmu7Subu2"
+
+      },
+      {
+          "key": "FELI_RE",
+          "type": "string",
+          "value": "3PMUJt5Voyxy12DjsKVKtFctA4HpAEfSgc5"
+
+      },
+      {
+          "key": "FELI_ST",
+          "type": "string",
+          "value": "3P6KR6QtXmPH8onFKMe276bVKUNVRzmNGSR"
 
       }
   ]
