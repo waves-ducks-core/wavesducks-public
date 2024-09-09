@@ -79,9 +79,9 @@ func asIntTuple(value: Any) = match value {
 }
 
 func handleStakingTopUp (totalAmount: Int) = {
-    let compoundAmount = totalAmount/2
-    #TODO: do lease stuff here
-    let payoutAmount = totalAmount-compoundAmount
+    let team = totalAmount/10
+    let compoundAmount = (totalAmount-team)/2
+    let payoutAmount = totalAmount-compoundAmount-team
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let totalStakedAmount = tryGetInteger(totalStakedKey())
     let interestDelta = if (totalStakedAmount > 0)
@@ -91,7 +91,8 @@ func handleStakingTopUp (totalAmount: Int) = {
     [
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + payoutAmount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta)),
-      IntegerEntry("global_PETE_balance",tryGetInteger("global_PETE_balance")+compoundAmount)
+      IntegerEntry("global_PETE_balance",tryGetInteger("global_PETE_balance")+compoundAmount),
+      ScriptTransfer(getFeeAggregator(), team, getPeteAssetId())
       
     ]
       
@@ -365,7 +366,9 @@ func claimRewardPete () = {
   strict peteBalanceBefore = assetBalance(this, getPeteAssetId())
   strict invokeRes = invoke(getPeteDappAddress(), "claim", [],[])
   strict peteBalanceAfter = assetBalance(this, getPeteAssetId())
-  let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore) 
+  let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore-1000_0000) ++ [
+    ScriptTransfer(i.caller,1000_0000, getPeteAssetId())
+  ]
     (
       resHandleStaking, 
       true
