@@ -1,0 +1,14 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_potionFee",
+            "type": "integer",
+            "value": 500000000
+        }
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES"
+}
+

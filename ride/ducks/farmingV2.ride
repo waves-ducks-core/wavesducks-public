@@ -35,6 +35,8 @@ func staticKey_itemsAddress() = "static_itemsAddress"
 func totalStakedKey() = "total_staked"
 func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
 func staticKey_cfMasterAddress() = "static_cfMasterAddress"
+func staticKey_potionFee() = "static_potionFee"
+func staticKey_canineStakingAddress() = "static_canineStakingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
@@ -50,6 +52,8 @@ func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakingContracts())
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_cfMasterAddress()).fromBase58String())
+func getPotionFee() =  getIntegerValue(getOracle(),staticKey_potionFee())
+func getCanineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -414,3 +418,29 @@ func claimReward (assetId: String) = {
     result._2
   )
   }
+
+
+@Callable(i)
+func redeemItem(type: String, nftAssetId: String)={
+strict wavesPayment = i.payments[0]
+strict potionPayment = i.payments[1].value()
+if potionPayment.amount != 1 then throw("You need to attach exactly 1 potion") else
+strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[potionPayment.value().assetId.value().toBase58String()],[]).asString()
+if artefact != "ART-POTION" then  throw("You need to attach a ART-POTION artefact") else
+if wavesPayment.assetId != unit then throw("You need to attach waves") else
+if wavesPayment.amount != getPotionFee() then throw("You need to attach exactly "+getPotionFee().toString()+" waves") else
+#TODO: validate waves fee + send to fee aggregator, maybe send some to treasury aswell?
+#
+
+let sendToAggreGator = wavesPayment.amount/2
+let topup = wavesPayment.amount - sendToAggreGator
+let basePower = tryGetInteger(nftAssetId+"_basePower")
+if basePower == 0 then throw("This is not a valid duck or the duck waves never staked!") else
+if tryGetString(nftAssetId+"_owner") != "" then throw("Please usntake your duck first!!") else
+strict addMore = invoke(getCanineStakingAddress(), "addWavesAndStakeMore", [], [AttachedPayment(unit, topup)])
+[
+  ScriptTransfer(getFeeAggregator(), sendToAggreGator, unit),
+  DeleteEntry(nftAssetId+"_basePower")
+  
+]
+}
