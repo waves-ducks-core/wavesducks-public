@@ -173,7 +173,7 @@ func canBeBreeded(asset1Id: ByteVector, asset2Id: ByteVector) = {
 }
 
 func getRandomOldGenes(txId: ByteVector, h: Int) = {
-  let freeGenes = ["A","B","C","D"]
+  let freeGenes = ["A","B","C"]
   let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
   freeGenes[randomNumber]
 }
@@ -217,7 +217,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
   } else 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
-      let TRTLGen = generateTRTL(txId, processFinishHeight,0,0,"",0)
+      let TRTLGen = generateTRTL(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
       let farmGen = getGen(TRTLGen)
       let description = "{\"genotype\": \"" + TRTLGen + "\", \"crossbreeding\": true}"
 
@@ -332,7 +332,7 @@ func freeGene(txIdStr: String) = {
 
   let selectedGene = getRandomOldGenes(txIdStr.fromBase58String(),processFinishHeight)
   let randomPosition = getRandomNumber(8, txIdStr.fromBase58String(), processFinishHeight, 3)
-  finishTRTLHatchingInternal(txIdStr,i,0,0,"",0)
+  finishTRTLHatchingInternal(txIdStr,i,0,0,selectedGene,randomPosition)
   ++feeValidate
   ++[Burn(firstPayment.assetId.value(),1)]
 
