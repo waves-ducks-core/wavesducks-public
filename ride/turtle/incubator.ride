@@ -19,6 +19,7 @@ func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 func staticKey_canisRebirthAddress() = "static_canineRebirthAddress"
+func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -27,6 +28,7 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAdd
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getCanisRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canisRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getFelineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -177,8 +179,8 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 
 @Callable(i)
 func issueFreeTurtle(address: String, txIdStr: String) = {
-  if (i.caller != getTurtleRebirthAddress() && i.caller != getCanisRebirthAddress()) then {
-    throw("TISFD: rebirth only")
+  if (i.caller != getTurtleRebirthAddress() && i.caller != getCanisRebirthAddress() && i.caller != getFelineRebirthAddress()) then {
+    throw("TISFT: rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
     let hatchingStatusKey = getHatchingStatusKey(address, txId)

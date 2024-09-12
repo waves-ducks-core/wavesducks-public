@@ -91,34 +91,26 @@ func burnAttachedPayments()={
 }
 
 @Callable(i)
-func burnDuckling()={
+func burnDuckling(user: String)={
     let payments = i.payments
     if size(payments) != 1 then throw("BBD: Please make sure to attach only 1 payment!") else
     let payment = payments[0].value()
     if payment.amount != 1 then throw("BBD: Please make sure to attach the NFT!") else
     if (assetInfo(payment.assetId.value()).value().issuer != getBabyduckAddress()) then throw("BBD: This is no duckling!") else
-    let amount=2000000
-
-    let burner = i.originCaller.toString()
     let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
-    let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(burner))
+    let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(user))
     let totalDucklingBurned = tryGetInteger(totalDucklingsBurned())
-    let totalDucklingBurnedByUser = tryGetInteger(getUserBurnDucklingKey(burner))
+    let totalDucklingBurnedByUser = tryGetInteger(getUserBurnDucklingKey(user))
 
     [
-        Burn(getEggAssetId(),amount),
         Burn(payment.assetId.value(), payment.amount),
         IntegerEntry(getTotalBurnKeyOld(),totalBurnTillDate),
-        IntegerEntry(getUserBurnKeyOld(burner), totalBurnTillDateByUser),
+        IntegerEntry(getUserBurnKeyOld(user), totalBurnTillDateByUser),
         IntegerEntry(totalDucklingsBurnedOld(),totalDucklingBurned ),
-        IntegerEntry(getUserBurnDucklingKeyOld(burner),totalDucklingBurnedByUser ),
-
-        IntegerEntry(getTotalBurnKey(), totalBurnTillDate+amount),
-        IntegerEntry(getUserBurnKey(burner), totalBurnTillDateByUser+amount),
+        IntegerEntry(getUserBurnDucklingKeyOld(user),totalDucklingBurnedByUser ),
         IntegerEntry(totalDucklingsBurned(),totalDucklingBurned ),
-        IntegerEntry(getUserBurnDucklingKey(burner),totalDucklingBurnedByUser ),
+        IntegerEntry(getUserBurnDucklingKey(user),totalDucklingBurnedByUser )
 
-        IntegerEntry(getLastBurnKey(), amount)
 
     ]
 }

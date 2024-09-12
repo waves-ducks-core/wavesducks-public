@@ -17,18 +17,16 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_peteAssetId() = "static_peteAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
-func staticKey_felinesRebirthAddress() = "static_felinesRebirthAddress"
+func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
 func staticKey_felinesStakingAddress() = "static_felineStakingAddress"
-func staticKey_canineRebirthAddress() = "static_felineRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
-func getFelineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felinesRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getFelineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getFelineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felinesStakingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
-func getFeliRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -143,7 +141,7 @@ func configureOracle(oracle: String) = {
 @Callable(i)
 func reduceRarity(assetId: String, fGen: String) = {
   let asset = assetId.fromBase58String()
-  if (i.caller != getFeliRebirthAddress() && i.caller != this) then {
+  if (i.caller != getFelineRebirthAddress() && i.caller != this) then {
     throw("IRR: admin or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
@@ -196,7 +194,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 @Callable(i)
 func issueFree(address: String, txIdStr: String) = {
   if (i.caller != getFelineRebirthAddress()) then {
-    throw("TISFD: rebirth only")
+    throw("FISF: rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
     let hatchingStatusKey = getHatchingStatusKey(address, txId)
