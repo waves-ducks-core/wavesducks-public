@@ -40,6 +40,8 @@ func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_spiceAssetId() = "static_spiceAssetId"
+func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String())
@@ -52,6 +54,8 @@ func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_co
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BCAP: Please attach waves") else
@@ -90,6 +94,14 @@ func getDuckIdKey(address: String, txId: ByteVector) = {
 
 func getDuckStatsKey(genString: String) = {
   "stats_" + genString + "_amount"
+}
+
+func tryGetBoolean(key: String) = {
+    match getBoolean(key) {
+        case b:Boolean => b
+        case _ => false
+    }
+
 }
 
 func tryGetInteger(key: String) = {
@@ -169,6 +181,7 @@ func isSymbolL(accumulated: Int, sym: String) = { if (sym == "L") then {accumula
 func isSymbolM(accumulated: Int, sym: String) = { if (sym == "M") then {accumulated+1} else {accumulated+0} }
 func isSymbolN(accumulated: Int, sym: String) = { if (sym == "N") then {accumulated+1} else {accumulated+0} }
 func isSymbolO(accumulated: Int, sym: String) = { if (sym == "O") then {accumulated+1} else {accumulated+0} }
+func isSymbolP(accumulated: Int, sym: String) = { if (sym == "P") then {accumulated+1} else {accumulated+0} }
 func isSymbolS(accumulated: Int, sym: String) = { if (sym == "S") then {accumulated+1} else {accumulated+0} }
 func isSymbolT(accumulated: Int, sym: String) = { if (sym == "T") then {accumulated+1} else {accumulated+0} }
 func isSymbolZ(accumulated: Int, sym: String) = { if (sym == "Z") then {accumulated+1} else {accumulated+0} }
@@ -259,7 +272,9 @@ let freeGenes = [
   "F",
   "G",
   "H",
-  "I"
+  "I",
+  "K",
+  "L"
 ]
 
 func getRandomGenes(txId: ByteVector, h: Int) = {
@@ -269,10 +284,15 @@ func getRandomGenes(txId: ByteVector, h: Int) = {
 
 
 func finishDuckHatchingItems(txIdStr: String, duckGenesString: String, payment1: AttachedPayment, payment2: AttachedPayment, owner: String) = {
-  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],[payment1,payment2]).asString()
-  let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
-  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
-  finishDuckHatch(txIdStr, owner, duckGenesString)
+  let instantPaid = tryGetBoolean("instantPaid_"+txIdStr)
+  if instantPaid then 
+                      finishDuckHatch(txIdStr, owner, duckGenesString)  
+                  else
+  
+                      strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],[payment1,payment2]).asString()
+                      let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
+                      if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
+                      finishDuckHatch(txIdStr, owner, duckGenesString)
 }
 
 @Callable(i)
@@ -325,7 +345,7 @@ func getGenFromName(assetName: String) = {
     getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
     getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I") +
     getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolK)) + "K") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolL)) + "L") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolM)) + "M") +
-    getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolN)) + "N") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolO)) + "O") +
+    getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolN)) + "N") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolO)) + "O") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolP)) + "P") +
     getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolS)) + "S") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolT)) + "T") + 
     getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolZ)) + "Z") +"-" + generation
     (
@@ -371,6 +391,7 @@ func startDuckBreeding(refererAddress: String) = {
   let firstPayment = i.payments[0].value()
   let secondPayment = i.payments[1].value()
   strict validPayment = checkAdditionalPayment(i.payments[2])
+  strict instantPaid = if size(i.payments) >= 4 && i.payments[3].assetId == getSpiceAssetId() then true else false
 
 
   let firstAssetId = firstPayment.assetId.value().toBase58String()
@@ -382,7 +403,7 @@ func startDuckBreeding(refererAddress: String) = {
     let leftToPay = getDucklingPrice()-amountPaidByCoupons
 
   strict payment = if leftToPay!=0 then {
-    let thirdPayment = i.payments[3].value()
+    let thirdPayment = if instantPaid then i.payments[4].value() else i.payments[3].value()
 
     if (thirdPayment.assetId != getEggAssetId()) then throw("BSDB: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
     if (thirdPayment.amount != leftToPay) then throw("BSDB: To breed you currently need the following amount of EGGlets: " + leftToPay.toString()) else
@@ -406,15 +427,26 @@ func startDuckBreeding(refererAddress: String) = {
         let parent2Gen = assetInfo(secondPayment.assetId.value()).value().name.split("")
         let newG = determineGeneration(parent1Gen[14], parent2Gen[14])
         
-        let spiceAmount = (Generations.indexOf(newG).value()+1)*10
-        strict ducklingGen = invoke(getBabyDuckBreedingAddress(),"issueDuckling",[i.caller.toString(),i.transactionId.toBase58String(), spiceAmount, newG],[]).asString()
-        [
+        let spiceAmount = (Generations.indexOf(newG).value()+1)*10_0000_0000
+        strict result = if instantPaid then 
+                                            if i.payments[3].amount == spiceAmount && i.payments[3].assetId == getSpiceAssetId() then
+                                            strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
+                                                [], [AttachedPayment(getSpiceAssetId(), spiceAmount/2)])
+                                            [
+                                              BooleanEntry("instantPaid_"+i.transactionId.toBase58String(), true)
+                                            ] 
+                                            else throw("Please attach the correct amount of spice!")
+                                        else 
+                                            strict res = invoke(getBabyDuckBreedingAddress(),"issueDuckling",[i.caller.toString(),i.transactionId.toBase58String(), spiceAmount/1_0000_0000, newG],[]).asString()
+                                            [
+                                              StringEntry(getDucklingKey(i.caller.toString(), i.transactionId),res),
+                                              BooleanEntry("instantPaid_"+i.transactionId.toBase58String(), false)
+                                            ]
+        result++[
           StringEntry(getDuckParentKey(i.transactionId, 1), firstAssetId),
           StringEntry(getDuckParentKey(i.transactionId, 2), secondAssetId),
           StringEntry(getProcessStatusKey(i.caller.toString(), i.transactionId), HatchingStarted),
           IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId), height + delayForHatching),
-          StringEntry(getDucklingKey(i.caller.toString(), i.transactionId),ducklingGen),
-
           IntegerEntry("asset_" + firstAssetId + "_children", 1),
           IntegerEntry("asset_" + secondAssetId + "_children", 1),
           ScriptTransfer(i.caller, 1, firstPayment.assetId.value()),
@@ -429,11 +461,17 @@ func startDuckBreeding(refererAddress: String) = {
 
 @Callable(i)
 func finishDuckHatching(txIdStr: String) = {
+  
   let owner = i.caller.toString()
-  strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
+  let instantPaid = tryGetBoolean("instantPaid_"+txIdStr)
+  
   let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
-  if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else
-  finishDuckHatch(txIdStr, owner, "") 
+  if instantPaid then 
+                      finishDuckHatch(txIdStr, owner, "")  
+                  else
+                      strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
+                      if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else
+                      finishDuckHatch(txIdStr, owner, "") 
 }
 
 @Callable(i)

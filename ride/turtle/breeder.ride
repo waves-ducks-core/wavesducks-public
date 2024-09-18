@@ -173,7 +173,7 @@ func canBeBreeded(asset1Id: ByteVector, asset2Id: ByteVector) = {
 }
 
 func getRandomOldGenes(txId: ByteVector, h: Int) = {
-  let freeGenes = ["A","B","C"]
+  let freeGenes = ["A","B","C","D"]
   let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
   freeGenes[randomNumber]
 }
