@@ -209,7 +209,7 @@
         {
             "key": "static_nodeAddress",
             "type": "string",
-            "value": "3PA1KvFfq9VuJjg45p2ytGgaNjrgnLSgf4r"
+            "value": "3P68kRWurF65CrFLhD66cqp9Gzm7jr7AMTj"
             
         },
         {
@@ -233,7 +233,7 @@
         {
             "key": "static_ammAddress",
             "type": "string",
-            "value": "3P5s8fYvGZuf8WGv5SVJYqyo5mbXUhhtKWj,3PPWSpENBfmvH7Hkz7vqMrwywTZYEtLEBaH"
+            "value": "3P5s8fYvGZuf8WGv5SVJYqyo5mbXUhhtKWj,3PPWSpENBfmvH7Hkz7vqMrwywTZYEtLEBaH,3PKzT1tyRFU4rRwWTUwhz7ukA6HdQa22iVf"
             
         },
         {
@@ -281,7 +281,23 @@
             "key": "static_perchFee",
             "type": "integer",
             "value": 100000000
+        },
+        {
+            "key": "static_mutariumFee",
+            "type": "integer",
+            "value": 400000000
+        },
+        {
+            "key": "static_mutantIncubatorAddress",
+            "type": "string",
+            "value": "3PKygHiLgLC16j5bNP1T3UUudmH98Pp2v8o"
+        },
+        {
+            "key": "static_mutantFarmingAddress",
+            "type": "string",
+            "value": "3PH1jsDiwuCB18go9PN6hpgiLRGQCf1A22h"
         }
+        
 
         
     ],

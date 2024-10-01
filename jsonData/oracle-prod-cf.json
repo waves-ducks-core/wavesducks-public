@@ -176,27 +176,44 @@
       },
       {
           "key": "FELI_INC",
-          "type": "string",
-          "value": "3P9SJwLFhgRQG5jAQinzZFyPzE9cP3oyu8Q"
+          "value": null
 
       },
       {
           "key": "FELI_BR",
-          "type": "string",
-          "value": "3PKhghDw2necJLA6mGuQuC4juWzmu7Subu2"
+          "value": null
 
       },
       {
           "key": "FELI_RE",
-          "type": "string",
-          "value": "3PMUJt5Voyxy12DjsKVKtFctA4HpAEfSgc5"
+          "value": null
 
       },
       {
           "key": "FELI_ST",
-          "type": "string",
-          "value": "3P6KR6QtXmPH8onFKMe276bVKUNVRzmNGSR"
+          "value": null
 
+      },
+      {
+        "key": "allowed_contract_3P6KR6QtXmPH8onFKMe276bVKUNVRzmNGSR",
+        "type": "string",
+        "value": "FELI_STAKING"
+      },
+      {
+        
+        "key": "allowed_contract_3PKhghDw2necJLA6mGuQuC4juWzmu7Subu2",
+        "type": "string",
+        "value": "FELI_BREED"
+      },
+      {
+        "key": "allowed_contract_3P9SJwLFhgRQG5jAQinzZFyPzE9cP3oyu8Q",
+        "type": "string",
+        "value": "FELI_INCUBATE"
+      },
+      {
+        "key": "allowed_contract_3PMUJt5Voyxy12DjsKVKtFctA4HpAEfSgc5",
+        "type": "string",
+        "value": "FELI_REBIRTH"
       }
   ]
 }

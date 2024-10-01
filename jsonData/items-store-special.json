@@ -187,7 +187,74 @@
             "key": "direct_cosmetic_ART-FEED500",
             "type": "integer",
             "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-POTION",
+            "type": "integer",
+            "value": 200000000000
+        },
+
+
+
+        {
+            "key": "direct_cosmetic_ART-BONE",
+            "type": "integer",
+            "value": 1
+        },
+
+        {
+            "key": "direct_cosmetic_ART-BONE_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-BONE_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-BONE_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+
+        {
+            "key": "direct_cosmetic_ART-SKELHEAD",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-SKELHEAD_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-SKELHEAD_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-SKELHEAD_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+
+        {
+            "key": "direct_cosmetic_ART-HWRESCUE",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-HWERASE",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-SKELETON",
+            "type": "integer",
+            "value": 200000000000
         }
+
     ],
     "fee": 600000,
     "feeAssetId": "WAVES"

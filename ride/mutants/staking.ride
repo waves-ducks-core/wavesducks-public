@@ -143,6 +143,7 @@ func claimStakingResult (address: String, assetId: String, recalc: Boolean, reve
       if reveneuType == "EGG" then
       [ScriptTransfer(addressFromStringValue(address), reward , getEggAssetId())] else
       if reveneuType == "FEED" then
+      strict invokeResult = if (reward >0 ) then  invoke(getAccBoosterAddress(),"addFeedLimit",[reward,address],[]) else unit
       [] else
       if reveneuType == "VEGG" then
       strict invokeResult = if (reward >0 ) then  invoke(getCouponsAddress(),"addCouponsFarming",[address, reward],[]) else unit
@@ -366,14 +367,14 @@ func topUpReward (reveneuType: String, amount: Int) = {
 func unstakeNFT(assetId: String) = {
   let address = i.caller.toString()
   if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else
-  let assetName = assetInfo(assetId.fromBase58String()).value().name.value()   
+  let assetName = assetInfo(assetId.fromBase58String()).value().description.value()   
   strict result = deterMineClassAndClaimType(address,assetId,assetName,false)
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let color = tryGetString("address_"+address+"_asset_"+assetId+"_perchColor")
   strict assetFP = tryGetInteger(assetFarmingPower(address,assetId))
   let updateKeys = deterMineClassAndUpdateType(address, assetId.fromBase58String(), assetFP, assetName)
   [
-    IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color)+1),
+    IntegerEntry("address_"+address+"_mutariumAvailable_"+color, tryGetInteger("address_"+address+"_mutariumAvailable_"+color)+1),
     DeleteEntry(assetId+"_owner"),
     DeleteEntry(assetFarmingPower(address,assetId)),
     DeleteEntry("address_"+address+"_asset_"+assetId+"_perchColor"),
@@ -388,6 +389,6 @@ func unstakeNFT(assetId: String) = {
 @Callable(i)
 func claimReward (assetId: String) = {
   strict validPayment =  checkAdditionalPayment(i.payments[0])
-  let assetName = assetInfo(assetId.fromBase58String()).value().name.value()  
+  let assetName = assetInfo(assetId.fromBase58String()).value().description.value()  
   if (i.payments.size() > 1) then throw("Please don't add extra payments") else deterMineClassAndClaimType(i.caller.toString(),assetId,assetName, true)++validPayment
   }

@@ -290,7 +290,7 @@
         {
             "key": "direct_cosmetic_ART-KATANA_sale",
             "type": "boolean",
-            "value": true
+            "value": false
         },
         {
             "key": "direct_cosmetic_ART-KATANA_growing_percentage",
@@ -734,6 +734,16 @@
             "key": "direct_cosmetic_ART-TURTLE_growing_percentage",
             "type": "integer",
             "value": 5
+        },
+        {
+            "key": "direct_cosmetic_ART-MUTARIUM-D",
+            "type": "integer",
+            "value": 50000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-MUTARIUM-G",
+            "type": "integer",
+            "value": 50000000000
         }
     ],
     "fee": 600000,

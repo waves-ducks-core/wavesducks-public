@@ -100,13 +100,21 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
   randomHash.toInt(offset) % variants
 }
 
-func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int) = {
+func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int,geneFromParent: Int, genePostion: Int,
+specifiqueGene: String, specifiqueGenePosition: Int) = {
+  if geneFromParent != 0 && genePostion==step then{ 
+    if geneFromParent == 1 then gen1 else 
+    if geneFromParent == 2 then gen2 else throw("Parent either needs to be 1 or 2")
+  }else if specifiqueGene != "" && specifiqueGenePosition==step then{
+    specifiqueGene
+  }else
   let randomNum = getRandomNumber(2, txId, hatchingFinishHeight, step)
   let gen = if (randomNum == 0) then gen1 else gen2
   gen
 }
-
-func generate(txId: ByteVector, hatchingFinishHeight: Int) = {
+func generate(txId: ByteVector, hatchingFinishHeight: Int,
+parentFixedGene: Int,positionFixedGene: Int,
+specifiqueGene: String, specifiqueGenePosition: Int) = {
   let colorRandom = getRandomNumber(4, txId, hatchingFinishHeight, 11)
   let color = if (colorRandom == 0) then "A"
     else if (colorRandom == 1) then "B" 
@@ -120,14 +128,14 @@ func generate(txId: ByteVector, hatchingFinishHeight: Int) = {
   let parent2Gen = assetInfo(parent2Id).value().name.split("")
 
   let gen = "FELI-" 
-            + getRandomGen(parent1Gen[5], parent2Gen[5], 0, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[6], parent2Gen[6], 1, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[7], parent2Gen[7], 2, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[8], parent2Gen[8], 3, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[9], parent2Gen[9], 4, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[10], parent2Gen[10], 5, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight)
+            + getRandomGen(parent1Gen[5], parent2Gen[5], 0, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[6], parent2Gen[6], 1, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[7], parent2Gen[7], 2, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[8], parent2Gen[8], 3, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[9], parent2Gen[9], 4, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[10], parent2Gen[10], 5, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + "-" + determineGeneration(parent1Gen[14], parent2Gen[14]) + color
     gen
 }
@@ -201,7 +209,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
   } else 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
-      let Gen = generate(txId, processFinishHeight)
+      let Gen = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
       let farmGen = getGen(Gen)
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
@@ -338,7 +346,7 @@ func freeGene(txIdStr: String) = {
 
   let selectedGene = getRandomOldGenes(txIdStr.fromBase58String(),processFinishHeight)
   let randomPosition = getRandomNumber(8, txIdStr.fromBase58String(), processFinishHeight, 3)
-  finishHatchingInternal(txIdStr,i,0,0,"",0)
+  finishHatchingInternal(txIdStr,i,0,0,selectedGene,randomPosition)
   ++feeValidate
   ++[Burn(firstPayment.assetId.value(),1)]
 

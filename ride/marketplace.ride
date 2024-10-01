@@ -30,6 +30,13 @@ func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"st
 func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+
+func getCanineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_canineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getCanineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_canineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getFelineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getFelineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getMutantBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_mutantIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
@@ -60,32 +67,23 @@ func getGlobalCounter() = {
 }
 
 func getAssetGenotype(assetId: ByteVector) = {
-  if (assetInfo(assetId).value().issuer == getPeteAddress()) then "PETE" else 
-  if (assetInfo(assetId).value().issuer == getItemsAddress()) then "ART" else 
-  let asset1 = match getString(getIncubatorAddress(), assetId.toBase58String()) {
-        case b:String => b
-        case _ => ""
-    }
-  if (asset1 != "") then asset1  else 
-    let asset2 = match getString(getBreederAddress(), assetId.toBase58String()) {
-      case c:String => c
-      case _ => ""
-    }
-    if (asset2 != "") then asset2 else 
-      let asset3 = match getString(getTurtleIncubatorAddress(), assetId.toBase58String()) {
-          case b:String => b
-          case _ => ""
-      }
-      if (asset3 != "") then asset3  else 
-        let asset4 = match getString(getTurtleBreederAddress(), assetId.toBase58String()) {
-          case c:String => c
-          case _ => ""
-        }
-        if (asset4 != "") then asset4 else ""
+  let issuer = assetInfo(assetId).value().issuer
+  let name = assetInfo(assetId).value().name
+  let description = assetInfo(assetId).value().description
+  if (issuer == getPeteAddress()) then "PETE" else 
+  if (issuer == getItemsAddress()) then "ART" else
+  #Ducks
+  if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then name else
+  #Turtles
+  if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then name else
+  #Canines
+  if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then name else
+  #Felines
+  if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then name else
+  #Mutants
+  if (issuer == getMutantBreederAddress()) then description else
+  throw("MAG: Asset is not supported")
     
-  
-  
-  
 }
 
 func getBidCancelResults(auctionId: String, bidId: String) = {
@@ -135,9 +133,8 @@ func initAuction(startPrice: Int, instantPrice: Int, description: String, eggSel
 
   if (pmt.amount != 1) then throw("MIA: NFT is not attached") else
   if (eggSell == "true") then throw("MIA: Same rules for everyone!") else
-  if (asset == "") then {
-    throw("MIA: You can only sell an NFT-duck created in incubator or breeder")
-  } else {
+  if (asset == "") then throw("MIA: You can only sell an NFT-duck created in incubator or breeder") else
+    let issuer = assetInfo(assetId).value().issuer
     [
       StringEntry("auction_" + auctionId + "_status", "open"),
       BooleanEntry("auction_" + auctionId + "_eggSell", eggSell == "true"),
@@ -149,13 +146,16 @@ func initAuction(startPrice: Int, instantPrice: Int, description: String, eggSel
       StringEntry("auction_" + auctionId + "_owner", i.originCaller.toString()),
       StringEntry("auction_" + auctionId + "_description", description),
       IntegerEntry("auction_" + auctionId + "_startPrice", startPrice),
-      BooleanEntry("auction_" + auctionId + "_isArtefact", assetInfo(assetId).value().issuer == getItemsAddress()),
-      BooleanEntry("auction_" + auctionId + "_isTurtle", assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer == getTurtleIncubatorAddress()),
-      BooleanEntry("auction_" + auctionId + "_isThird", assetInfo(assetId).value().issuer == getPeteAddress()),
+      BooleanEntry("auction_" + auctionId + "_isArtefact", issuer == getItemsAddress()),
+      BooleanEntry("auction_" + auctionId + "_isTurtle", issuer == getTurtleBreederAddress() || issuer == getTurtleIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isMutant", issuer == getMutantBreederAddress()),
+      BooleanEntry("auction_" + auctionId + "_isCanine", issuer == getCanineBreederAddress() || issuer == getCanineIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isFeline", issuer == getFelineBreederAddress() || issuer == getFelineIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isThird", issuer == getPeteAddress()),
       IntegerEntry("auction_" + auctionId + "_instantPrice", instantPrice),
       StringEntry("address_" + i.originCaller.toString() + "_auction_" + auctionId + "_lockedNFT", assetId.toBase58String())
     ]
-  }
+  
 }
 
 @Callable(i)

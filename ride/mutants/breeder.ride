@@ -258,7 +258,7 @@ func checkTypeAndValidObstinate(info: Asset)={
     let breederSc = if type == "T" then getTurtleBreederAddress() else if type == "D" then getDuckBreederAddress() else throw("MCTAVO: Invalid type")
     if breederSc != info.issuer then throw("MCTAVO: Only obstinates from the breeder contract can be turned into mutants") else
     if tryGetStringExternal(breederSc, info.id.toBase58String()) == "" then throw("MCTAVO: Invalid nft") else
-    if tryGetString(getChildren(info.id.toBase58String())) != "" then throw("MCTAVO: NFT already used") else
+    if tryGetInteger(getChildren(info.id.toBase58String())) == 1  then throw("MCTAVO: NFT already used") else
 
     type
 

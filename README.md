@@ -11,9 +11,15 @@
 "type": "boolean",
 "value": true
 
-        }
-    ],
-    "fee": 600000,
-    "feeAssetId": "WAVES"
+        },
+
+{
+"key": "static_oracleAddress",
+"type": "string",
+"value":"3P4vXL8gU27PhQv8sMT9jmoQY3oFqJNRWT9"
+}
+],
+"fee": 600000,
+"feeAssetId": "WAVES"
 
 }

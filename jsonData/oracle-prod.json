@@ -183,7 +183,7 @@
         {
             "key": "static_nodeAddress",
             "type": "string",
-            "value": "3PA1KvFfq9VuJjg45p2ytGgaNjrgnLSgf4r"
+            "value": "3PGZMJGVbWM8taptaK8sbxE2Ja7k54HKUJS"
             
         },
         {
@@ -212,7 +212,7 @@
             {
               "key": "static_ammAddress",
               "type": "string",
-              "value": "3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ,3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV"
+              "value": "3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ,3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV,3P3zkxHhAzRzV9PBLB14JXG4ZEEPv4LtDyQ"
             },
         {
             "key": "static_capacityAddress",

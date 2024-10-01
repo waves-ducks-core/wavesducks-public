@@ -100,10 +100,10 @@ func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
       else if (colorRandom == 2) then "B" 
       else "R"
 
-    if (typeRandom == 0) then ("DUCK-LLLLLLLL-G" + color, "8L-G", entry)
-      else if (typeRandom == 1) then ("DUCK-MMMMMMMM-G" + color, "8M-G", entry)
-      else if (typeRandom == 2) then ("DUCK-NNNNNNNN-G" + color, "8N-G", entry)
-      else ("DUCK-OOOOOOOO-G" + color, "8O-G", entry)
+    if (typeRandom == 0) then ("DUCK-MMMMMMMM-G" + color, "8M-G", entry)
+      else if (typeRandom == 1) then ("DUCK-NNNNNNNN-G" + color, "8N-G", entry)
+      else if (typeRandom == 2) then ("DUCK-OOOOOOOO-G" + color, "8O-G", entry)
+      else ("DUCK-PPPPPPPP-G" + color, "8P-G", entry)
   #}
 }
 

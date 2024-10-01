@@ -145,6 +145,22 @@ func reduceRarity(assetId: String, fGen: String) = {
 }
 
 @Callable(i)
+func increaseRarity(assetId: String, fGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getCaniRebirthAddress() && i.caller != this) then {
+    throw("IRR: admin or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    let letter = duckGen.take(6).takeRight(1)
+    let farmGen = "8"+letter+"-G"
+    [
+      IntegerEntry(getCANIStatsKey(duckGen), tryGetInteger(getCANIStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ]
+  }
+}
+
+@Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("ICU: admin only") else 
   [

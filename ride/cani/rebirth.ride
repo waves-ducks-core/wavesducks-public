@@ -107,38 +107,42 @@ func tryGetBoolean(key: String) = {
 
 }
 
-func getRandomWin(tx: ByteVector, finishHeight: Int) = {
+func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   #let jackpotEnabled = tryGetBoolean("JACKPOT_ENABLED")
   #let jackpotRandom = getRandomNumber(300, tx, finishHeight, 1)
   #if (jackpotRandom == 1 && jackpotEnabled) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
-    if (n<100) then { "docking_A" } else
-    if (n<200) then { "docking_B" } else
-    if (n<300) then { "docking_C" } else
-    if (n<400) then { "docking_D" } else
-    if (n<450) then { "incubator" } else    
-    if (n<490) then { "duckling_40" } else
-    if (n<540) then { "duckling_20" } else
-    if (n<640) then { "item!ART-FEED5" } else    
-    if (n<710) then { "item!ART-FEED10" } else    
-    if (n<740) then { "item!ART-FEED15" } else    
-    if (n<770) then { "item!ART-FEED20" } else    
-    if (n<790) then { "item!ART-FEED25" } else    
-    if (n<810) then { "item!ART-FEED50" } else    
-    if (n<830) then { "item!ART-FEED100" } else  
-    if (n<860) then { "item!ART-MUTARIUM-G"} else
-    if (n<890) then { "item!ART-MUTARIUM-D"} else
-    if (n<910) then { "item!ART-FREEGENE" } else    
-    if (n<930) then { "item!ART-FIXGENE" } else   
-    if (n<980) then { "trtl_incubator" } else
+    if (n<100 && blacklistCode != "docking_A" ) then "docking_A" else
+    if (n<200 && blacklistCode != "docking_B" ) then "docking_B" else
+    if (n<300 && blacklistCode != "docking_C" ) then "docking_C" else
+    if (n<400 && blacklistCode != "docking_D" ) then "docking_D" else
+    if (n<450 && blacklistCode != "incubator" ) then "incubator" else    
+    if (n<490 && blacklistCode != "duckling_40" ) then "duckling_40" else
+    if (n<540 && blacklistCode != "duckling_20" ) then "duckling_20" else
+    if (n<640 && blacklistCode != "item!ART-FEED5" ) then "item!ART-FEED5" else    
+    if (n<710 && blacklistCode != "item!ART-FEED10" ) then "item!ART-FEED10" else    
+    if (n<740 && blacklistCode != "item!ART-FEED15" ) then "item!ART-FEED15" else    
+    if (n<770 && blacklistCode != "item!ART-FEED20" ) then "item!ART-FEED20" else    
+    if (n<790 && blacklistCode != "item!ART-FEED25" ) then "item!ART-FEED25" else    
+    if (n<810 && blacklistCode != "item!ART-FEED50" ) then "item!ART-FEED50" else    
+    if (n<830 && blacklistCode != "item!ART-FEED100" ) then "item!ART-FEED100" else  
+    if (n<860 && blacklistCode != "item!ART-MUTARIUM-G" ) then "item!ART-MUTARIUM-G" else
+    if (n<890 && blacklistCode != "item!ART-MUTARIUM-D" ) then "item!ART-MUTARIUM-D" else
+    if (n<910 && blacklistCode != "item!ART-FREEGENE" ) then "item!ART-FREEGENE" else    
+    if (n<930 && blacklistCode != "item!ART-FIXGENE" ) then "item!ART-FIXGENE" else   
+    if (n<980 && blacklistCode != "trtl_incubator" ) then "trtl_incubator" else
     { "item!ART-POTION" }
-
     (n,result)
 }
+func getRandomReturn(tx: ByteVector, finishHeight: Int)={
+  let n = getRandomNumber(2, tx, finishHeight, 1)
+  if n == 0 then true else false
+}
 
-func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean) = {
+func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment,
+ double: Boolean, blacklistCode: String, rescue: Boolean) = {
   let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
   strict validPayment = checkAdditionalPayment(additionalPayment)
@@ -151,7 +155,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       throw("you cannot finish rebirth, yet")
     } else {
 
-      let output = getRandomWin(initTx.fromBase58String(), finishBlock)  
+      let output = getRandomWin(initTx.fromBase58String(), finishBlock, blacklistCode)  
       let win = output._2
       let random = output._1
 
@@ -232,12 +236,21 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       }else{
         throw("RFB: Some error occured, please contact the admins! "+win)
       }
+      let returnToSender = getRandomReturn(initTx.fromBase58String(), finishBlock)
+      let returnPayload = if returnToSender then
+        let assetId = getStringValue("address_" + address + "_initTx_" + initTx + "_assetId").fromBase58String()
+        let issuer = checkReal(assetId)   
+        strict gen = invoke(getCanineBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
+        strict call = invoke(issuer, "increaseRarity", [assetId.toBase58String(), gen], [])
+        [ScriptTransfer(address.addressFromStringValue(), 1, 
+        assetId)] 
+      else []
 
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment
+      ]++validPayment++returnPayload
     }
   }
 }
@@ -289,7 +302,7 @@ func initRebirth() = {
 
 @Callable(i)
 func finishRebirth(initTx: String) = {
-  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false)
+  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false,"",false)
 }
 
 @Callable(i)
@@ -302,7 +315,38 @@ func finishRebirthDouble(initTx: String) = {
       [
         Burn(assetId,1)
       ]++
-      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true)
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,"",false)
     else
       throw("Error! Wrong item attached to double rewards!")
 }
+
+@Callable(i)
+func finishRebirthItem(initTx: String, itemCode: String) = {
+  #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
+  if (size(i.payments) == 2 && i.payments[0].amount==1) then
+    let assetId = i.payments[0].assetId.value()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    #TODO CHANGE INTO CORRECT TYPE!!!!
+    if boosterType == "ART-HWERASE" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false, itemCode,false)
+    
+    else if boosterType == "ART-HWRESCUE" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false, "",true)
+    else if boosterType == "ART-GIFT_DOUBL" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true, "",false)
+    else
+      throw("Error! Wrong item attached ")
+  else if (size(i.payments) == 1 ) then 
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false,"",false)
+  else throw("Invalid payments")
+}
+
