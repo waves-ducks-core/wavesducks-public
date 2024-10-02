@@ -61,6 +61,13 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 
 }
 
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
 func isTestEnv()={
   getBool("TESTENV")
 }
