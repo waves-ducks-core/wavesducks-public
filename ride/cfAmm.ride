@@ -15,6 +15,12 @@ func asIntTuple(value: Any) = match value {
   case _ => throw("Wrong type, expected: Tuple Int")
 }
 
+func staticKey_eggAssetId () = "static_eggAssetId"
+func staticKey_spiceAssetId () = "static_spiceAssetId"
+func staticKey_peteAssetId () = "static_peteAssetId"
+func staticKey_mutantFarmingAddress () = "static_mutantFarmingAddress"
+func staticKey_felineFarmingAddress () = "static_felineStakingAddress"
+
 func getOracleAddress() = {
   valueOrErrorMessage(valueOrErrorMessage(getString(this, "static_oracle"),"oracle not found!").addressFromString(),"could not parse oracle")
 }
@@ -26,6 +32,12 @@ func getFeesAccount()={
 func getNodeAccount()={
   addressFromStringValue(valueOrErrorMessage(getString(getOracleAddress(),"static_nodeAddress"), "node_address not found!"))
 }
+
+func getMutantFarmingAccount () = addressFromStringValue(valueOrErrorMessage(getString(getOracleAddress(), staticKey_mutantFarmingAddress()), (staticKey_mutantFarmingAddress() + " not found!")))
+func getFelineFarmingAccount () = addressFromStringValue(valueOrErrorMessage(getString(getOracleAddress(), staticKey_felineFarmingAddress()), (staticKey_felineFarmingAddress() + " not found!")))
+func getSpiceAssetId () = valueOrErrorMessage(getString(getOracleAddress(), staticKey_spiceAssetId()), (staticKey_spiceAssetId() + " not found!"))
+func getEggAssetId () = valueOrErrorMessage(getString(getOracleAddress(), staticKey_eggAssetId()), (staticKey_eggAssetId() + " not found!"))
+func getPeteAssetId () = valueOrErrorMessage(getString(getOracleAddress(), staticKey_peteAssetId()), (staticKey_peteAssetId() + " not found!"))
 
 func tryGetInteger(key: String) = {
   match getInteger(this, key) {
@@ -540,7 +552,11 @@ func swap(assetOut: String, minimum: Int) ={
       Burn(assetOut.getAssetBytes().value(), fraction(feeAmount,2,4)),
       IntegerEntry("global_"+assetOut+"_burned", tryGetInteger("global_"+assetOut+"_burned")+fraction(feeAmount,2,4))
     ]
+   else if (assetOut == getPeteAssetId()) then 
+    strict topup2 = invoke(getFelineFarmingAccount(), "topUpReward", nil, [AttachedPayment(fromBase58String(getPeteAssetId()), fraction(feeAmount, 1, 4))])
+    [ScriptTransfer(getFeesAccount(), fraction(feeAmount, 1, 4), getAssetBytes(assetOut))]
   else
+                                            
     [ScriptTransfer(getFeesAccount(),fraction(feeAmount,2,4),assetOut.getAssetBytes())]
 
   (feesManagement,cleanAmountOut)
@@ -608,12 +624,12 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
 
 @Verifier(tx)
 func verify() = {
-    if isTestEnv() then 
+  if isTestEnv() then 
       sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
   else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
-    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
-    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
 
     let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
         else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
@@ -632,4 +648,4 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 2
     }
-}
+}   
