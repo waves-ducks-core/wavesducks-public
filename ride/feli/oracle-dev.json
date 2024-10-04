@@ -12,12 +12,12 @@
         {
             "key": "static_felineIncubatorAddress",
             "type": "string",
-            "value": "3P2dqen45M2z9xG6QXqhuk43r2PMFiExGxp"
+            "value": "3MwaAkx6seuusecHhgs3DU2tz7GUqPPA8dL"
         },
         {
             "key": "static_felineRebirthAddress",
             "type": "string",
-            "value": "3PLLdSgNcBL6bijqmXGa9PdL4tdbFneXT8P"
+            "value": "3N26gCrijWPWiTMtJnMTr6w7aYjTHvFrb9W"
         },
         {
             "key": "static_peteAssetId",
@@ -32,12 +32,12 @@
         {
             "key": "static_felineStakingAddress",
             "type": "string",
-            "value": "3PQFjXwRYZMmeUUjV4yTmzQWgFrW6cuBM2H"
+            "value": "3N5ZQQQtXgjvyN5iYK8kxZsS8eUYrnhcb3T"
         },
         {
             "key": "static_felineBreederAddress",
             "type": "string",
-            "value": "3PMisRTMyePn3R2HAJbXT58QpGoEhj25v7J"
+            "value": "3N3E5DdENzNsTDLRTChV21RMKbtVJmoyJwe"
         },
         {
             "key": "static_felinePerchFee",

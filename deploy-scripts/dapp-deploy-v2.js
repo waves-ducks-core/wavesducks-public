@@ -6,30 +6,34 @@ const senderSeed = "vendor suspect stand giraffe lucky expose shine network hood
 const jsonFilePath = path.join(__dirname, '../seeds.json');
 
 async function deployAllDapps() {
-    for (const [dappKey, { seed, path, oraclePath, deployed }] of Object.entries(dappSeeds)) {
+    for (const [dappKey, { seed, path, address }] of Object.entries(dappSeeds)) {
 
-        await deployDapp(dappKey, path, seed, oraclePath, deployed);
+        await deployDapp(dappKey, path, seed, address);
     }
 }
 
-async function deployDapp(dappKey, filePath, dappSeed, oraclePath, deployed) {
+async function deployDapp(dappKey, filePath, dappSeed, address) {
     try {
         const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'));
         if (!jsonData[dappKey]) {
             throw new Error(`Key ${dappKey} not found in JSON`);
         }
-        if (deployed) {
-            console.log(`${dappKey}: ${address(dappSeed)} is already deployed`);
+        if (address) {
+            console.log(`${dappKey}: ${address} is already deployed`);
             return;
         }
 
-        await transferFundsToWallets(dappSeed, dappKey),
-            await deployTestEnv(dappSeed, dappKey),
-            await deployDataOnOracle(dappSeed, oraclePath, dappKey),
-            await setDappScripts(filePath, dappSeed, dappKey),
-            await configureOracle(dappSeed, dappKey),
+        await transferFundsToWallets(dappSeed, dappKey);
+        await deployTestEnv(dappSeed, dappKey);
 
-            jsonData[dappKey].deployed = true;
+        if (dappKey === 'ORACLE_SEED') {
+            await deployDataOnOracle(dappSeed)
+        }
+        
+        await setDappScripts(filePath, dappSeed, dappKey)
+        await configureOracle(dappSeed, dappKey)
+
+        jsonData[dappKey].address = address(dappSeed);
         fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2), 'utf-8');
         console.log(`Deployment successful, updated ${dappKey}: ${address(dappSeed)}`);
     } catch (e) {
@@ -37,7 +41,6 @@ async function deployDapp(dappKey, filePath, dappSeed, oraclePath, deployed) {
 
         const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'));
         if (jsonData[dappKey]) {
-            jsonData[dappKey].deployed = false;
             fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2), 'utf-8');
         }
     }
@@ -53,6 +56,8 @@ const transferFundsToWallets = async (dappSeed, dappKey) => {
 
         await broadcast(transferTx);
         await waitForTx(transferTx.id);
+
+        console.log(`${dappKey}: ${transferTx.recipient}`)
     } catch (e) {
         console.error(`TRANSFER FUNDS ERROR. [${dappKey}: ${address(dappSeed)}]`);
         console.error(e.message);
@@ -77,9 +82,9 @@ const deployTestEnv = async (dappSeed, dappKey) => {
     }
 };
 
-const deployDataOnOracle = async (dappSeed, oraclePath, dappKey) => {
+const deployDataOnOracle = async (dappSeed) => {
     try {
-        const dappOracle = require(`../${oraclePath}`);
+        const dappOracle = require(`../jsonData/oracle-dev.json`);
         const ssTxSetEnv = data({
             additionalFee: 400000,
             data: dappOracle.data
@@ -88,7 +93,7 @@ const deployDataOnOracle = async (dappSeed, oraclePath, dappKey) => {
         await broadcast(ssTxSetEnv);
         await waitForTx(ssTxSetEnv.id);
     } catch (e) {
-        console.error(`DEPLOY DATA ORACLE ERROR. [${dappKey}: ${address(dappSeed)}]`);
+        console.error(`DEPLOY DATA ORACLE ERROR.`);
         console.error(e.message);
         throw e;
     }

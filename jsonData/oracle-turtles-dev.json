@@ -5,7 +5,7 @@
         {
             "key": "static_turtleIncubatorAddress",
             "type": "string",
-            "value": "3PGvfeMaCezvCWyz4RGeoQpmwzrWwv7NLYU"
+            "value": "3MvD6ypLdYhx8WBqi2FjCr3GqrncFiZWDbq"
         },
         {
             "key": "static_turtleIncubationFee",
@@ -22,17 +22,17 @@
         {
             "key": "static_turtleBreederAddress",
             "type": "string",
-            "value": "3PAAYogFMWzD3enj9WaBhmrfj7pEuAqRXVG"
+            "value": "3N5LaqMhtroXEqtz3nUc4QFZuPsq85MH2RU"
         },
         {
             "key": "static_turtleStakingAddress",
             "type": "string",
-            "value": "3PGXMdo3TNER2mstPL5pSz65C5nKi7sjkZU"
+            "value": "3MvqNgAQonu6nSGGh71ohTyBPhzdJxPK7QA"
         },
         {
             "key": "static_turtleRebirthAddress",
             "type": "string",
-            "value": "3PNaRW9FuMUWpAzZkjrdvHBpZxeX7kNrDoY"
+            "value": "3Mrq917T9DgxmZHP2wBRURvA2jUseEGaMqW"
         },
         {
             "key": "static_turtleSpiceRebirthPrice",
