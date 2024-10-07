@@ -6,20 +6,22 @@ const senderSeed = "vendor suspect stand giraffe lucky expose shine network hood
 const jsonFilePath = path.join(__dirname, '../seeds.json');
 
 async function deployAllDapps() {
-    for (const [dappKey, { seed, path, address }] of Object.entries(dappSeeds)) {
+    for (const [dappKey, { seed, path, address, shouldDeploy }] of Object.entries(dappSeeds)) {
 
-        await deployDapp(dappKey, path, seed, address);
+        if(shouldDeploy){
+            await deployDapp(dappKey, path, seed, address);
+        }
     }
 }
 
-async function deployDapp(dappKey, filePath, dappSeed, address) {
+async function deployDapp(dappKey, filePath, dappSeed, dappAddress) {
     try {
         const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'));
         if (!jsonData[dappKey]) {
             throw new Error(`Key ${dappKey} not found in JSON`);
         }
-        if (address) {
-            console.log(`${dappKey}: ${address} is already deployed`);
+        if (dappAddress) {
+            console.log(`${dappKey}: ${dappAddress} is already deployed`);
             return;
         }
 
