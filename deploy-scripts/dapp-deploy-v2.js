@@ -8,10 +8,12 @@ const jsonFilePath = path.join(__dirname, '../seeds.json');
 async function deployAllDapps() {
     for (const [dappKey, { seed, path, address, shouldDeploy }] of Object.entries(dappSeeds)) {
 
-        if(shouldDeploy){
+        if (shouldDeploy) {
             await deployDapp(dappKey, path, seed, address);
         }
+
     }
+    console.log('All data deployed. See on json file what seeds have their address writed to know what dapps are deployed.');
 }
 
 async function deployDapp(dappKey, filePath, dappSeed, dappAddress) {
@@ -20,10 +22,7 @@ async function deployDapp(dappKey, filePath, dappSeed, dappAddress) {
         if (!jsonData[dappKey]) {
             throw new Error(`Key ${dappKey} not found in JSON`);
         }
-        if (dappAddress) {
-            console.log(`${dappKey}: ${dappAddress} is already deployed`);
-            return;
-        }
+        if (dappAddress && dappKey !== "ORACLE_SEED") return;
 
         await transferFundsToWallets(dappSeed, dappKey);
         await deployTestEnv(dappSeed, dappKey);
@@ -31,7 +30,7 @@ async function deployDapp(dappKey, filePath, dappSeed, dappAddress) {
         if (dappKey === 'ORACLE_SEED') {
             await deployDataOnOracle(dappSeed)
         }
-        
+
         await setDappScripts(filePath, dappSeed, dappKey)
         await configureOracle(dappSeed, dappKey)
 
@@ -86,14 +85,18 @@ const deployTestEnv = async (dappSeed, dappKey) => {
 
 const deployDataOnOracle = async (dappSeed) => {
     try {
-        const dappOracle = require(`../jsonData/oracle-dev.json`);
-        const ssTxSetEnv = data({
-            additionalFee: 400000,
-            data: dappOracle.data
-        }, dappSeed);
+        const paths = ['/jsonData/oracle-dev.json', '/ride/ducks/oracle-dev.json', '/jsonData/oracle-turtles-dev.json', '/ride/cani/oracle-dev.json', '/ride/feli/oracle-dev.json']
+        for (const filePath of paths) {
+            const dappOracle = require(`..${filePath}`);
+            const ssTxSetEnv = data({
+                additionalFee: 400000,
+                data: dappOracle.data
+            }, dappSeed);
 
-        await broadcast(ssTxSetEnv);
-        await waitForTx(ssTxSetEnv.id);
+            await broadcast(ssTxSetEnv);
+            await waitForTx(ssTxSetEnv.id);
+            console.log(`Deployed: ${filePath}/oracle-dev.json `)
+        }
     } catch (e) {
         console.error(`DEPLOY DATA ORACLE ERROR.`);
         console.error(e.message);
@@ -120,6 +123,7 @@ const setDappScripts = async (filePath, dappSeed, dappKey) => {
 };
 
 const configureOracle = async (dappSeed, dappKey) => {
+    if (dappKey === 'ORACLE_SEED') return;
     try {
         const dApp = address(dappSeed);
 

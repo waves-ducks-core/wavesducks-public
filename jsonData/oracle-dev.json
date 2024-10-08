@@ -120,7 +120,7 @@
         {
             "key": "static_feeAggregator",
             "type": "string",
-            "value": "3P6hQHv6LWTRdxJAJNT81zvrGURDYxErTtS"
+            "value": "3Mx9X6Dpj3thXL2So77C4DG9AmBM4WX8Mvw"
         },
         {
             "key": "static_warsPKey",
@@ -270,6 +270,6 @@
     ],
     "fee": 700000,
     "feeAssetId": "WAVES",
-    "sender": "3P4vXL8gU27PhQv8sMT9jmoQY3oFqJNRWT9",
+    "sender": "3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9",
     "senderPublicKey": "H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
 }
