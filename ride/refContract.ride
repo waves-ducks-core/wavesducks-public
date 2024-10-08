@@ -6,7 +6,7 @@ func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_incubatorAddress() = "static_incubatorAddress"
-func staticKey_babyDuckAddress() = "static_babyDuckAddress"
+func staticKey_babyDuckAddress() = "static_incubatorAddress"
 func staticKey_farmingAddress() = "static_farmingAddressNew"
 func staticKey_cfMasterAddress() = "static_cfMasterAddress"
 func staticKey_huntAddress()= "static_huntAddress"
@@ -122,6 +122,7 @@ func whitelistAddress(refererAddress:String)={
 
 @Callable(i)
 func refPayment(refererKey: String) = {
+  #TODO MAKE DYNAMICALLY
   let dao = "3PEwRcYNAUtoFvKpBhKoiwajnZfdoDR6h4h"
   #let sendFundsBack = ([ScriptTransfer(i.caller, i.payments[0].amount, i.payments[0].assetId)],false)
   let alreadySend = tryGetInteger("dao_refund")
