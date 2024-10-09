@@ -1,11 +1,11 @@
-async function configureOracle(dappSeed, dappKey) {
+async function configureOracle(dappSeed, dappKey, oracleSeed) {
     if (dappKey === 'ORACLE_SEED') return;
     try {
         const dApp = address(dappSeed);
 
         const args = [{
             type: "string",
-            value: address(dappSeeds.ORACLE_SEED.seed),
+            value: address(oracleSeed),
         }]
 
         const houseKey = getHousesType(dappKey);

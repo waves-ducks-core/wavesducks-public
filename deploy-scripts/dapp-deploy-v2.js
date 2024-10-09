@@ -29,7 +29,7 @@ async function deployDapp(dappKey, filePath, dappSeed, dappAddress) {
         await transferFundsToWallets(dappSeed, dappKey);
         await deployTestEnv(dappSeed, dappKey);
         await setDappScripts(filePath, dappSeed, dappKey)
-        await configureOracle(dappSeed, dappKey)
+        await configureOracle(dappSeed, dappKey, dappSeeds.ORACLE_SEED.seed)
 
         jsonData[dappKey].address = address(dappSeed);
         fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2), 'utf-8');
