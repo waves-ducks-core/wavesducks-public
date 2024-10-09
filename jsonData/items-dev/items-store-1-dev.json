@@ -1,0 +1,384 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "direct_cosmetic_ART-TOPHAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
+            "key": "direct_cosmetic_ART-TOPHAT",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-TOPHAT_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-TOPHAT_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-TOPHAT_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-CROWN",
+            "type": "integer",
+            "value": 750000000
+        },
+        {
+            "key": "direct_cosmetic_ART-CROWN_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-CROWN_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-CROWN_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-CROWN_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-JESTERHAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
+            "key": "direct_cosmetic_ART-JESTERHAT",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-JESTERHAT_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-JESTERHAT_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-JESTERHAT_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-PANAMAHAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
+            "key": "direct_cosmetic_ART-PANAMAHAT",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-PANAMAHAT_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-PANAMAHAT_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-PANAMAHAT_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-PEPEHAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
+            "key": "direct_cosmetic_ART-PEPEHAT",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-PEPEHAT_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-PEPEHAT_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-PEPEHAT_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SOMBRERO_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
+            "key": "direct_cosmetic_ART-SOMBRERO",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-SOMBRERO_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SOMBRERO_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-SOMBRERO_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-MAFIAHAT",
+            "type": "integer",
+            "value": 150000000
+        },
+        {
+            "key": "direct_cosmetic_ART-MAFIAHAT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-MAFIAHAT_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-MAFIAHAT_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-MAFIAHAT_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-ICECREAM_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
+            "key": "direct_cosmetic_ART-ICECREAM",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-ICECREAM_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-ICECREAM_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-ICECREAM_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-ORB_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
+            "key": "direct_cosmetic_ART-ORB",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-ORB_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-ORB_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-ORB_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-TOMMYGUN",
+            "type": "integer",
+            "value": 200000000
+        },
+        {
+            "key": "direct_cosmetic_ART-TOMMYGUN_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-TOMMYGUN_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-TOMMYGUN_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-TOMMYGUN_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-UMBRELLA_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }, 
+        {
+            "key": "direct_cosmetic_ART-UMBRELLA",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-UMBRELLA_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-UMBRELLA_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-UMBRELLA_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-KATANA",
+            "type": "integer",
+            "value": 10000000
+        },
+        {
+            "key": "direct_cosmetic_ART-KATANA_max_sales",
+            "type": "integer",
+            "value": 145
+        },
+        {
+            "key": "direct_cosmetic_ART-KATANA_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-KATANA_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SCEPTER",
+            "type": "integer",
+            "value": 10000000
+        },
+        {
+            "key": "direct_cosmetic_ART-SCEPTER_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SCEPTER_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-SCEPTER_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SHOPBAG",
+            "type": "integer",
+            "value": 10000000
+        },
+        {
+            "key": "direct_cosmetic_ART-SHOPBAG_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SHOPBAG_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-SHOPBAG_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-BLUESHIRT_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-BLUESHIRT",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "direct_cosmetic_ART-BLUESHIRT_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-BLUESHIRT_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-BLUESHIRT_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-BUILTBODY_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-BUILTBODY",
+            "type": "integer",
+            "value": 100000000
+        },
+        {
+            "key": "direct_cosmetic_ART-BUILTBODY_max_sales",
+            "type": "integer",
+            "value": 0
+        }
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}
+

@@ -12,17 +12,17 @@
         {
             "key": "static_felineIncubatorAddress",
             "type": "string",
-            "value": "3P2dqen45M2z9xG6QXqhuk43r2PMFiExGxp"
+            "value": "3MwaAkx6seuusecHhgs3DU2tz7GUqPPA8dL"
         },
         {
             "key": "static_felineRebirthAddress",
             "type": "string",
-            "value": "3PLLdSgNcBL6bijqmXGa9PdL4tdbFneXT8P"
+            "value": "3N26gCrijWPWiTMtJnMTr6w7aYjTHvFrb9W"
         },
         {
             "key": "static_peteAssetId",
             "type": "string",
-            "value": "GAzAEjApmjMYZKPzri2g2VUXNvTiQGF7KDYZFFsP3AEq"
+            "value": "7TmSk9yBFPAJfEzAC15MnSfUFdy87sHrzwCyCJD2X9B7"
         },
         {
             "key": "static_peteDappAddress",
@@ -32,12 +32,12 @@
         {
             "key": "static_felineStakingAddress",
             "type": "string",
-            "value": "3PQFjXwRYZMmeUUjV4yTmzQWgFrW6cuBM2H"
+            "value": "3N5ZQQQtXgjvyN5iYK8kxZsS8eUYrnhcb3T"
         },
         {
             "key": "static_felineBreederAddress",
             "type": "string",
-            "value": "3PMisRTMyePn3R2HAJbXT58QpGoEhj25v7J"
+            "value": "3N3E5DdENzNsTDLRTChV21RMKbtVJmoyJwe"
         },
         {
             "key": "static_felinePerchFee",
@@ -54,7 +54,7 @@
     ],
     "fee": 700000,
     "feeAssetId": "WAVES",
-    "sender":"3P4vXL8gU27PhQv8sMT9jmoQY3oFqJNRWT9",
+    "sender":"3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9",
     "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
 }
 

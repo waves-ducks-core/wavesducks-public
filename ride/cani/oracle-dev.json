@@ -21,17 +21,17 @@
         {
             "key": "static_canineIncubatorAddress",
             "type": "string",
-            "value": "3P4YUDVTsDtqBkdtonR2T79yddwjSTuRg71"
+            "value": "3MtrXLq2YFHNLqTBXr488vaQVQpsHdmbg7C"
         },
         {
             "key": "static_canineRebirthAddress",
             "type": "string",
-            "value": "3PAvZSshLfaefR3atDSDu6siNfLMbi3dpJJ"
+            "value": "3Mw8EHDvHCbzm6VE777G6EJNQBEe6CeS335"
         },
         {
             "key": "static_canineStakingAddress",
             "type": "string",
-            "value": "3PFjynLTApECwzmbdQ45eRRMSmkMw6n4V7s"
+            "value": "3NAN9Bp8r6PqgX6VJhNFyoKjHEH8N7bGvBQ"
         },
         {
             "key": "static_nodeAddress",
@@ -42,13 +42,13 @@
         {
             "key": "static_canineBreederAddress",
             "type": "string",
-            "value": "3PFWCFZLxTbCiPFwuXWFJsCyv4pcPP8dP6t"
+            "value": "3MzBKfvEdHEdy5GmoTxAfLfM1mTafCbaNWv"
         }
         
     ],
     "fee": 700000,
     "feeAssetId": "WAVES",
-    "sender":"3P4vXL8gU27PhQv8sMT9jmoQY3oFqJNRWT9",
+    "sender":"3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9",
     "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
 }
 

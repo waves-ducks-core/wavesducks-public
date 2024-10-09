@@ -1,0 +1,54 @@
+{
+    "type": 12,
+    "version": 2,
+    "data": [
+        {
+            "key": "ART-FIXGENE_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FREEGENE_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-MIRROR_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FEED5_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FEED10_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FEED15_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FEED20_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FEED25_issue",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-FEED25_issue",
+            "type": "boolean",
+            "value": true
+        }
+
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}

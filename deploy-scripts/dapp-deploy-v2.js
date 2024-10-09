@@ -1,57 +1,47 @@
-(async () => {
-    require('dotenv').config()
-    const dappSeed = process.env.DUCK_INCUBATOR_SEED;
-    const testEnv = require('../jsonData/testEnv.json');
-    const ssTxSetEnv = data(
-        {
-            additionalFee: 400000,
-            data: testEnv.data
-        },
-        dappSeed
-    );
+const dappSeeds = require('../seeds.json');
+const fs = require('fs');
+const path = require('path');
+const jsonFilePath = path.join(__dirname, '../seeds.json');
+const transferFundsToWallets = require('./dapp-deploy-functions/transferFunds');
+const deployTestEnv = require('./dapp-deploy-functions/deployTestEnv');
+const setDappScripts = require('./dapp-deploy-functions/setDapps');
+const configureOracle = require('./dapp-deploy-functions/configureOracle');
 
-    await broadcast(ssTxSetEnv).catch((e) => {
-        console.log(e);
-        throw e;
-    });
-    await waitForTx(ssTxSetEnv.id).catch((e) => {
-        console.log(e);
-        throw e;
-    });
-    console.log(ssTxSetEnv.id);
+async function deployAllDapps() {
+    for (const [dappKey, { seed, path, address, shouldDeploy }] of Object.entries(dappSeeds)) {
 
-    const script = compile(file(process.env.FILE.replace(/\_/g, '/') + ".ride"));
+        if (shouldDeploy && dappKey !== 'ORACLE_SEED') {
+            await deployDapp(dappKey, path, seed, address);
+        }
 
-    const ssTx = setScript(
-        {
-            script, additionalFee: 400000,
-        }, dappSeed
-    ); await broadcast(ssTx).catch((e) => {
-        console.log(e); throw e;
-    }); await waitForTx(ssTx.id).catch((e) => {
-        console.log(e); throw e;
-    }); console.log(ssTx.id);
+    }
+    console.log('All data deployed. See on json file what seeds have their address writed to know what dapps are deployed.');
+}
 
-    const dApp = address(dappSeed);
-    const tx = invokeScript({
-        version: 1,
-        dApp,
-        additionalFee:400000,
-        call: {
-            function: "configureOracle",
-            args: [
-                {
-                    type: "string",
-                    value: address(process.env.ORACLE_SEED),
-                }],
-        },
-        payment: null,
-    },
-        dappSeed);
+async function deployDapp(dappKey, filePath, dappSeed, dappAddress) {
+    try {
+        const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'));
+        if (!jsonData[dappKey]) {
+            throw new Error(`Key ${dappKey} not found in JSON`);
+        }
+        if (dappAddress) return;
 
-    console.log(JSON.stringify(tx)); await broadcast(tx).catch((e) => {
-        console.log(e); throw e;
-    }); await waitForTx(tx.id).catch((e) => {
-        console.log(e); throw e;
-    });
-})();
+        await transferFundsToWallets(dappSeed, dappKey);
+        await deployTestEnv(dappSeed, dappKey);
+        await setDappScripts(filePath, dappSeed, dappKey)
+        await configureOracle(dappSeed, dappKey, dappSeeds.ORACLE_SEED.seed)
+
+        jsonData[dappKey].address = address(dappSeed);
+        fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2), 'utf-8');
+        console.log(`Deployment successful, updated ${dappKey}: ${address(dappSeed)}`);
+    } catch (e) {
+        console.error('Deployment failed:', e.message);
+
+        const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf-8'));
+        if (jsonData[dappKey]) {
+            fs.writeFileSync(jsonFilePath, JSON.stringify(jsonData, null, 2), 'utf-8');
+        }
+    }
+}
+
+deployAllDapps();
