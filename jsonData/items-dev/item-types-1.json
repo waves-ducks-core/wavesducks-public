@@ -1,0 +1,288 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "type_cosmetic_ART-CAPE",
+            "type": "string",
+            "value": "BACK"
+        },
+        {
+            "key": "type_cosmetic_ART-HAT",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-XHAT",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-POMP",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-TOPHAT",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-CROWN",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-JESTERHAT",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-PANAMAHAT",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-PEPEHAT",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-SOMBRERO",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-MAFIAHAT",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-PILGRIMHAT",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-PUMPKIN",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-FIRE_HELMET",
+            "type": "string",
+            "value": "HEAD"
+        },
+        {
+            "key": "type_cosmetic_ART-FAWKESMASK",
+            "type": "string",
+            "value": "MASK"
+        },
+        {
+            "key": "type_cosmetic_ART-XSCARF",
+            "type": "string",
+            "value": "ACCESSORY"
+        },
+        {
+            "key": "type_cosmetic_ART-ICECREAM",
+            "type": "string",
+            "value": "LEFT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-ORB",
+            "type": "string",
+            "value": "LEFT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-TOMMYGUN",
+            "type": "string",
+            "value": "LEFT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-UMBRELLA",
+            "type": "string",
+            "value": "LEFT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-FIRE_SHIELD",
+            "type": "string",
+            "value": "LEFT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-KATANA",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-SCEPTER",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-SHOPBAG",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-SABER-PUR",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-SABER-BLU",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-SABER-YEL",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-SABER-RED",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-SABER-GRN",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-FIRE_SWORD",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+        {
+            "key": "type_cosmetic_ART-XSWEATER",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-BLUESHIRT",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-BUILTBODY",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-FREDYSWEATER",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-GUARDSUIT",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-LEATHERJCKET",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-PEPESHIRT",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-ROYALCOAT",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-TANKTOP",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-TRENCHCOAT",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-TUXEDO",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-WASSERMANVST",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_BRAZ",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_FRAN",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_ARG",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_ENG",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_SPAIN",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_GERM",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_NETH",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_PORT",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_BELG",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_DENM",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_CROAT",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_URUG",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_SWITZ",
+            "type": "string",
+            "value": "TOP"
+        },
+        {
+            "key": "type_cosmetic_ART-JERSEY_SERB",
+            "type": "string",
+            "value": "TOP"
+        }
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES"
+}

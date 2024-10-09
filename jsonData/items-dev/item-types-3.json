@@ -1,0 +1,44 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "type_cosmetic_ART-PINGUIN",
+            "type": "string",
+            "value": "PET"
+        },
+        {
+            "key": "type_cosmetic_ART-SLEDGE",
+            "type": "string",
+            "value": "PET"
+        },
+        {
+            "key": "type_cosmetic_ART-DEER",
+            "type": "string",
+            "value": "PET"
+        },
+        {
+            "key": "type_cosmetic_ART-CRACKER",
+            "type": "string",
+            "value": "PET"
+        },
+        {
+            "key": "type_cosmetic_ART-PLR_BEAR",
+            "type": "string",
+            "value": "PET"
+        },
+        {
+            "key": "type_cosmetic_ART-LAMB",
+            "type": "string",
+            "value": "PET"
+        }
+        ,
+        {
+            "key": "type_cosmetic_ART-BUNNY",
+            "type": "string",
+            "value": "PET"
+        }
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES"
+}
