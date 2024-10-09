@@ -9,7 +9,6 @@ const dataDapps = Object.entries({ ORACLE_SEED, LOOT_BOXES_SEED })
 
 async function deployAllData() {
     for (const [dappKey, { seed, path, oraclePaths }] of dataDapps) {
-        if(dappKey === 'ORACLE_SEED') continue;
         await transferFundsToWallets(seed, dappKey);
         await deployTestEnv(seed, dappKey);
         await deployData(seed, oraclePaths)
