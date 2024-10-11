@@ -97,16 +97,8 @@
             "type": "string",
             "value": "3P5W1D4UuSZrNfeZFJZcD5wT2avfbHbzTvS"
         },
-        {
-            "key": "static_trustedContracts",
-            "type": "string",
-            "value": "3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw;3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD;3PBPQYB9EMuMFNy6jZCk1jvembMPkKBv1v1;3PDEbskwA7AXaWN9Nyh1PQxJyNxDjXFPubY;3PPyYYmEkvneaAoBPLCe3BEmtzTiKdco91x"
-        },
-        {
-            "key": "static_proxyStakingContracts",
-            "type": "string",
-            "value": "3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT;3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PBPQYB9EMuMFNy6jZCk1jvembMPkKBv1v1;3PDEbskwA7AXaWN9Nyh1PQxJyNxDjXFPubY;3PPyYYmEkvneaAoBPLCe3BEmtzTiKdco91x"
-        },
+
+
         {
             "key": "static_ropeAddress",
             "type": "string",
@@ -141,7 +133,7 @@
         {
             "key": "static_warsPKey",
             "type": "string",
-            "value": "BmKAXRQy7jZm44fa1YxNQDTcAwNSb74EpQwP5CT7UHdV"
+            "value": "6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4"
             
         },
         {
@@ -233,7 +225,7 @@
         {
             "key": "static_rentingAddress",
             "type": "string",
-            "value": "3P355gZeQTTSwE5Cynz9FQekvWJRhASBHFC"
+            "value": "3PEgzEYXMbAHU4ZuAPrd6HanY4LW4Ee5J6F"
         },
         {
             "key": "static_levelSystemAddress",
