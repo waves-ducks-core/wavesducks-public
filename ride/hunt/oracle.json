@@ -1,0 +1,13 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+{
+    "key": "static_huntDistroAddress",
+    "type": "string",
+    "value": "3PGEFZSu8iDDUdfQmYfHFcpQKxMR3neWTno"
+}],
+"fee": 700000,
+"feeAssetId": "WAVES",
+    "senderPublicKey": "Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe"
+}
