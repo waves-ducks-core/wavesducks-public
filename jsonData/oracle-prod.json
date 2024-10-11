@@ -127,7 +127,7 @@
         {
             "key": "static_feeAggregator",
             "type": "string",
-            "value": "3P6hQHv6LWTRdxJAJNT81zvrGURDYxErTtS"
+            "value": "3PCyvU3nWXmmrnSxeNWwHPVinCVociqbL1n"
             
         },
         {
@@ -216,11 +216,6 @@
             "type": "integer",
             "value": 50000000
             
-        },
-        {
-            "key": "static_huntDistroAddress",
-            "type": "string",
-            "value": "3P7eZotfwNFYWGm9YeWhTZed1JdLdiszuh7"
         },
         {
             "key": "static_rentingAddress",
