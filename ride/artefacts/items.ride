@@ -603,8 +603,10 @@ func preInit() = {
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
 
-  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey()) then throw("IIA: admin only") else 
-    if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) 
+  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey() &&  !isTestEnv()) then throw("IIA: admin only") else 
+    if ((i.caller == getHuntDistroAddress()
+    #|| i.callerPublicKey == getWarsPKey()
+    ) 
               && !type.contains("ART-FIRE_") 
               && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let address = Address(fromBase58String(receiver))
