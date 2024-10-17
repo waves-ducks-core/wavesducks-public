@@ -57,7 +57,14 @@ func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58Str
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
-
+func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getCanineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_canineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getCanineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_canineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getFelineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getFelineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getMutantBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_mutantIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func checkAdditionalPayment(payment: AttachedPayment, amountOverride: Int)= {
   if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
@@ -80,13 +87,14 @@ func tryGetType(wearable: String)= {
   }
 
 
-func wearItem(assetIdWearAble: String, duckId: String)={
+func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean)={
   strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetIdWearAble],[]).asString()
   if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
     let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
     strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
     if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
       let type = tryGetType(artefactName)
+      if !allTypes && type != "PET" then throw("You can't attach this item to your NFT! Pets only!") else
       let typeOnDuck = if type != "" then tryGetString(keyTypesDuck(duckId,type))!= "" else throw("Type undefined, please contact admins "+artefactName)
       if typeOnDuck then throw("You can only attach 1 from each type to your duck!") else 
 
@@ -96,6 +104,35 @@ func wearItem(assetIdWearAble: String, duckId: String)={
         
       ]++typeResult
 }
+
+func tryGetBooleanExternal(address: Address, key: String) = {
+    match getBoolean(address, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
+
+func getIfAllTypesAllowed(assetId: ByteVector) = {
+  let issuer = assetInfo(assetId).value().issuer
+  let blacklisted = tryGetBooleanExternal(issuer,assetId.toBase58String() + "_blacklisted")
+  if (blacklisted) then throw("GO FUCK YOURSELF") else
+  let name = assetInfo(assetId).value().name
+  #Ducks
+  if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then true else
+  #Turtles
+  if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then  false else
+  #Canines
+  if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then false else
+  #Felines
+  if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then false else
+  #Mutants
+  if (issuer == getMutantBreederAddress()) then false else
+  throw("MAG: Asset is not supported")
+    
+
+}
+
 
 @Callable(i)
 func configureOracle(oracle: String) = {
@@ -114,8 +151,8 @@ func wearItemToDuck() = {
   let duckId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("WRITD: NFT is not attached") else
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-  wearItem(secondAssetId,duckId)++[
+  let allTypes = getIfAllTypesAllowed(firstPayment.assetId.value())
+  wearItem(secondAssetId,duckId,allTypes)++[
     ScriptTransfer(i.caller, 1, firstPayment.assetId)
   ]++validPayment
 
@@ -166,7 +203,7 @@ func wearXItemsToDuck()= {
             ScriptTransfer(i.caller, 1, payment.assetId)
           ]
         else
-            acc++wearItem(payment.assetId.value().toBase58String(),i.payments[1].assetId.value().toBase58String())
+            acc++wearItem(payment.assetId.value().toBase58String(),i.payments[1].assetId.value().toBase58String(),true)
 
     }
     FOLD<6>(i.payments, [], handleItem)++validPayment
