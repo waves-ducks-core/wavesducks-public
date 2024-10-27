@@ -214,7 +214,7 @@ func instantBuy(auctionId: String) = {
                 []
                 }else [
             ScriptTransfer(getFeeAggregatorAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit),
-            ScriptTransfer(getBuybackAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit)]
+            ScriptTransfer(getBuybackAddress(),fraction(amount, fraction(finalFee,4,10), 1000),unit)]
         let caller = if getMarketPlaceProxy() == i.caller then i.originCaller else i.caller
         strict recordAction = if amount > 50_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY50"],[]) else
                               if amount > 20_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY20"],[]) else

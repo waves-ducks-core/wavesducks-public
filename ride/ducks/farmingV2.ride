@@ -208,6 +208,7 @@ func isProxyStakingSc(address: String)={
 func calculateFarmPower(assetId:String, bonusAddress: String)={
   if !(assetInfo(assetId.fromBase58String()).value().issuer == getBreederAddress() 
       ||assetInfo(assetId.fromBase58String()).value().issuer == getIncubatorAddress()) then throw("This does not seem like a valid Duck!") else
+  if tryGetBooleanExternal(getBreederAddress(),assetId+"_blacklisted") || tryGetBooleanExternal(getIncubatorAddress(),assetId+"_blacklisted") then throw("Screw urself") else
   let assetName = assetInfo(assetId.fromBase58String()).value().name
   let gen = assetName.takeRight(1)
   let isJackpot = assetName.takeRight(1) == "U"
@@ -328,7 +329,6 @@ func migratePerches(address: String) ={
 
 @Callable(i)
 func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolean) = {
-  if true then throw("Staking is disabled") else
   if stakeWithoutPerch && !isProxyStakingSc(i.caller.toString()) then throw("You can't stake without a perch") else
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let pmt = i.payments[1].value()
@@ -403,7 +403,6 @@ func unstakeNFT(asset: String)={
 
 @Callable(i)
 func topUpReward () = {
-  if true then throw("Staking is disabled") else
   let firstPayment = i.payments[0].value()
   if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
   let resHandleStaking = handleStakingTopUp(firstPayment.amount) 
@@ -417,7 +416,6 @@ func topUpReward () = {
 #claim rewards
 @Callable(i)
 func claimReward (assetId: String) = {
-  if true then throw("Staking is disabled") else
   strict validPayment = if i.originCaller == getCfMasterAddress() then [] else checkAdditionalPayment(i.payments[0])
   if tryGetString(assetId+"_owner") != i.caller.toString() && tryGetString(assetId+"_original_caller") != i.caller.toString() then throw("You don't own this duck ("+assetId+")!! ") else    
   if (i.payments.size() > 1) then throw("Please don't add extra payments") else 

@@ -305,6 +305,37 @@ func configureOracle(oracle: String) = {
 }
 
 @Callable(i)
+func putChildren(oldAssetId: String, assetId: String)={
+  if i.caller != getIncubatorAddress() then throw("BPC: forbidden") else
+  [
+    IntegerEntry("asset_" + assetId + "_children", tryGetInteger("asset_" + oldAssetId + "_children"))
+  ]
+
+}
+
+@Callable(i)
+func mintAndReplaceDuck(assetId: String) ={
+  if i.caller != addressFromStringValue("3PEgzEYXMbAHU4ZuAPrd6HanY4LW4Ee5J6F") then throw("IMARD: stop") else
+  let duckIdKey = getStringValue(assetId)
+  let details = assetInfo(assetId.fromBase58String()).value()
+  let name = details.name
+  let description = details.description
+  let newAsset = Issue(name, description, 1,0, false)
+  let newAssetId = newAsset.calculateAssetId()
+  [
+    newAsset,
+    StringEntry(duckIdKey, newAssetId.toBase58String()),
+    StringEntry(newAssetId.toBase58String(),duckIdKey),
+    DeleteEntry(assetId),
+    BooleanEntry(assetId+"_blacklisted", true),
+    StringEntry(assetId+"_replacedWith", newAssetId.toBase58String()),
+    IntegerEntry("asset_" + newAssetId.toBase58String() + "_children", tryGetInteger("asset_" + assetId + "_children")),
+    ScriptTransfer(i.caller, 1, newAssetId)
+  ]
+
+
+}
+@Callable(i)
 func generateDuck(txId: ByteVector, hatchingFinishHeight: Int, 
 geneFromParent: Int, genePostion: Int, 
 specifiqueGene: String, specifiqueGenePosition: Int) = {
