@@ -253,6 +253,16 @@
             "key": "direct_cosmetic_ART-SKELETON",
             "type": "integer",
             "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-SNW_GLBES",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-ROBODUCK",
+            "type": "integer",
+            "value": 200000000000
         }
 
     ],
