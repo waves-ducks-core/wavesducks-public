@@ -115,10 +115,10 @@ func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, 
 }
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
-  let phoenixOptions = PHOENIXBASEOPTIONS - fraction(PHOENIXBASEOPTIONS / 2, assetRarity, 100)  # chance = 0.1% + 0.1% * rarity (from 0.02 to 1)
+  #let phoenixOptions = PHOENIXBASEOPTIONS - fraction(PHOENIXBASEOPTIONS / 2, assetRarity, 100)  # chance = 0.1% + 0.1% * rarity (from 0.02 to 1)
 
-  let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
-
+  #let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
+  let jackpotRandom = getRandomNumber(10, tx, finishHeight, 1)
   if (jackpotRandom == 1) then { "phoenix" } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
@@ -237,7 +237,7 @@ func finishRebirthInternal(initTx: String, address: String, payment: AttachedPay
 		]
 
       }else if (win == "phoenix") then {
-        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, valueOrElse(getString("JACKPOT_NAME"),"WWWWWWWP")], []) 
+        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWHWTF"], []) 
         [
 			StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())
 		]
