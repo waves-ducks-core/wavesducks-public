@@ -71,18 +71,18 @@
       "value": "DH2"
     },
           {
-      "key": "allowed_contract_3PBPQYB9EMuMFNy6jZCk1jvembMPkKBv1v1",
+      "key": "allowed_contract_3P8JD7RpyGZeVGj58P2ox367iMwsM3hWosS",
       "type": "string",
       "value": "SDH"
     },
     {
-      "key": "allowed_contract_3PDEbskwA7AXaWN9Nyh1PQxJyNxDjXFPubY",
+      "key": "allowed_contract_3PGwjnnoPreHxeRDxufGD8a2iqaeM5tQKno",
       "type": "string",
       "value": "BDH"
     },
 
     {
-      "key": "allowed_contract_3PPyYYmEkvneaAoBPLCe3BEmtzTiKdco91x",
+      "key": "allowed_contract_3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh",
       "type": "string",
       "value": "XST"
     },
@@ -107,12 +107,12 @@
       "value": "NATIVE_POOL"
     },
     {
-      "key": "allowed_contract_3PJwsxCtCXTxex5dPSFjYGp95mxF1BDJDnq",
+      "key": "allowed_contract_3P4me2DmXjXs15zkcUGKrG4KdyFxQbLxNZu",
       "type": "string",
       "value": "LAYER2_POOL"
     },
     {
-      "key": "allowed_contract_3P355gZeQTTSwE5Cynz9FQekvWJRhASBHFC",
+      "key": "allowed_contract_3PEgzEYXMbAHU4ZuAPrd6HanY4LW4Ee5J6F",
       "type": "string",
       "value": "RENTING"
     },

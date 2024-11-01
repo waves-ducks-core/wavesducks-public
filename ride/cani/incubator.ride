@@ -104,8 +104,9 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
 }
 
 func select(color: String)={
-    let oldGenes = []
-    let newGenes = [("CANI-AAAAAAAA-G" + color, "8A-G"),("CANI-BBBBBBBB-G" + color, "8B-G"),("CANI-CCCCCCCC-G" + color, "8C-G"),("CANI-DDDDDDDD-G" + color, "8D-G")]
+    let oldGenes = [("CANI-AAAAAAAA-G" + color, "8A-G")]
+    let newGenes = [("CANI-BBBBBBBB-G" + color, "8B-G"),("CANI-CCCCCCCC-G" + color, "8C-G")
+                    ,("CANI-DDDDDDDD-G" + color, "8D-G"),("CANI-EEEEEEEE-G" + color, "8E-G")]
     (oldGenes++newGenes, newGenes)
 }
 
@@ -122,7 +123,7 @@ func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = 
     
 }
 
-let typesAmount = size(select("R")._1)-1
+let typesAmount = size(select("R")._2)-1
 
 
 func countEggsNeededAmount(totalCANIsAmount: Int) = {

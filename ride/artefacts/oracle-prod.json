@@ -1,0 +1,16 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_scriptMasterAddress",
+            "type": "string",
+            "value": "3P6DvvYD1qP3fPPXXzHhqifUJQL7sTRXjjW"
+        }
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES",
+    "senderPublicKey": "Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe"
+
+}
+

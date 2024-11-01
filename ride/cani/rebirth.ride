@@ -236,7 +236,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       }else{
         throw("RFB: Some error occured, please contact the admins! "+win)
       }
-      let returnToSender = getRandomReturn(initTx.fromBase58String(), finishBlock)
+      let returnToSender =  if rescue then getRandomReturn(initTx.fromBase58String(), finishBlock) else false
       let returnPayload = if returnToSender then
         let assetId = getStringValue("address_" + address + "_initTx_" + initTx + "_assetId").fromBase58String()
         let issuer = checkReal(assetId)   

@@ -352,7 +352,14 @@ func verify() = {
         }
       }
       case ss: SetScriptTransaction => {
-        sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
+        sigVerify(tx.bodyBytes, tx.proofs[0], base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4') || 
+        sigVerify(tx.bodyBytes, tx.proofs[0], base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8') || 
+        sigVerify(tx.bodyBytes, tx.proofs[0], base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3')
+      }
+      case data: DataTransaction => {
+        sigVerify(tx.bodyBytes, tx.proofs[0], base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4') || 
+        sigVerify(tx.bodyBytes, tx.proofs[0], base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8') || 
+        sigVerify(tx.bodyBytes, tx.proofs[0], base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3')
       }
       case mt: MassTransferTransaction => {
         sigVerify(tx.bodyBytes, tx.proofs[0], mAccPKey)
