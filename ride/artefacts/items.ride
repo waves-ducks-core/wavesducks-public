@@ -203,7 +203,7 @@ func issueItem(type: String, nonce: Int, address: Address)={
 func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments:List[AttachedPayment],
  feeAmount: Int, feeAssetId: ByteVector|Unit, recipient: Address, instantFinish: Boolean,
  txId: String, secondaryItem: String, amountSecondaryItem: Int, ducklingsPercent: Int, genValue: Int)={
-  if size(payments) != amountBaseItem+1 then throw("IID: Please attach "+(amountBaseItem+2).toString()+" payments!") else
+  if size(payments) < amountBaseItem+amountSecondaryItem then throw("IID: Please attach more payments!") else
 
   func isBaseItem(accumulated: (List[Burn],Int,Int, Int, Int), pay: AttachedPayment) = {
     if pay.assetId == unit|| pay.assetId == getEggAssetId() then (accumulated._1,accumulated._2, accumulated._3, accumulated._4, accumulated._5) else
@@ -234,8 +234,8 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
   #second is secondary items
   #third is ducklings
   let totalBaseItem = FOLD<10>(payments, ([],0,0,0,0), isBaseItem)
-  if totalBaseItem._2 != amountBaseItem then throw("IID: Please attach "+amountBaseItem.toString()+" artefacts of type "+baseItem) else
-  if secondaryItem != "" && totalBaseItem._3 != amountSecondaryItem then throw("IID: Please attach "+amountSecondaryItem.toString()+" artefacts of type "+secondaryItem) else
+  if totalBaseItem._2 != amountBaseItem then throw("IID: Please attach "+amountBaseItem.toString()+" artefacts of primary type "+baseItem) else
+  if secondaryItem != "" && totalBaseItem._3 != amountSecondaryItem then throw("IID: Please attach "+amountSecondaryItem.toString()+" artefacts of secondary type "+secondaryItem) else
   if ducklingsPercent != 0 && totalBaseItem._4 != ducklingsPercent then throw("IID: Please attach "+ducklingsPercent.toString()+" growth, you added "+totalBaseItem._4.toString()) else
   if genValue != 0 && totalBaseItem._5 != genValue then throw("IID: Please attach "+genValue.toString()+" gen value, you added "+totalBaseItem._5.toString()) else
   strict validate = if feeAmount != 0 then 
@@ -265,7 +265,7 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
 func getBaseItem(baseItem: String) = getStringValue("merge_"+baseItem+"_baseItem")
 func getAmountBaseItem(baseItem: String) = getIntegerValue("merge_"+baseItem+"_amount")
 func getSecondaryItem(baseItem: String) = tryGetString("merge_"+baseItem+"_secondaryItem")
-func getAmountSecondaryItem(baseItem: String) = tryGetInteger("merge_"+baseItem+"_amountSecondaryItem")
+func getAmountSecondaryItem(baseItem: String) = tryGetInteger("merge_"+baseItem+"_secondaryItemAmount")
 func getGenValue(baseItem: String) = tryGetInteger("merge_"+baseItem+"_genValue")
 func getDucklingsPercent(baseItem: String) = tryGetInteger("merge_"+baseItem+"_ducklingsPercent")
 func getEndItem(baseItem: String) = getStringValue("merge_"+baseItem+"_endItem")
@@ -339,8 +339,21 @@ func instanMergeItem(receiptName: String)={
    getInstant(receiptName), getSecondaryItem(receiptName), getAmountSecondaryItem(receiptName),getDucklingsPercent(receiptName),
     getBaseItem(receiptName), getGenValue(receiptName))
   strict grantExp = invoke(getCouponsAddress(),"increaseExp",[i.caller.toString()],[])
-  itemMerger(params._9,params._1,params._2,i.payments,params._3,params._4,i.caller, 
-  params._5, i.transactionId.toBase58String(), params._6, params._7,params._8,params._10)
+  itemMerger(
+  params._9,
+  params._1,
+  params._2,
+  i.payments,
+  params._3,
+  params._4,
+  i.caller, 
+  params._5,
+  i.transactionId.toBase58String(),
+  params._6,
+  params._7,
+  params._8,
+  params._10
+  )
 }
 
 @Callable(i)
