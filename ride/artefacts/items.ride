@@ -5,6 +5,7 @@
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_breederAddress() ="static_breederAddress"
 func staticKey_eggAssetId() ="static_eggAssetId"
+func staticKey_peteAssetId() ="static_peteAssetId"
 func staticKey_trustedContracts() ="static_trustedContracts"
 func staticKey_rebirthAddress() ="static_rebirthAddress"
 func staticKey_turtleRebirthAddress() ="static_turtleRebirthAddress"
@@ -133,6 +134,7 @@ func tryGetStringExternal(address: Address, key: String) = {
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getTrustedContracts() =  tryGetStringExternal(getOracle(),staticKey_trustedContracts())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
 func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String())
@@ -206,7 +208,7 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
   if size(payments) < amountBaseItem+amountSecondaryItem then throw("IID: Please attach more payments!") else
 
   func isBaseItem(accumulated: (List[Burn],Int,Int, Int, Int), pay: AttachedPayment) = {
-    if pay.assetId == unit|| pay.assetId == getEggAssetId() then (accumulated._1,accumulated._2, accumulated._3, accumulated._4, accumulated._5) else
+    if pay.assetId == unit|| pay.assetId == getEggAssetId() || pay.assetId == getPeteAssetId() then (accumulated._1,accumulated._2, accumulated._3, accumulated._4, accumulated._5) else
     let assetId = pay.assetId.value()
     if assetInfo(assetId.value()).value().issuer == getBreederAddress() then
       let splitted = split(assetInfo(assetId.value()).value().name, "")
@@ -239,7 +241,7 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
   if ducklingsPercent != 0 && totalBaseItem._4 != ducklingsPercent then throw("IID: Please attach "+ducklingsPercent.toString()+" growth, you added "+totalBaseItem._4.toString()) else
   if genValue != 0 && totalBaseItem._5 != genValue then throw("IID: Please attach "+genValue.toString()+" gen value, you added "+totalBaseItem._5.toString()) else
   strict validate = if feeAmount != 0 then 
-    let feePayment =  payments[amountBaseItem]
+    let feePayment =  payments[amountBaseItem+amountSecondaryItem]
     if feePayment.assetId != feeAssetId then throw("IID: You miss a payment with the fee!") else
     if feePayment.amount != feeAmount then throw("IID: You did not attach the correct fee amount!") else [ScriptTransfer(getFeeAggregator(), feeAmount, feePayment.assetId)]
     else []

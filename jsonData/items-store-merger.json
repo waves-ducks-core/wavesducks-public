@@ -484,7 +484,7 @@
         {
             "key": "merge_ART-LKE_baseItem",
             "type": "string",
-            "value": "ART-LAKE"
+            "value": "ART-XTREE"
         },
         {
             "key": "merge_ART-LKE_amount",
@@ -494,7 +494,7 @@
         {
             "key": "merge_ART-LKE_endItem",
             "type": "string",
-            "value": "ART-XTREE"
+            "value": "ART-LAKE"
         },
         {
             "key": "merge_ART-LKE_price",
