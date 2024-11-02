@@ -234,7 +234,7 @@
         {
             "key": "merge_ART-GLOBEC0_price",
             "type": "integer",
-            "value": 5
+            "value": 500000000
         },
         {
             "key": "merge_ART-GLOBEC0_instant",
@@ -316,7 +316,7 @@
         {
             "key": "merge_ART-XSTABLE_price",
             "type": "integer",
-            "value": 5
+            "value": 500000000
         },
         {
             "key": "merge_ART-XSTABLE_instant",
@@ -459,7 +459,7 @@
         {
             "key": "merge_ART-MRRR_price",
             "type": "integer",
-            "value": 5
+            "value": 500000000
         },
         {
             "key": "merge_ART-MRRR_instant",
@@ -499,7 +499,7 @@
         {
             "key": "merge_ART-LKE_price",
             "type": "integer",
-            "value": 1
+            "value": 100000000
         },
         {
             "key": "merge_ART-LKE_instant",
@@ -614,6 +614,6 @@
     ],
     "fee": 600000,
     "feeAssetId": "WAVES",
-    "senderPublicKey": "Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe"
+    "senderPublicKey": "6DknLGEJHLXmZB6ni3tGa8M3gccMMmc3uaaPhvCSuKvM"
 }
 

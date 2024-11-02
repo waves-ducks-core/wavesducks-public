@@ -199,7 +199,7 @@
         {
             "key": "direct_cosmetic_ART-BONE",
             "type": "integer",
-            "value": 1
+            "value": 1000000000
         },
 
         {
@@ -221,7 +221,7 @@
         {
             "key": "direct_cosmetic_ART-SKELHEAD",
             "type": "integer",
-            "value": 1
+            "value": 1000000000
         },
         {
             "key": "direct_cosmetic_ART-SKELHEAD_priceAsset",
@@ -257,5 +257,6 @@
 
     ],
     "fee": 600000,
-    "feeAssetId": "WAVES"
+    "feeAssetId": "WAVES",
+    "senderPublicKey": "6DknLGEJHLXmZB6ni3tGa8M3gccMMmc3uaaPhvCSuKvM"
 }
