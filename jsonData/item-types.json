@@ -486,8 +486,14 @@
             "key": "type_cosmetic_ART-BUNNY",
             "type": "string",
             "value": "PET"
+        }        ,
+        {
+            "key": "type_cosmetic_ART-SKELETON",
+            "type": "string",
+            "value": "PET"
         }
     ],
     "fee": 700000,
-    "feeAssetId": "WAVES"
+    "feeAssetId": "WAVES",
+    "senderPublicKey": "6DknLGEJHLXmZB6ni3tGa8M3gccMMmc3uaaPhvCSuKvM"
 }
