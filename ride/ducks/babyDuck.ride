@@ -282,8 +282,8 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
     let ducklingOwner = tryGetString(keyOwner(realDucklingId))
     strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
         [], [AttachedPayment(getSpiceAssetId(), currentPayment/2)])
-    #strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
-    #    ["SPICE",0], [AttachedPayment(getSpiceAssetId(), currentPayment/10)])
+    strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["SPICE",0], [AttachedPayment(getSpiceAssetId(), currentPayment/10)])
     strict recordAction = if currentPayment >= 10_0000_0000 then  invoke(getCouponsAddress(),"recordAction",["FEEDDUCKLING10"],[]) else nil
 
     if ducklingOwner != i.caller.toString()&& !isTestEnv() then 
