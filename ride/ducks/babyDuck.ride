@@ -298,7 +298,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
         IntegerEntry(kFeedTxStats, currentPayment),
         StringEntry(kNewLevel, calculateResults._1),
         StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";")),
-        Burn(getSpiceAssetId(), currentPayment/2)#- currentPayment/10)
+        Burn(getSpiceAssetId(), currentPayment/2- currentPayment/10)
       ]++feeValidate
   
 }
