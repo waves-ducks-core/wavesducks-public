@@ -478,7 +478,8 @@ func startDuckBreeding(refererAddress: String) = {
                                             strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
                                                 ["SPICE",0], [AttachedPayment(getSpiceAssetId(), spiceAmount/10)])
                                             [
-                                              BooleanEntry("instantPaid_"+i.transactionId.toBase58String(), true)
+                                              BooleanEntry("instantPaid_"+i.transactionId.toBase58String(), true),
+                                              Burn(i.payments[3].assetId.value(), i.payments[3].amount-spiceAmount/10-spiceAmount/2)
                                             ] 
                                             else throw("Please attach the correct amount of spice!")
                                         else 
