@@ -28,7 +28,7 @@ func configureOracle(oracle: String) = {
 @Callable(i)
 func transferRewardsToCanineStaking() = {
   #if i.caller != this then throw("ICU: admin only") else 
-  let balance = wavesBalance(this).available-1500000
+  let balance = wavesBalance(this).available-10_0000_0000
   let topup = balance/10*9
   let fee = balance - topup
   strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance/10*9)])
@@ -49,7 +49,7 @@ func claimAndLiquidateLP() = {
 
   strict liquidateLP = invoke(wxPool, "swap", [0,"WAVES",this.toString()],[AttachedPayment(wavesdLP,assetBalance(this,wavesdLP))])
 
-  let balance = wavesBalance(this).available-1500000
+  let balance = wavesBalance(this).available-10_0000_0000
   let fee = balance/10
   let topup = balance - fee
   strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance/10*9)])
