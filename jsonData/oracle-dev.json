@@ -185,12 +185,12 @@
         {
             "key": "static_nodeAddress",
             "type": "string",
-            "value": "3P68kRWurF65CrFLhD66cqp9Gzm7jr7AMTj"
+            "value": "3Mx9X6Dpj3thXL2So77C4DG9AmBM4WX8Mvw"
         },
         {
             "key": "static_buybackAddress",
             "type": "string",
-            "value": "3PLdbabW22kBhfy6Wnndbi6ex6D58VPCRUP"
+            "value": "3Mx9X6Dpj3thXL2So77C4DG9AmBM4WX8Mvw"
         },
         {
             "key": "static_extraFee",
@@ -205,7 +205,7 @@
         {
             "key": "static_ammAddress",
             "type": "string",
-            "value": "3Mt97d2wQrdw1B8QKr9KCZnDj2VyBExG2oY,3Mp8MKhxBFzzBhS6txZgmaD7xvsbZgLuhjB,3MzT6Lr8UBLvCnz1rU1KeRc5xws5SSGiFpT"
+            "value": "3N28mjf56ZDzhGpFQVgFTuA6U6snixN1F4F,3NAxFRdHPdjEy2RNC7Y6EmjuUXRhD2KXC9N"
         },
         {
             "key": "amm_burn_3Mp8MKhxBFzzBhS6txZgmaD7xvsbZgLuhjB",

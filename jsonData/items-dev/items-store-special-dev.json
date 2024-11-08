@@ -161,7 +161,7 @@
         {
             "key": "direct_cosmetic_ART-FEED5_priceAsset",
             "type": "string",
-            "value": "7TmSk9yBFPAJfEzAC15MnSfUFdy87sHrzwCyCJD2X9B7"
+            "value": "CS4Md7Bub7fsVZft2cDbTmKeSi6UnYKQQLYnAukKzgST"
         },
         {
             "key": "direct_cosmetic_ART-FEED5_sale",
@@ -251,6 +251,16 @@
         },
         {
             "key": "direct_cosmetic_ART-SKELETON",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-SNW_GLBES",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-ROBODUCK",
             "type": "integer",
             "value": 200000000000
         }
