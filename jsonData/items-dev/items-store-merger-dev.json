@@ -36,7 +36,7 @@
             "key": "merge_ART-TINSELRC0_baseItem",
             "type": "string",
             "value": "ART-TINSEL"
-        },       
+        },
         {
             "key": "merge_ART_TINSELRC0_baseItem",
             "value": null
@@ -66,7 +66,6 @@
             "type": "string",
             "value": "Ag7HEcF5ewbQ84uczdJ2DBG2LA2riks2DtchM2A222vM"
         },
-        
         {
             "key": "merge_ART-STINSELRC0_baseItem",
             "type": "string",
@@ -97,7 +96,6 @@
             "type": "string",
             "value": "WAVES"
         },
-        
         {
             "key": "merge_ART-HEADRC0_baseItem",
             "type": "string",
@@ -138,11 +136,6 @@
             "type": "integer",
             "value": 1
         },
-
-
-
-
-            
         {
             "key": "merge_ART-DUCKLINGRC0_baseItem",
             "type": "string",
@@ -174,11 +167,10 @@
             "value": "WAVES"
         },
         {
-        "key": "merge_ART-DUCKLINGRC0_ducklingsPercent",
-        "type": "integer",
-        "value": 50
+            "key": "merge_ART-DUCKLINGRC0_ducklingsPercent",
+            "type": "integer",
+            "value": 50
         },
-        
         {
             "key": "merge_ART-DUCKLINGRC1_baseItem",
             "type": "string",
@@ -210,12 +202,10 @@
             "value": "WAVES"
         },
         {
-        "key": "merge_ART-DUCKLINGRC1_ducklingsPercent",
-        "type": "integer",
-        "value": 10
+            "key": "merge_ART-DUCKLINGRC1_ducklingsPercent",
+            "type": "integer",
+            "value": 10
         },
-
-
         {
             "key": "merge_ART-GLOBEC0_baseItem",
             "type": "string",
@@ -256,7 +246,6 @@
             "type": "integer",
             "value": 1
         },
-
         {
             "key": "merge_ART-DOUBL0_baseItem",
             "type": "string",
@@ -297,7 +286,6 @@
             "type": "integer",
             "value": 1
         },
-
         {
             "key": "merge_ART-XSTABLE_baseItem",
             "type": "string",
@@ -338,7 +326,6 @@
             "type": "integer",
             "value": 1
         },
-
         {
             "key": "merge_ART-XMSTLTOE_baseItem",
             "type": "string",
@@ -379,69 +366,67 @@
             "type": "integer",
             "value": 1
         },
-
-        { 
+        {
             "key": "merge_ART-XTREE_baseItem",
-               "type": "string",
-               "value": "ART-LAKE"
-           },
-           {
-               "key": "merge_ART-XTREE_amount",
-               "type": "integer",
-               "value": 2
-           },
-           {
-               "key": "merge_ART-XTREE_endItem",
-               "type": "string",
-               "value": "ART-XTREE"
-           },
-           {
-               "key": "merge_ART-XTREE_price",
-               "type": "integer",
-               "value": 0
-           },
-           {
-               "key": "merge_ART-XTREE_instant",
-               "type": "boolean",
-               "value": true
-           },
-           {
-               "key": "merge_ART-XTREE_asset",
-               "type": "string",
-               "value": "WAVES"
-           },
-
-           { 
+            "type": "string",
+            "value": "ART-LAKE"
+        },
+        {
+            "key": "merge_ART-XTREE_amount",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "merge_ART-XTREE_endItem",
+            "type": "string",
+            "value": "ART-XTREE"
+        },
+        {
+            "key": "merge_ART-XTREE_price",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "merge_ART-XTREE_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-XTREE_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
             "key": "merge_ART-MHOUSE_baseItem",
-               "type": "string",
-               "value": "ART-HOUSE"
-           },
-           {
-               "key": "merge_ART-MHOUSE_amount",
-               "type": "integer",
-               "value": 2
-           },
-           {
-               "key": "merge_ART-MHOUSE_endItem",
-               "type": "string",
-               "value": "ART-BIGHOUSE"
-           },
-           {
-               "key": "merge_ART-MHOUSE_price",
-               "type": "integer",
-               "value": 0
-           },
-           {
-               "key": "merge_ART-MHOUSE_instant",
-               "type": "boolean",
-               "value": true
-           },
-           {
-               "key": "merge_ART-MHOUSE_asset",
-               "type": "string",
-               "value": "WAVES"
-           },
-           {
+            "type": "string",
+            "value": "ART-HOUSE"
+        },
+        {
+            "key": "merge_ART-MHOUSE_amount",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "merge_ART-MHOUSE_endItem",
+            "type": "string",
+            "value": "ART-BIGHOUSE"
+        },
+        {
+            "key": "merge_ART-MHOUSE_price",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "merge_ART-MHOUSE_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-MHOUSE_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
             "key": "merge_ART-MRRR_baseItem",
             "type": "string",
             "value": "ART-FIXGENE"
@@ -469,7 +454,7 @@
         {
             "key": "merge_ART-MRRR_asset",
             "type": "string",
-            "value": "7TmSk9yBFPAJfEzAC15MnSfUFdy87sHrzwCyCJD2X9B7"
+            "value": "CS4Md7Bub7fsVZft2cDbTmKeSi6UnYKQQLYnAukKzgST"
         },
         {
             "key": "merge_ART-MRRR_secondaryItem",
@@ -484,7 +469,7 @@
         {
             "key": "merge_ART-LKE_baseItem",
             "type": "string",
-            "value": "ART-LAKE"
+            "value": "ART-XTREE"
         },
         {
             "key": "merge_ART-LKE_amount",
@@ -494,7 +479,7 @@
         {
             "key": "merge_ART-LKE_endItem",
             "type": "string",
-            "value": "ART-XTREE"
+            "value": "ART-LAKE"
         },
         {
             "key": "merge_ART-LKE_price",
@@ -509,10 +494,9 @@
         {
             "key": "merge_ART-LKE_asset",
             "type": "string",
-            "value": "7TmSk9yBFPAJfEzAC15MnSfUFdy87sHrzwCyCJD2X9B7"
+            "value": "CS4Md7Bub7fsVZft2cDbTmKeSi6UnYKQQLYnAukKzgST"
         }
     ],
     "fee": 600000,
     "feeAssetId": "WAVES"
 }
-
