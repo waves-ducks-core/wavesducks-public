@@ -42,6 +42,7 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String())
@@ -56,7 +57,7 @@ func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticK
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-
+func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BCAP: Please attach waves") else
   let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
@@ -474,6 +475,8 @@ func startDuckBreeding(refererAddress: String) = {
                                             if i.payments[3].amount == spiceAmount && i.payments[3].assetId == getSpiceAssetId() then
                                             strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
                                                 [], [AttachedPayment(getSpiceAssetId(), spiceAmount/2)])
+                                            strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+                                                ["SPICE",0], [AttachedPayment(getSpiceAssetId(), spiceAmount/10)])
                                             [
                                               BooleanEntry("instantPaid_"+i.transactionId.toBase58String(), true)
                                             ] 
