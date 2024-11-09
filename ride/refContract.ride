@@ -79,7 +79,7 @@ func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),static
 func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),
                             getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress(),getTurtleStakingAddress(),
                             getTurtleRebirthAddress(),getCapacityAddress(),getVeggFarmingAddress(), 
-                            #getMutantFarmingAddress(), 
+                            getMutantFarmingAddress(), 
                             getFelineFarmingAddress(), 
                             getCanineFarmingAddress(), getCanineBreederAddress(), getFelineBreederAddress()]
 
