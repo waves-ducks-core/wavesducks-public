@@ -198,7 +198,7 @@ func resetCheater(user:String) = {
 @Callable(i)
 func addCouponsFarming(user:String,amount:Int) = {
     if i.caller != getVeggFarmingAddress() 
-    #&& i.caller != getMutantFarmingAddress() 
+    && i.caller != getMutantFarmingAddress() 
     then throw("Method only for farming sc!") else
         addCouponsInternal(user,amount)
 
