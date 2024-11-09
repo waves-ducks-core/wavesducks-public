@@ -123,7 +123,7 @@ func whitelistAddress(refererAddress:String)={
 @Callable(i)
 func refPayment(refererKey: String) = {
   #TODO MAKE DYNAMICALLY
-  let dao = "3PEwRcYNAUtoFvKpBhKoiwajnZfdoDR6h4h"
+  let dao = if isTestEnv() then "3Mx9X6Dpj3thXL2So77C4DG9AmBM4WX8Mvw" else "3PEwRcYNAUtoFvKpBhKoiwajnZfdoDR6h4h"
   #let sendFundsBack = ([ScriptTransfer(i.caller, i.payments[0].amount, i.payments[0].assetId)],false)
   let alreadySend = tryGetInteger("dao_refund")
   let sendFundsToDao = (
