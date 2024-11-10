@@ -6,7 +6,7 @@
     "chainId": 87,
     "proofs": [
     ],
-    "dApp": "3P4Anrwd7rKDGyxXZRaocXVbKtg8TKEzf6D",
+    "dApp": "3PJr8TE2b8bEmPXXoHcJnPanke3Yi41zzya",
     "payment": [],
     "call": {
       "function": "configureOracle",

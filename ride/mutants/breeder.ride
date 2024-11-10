@@ -276,6 +276,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func startMutantHatching(refererAddress: String) = {
+    if true then throw("MSMH: Not implemented") else 
     #TODO: add fees in egg, read this from a key in oracle, read assetId from oracle
     #TODO: add spice in egg read this from a key in oracle, read assetId from oracle
     #TODO: create an array with the address from turtle and duck breeding contract
