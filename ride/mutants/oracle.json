@@ -10,12 +10,12 @@
         {
             "key": "static_mutantIncubatorAddress",
             "type": "string",
-            "value": "3N1mAvAyeEwnFekyjaY4BXBKUcHqAUxwQxX"
+            "value": "3PJr8TE2b8bEmPXXoHcJnPanke3Yi41zzya"
         },
         {
             "key": "static_mutantFarmingAddress",
             "type": "string",
-            "value": "3N1y6kVT6VXz9mGb7seF2wAQ2dMKG1ojx2H"
+            "value": "3PFDP2upzDE7Djhhey5yweAQqWsMcoAzaUc"
         }
     ],
     "fee": 700000,
