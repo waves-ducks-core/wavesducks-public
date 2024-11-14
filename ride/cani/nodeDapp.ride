@@ -28,7 +28,8 @@ func configureOracle(oracle: String) = {
 @Callable(i)
 func transferRewardsToCanineStaking() = {
   #if i.caller != this then throw("ICU: admin only") else 
-  let balance = wavesBalance(this).available-1500000
+  let balance = wavesBalance(this).available-10_0000_0000
+  if balance <0 then ([]) else
   let topup = balance/10*9
   let fee = balance - topup
   strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance/10*9)])
@@ -39,21 +40,35 @@ func transferRewardsToCanineStaking() = {
 
 
 @Callable(i)
-func claimAndLiquidateLP() = {
+func claimAndLiquidateLPAndUnits() = {
   let processBlocksDapp = addressFromStringValue("3PJVm7xLPabmYohbnvdgGDYHMwnZxF2x18m")
   let wxPool = addressFromStringValue("3P68zNiufsu1viZpu1aY3cdahRRKcvV5N93")
   let wavesdLP = "HYogWffUjS8Uw4bYA1Dn3qrGmJerMqkf139aJcHhk8yq".fromBase58String()
+  let units = "GjwAHMjqWzYR4LgoNy91CxUKAGJN79h2hseZoae4nU8t".fromBase58String()
 
   #strict processBlocks = invoke( processBlocksDapp, "processBlocks", [],[])
   strict claimLP = invoke(processBlocksDapp, "claimLP", [],[])
 
   strict liquidateLP = invoke(wxPool, "swap", [0,"WAVES",this.toString()],[AttachedPayment(wavesdLP,assetBalance(this,wavesdLP))])
+  strict liquidateUnits = invoke(wxPool, "swap", [0,"WAVES",this.toString()],[AttachedPayment(units,assetBalance(this,units))])
 
-  let balance = wavesBalance(this).available-1500000
+  let balance = wavesBalance(this).available-10_0000_0000
   let fee = balance/10
   let topup = balance - fee
   strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance/10*9)])
   ([
     ScriptTransfer(getFeeAggregatorAddress(), fee, unit)
   ],balance)
+}
+
+@Verifier(tx)
+func verify () = match tx {
+
+    case ss: SetScriptTransaction => 
+              let Admin = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+              sigVerify(tx.bodyBytes, tx.proofs[0], Admin)
+    case _ => 
+
+        sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+
 }

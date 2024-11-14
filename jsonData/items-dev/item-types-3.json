@@ -37,6 +37,11 @@
             "key": "type_cosmetic_ART-BUNNY",
             "type": "string",
             "value": "PET"
+        },
+        {
+            "key": "type_cosmetic_ART-SKELETON",
+            "type": "string",
+            "value": "PET"
         }
     ],
     "fee": 700000,

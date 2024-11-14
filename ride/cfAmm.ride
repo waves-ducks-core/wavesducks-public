@@ -555,6 +555,9 @@ func swap(assetOut: String, minimum: Int) ={
    else if (assetOut == getPeteAssetId()) then 
     strict topup2 = invoke(getFelineFarmingAccount(), "topUpReward", nil, [AttachedPayment(fromBase58String(getPeteAssetId()), fraction(feeAmount, 1, 4))])
     [ScriptTransfer(getFeesAccount(), fraction(feeAmount, 1, 4), getAssetBytes(assetOut))]
+   else if (assetOut == getEggAssetId()) then 
+    strict topup2 = invoke(getMutantFarmingAccount(), "topUpReward", ["EGG",fraction(feeAmount, 1, 4)], [AttachedPayment(fromBase58String(getEggAssetId()), fraction(feeAmount, 1, 4))])
+    [ScriptTransfer(getFeesAccount(), fraction(feeAmount, 1, 4), getAssetBytes(assetOut))]
   else
                                             
     [ScriptTransfer(getFeesAccount(),fraction(feeAmount,2,4),assetOut.getAssetBytes())]
@@ -646,6 +649,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 }   

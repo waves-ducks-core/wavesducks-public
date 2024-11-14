@@ -198,7 +198,7 @@ func resetCheater(user:String) = {
 @Callable(i)
 func addCouponsFarming(user:String,amount:Int) = {
     if i.caller != getVeggFarmingAddress() 
-    #&& i.caller != getMutantFarmingAddress() 
+    && i.caller != getMutantFarmingAddress() 
     then throw("Method only for farming sc!") else
         addCouponsInternal(user,amount)
 
@@ -259,8 +259,8 @@ func useCoupons(amountTryingToPay:Int)= {
     let keySpendSc = couponsSpendOnSc(i.caller.toString())
 
     strict topUp = invoke(getVeggFarmingAddress(), "topUpReward", [amountPaid/100*25],[])
-    #strict topUp2 = if invokingSc == getMutantFarmingAddress() then unit else
-    # invoke(getMutantFarmingAddress(), "topUpReward", ["VEGG",amountPaid/100*15],[])
+    strict topUp2 = if invokingSc == getMutantFarmingAddress() then unit else
+     invoke(getMutantFarmingAddress(), "topUpReward", ["VEGG",amountPaid/100*15],[])
 
     let totalSpend = tryGetInteger(keySpend)+amountPaid
     let totalSpendSc = tryGetInteger(keySpendSc)+amountPaid
@@ -318,6 +318,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 }   

@@ -6,7 +6,7 @@ func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_incubatorAddress() = "static_incubatorAddress"
-func staticKey_babyDuckAddress() = "static_incubatorAddress"
+func staticKey_babyDuckAddress() = "static_babyDuckAddress"
 func staticKey_farmingAddress() = "static_farmingAddressNew"
 func staticKey_cfMasterAddress() = "static_cfMasterAddress"
 func staticKey_huntAddress()= "static_huntAddress"
@@ -79,7 +79,7 @@ func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),static
 func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),
                             getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress(),getTurtleStakingAddress(),
                             getTurtleRebirthAddress(),getCapacityAddress(),getVeggFarmingAddress(), 
-                            #getMutantFarmingAddress(), 
+                            getMutantFarmingAddress(), 
                             getFelineFarmingAddress(), 
                             getCanineFarmingAddress(), getCanineBreederAddress(), getFelineBreederAddress()]
 
@@ -123,7 +123,7 @@ func whitelistAddress(refererAddress:String)={
 @Callable(i)
 func refPayment(refererKey: String) = {
   #TODO MAKE DYNAMICALLY
-  let dao = "3PEwRcYNAUtoFvKpBhKoiwajnZfdoDR6h4h"
+  let dao = if isTestEnv() then "3Mx9X6Dpj3thXL2So77C4DG9AmBM4WX8Mvw" else "3PEwRcYNAUtoFvKpBhKoiwajnZfdoDR6h4h"
   #let sendFundsBack = ([ScriptTransfer(i.caller, i.payments[0].amount, i.payments[0].assetId)],false)
   let alreadySend = tryGetInteger("dao_refund")
   let sendFundsToDao = (
@@ -205,6 +205,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 }    
