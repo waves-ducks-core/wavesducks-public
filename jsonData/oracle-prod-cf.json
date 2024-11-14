@@ -222,6 +222,15 @@
       },
       {"key":"EGG_ASSET_ID","type":"string","value":"C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS"}
 
+        "key": "allowed_contract_3PJr8TE2b8bEmPXXoHcJnPanke3Yi41zzya",
+        "type": "string",
+        "value": "MUTANT_BREEDER"
+      },
+      {
+        "key": "allowed_contract_3PFDP2upzDE7Djhhey5yweAQqWsMcoAzaUc",
+        "type": "string",
+        "value": "MUTANT_FARMING"
+      }
   ]
 }
 

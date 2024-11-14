@@ -15,6 +15,8 @@ func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_burnAddress() = "static_burnAddress"
+func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 
 func getStatsKey_amount() = "stats_amount"
 func getStatsKey(genString: String) = "stats_" + genString + "_amount"
@@ -48,6 +50,8 @@ func getDuckBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticK
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() 
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String()
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func getAllowedMutants() = [getTurtleBreederAddress(),getDuckBreederAddress()]
 
@@ -276,7 +280,6 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func startMutantHatching(refererAddress: String) = {
-    if true then throw("MSMH: Not implemented") else 
     #TODO: add fees in egg, read this from a key in oracle, read assetId from oracle
     #TODO: add spice in egg read this from a key in oracle, read assetId from oracle
     #TODO: create an array with the address from turtle and duck breeding contract
@@ -294,12 +297,16 @@ func startMutantHatching(refererAddress: String) = {
     let nft2 = assetInfo(i.payments[1].assetId.value()).value()
     let type1 = checkTypeAndValidObstinate(nft1)
     let type2 = checkTypeAndValidObstinate(nft2)
+    strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),assetBalance(this,getEggAssetId()))])
+    strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
+        [], [AttachedPayment(getSpiceAssetId(), assetBalance(this,getSpiceAssetId())/5)])
     if type1 == type2 then throw("MSMH: NFTs can not be of the same type") else
     [
         StringEntry(getParentKey(i.transactionId, 1), nft1.id.toBase58String()),
         StringEntry(getParentKey(i.transactionId, 2), nft2.id.toBase58String()),
         StringEntry(getProcessStatusKey(i.caller.toString(), i.transactionId.toBase58String()), hatchingStarted()),
-        IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId.toBase58String()), height + delayForHatching())
+        IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId.toBase58String()), height + delayForHatching()),
+        Burn(getSpiceAssetId(), assetBalance(this,getSpiceAssetId()))
     ]++validPayment
 }
 
