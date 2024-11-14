@@ -214,7 +214,14 @@
         "key": "allowed_contract_3PMUJt5Voyxy12DjsKVKtFctA4HpAEfSgc5",
         "type": "string",
         "value": "FELI_REBIRTH"
-      }
+      },
+      {
+        "key": "MARKETPLACE_PROXY_DAPP",
+        "type": "string",
+        "value": "3PL1tnAkQUP3jQNGUu2NvfAuWuz5kqrhctt"
+      },
+      {"key":"EGG_ASSET_ID","type":"string","value":"C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS"}
+
   ]
 }
 

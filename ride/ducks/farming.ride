@@ -353,9 +353,6 @@ func unstakeJackpotWithoutClaimEgg(asset: String) = {
 
 @Verifier(tx)
 func verify() = {
-  if isTestEnv() then 
-      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-  else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
     let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
     let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
