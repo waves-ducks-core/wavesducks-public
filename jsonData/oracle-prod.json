@@ -193,7 +193,7 @@
         {
             "key": "static_extraFeeRemove",
             "type": "integer",
-            "value": 1500000000
+            "value": 500000000
             
         },
             {
