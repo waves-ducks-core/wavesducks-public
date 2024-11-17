@@ -117,8 +117,8 @@ func tryGetBoolean(key: String) = {
 }
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
-  let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
-  if (jackpotRandom == 1) then { (jackpotRandom,"jackpot") } else 
+  #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
+  #if (jackpotRandom == 1) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
@@ -382,6 +382,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 }
