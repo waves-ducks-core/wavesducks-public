@@ -1,7 +1,7 @@
 {
   "type": 12,
-  "sender": "3PDktsxDVEcoobpEBJcausnKo4enhcWUDEF",
-  "senderPublicKey": "23NWm7kUDQqbTVkirjd5JXWRZaWVoS4ZesmRNHicBa3T",
+  "sender": "3P6DvvYD1qP3fPPXXzHhqifUJQL7sTRXjjW",
+  "senderPublicKey": "EB1qMWj4Wo3jC5oUtoj8yJFYbM18Ls4W9NZPy6wVwbsT",
   "fee": 500000,
   "feeAssetId": null,
   "version": 2,
@@ -100,6 +100,11 @@
       "key": "allowed_contract_3P3zkxHhAzRzV9PBLB14JXG4ZEEPv4LtDyQ",
       "type": "string",
       "value": "PETE_POOL"
+    },
+    {
+      "key": "allowed_contract_3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV",
+      "type": "string",
+      "value": "CF_POOL"
     },
     {
       "key": "allowed_contract_3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ",
@@ -220,7 +225,8 @@
         "type": "string",
         "value": "3PL1tnAkQUP3jQNGUu2NvfAuWuz5kqrhctt"
       },
-      {"key":"EGG_ASSET_ID","type":"string","value":"C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS"}
+      {"key":"EGG_ASSET_ID","type":"string","value":"C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS"},
+      {
 
         "key": "allowed_contract_3PJr8TE2b8bEmPXXoHcJnPanke3Yi41zzya",
         "type": "string",
