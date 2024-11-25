@@ -176,7 +176,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
     let totalDucksAmount = tryGetInteger("felines_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
 
-    let (duckGen, farmGen) = ("Feline-"+gen+"-JU", "8W-J")
+    let (duckGen, farmGen) = ("FELI-"+gen+"-JU", "8W-J")
     let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
     let asset = Issue(duckGen, description, 1, 0, false, unit, height)
