@@ -56,6 +56,14 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnA
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
+func checkReal(assetId: ByteVector) = {
+  if (assetInfo(assetId).value().issuer == getBreederAddress() || assetInfo(assetId).value().issuer ==getIncubatorAddress()) then {
+   assetInfo(assetId).value().issuer
+  } else {
+    throw("not valid NFT")
+  }
+}
+
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("RCAP: Please attach waves") else
   let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
@@ -114,7 +122,7 @@ func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, 
   randomHash.toInt(offset*8) % options
 }
 
-func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
+func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklistCode: String) = {
   let phoenixOptions = PHOENIXBASEOPTIONS - fraction(PHOENIXBASEOPTIONS / 2, assetRarity, 100)  # chance = 0.1% + 0.1% * rarity (from 0.02 to 1)
 
   let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
@@ -122,31 +130,34 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int) = {
   if (jackpotRandom == 1) then { "phoenix" } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
-    if (n<10) then {"item!ART-FREEGENE"} else
-    if (n<126) then { "ar" } else
-    if (n<186) then { "item!ART-FIRE_ARMOUR" } else
-    if (n<206) then { "item!ART-FEED5" } else    
-    if (n<226) then { "item!ART-FEED10" } else    
-    if (n<246) then { "item!ART-FEED15" } else    
-    if (n<266) then { "item!ART-FEED20" } else    
-    if (n<286) then { "item!ART-FEED25" } else    
-    if (n<296) then { "item!ART-FEED50" } else   
-    if (n<300) then { "item!ART-FEED100" } else
-    if (n<310) then  { "item!ART-CROWN" } else 
-    if (n<350) then { "incubator" } else
-    if (n<460) then if assetRarity < 50 then { "item!ART-BUILTBODY" } else { "item!ART-MUTARIUM-D" } else
-    if (n<480) then { "item!ART-SNAKE" } else
-    if (n<510) then { "item!ART-ROBODUCK" } else
-    if (n<600) then { "item!ART-KATANA" } else
-    if (n<650) then if assetRarity < 50 then { "item!ART-SCEPTER" } else { "item!ART-MUTARIUM-D" } else
-    if (n<710) then { "item!ART-MUTARIUM-D" } else
-    if (n<720) then { "item!ART-MUTARIUM-G" } else
-    if (n<890) then { "duckling_10" } else 
-    if (n<960) then { "duckling_20" } else
+    if (n < 10 && blacklistCode != "item!ART-FREEGENE") then {"item!ART-FREEGENE"} else
+    if (n < 126 && blacklistCode != "ar") then { "ar" } else
+    if (n < 186 && blacklistCode != "item!ART-FIRE_ARMOUR") then { "item!ART-FIRE_ARMOUR" } else
+    if (n < 206 && blacklistCode != "item!ART-FEED5") then { "item!ART-FEED5" } else    
+    if (n < 226 && blacklistCode != "item!ART-FEED10") then { "item!ART-FEED10" } else    
+    if (n < 246 && blacklistCode != "item!ART-FEED15") then { "item!ART-FEED15" } else    
+    if (n < 266 && blacklistCode != "item!ART-FEED20") then { "item!ART-FEED20" } else    
+    if (n < 286 && blacklistCode != "item!ART-FEED25") then { "item!ART-FEED25" } else    
+    if (n < 296 && blacklistCode != "item!ART-FEED50") then { "item!ART-FEED50" } else   
+    if (n < 300 && blacklistCode != "item!ART-FEED100") then { "item!ART-FEED100" } else
+    if (n < 310 && blacklistCode != "item!ART-CROWN") then  { "item!ART-CROWN" } else 
+    if (n < 350 && blacklistCode != "incubator") then { "incubator" } else
+    if (n < 460 && blacklistCode != "item!ART-BUILTBODY") then if assetRarity < 50 then { "item!ART-BUILTBODY" } else { "item!ART-MUTARIUM-D" } else
+    if (n < 480 && blacklistCode != "item!ART-SNAKE") then { "item!ART-SNAKE" } else
+    if (n < 510 && blacklistCode != "item!ART-ROBODUCK") then { "item!ART-ROBODUCK" } else
+    if (n < 600 && blacklistCode != "item!ART-KATANA") then { "item!ART-KATANA" } else
+    if (n < 650 && blacklistCode != "item!ART-SCEPTER") then if assetRarity < 50 then { "item!ART-SCEPTER" } else { "item!ART-MUTARIUM-D" } else
+    if (n < 710 && blacklistCode != "item!ART-MUTARIUM-D") then { "item!ART-MUTARIUM-D" } else
+    if (n < 720 && blacklistCode != "item!ART-MUTARIUM-G") then { "item!ART-MUTARIUM-G" } else
+    if (n < 890 && blacklistCode != "duckling_10") then { "duckling_10" } else 
+    if (n < 960 && blacklistCode != "duckling_20") then { "duckling_20" } else
     { "duckling_40" }
 
 }
-
+func getRandomReturn(tx: ByteVector, finishHeight: Int)={
+  let n = getRandomNumber(2, tx, finishHeight, 1)
+  if n == 0 then true else false
+}
 
 func getOrigin(assetId: ByteVector) = {
   let assetName = assetInfo(assetId).value().name
@@ -176,11 +187,12 @@ func isTestEnv()={
 }
 
 
-func finishRebirthInternal(initTx: String, address: String, payment: AttachedPayment, double: Boolean) = {
+func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment,
+ double: Boolean, blacklistCode: String, rescue: Boolean) = {
   let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
   let assetRarity = tryGetInteger("address_" + address + "_initTx_" + initTx + "_assetRarity")
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
-  strict validPayment = checkAdditionalPayment(payment)
+  strict validPayment = checkAdditionalPayment(additionalPayment)
   strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTH"],[])
   func getAccessItemAssetId(address: Address) = tryGetStringExternal(address,"static_accessItemAssetId").fromBase58String()
   func getAccessItemPrice(address: Address) = tryGetIntExternal(address,"static_accessItemPrice")
@@ -191,7 +203,7 @@ func finishRebirthInternal(initTx: String, address: String, payment: AttachedPay
     if (height < finishBlock) then {
       throw("you cannot finish rebirth, yet")
     } else {
-      let win = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity)  
+      let win = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity, blacklistCode)  
 
       let txId = initTx
 
@@ -270,7 +282,15 @@ func finishRebirthInternal(initTx: String, address: String, payment: AttachedPay
       }else{
         throw("RFB: Some error occured, please contact the admins!")
       }
-
+      let returnToSender =  if rescue then getRandomReturn(initTx.fromBase58String(), finishBlock) else false
+      let returnPayload = if returnToSender then
+        let assetId = getStringValue("address_" + address + "_initTx_" + initTx + "_assetId").fromBase58String()
+        let issuer = checkReal(assetId)   
+        strict gen = invoke(getBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
+        strict call = invoke(issuer, "increaseRarity", [assetId.toBase58String(), gen], [])
+        [ScriptTransfer(address.addressFromStringValue(), 1, 
+        assetId)] 
+      else []
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish")
@@ -334,7 +354,7 @@ func initRebirth(refererAddress: String) = {
 
 @Callable(i)
 func finishRebirth(initTx: String) = {
- finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false)
+ finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false,"",false)
 }
 
 @Callable(i)
@@ -347,11 +367,40 @@ func finishRebirthDouble(initTx: String) = {
       [
         Burn(assetId,1)
       ]++
-      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true)
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,"",false)
     else
       throw("Error! Wrong item attached to double rewards!")
 }
 
+@Callable(i)
+func finishRebirthItem(initTx: String, itemCode: String) = {
+  #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
+  if (size(i.payments) == 2 && i.payments[0].amount==1) then
+    let assetId = i.payments[0].assetId.value()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    #TODO CHANGE INTO CORRECT TYPE!!!!
+    if boosterType == "ART-HWERASE" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false, itemCode,false)
+    
+    else if boosterType == "ART-HWRESCUE" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false, "",true)
+    else if boosterType == "ART-GIFT_DOUBL" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true, "",false)
+    else
+      throw("Error! Wrong item attached ")
+  else if (size(i.payments) == 1 ) then 
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false,"",false)
+  else throw("Invalid payments")
+}
 @Verifier(tx)
 func verify() = {
   if isTestEnv() then 
