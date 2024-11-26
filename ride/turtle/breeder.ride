@@ -30,6 +30,8 @@ func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
+
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -40,6 +42,7 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAdd
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -83,7 +86,7 @@ func getTRTLIdKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_di"
 }
 
-func getTRTLStatsKey(genString: String) = {
+func getStatsKey(genString: String) = {
   "stats_" + genString + "_amount"
 }
 
@@ -231,7 +234,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
       let asset = Issue(TRTLGen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
-      let amount = tryGetInteger(getTRTLStatsKey(TRTLGen)) + 1
+      let amount = tryGetInteger(getStatsKey(TRTLGen)) + 1
       let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let parent1Id = tryGetString(getTRTLParentKey(txId, 1))
       let parent2Id = tryGetString(getTRTLParentKey(txId, 2))
@@ -240,7 +243,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
         StringEntry(processStatusKey, HatchingFinished),
         StringEntry(TRTLIdKey, assetId.toBase58String()),
         StringEntry(assetId.toBase58String(), TRTLIdKey),
-        IntegerEntry(getTRTLStatsKey(TRTLGen), amount),
+        IntegerEntry(getStatsKey(TRTLGen), amount),
         IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
@@ -257,6 +260,19 @@ func asInt(value: Any) = match value {
   case _ => throw("wrong type, expected: Int")
 }
 
+@Callable(i)
+func increaseRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getTurtleRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ]
+  }
+}
 @Callable(i)
 func startTRTLBreeding(refererAddress: String) = {
   #TODO: add validation that feeValidate payment is added!
