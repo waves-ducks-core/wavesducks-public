@@ -74,7 +74,7 @@ func getTRTLIdKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_di"
 }
 
-func getTRTLStatsKey(genString: String) = {
+func getStatsKey(genString: String) = {
   "stats_" + genString + "_amount"
 }
 
@@ -138,6 +138,20 @@ func asBoolean(value: Any) = match value {
 }
 
 @Callable(i)
+func increaseRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getTurtleRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ]
+  }
+}
+
+@Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("ICU: admin only") else 
   [
@@ -175,7 +189,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
       StringEntry(hatchingStatusKey, HatchingFinished),
       StringEntry(duckIdKey, assetId.toBase58String()),
       StringEntry(assetId.toBase58String(), duckIdKey),
-      IntegerEntry(getTRTLStatsKey(duckGen), tryGetInteger(getTRTLStatsKey(duckGen)) + 1),
+      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) + 1),
       IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
       asset,
       ScriptTransfer(addressFromString(address).value(), 1, assetId)
@@ -201,7 +215,7 @@ func issueFreeTurtle(address: String, txIdStr: String) = {
     let asset = Issue(TRTLGen, description, 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
 
-    let amount = tryGetInteger(getTRTLStatsKey(TRTLGen)) + 1
+    let amount = tryGetInteger(getStatsKey(TRTLGen)) + 1
 
     let duckIdKey = getTRTLIdKey(address, txId)
     ([
@@ -211,7 +225,7 @@ func issueFreeTurtle(address: String, txIdStr: String) = {
       StringEntry(hatchingStatusKey, HatchingFinished),
       StringEntry(duckIdKey, assetId.toBase58String()),
       StringEntry(assetId.toBase58String(), duckIdKey),
-      IntegerEntry(getTRTLStatsKey(TRTLGen), amount),
+      IntegerEntry(getStatsKey(TRTLGen), amount),
       IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
       asset,
       ScriptTransfer(addressFromString(address).value(), 1, assetId)
@@ -296,13 +310,13 @@ func finishTRTLHatching(txIdStr: String) = {
       let asset = Issue(TRTLGen, description, 1, 0, false, unit, hatchingFinishHeight)
       let assetId = asset.calculateAssetId()
 
-      let amount = tryGetInteger(getTRTLStatsKey(TRTLGen)) + 1
+      let amount = tryGetInteger(getStatsKey(TRTLGen)) + 1
 
       [
         StringEntry(hatchingStatusKey, HatchingFinished),
         StringEntry(TRTLIdKey, assetId.toBase58String()),
         StringEntry(assetId.toBase58String(), TRTLIdKey),
-        IntegerEntry(getTRTLStatsKey(TRTLGen), amount),
+        IntegerEntry(getStatsKey(TRTLGen), amount),
         IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
         asset,
         ScriptTransfer(i.caller, 1, assetId)
