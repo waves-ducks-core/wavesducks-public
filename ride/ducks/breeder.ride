@@ -308,6 +308,20 @@ func finishDuckHatchingItems(txIdStr: String, duckGenesString: String, payment1:
 }
 
 @Callable(i)
+func increaseRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getDuckStatsKey(duckGen), tryGetInteger(getDuckStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ]
+  }
+}
+
+@Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("admin only") else 
   [
