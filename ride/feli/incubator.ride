@@ -11,7 +11,12 @@ func getBool(key: String) = {
 func isTestEnv()={
   getBool("TESTENV")
 }
-
+func asString(value: Any) = match value {
+  case s: String => s
+  case s: Int => throw("wrong type, expected: String, got: Int")
+  case s: Unit => throw("wrong type, expected: String, got: Unit")
+  case _ => throw("wrong type, expected: String")
+}
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
         case a:String => a
@@ -29,6 +34,7 @@ func staticKey_peteAssetId() = "static_peteAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
 func staticKey_felinesStakingAddress() = "static_felineStakingAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -37,6 +43,7 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAdd
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFelineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getFelineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felinesStakingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -278,8 +285,13 @@ func startHatching(refererAddress: String) = {
         IntegerEntry("felines_last_price", eggsNeeded / 1500000)
       ]
 
-    let leftToPay = eggsNeeded
     let firstPayment = i.payments[1].value()
+    let leftToPay = if size(i.payments) == 2 then {
+          strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[1].value().assetId],[]).asString()
+          if (boosterType == "ART-FELCPN") then  eggsNeeded/100* 95 else 100
+
+          }else 
+            eggsNeeded
     if (firstPayment.assetId != getPeteAssetId()) then throw("TB: You can attach only EGG tokens with the following asset id: " + getPeteAssetId().toBase58String()) else 
     if (firstPayment.amount < leftToPay) then throw("TB: To breed a Feline you following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
     strict addMore = invoke(getFelineStakingAddress(), "addPeteAndStakeMore", [], [AttachedPayment(getPeteAssetId(), leftToPay)])
