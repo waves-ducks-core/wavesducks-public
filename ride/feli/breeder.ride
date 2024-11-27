@@ -258,6 +258,19 @@ func asInt(value: Any) = match value {
   case _ => throw("wrong type, expected: Int")
 }
 
+@Callable(i)
+func increaseRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getFeliRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ]
+  }
+}
 
 @Callable(i)
 func getGenFromName(assetName: String) = {
