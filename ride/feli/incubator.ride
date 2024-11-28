@@ -287,7 +287,7 @@ func startHatching(refererAddress: String) = {
 
     let firstPayment = i.payments[1].value()
     let leftToPay = if size(i.payments) == 3 then {
-          strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId],[]).asString()
+          strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).asString()
           if (boosterType == "ART-FELCPN") then  eggsNeeded/100* 85 else 100
 
           }else 
