@@ -8,6 +8,13 @@ func getBool(key: String) = {
   }
 }
 
+func asString(value: Any) = match value {
+  case s: String => s
+  case s: Int => throw("wrong type, expected: String, got: Int")
+  case s: Unit => throw("wrong type, expected: String, got: Unit")
+  case _ => throw("wrong type, expected: String")
+}
+
 func isTestEnv()={
   getBool("TESTENV")
 }
@@ -28,6 +35,7 @@ func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_caniRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_caniFarmingAddress() = "static_canineStakingAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -36,6 +44,7 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAdd
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getCaniRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_caniRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getCaniFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_caniFarmingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -280,8 +289,13 @@ func startHatching(refererAddress: String) = {
         IntegerEntry("cani_last_price", eggsNeeded / 1500000)
       ]
 
-    let leftToPay = eggsNeeded
     let firstPayment = i.payments[1].value()
+    let leftToPay = if size(i.payments) == 3 then {
+          strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).asString()
+          if (boosterType == "ART-CANCPN") then  eggsNeeded/100* 85 else 100
+
+          }else 
+            eggsNeeded
     if (firstPayment.assetId != getMintAssetId()) then throw("TB: You can attach only WAVES") else 
     if (firstPayment.amount < leftToPay) then throw("TB: To breed a Canine you following amount of WAVES: " + leftToPay.toString()+ " "+i.caller.toString()) else
     strict addMore = invoke(getCaniFarmingAddress(), "addWavesAndStakeMore", [], [AttachedPayment(unit, leftToPay)])
