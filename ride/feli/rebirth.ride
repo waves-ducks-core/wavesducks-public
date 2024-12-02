@@ -113,9 +113,8 @@ func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   if n == 0 then true else false
 }
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
-  #let jackpotEnabled = tryGetBoolean("JACKPOT_ENABLED")
-  #let jackpotRandom = getRandomNumber(300, tx, finishHeight, 1)
-  #if (jackpotRandom == 1 && jackpotEnabled) then { (jackpotRandom,"jackpot") } else 
+  let jackpotRandom = getRandomNumber(300, tx, finishHeight, 1)
+  if (jackpotRandom == 1 ) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
@@ -178,9 +177,9 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                 ]
         call
 
-      #} else if (win == "jackpot") then {
-      #  strict call = invoke(getTurtleIncubatorAddress(), "issueJackpot", [address, txId, valueOrElse(getString("JACKPOT_NAME"),"WWWWXMAS")], []) 
-      #  [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+      } else if (win == "jackpot") then {
+        strict call = invoke(getCanineIncubatorAddress(), "issueJackpot", [address, txId, "WWFSANTA"], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
       #TODO: turn into issueFreeCanine, on double, issue free turtle aswell
       } else if (win == "incubator") then {
         strict call = if !double then 
