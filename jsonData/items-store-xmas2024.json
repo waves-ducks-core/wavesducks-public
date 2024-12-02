@@ -10,7 +10,7 @@
         {
             "key": "merge_ART-PET0_amount",
             "type": "integer",
-            "value": 6
+            "value": 4
         },
         {
             "key": "merge_ART-PET0_endItem",
@@ -40,7 +40,7 @@
         {
             "key": "merge_ART-PET0_secondaryItemAmount",
             "type": "integer",
-            "value": 4
+            "value": 6
         },
         
         {
@@ -51,7 +51,7 @@
         {
             "key": "merge_ART-PET1_amount",
             "type": "integer",
-            "value": 4
+            "value": 6
         },
         {
             "key": "merge_ART-PET1_endItem",
@@ -81,7 +81,7 @@
         {
             "key": "merge_ART-PET1_secondaryItemAmount",
             "type": "integer",
-            "value": 6
+            "value": 4
         },
         
         {
