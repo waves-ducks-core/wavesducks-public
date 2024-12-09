@@ -294,6 +294,17 @@ func increaseExp(address: String)={
     ]
 }
 
+@Callable(i)
+func increaseExpDefined(address: String, amount: Int)={
+    if i.caller != getItemsAddress() then [] else
+    let userExperienceKey = userExperience(address)
+    let userExpTilldate = tryGetInteger(userExperienceKey)
+    
+    [
+        IntegerEntry(userExperienceKey,userExpTilldate+amount)
+    ]
+}
+
 @Verifier(tx)
 func verify() = {
   if isTestEnv() then 
