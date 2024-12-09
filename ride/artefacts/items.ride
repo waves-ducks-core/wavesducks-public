@@ -219,7 +219,7 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
     if assetInfo(assetId.value()).value().issuer == getBreederAddress() then
       let splitted = split(assetInfo(assetId.value()).value().name, "")
       let gen = splitted[14]
-      let genNr = Generations.indexOf(gen).value()
+      let genNr = Generations.indexOf(gen).value()+1
       (accumulated._1,accumulated._2, accumulated._3, accumulated._4, accumulated._5+genNr)
     else if assetInfo(assetId.value()).value().issuer == getBabyduckAddress() then
       let startPercentage = tryGetIntegerExternal(getBabyduckAddress(),"duckling_" + assetId.toBase58String() + "_startPercentage")
@@ -700,7 +700,7 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 }   
 
