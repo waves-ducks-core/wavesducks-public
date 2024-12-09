@@ -361,6 +361,11 @@
             "key": "direct_cosmetic_ART-MUTARIUM-G",
             "type": "integer",
             "value": 50000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-XMAS_STBLE",
+            "type": "integer",
+            "value": 50000000000
         }
     ],
     "fee": 600000,
