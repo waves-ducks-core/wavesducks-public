@@ -46,6 +46,16 @@
             "key": "ART-FEED25_issue",
             "type": "boolean",
             "value": true
+        },
+        {
+            "key": "ART-GFTR",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "ART-GFTW",
+            "type": "boolean",
+            "value": true
         }
 
     ],

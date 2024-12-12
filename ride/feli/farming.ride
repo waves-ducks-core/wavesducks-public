@@ -415,6 +415,20 @@ func claimReward (assetId: String) = {
   )
   }
 
+@Callable(i)
+func liquidateUSDT() = {
+  let wxPool = addressFromStringValue("3P4PFYKHyxitgwVb4WVWEcdH7ZsuR4GgcXC")
+  let usdtAssetId = "9wc3LXNA4TEBsXyKtoLE9mrbDD7WMHXvXrCjZvabLAsi".fromBase58String()
+  let peteAssetId = "GAzAEjApmjMYZKPzri2g2VUXNvTiQGF7KDYZFFsP3AEq".fromBase58String()
+  strict peteBefore = assetBalance(this,peteAssetId)
+  strict liquidateUsdt = invoke(wxPool, "swap", [peteAssetId.toBase58String(),0],[AttachedPayment(usdtAssetId,assetBalance(this,usdtAssetId))])
+  strict peteAfter = assetBalance(this,peteAssetId)
+  strict invokeRes = invoke(getPeteDappAddress(), "stake", [],[AttachedPayment(peteAssetId,peteAfter-peteBefore)])
+  [
+    IntegerEntry("global_PETE_balance",tryGetInteger("global_PETE_balance")+(peteAfter-peteBefore))
+  ]
+}
+
 @Verifier(tx)
 func verify() = {
   if isTestEnv() then 
@@ -439,6 +453,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 }
