@@ -39,6 +39,7 @@ func getMutantBreederAddress()=  Address(tryGetStringExternal(getOracle(),"stati
 
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
+func getEggPoolAddress() =  Address(tryGetStringExternal(getOracle(),"static_eggPool").fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getMarketPlaceProxy() = Address(tryGetStringExternal(getOracle(),"static_marketPlaceProxyAddress").fromBase58String())
 func getBuybackAddress() = Address(tryGetStringExternal(getOracle(),"static_buybackAddress").fromBase58String())
@@ -116,6 +117,22 @@ func getBool(key: String) = {
 
 func isTestEnv()={
   getBool("TESTENV")
+}
+
+func processFees(isEggSell: Boolean, amount: Int, finalFee: Int) = {
+  if isEggSell then {
+          strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 1000))])
+          []
+      }else   {
+          let eggAssetId = getEggAssetId()
+          strict eggBalance = assetBalance(this, eggAssetId)
+          strict liquidateUsdt = invoke(getEggPoolAddress(), "swap", [eggAssetId.toBase58String(),0],[AttachedPayment(unit,fraction(amount, fraction(finalFee,4,10), 1000))])
+          strict eggBalanceAfter = assetBalance(this, eggAssetId)
+          strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(eggAssetId,eggBalanceAfter-eggBalance)])
+          [
+            ScriptTransfer(getFeeAggregatorAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit)
+          ]
+      }
 }
 
 @Callable(i)
@@ -209,12 +226,7 @@ func instantBuy(auctionId: String) = {
         let auctionOwner = tryGetString("auction_" + auctionId + "_owner")
         let recordPrice = tryGetInteger(assetId+"_recordPrice")
         let newRecordPrice = max([recordPrice, amount])
-              let burnCall = if isEggSell then {
-                strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 1000))])
-                []
-                }else [
-            ScriptTransfer(getFeeAggregatorAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit),
-            ScriptTransfer(getBuybackAddress(),fraction(amount, fraction(finalFee,4,10), 1000),unit)]
+        strict burnCall = processFees(isEggSell,amount, finalFee)
         let caller = if getMarketPlaceProxy() == i.caller then i.originCaller else i.caller
         strict recordAction = if amount > 50_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY50"],[]) else
                               if amount > 20_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY20"],[]) else
@@ -304,13 +316,7 @@ func acceptBid(auctionId: String, bidId: String) = {
     } else {
       let recordPrice = tryGetInteger(assetId+"_recordPrice")
       let newRecordPrice = max([recordPrice, bidAmount])
-              let burnCall = if isEggSell then {
-                strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(bidAmount, finalFee, 1000))])
-                []
-                }else [
-                  ScriptTransfer(getFeeAggregatorAddress(),fraction(bidAmount, fraction(finalFee,6,10), 1000),unit),
-                  ScriptTransfer(getBuybackAddress(),fraction(bidAmount, fraction(finalFee,6,10), 1000),unit)
-        ]
+      strict burnCall = processFees(isEggSell,bidAmount, finalFee)
       [
         StringEntry("auction_" + auctionId + "_bid_" + bidId + "_status", "finished"),
         StringEntry("auction_" + auctionId + "_status", "finished"),
@@ -351,6 +357,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 }   
