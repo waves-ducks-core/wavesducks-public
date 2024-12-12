@@ -241,7 +241,17 @@
         "key": "AUCTION_DAPP",
         "type": "string",
         "value": "3PEBtiSVLrqyYxGd76vXKu8FFWWsD1c5uYG"
-      }
+      },
+      {
+        "key": "INCUBATOR_DAPP",
+        "type": "string",
+        "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+    },
+    {
+        "key": "BREEDER_DAPP",
+        "type": "string",
+        "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
+    }
   ]
 }
 

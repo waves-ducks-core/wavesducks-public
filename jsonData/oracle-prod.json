@@ -256,6 +256,11 @@
             "key": "static_perchFee",
             "type": "integer",
             "value": 100000000
+        },
+        {
+            "key": "static_eggPool",
+            "type": "string",
+            "value": "3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ"
         }
     ],
     "fee": 700000,
