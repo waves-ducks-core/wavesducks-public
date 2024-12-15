@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 func isTestEnv()={
@@ -35,7 +35,10 @@ func tryGetInteger(key: String) = {
 }
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("WAI: wrong type, expected: Int")
+}
 #SC THAT CAN USE COUPONS
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
@@ -238,7 +241,65 @@ func CFRefund(recipient: String,amount: Int)={
 
 }
 
+@Callable(i)
+func questOnePetNft (assetId: String)={
+    let invoker = i.caller.toString()
+    let type =  if assetInfo(assetId.fromBase58String()).value().issuer == getBreedingAddress() then "DUCK" else
+                if assetInfo(assetId.fromBase58String()).value().issuer == getCanineBreederAddress() then "CANINE" else
+                if assetInfo(assetId.fromBase58String()).value().issuer == getFelineBreederAddress() then "FELINE" else
+                if assetInfo(assetId.fromBase58String()).value().issuer == getTurtleBreederAddress() then "TURTLE" else
+                throw("Unsupported NFT!")
+    let invokedKey = "q1_"+type+"_"+invoker+"_invoked"
+    let amountNftInvokedKey = "q1_"+assetId+"_amount_invoked"
+    let typesCompletedKey = "q1_"+invoker+"_completed"
+    let totalPetKey = "q1_total"
+    if tryGetBoolean(invokedKey) then throw("You already invoked this type!") else
 
+    
+    [
+        BooleanEntry(invokedKey,true),
+        IntegerEntry(amountNftInvokedKey,tryGetInteger(amountNftInvokedKey)+1),
+        IntegerEntry(typesCompletedKey,tryGetInteger(typesCompletedKey)+1),
+        IntegerEntry(totalPetKey,tryGetInteger(totalPetKey)+1)
+    ]++addCouponsInternal(i.caller.toString(),6000_0000)
+
+}
+
+@Callable(i)
+func questTwoBuyPerches(type: String, color: String)={
+    let invoker = i.caller.toString()
+    #todo: check if user completed petting
+    let typesCompletedKey = "q1_"+invoker+"_completed"
+    if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
+    let method = if type =="TURTLE" then "addFreeBeach" else "addFreePerch"
+    strict invokeRes = invoke(this, "useCoupons",[5_000_0000],[]).asInt()
+    if invokeRes != 0 then throw("Not enough vEGG to complet this quest!") else
+    let invokeAddress = if type =="TURTLE" then getTurtleStakingAddress() else
+                        if type =="CANINE" then getCanineFarmingAddress() else
+                        if type =="FELINE" then getFelineFarmingAddress() else
+                        if type =="DUCK" then getBreedingAddress() else
+                        throw("Unsupported type!")
+    let invokeRes2 = invoke(invokeAddress, method, [invoker,color],[])
+    let invokedKey = "q2_"+type+"_"+invoker+"_invoked"
+    let amountNftInvokedKey = "q2_"+type+"_amount_invoked"
+    let typesQ2CompletedKey = "q2_"+invoker+"_completed"
+    let totalQ2Key = "q2_total"
+    if tryGetBoolean(invokedKey) then throw("You already invoked this type!") else
+    [
+        BooleanEntry(invokedKey,true),
+        IntegerEntry(amountNftInvokedKey,tryGetInteger(amountNftInvokedKey)+1),
+        IntegerEntry(typesQ2CompletedKey,tryGetInteger(typesQ2CompletedKey)+1),
+        IntegerEntry(totalQ2Key,tryGetInteger(totalQ2Key)+1)
+    ]
+}
+
+@Callable(i)
+func questThree()={
+    let invoker = i.caller.toString()
+    let typesCompletedKey = "q1_"+invoker+"_completed"
+    if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
+    throw("Not implemented yet!")
+}
 
 @Callable(i)
 func useCoupons(amountTryingToPay:Int)= {
