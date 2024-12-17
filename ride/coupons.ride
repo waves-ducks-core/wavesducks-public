@@ -290,15 +290,24 @@ func questTwoBuyPerches(type: String, color: String)={
         IntegerEntry(amountNftInvokedKey,tryGetInteger(amountNftInvokedKey)+1),
         IntegerEntry(typesQ2CompletedKey,tryGetInteger(typesQ2CompletedKey)+1),
         IntegerEntry(totalQ2Key,tryGetInteger(totalQ2Key)+1)
-    ]
+    ]++addCouponsInternal(i.caller.toString(),2_000_0000)
 }
-
+#https://docs.google.com/document/d/1FHMO20W3sZEcO4VIegoi3rHksClMYJrVndlxNKGn7Yw/edit?tab=t.0
 @Callable(i)
 func questThree()={
     let invoker = i.caller.toString()
     let typesCompletedKey = "q1_"+invoker+"_completed"
     if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
-    throw("Not implemented yet!")
+    strict invokeRes1 = invoke(this, "useCoupons",[1_0000_0000],[]).asInt()
+    if invokeRes1 != 0 then throw("Not enough vEGG to complet this quest!") else
+    let invokeKey = "q3_"+invoker+"_invoked"
+    let totalQ3Key = "q3_total"
+    if tryGetBoolean(invokeKey) then throw("You already invoked this type!") else
+    strict invokeRes2 = invoke(getBabyduckAddress(), "issueFreeDuckling", [invoker, i.transactionId.toBase58String(),20],[])
+    [
+        BooleanEntry(invokeKey,true),
+        IntegerEntry(totalQ3Key,tryGetInteger(totalQ3Key)+1)
+    ]++addCouponsInternal(i.caller.toString(),1_1000_0000)
 }
 
 @Callable(i)

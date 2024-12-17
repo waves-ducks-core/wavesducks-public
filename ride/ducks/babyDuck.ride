@@ -232,7 +232,9 @@ func buyDuckling(refererAddress: String)={
 
 @Callable(i)
 func issueFreeDuckling(address: String, txIdStr: String, percentage: Int) = {
-  if i.caller != this && i.caller != getRebirthAddress() && i.caller != getCanineRebirthAddress() && i.caller != getFelineRebirthAddress() then throw("BIFD: You can't issue free duckling") else
+  if i.caller != this && i.caller != getRebirthAddress() &&
+   i.caller != getCanineRebirthAddress() && i.caller != getFelineRebirthAddress() &&
+   i.caller != getCouponsAddress() then throw("BIFD: You can't issue free duckling") else
   let asset = Issue("BABY-11111111-GZ", "", 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
     ([
