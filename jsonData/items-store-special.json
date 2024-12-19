@@ -201,44 +201,6 @@
             "type": "integer",
             "value": 1000000000
         },
-
-        {
-            "key": "direct_cosmetic_ART-BONE_priceAsset",
-            "type": "string",
-            "value": "WAVES"
-        },
-        {
-            "key": "direct_cosmetic_ART-BONE_sale",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "direct_cosmetic_ART-BONE_growing_percentage",
-            "type": "integer",
-            "value": 0
-        },
-
-        {
-            "key": "direct_cosmetic_ART-SKELHEAD",
-            "type": "integer",
-            "value": 1000000000
-        },
-        {
-            "key": "direct_cosmetic_ART-SKELHEAD_priceAsset",
-            "type": "string",
-            "value": "WAVES"
-        },
-        {
-            "key": "direct_cosmetic_ART-SKELHEAD_sale",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "direct_cosmetic_ART-SKELHEAD_growing_percentage",
-            "type": "integer",
-            "value": 0
-        },
-
         {
             "key": "direct_cosmetic_ART-HWRESCUE",
             "type": "integer",
