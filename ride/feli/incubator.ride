@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 func getBool(key: String) = {
@@ -367,7 +367,7 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 }
 
