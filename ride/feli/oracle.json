@@ -7,7 +7,7 @@
         {
             "key": "static_felineIncubationFee",
             "type": "integer",
-            "value": 100000000
+            "value": 50000000
         },
         {
             "key": "static_felineIncubatorAddress",
@@ -42,12 +42,12 @@
         {
             "key": "static_felinePerchFee",
             "type": "integer",
-            "value": 300000000
+            "value": 250000000
         },
         {
             "key": "static_felinePeteRebirthPrice",
             "type": "integer",
-            "value": 1600000000
+            "value": 800000000
         }
         
 
