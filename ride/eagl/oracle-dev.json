@@ -1,0 +1,52 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_eaglIncubatorAddress",
+            "type": "string",
+            "value": "3MrzBHoTCQZEyP5yUGbHw4n6mHz7TzJo49r"
+        },
+        {
+            "key": "static_eaglRebirthAddress",
+            "type": "string",
+            "value": ""
+        },
+        {
+            "key": "static_eaglStakingAddress",
+            "type": "string",
+            "value": "3N7oGx2296rxeSa5jtPvUVmeeQxQkWpz15A"
+        },
+        {
+            "key": "static_puzzleAssetId",
+            "type": "string",
+            "value": "Cca5C1DNTnJaPCEJFViGxGFATXtaRsSAUNRtVcgSEuEt"
+        },
+        {
+            "key": "static_eaglPuzzleAddress",
+            "type": "string",
+            "value": "3N7oGx2296rxeSa5jtPvUVmeeQxQkWpz15A"
+        },
+        {
+            "key": "static_eaglBreederAddress",
+            "type": "string",
+            "value": "3Mqa6zGAReUUwsty7AzdVc62A8ZGtHMFeoi"
+        },
+        {
+            "key": "static_eaglIncubationFee",
+            "type": "integer",
+            "value": 100000000
+        },
+        {
+            "key": "static_eaglPerchFee",
+            "type": "integer",
+            "value": 150000000
+        }
+        
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES",
+    "sender":"3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9",
+    "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
+}
+
