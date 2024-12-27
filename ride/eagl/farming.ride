@@ -394,7 +394,6 @@ func addPuzzleAndStakeMore()={
   [
     IntegerEntry("global_PZL_balance",tryGetInteger("global_PZL_balance")+firstPayment.amount)
   ]
-  #todo; stake PETE IN THE PETE SC
 
 }
 
