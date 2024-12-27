@@ -119,7 +119,7 @@ func getIfAllTypesAllowed(assetId: ByteVector) = {
   if (blacklisted) then throw("GO FUCK YOURSELF") else
   let name = assetInfo(assetId).value().name
   #Ducks
-  if (issuer == getIncubatorAddress() || issuerc == getBreederAddress()) then true else
+  if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then true else
   #Turtles
   if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then  false else
   #Canines
@@ -209,6 +209,32 @@ func wearXItemsToDuck()= {
     FOLD<6>(i.payments, [], handleItem)++validPayment
 }
 
+@Callable(i)
+func calculateWearblesBoost(duckId: String)= {
+  let back = tryGetString(keyTypesDuck(duckId,"BACK"))
+  let head = tryGetString(keyTypesDuck(duckId,"HEAD"))
+  let left_wing = tryGetString(keyTypesDuck(duckId,"LEFT_WING"))
+  let right_wing = tryGetString(keyTypesDuck(duckId,"RIGHT_WING"))
+  let top = tryGetString(keyTypesDuck(duckId,"TOP"))
+  let pet = tryGetString(keyTypesDuck(duckId,"PET"))
+  let tail = tryGetString(keyTypesDuck(duckId,"TAIL"))
+  let accessory = tryGetString(keyTypesDuck(duckId,"ACCESSORY"))
+  let assetIdArray = [back,head,left_wing,right_wing,top,pet,tail,accessory]
+  func countTotalBoost (acc: Int, assetId: String) = {
+    if assetId != "" then
+      strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId],[]).asString()
+      let boost = valueOrErrorMessage(getInteger("boost_"+artefactName), "No boost found for "+artefactName)
+      acc+boost
+    else
+      acc
+  }
+  let totalBoost = FOLD<8>(assetIdArray, 0, countTotalBoost)
+  ([
+    IntegerEntry(duckId+"_lastBoost", totalBoost)
+  ],totalBoost)
+
+  
+}
 
 @Verifier(tx)
 func verify() = {
