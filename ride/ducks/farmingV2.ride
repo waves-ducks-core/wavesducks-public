@@ -47,6 +47,7 @@ func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
 func staticKey_cfMasterAddress() = "static_cfMasterAddress"
 func staticKey_potionFee() = "static_potionFee"
 func staticKey_canineStakingAddress() = "static_canineStakingAddress"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
@@ -64,6 +65,7 @@ func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakin
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_cfMasterAddress()).fromBase58String())
 func getPotionFee() =  getIntegerValue(getOracle(),staticKey_potionFee())
 func getCanineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -231,8 +233,9 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
   strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).asInt()
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).asInt()
   #Recalculate bonusses every claim
-  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100
+  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   ([
   ],(finalPowerRarityBoost,finalPower))
 
