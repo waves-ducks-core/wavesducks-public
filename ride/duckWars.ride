@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 func isTestEnv()={
@@ -305,10 +305,10 @@ func importMantle(artefactId: String)= {
   if getStringValue(kMantleStatus) != STATUSEXPORTED then throw("WIM: Mantle is not exported") else
   let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
   if getStringValue(kMantleOwner) != i.originCaller.toString() then
-    StringEntry(kMantleStatus, STATUSBLOCKED)
+    [StringEntry(kMantleStatus, STATUSBLOCKED)]
   else
   
-    StringEntry(kMantleStatus, STATUSFREE)
+    [StringEntry(kMantleStatus, STATUSFREE)]
   
 }
 
