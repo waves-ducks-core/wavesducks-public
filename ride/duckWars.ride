@@ -50,6 +50,7 @@ let MANTLENAME = "mantle"
 let STATUSFREE = "FREE"
 let STATUSOCCUPIED = "OCCUPIED"
 let STATUSEXPORTED = "EXPORTED"
+let STATUSBLOCKED = "BLOCKED"
 
 func keyDuckLock(callerAddress: String, duckId: String) = {
   "address_" + callerAddress + "_duck_" + duckId + "_status"
@@ -303,10 +304,12 @@ func importMantle(artefactId: String)= {
   if firstPayment.amount != 1 then throw("WIM: NFT is not attached") else
   if getStringValue(kMantleStatus) != STATUSEXPORTED then throw("WIM: Mantle is not exported") else
   let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
-  [
+  if getStringValue(kMantleOwner) != i.originCaller.toString() then
+    StringEntry(kMantleStatus, STATUSBLOCKED)
+  else
+  
     StringEntry(kMantleStatus, STATUSFREE)
-  ]
-
+  
 }
 
 @Callable(i)
