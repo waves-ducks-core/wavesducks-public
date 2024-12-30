@@ -29,8 +29,9 @@ func eggAssetIdKey() = "static_eggAssetId"
 func wearablesAddressKey() = "static_wearablesAddress"
 func farmingAddressKey() = "static_farmingAddressNew"
 func couponsAddressKey() = "static_couponsAddress"
-func rebirthAddressKey() = "static_rebirthAddress"
 func burnAddressKey() = "static_burnAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
 
 func getOracle() = Address(tryGetString(oracleAddressKey()).fromBase58String())
 
@@ -41,14 +42,14 @@ func getEggAssetId() = tryGetStringExternal(getOracle(), eggAssetIdKey()).fromBa
 func getWearablesAddress() = Address(tryGetStringExternal(getOracle(), wearablesAddressKey()).fromBase58String())
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(), farmingAddressKey()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(), couponsAddressKey()).fromBase58String()) 
-func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(), rebirthAddressKey()).fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(), burnAddressKey()).fromBase58String())
-
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
 let MANTLENAME = "mantle"
 
 let STATUSFREE = "FREE"
 let STATUSOCCUPIED = "OCCUPIED"
+let STATUSEXPORTED = "EXPORTED"
 
 func keyDuckLock(callerAddress: String, duckId: String) = {
   "address_" + callerAddress + "_duck_" + duckId + "_status"
@@ -97,6 +98,10 @@ func keyPutOnArtefact(type: String, owner: String, duckId: String, artefactId: B
 
 func keyArtefactExists(type: String, artefactId: ByteVector) = {
   "artefact_" + type + "_artefactId_" + artefactId.toBase58String()
+}
+
+func keyArtefactNftId(artefactId: ByteVector)={
+  "artefactId_" + artefactId.toBase58String()+"_nft"
 }
 
 func isJackpot(assetId: ByteVector ) = assetInfo(assetId).value().name.value().takeRight(1) == "U"
@@ -252,6 +257,57 @@ func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
 
 
 #TODO: check if duck wears sweater, if so stake the duck automatically
+@Callable(i)
+func exportMantle(artefactId: String)= {
+let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
+let kMantleStatus = keyArtefactStatus(MANTLENAME, artefactId.fromBase58String())
+let mantleOwner = getStringValue(kMantleOwner)
+let mantleStatus = getStringValue(kMantleStatus)
+let kMantleInvested = keyArtefactInvested(MANTLENAME, artefactId)
+let mantleAlreadyInvested = getIntegerValue(kMantleInvested)
+
+if i.caller.toString() != mantleOwner then throw("WEM: You dont own the mantle!") else
+if (mantleStatus != STATUSFREE) then throw("WEM: Mantle is already used!") else
+if mantleAlreadyInvested < 1_0000_0000 then throw("WEM: You can't export mantle with less than 1_0000_0000 invested") else
+let exportFee = mantleAlreadyInvested/100*5
+let exportFeeCapped = if exportFee > 10_0000_0000 then 10_0000_0000 else exportFee 
+if size(i.payments) == 0 then throw("WEM: Please attach export fee") else
+let firstPayment = i.payments[0].value()
+if (firstPayment.assetId != getEggAssetId()) then throw("WEM: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else
+if (firstPayment.amount != exportFeeCapped) then throw("WEM: Please attach exactly "+exportFeeCapped.toString()+" amount of EGGlets") else
+let kArtefactNftId = keyArtefactNftId(artefactId.fromBase58String())
+if tryGetString(kArtefactNftId) == "" then 
+  let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false, unit, 0)
+  let mantleNftId = issueMantleNFT.calculateAssetId()
+  [
+  issueMantleNFT, 
+  StringEntry(kArtefactNftId,mantleNftId.toBase58String()),
+  ScriptTransfer(i.caller, 1, mantleNftId),
+  StringEntry(kMantleStatus, STATUSEXPORTED)
+  ]
+else 
+  [
+    ScriptTransfer(i.caller, 1, tryGetString(kArtefactNftId).fromBase58String()),
+    StringEntry(kMantleStatus, STATUSEXPORTED)
+  ]
+
+}
+
+
+@Callable(i)
+func importMantle(artefactId: String)= {
+  let kMantleStatus = keyArtefactStatus(MANTLENAME, artefactId.fromBase58String())
+  let firstPayment = i.payments[0].value()
+  let kArtefactNftId = keyArtefactNftId(artefactId.fromBase58String())
+  if tryGetString(kArtefactNftId) != firstPayment.assetId.value().toBase58String() then throw("WIM: NFT is not attached") else
+  if firstPayment.amount != 1 then throw("WIM: NFT is not attached") else
+  if getStringValue(kMantleStatus) != STATUSEXPORTED then throw("WIM: Mantle is not exported") else
+  let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
+  [
+    StringEntry(kMantleStatus, STATUSFREE)
+  ]
+
+}
 
 @Callable(i)
 func putOnArtefact(artefactId: String) = {
