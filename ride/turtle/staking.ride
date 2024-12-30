@@ -40,6 +40,7 @@ func staticKey_spiceAssetId() = "static_spiceAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
 
 func rewardClaimedKey(address: Address) = address.toString() + "_claimed"
 func totalStakedKey() = "total_staked"
@@ -58,6 +59,7 @@ func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -153,27 +155,33 @@ func calculateFarmPower(assetId:String)={
   let uniqueList = FOLD<8>(genotype, [], uniqueArrayFilter)
   let totalGenes = size(uniqueList)
   let power = pow(15,1,totalGenes,0,2,DOWN)
+  strict farmBoost = 0
+  #Recalculate bonusses every claim
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).asInt()
+  let finalPowerRarityBoost = power+power*farmBoost/100+power*wearabledBoost/1000
 
   ([
-    IntegerEntry("DEBUG_"+assetName, power)
-  ],power)
+    IntegerEntry("DEBUG_POWER"+assetName, power),
+    IntegerEntry("DEBUG_FINAL_POWER"+assetName, finalPowerRarityBoost)
+  ],finalPowerRarityBoost)
 
 }
 
-@Callable(i)
-func calculateFarmPowerAssetName(assetName:String)={
-  let genotype = assetName.drop(5).dropRight(3).split("")
-  func uniqueArrayFilter(accum: List[String], nextGen: String) =
-        if !containsElement(accum,nextGen) then accum:+nextGen else accum
-  let uniqueList = FOLD<8>(genotype, [], uniqueArrayFilter)
-  let totalGenes = size(uniqueList)
-  let power = pow(15,1,totalGenes,0,2,DOWN)
 
-  ([
-    IntegerEntry("DEBUG_"+assetName, power)
-  ],power)
+#@Callable(i)
+#func calculateFarmPowerAssetName(assetName:String)={
+#  let genotype = assetName.drop(5).dropRight(3).split("")
+#  func uniqueArrayFilter(accum: List[String], nextGen: String) =
+#        if !containsElement(accum,nextGen) then accum:+nextGen else accum
+#  let uniqueList = FOLD<8>(genotype, [], uniqueArrayFilter)
+#  let totalGenes = size(uniqueList)
+#  let power = pow(15,1,totalGenes,0,2,DOWN)
 
-}
+#  ([
+#    IntegerEntry("DEBUG_"+assetName, power)
+#  ],power)
+
+#}
 
 @Callable(i)
 func addFreeBeach(address: String, color: String) = {
