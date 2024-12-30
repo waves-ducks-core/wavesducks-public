@@ -44,6 +44,7 @@ func keyLastCheckInterest(address: String, asset: String, reveneuType: String) =
 func keyGlobalEarned(reveneuType: String) =  "global_earnings_"+reveneuType
 func staticKey_extraFee() = "static_extraFee"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
 
 
 func tryGetString(key: String) = {
@@ -61,6 +62,7 @@ func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func asIntTuple(value: Any) = match value {
   case int: (Int,Int) => int
@@ -256,8 +258,12 @@ func calculateFarmPower(assetId:String)={
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*asRarityResult._2/100
+  strict farmBoost = 0
+  #Recalculate bonusses every claim
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).asInt()
+  let finalPowerRarityBoost = power+power*farmBoost/100+power*wearabledBoost/1000
   ([
-  ],(finalPowerRarity,finalPower))
+  ],(finalPowerRarityBoost,finalPower))
 
 }
 
