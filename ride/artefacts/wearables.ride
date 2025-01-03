@@ -94,7 +94,7 @@ func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean)={
     strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
     if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
       let type = tryGetType(artefactName)
-      if !allTypes && !containsElement(["PET","BACK","TAIL","ACCESSORY"], type) then throw("You can't attach this item to your NFT! Pets only!") else
+      if !allTypes && !containsElement(["PET","BACK","TAIL","ACCESSORY", "HEAD"], type) then throw("You can't attach this item to your NFT! Pets only!") else
       let typeOnDuck = if type != "" then tryGetString(keyTypesDuck(duckId,type))!= "" else throw("Type undefined, please contact admins "+artefactName)
       if typeOnDuck then throw("You can only attach 1 from each type to your duck!") else 
 
