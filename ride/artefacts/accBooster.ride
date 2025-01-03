@@ -117,7 +117,7 @@ func unstakeItem(artefactName: String) = {
     if ! containsElement(stakeable, artefactName) then throw("This artefact doesn't exist") else 
       let invoker = i.caller.toString()
       let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
-      if artefactId == "ART-XSOCK" then throw("You can not unstake ART-XSOCK anymore") else
+      if artefactName == "ART-XSOCK" then throw("You can not unstake ART-XSOCK anymore") else
       if artefactId == "" then throw("You didnt stake "+artefactName) else
         strict boostDuck = 
         if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],[]) else
@@ -135,13 +135,14 @@ func oneTimeUseFeed() ={
   if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
     let assetId = i.payments[0].assetId.value()
     strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    let artefactId = tryGetString(keyArtefactOwner("ART-XSOCK",i.caller.toString()))
     if !artefactName.contains("ART-FEED") then throw("You can't use this artafect to earn feedlimit!") else
         let invoker = i.caller.toString()
         let amount = drop(artefactName,8)
         let intValue = parseIntValue(amount)
         strict topup = invoke(getMutantFarmingAddress(), "topUpReward", ["FEED",intValue/2], [])
         [
-          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+intValue),
+          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+intValue+intValue/10),
           Burn(assetId,1)
         ]++validPayment
 }
