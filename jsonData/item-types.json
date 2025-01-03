@@ -492,6 +492,16 @@
             "type": "string",
             "value": "PET"
         }
+        {
+            "key": "type_cosmetic_ART-XMAS_FOX",
+            "type": "string",
+            "value": "PET"
+        }
+        {
+            "key": "type_cosmetic_ART-XMAS_KRMPS",
+            "type": "string",
+            "value": "PET"
+        }
     ],
     "fee": 700000,
     "feeAssetId": "WAVES",
