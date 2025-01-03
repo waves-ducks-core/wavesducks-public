@@ -1,0 +1,63 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "direct_cosmetic_ART-MUTARIUM-D",
+            "type": "integer",
+            "value": 50000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-MUTARIUM-G",
+            "type": "integer",
+            "value": 50000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-XTINSEL",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "direct_cosmetic_ART-XTINSEL_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-XTINSEL_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-XTINSEL_growing_percentage",
+            "type": "integer",
+            "value": 5
+        },
+        {
+            "key": "direct_cosmetic_ART-CNDY_SWORD_growing_percentage",
+            "type": "integer",
+            "value": 5
+        },
+        {
+            "key": "direct_cosmetic_ART-GNGR_BREAD",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "direct_cosmetic_ART-GNGR_BREAD_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-GNGR_BREAD_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-GNGR_BREAD_growing_percentage",
+            "type": "integer",
+            "value": 5
+        }
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}
