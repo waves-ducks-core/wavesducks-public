@@ -217,6 +217,44 @@
             "value": 200000000000
         }
 
+
+
+
+
+
+        ,
+        {
+            "key": "direct_cosmetic_ART-DEER",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-SLEDGE",
+            "type": "integer",
+            "value": 200000000000
+        }
+        ,
+        {
+            "key": "direct_cosmetic_ART-PLR_BEAR",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-LAMB",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-BUNNY",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-PINGUIN",
+            "type": "integer",
+            "value": 200000000000
+        }
+
     ],
     "fee": 600000,
     "feeAssetId": "WAVES",
