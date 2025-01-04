@@ -16,7 +16,7 @@ func getStr(key: String) = {
 
 let mAccPKeyString = getStr(keyMAccPKey)
 let backupPKeyString = getStr(keyBackupPKey)
-func getBackupKey() = if backupPKeyString== "" then this.bytes else backupPKeyString.fromBase58String()
+
 let mAccPKey = mAccPKeyString.fromBase58String()
 
 let mAccAddr = addressFromPublicKey(mAccPKey)
@@ -326,11 +326,12 @@ func verify() = {
   let checkStarted = getInt(kTotalLiquidity) >= getInt(kLiquidityThreshold)
   match (tx) {
       case inv:InvokeScriptTransaction => {
+        let signKey =  if backupPKeyString== "" then tx.senderPublicKey else backupPKeyString.fromBase58String()
         let acceptedCallsStaking = ["stakeFarmTokens","claimReward","withdrawFarmTokens","voteToLiquidate"]
         let acceptedCallsThis = ["callUnstakeProxy","claimCeoFee","lockInvestments","unlockInvestments"]
         if (inv.function == "unstakeNFT" && inv.dApp.addressFromRecipient() == getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue() )then throw("You cannot call these functions directly") else
-        if (inv.dApp.addressFromRecipient() == this &&inv.function == "initMasterKey" && mAccPKeyString=="")then sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
-        else if (sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) == false && sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())== false) then throw("_100") else
+        if (inv.dApp.addressFromRecipient() == this &&inv.function == "initMasterKey" && mAccPKeyString=="")then sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
+        else if (sigVerify(tx.bodyBytes, tx.proofs[0], signKey) == false) then throw("_100") else
         if (checkStarted == false) then throw("_14") else
         if (getBool(kLocked) == true) then throw("_22") else
         # Avoid scam with high fees => allow only Waves and minimal amount
@@ -339,11 +340,11 @@ func verify() = {
         } else if (inv.payments.size() > 5 && inv.function != "instanMergeItem") then {
           throw("_17: to big payment size")
         } else if (inv.dApp.addressFromRecipient() == this && containsElement(acceptedCallsThis,inv.function)) then {
-          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
+          sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
         } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
-          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
+          sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
         } else if (inv.dApp.addressFromRecipient() == stakingAddress && containsElement(acceptedCallsStaking,inv.function) ) then {
-          sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
+          sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
         }else {
           let dappToCall = inv.dApp.addressFromRecipient().toString()
           let allowedContract = getStrA(mAccAddr, "allowed_contract_"+dappToCall)
@@ -366,7 +367,9 @@ func verify() = {
       }
       case lease: LeaseTransaction => {
         if (lease.recipient == addressFromStringValue("3PA1KvFfq9VuJjg45p2ytGgaNjrgnLSgf4r"))
-        then sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey) || sigVerify(tx.bodyBytes, tx.proofs[0], getBackupKey())
+        then 
+            let signKey =  if backupPKeyString== "" then tx.senderPublicKey else backupPKeyString.fromBase58String()
+            sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
         else false
       }
       case unlease: LeaseCancelTransaction => true
