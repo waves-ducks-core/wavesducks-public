@@ -62,16 +62,10 @@ let allArtefact = [
 #TODO: make this list as a string with split inside the sc to avoid the need of updating the sc
 let snow_boosters = [
   "ART-TINSEL",
-  "ART-FEED5",
   "ART-FEED10",
-  "ART-FEED15",
   "ART-GNGR_BREAD",
   "ART-SNOWBALL",
-  "ART-GIFT_DOUBL",
-  "ART-FELCPN",
-  "ART-CANCPN",
-  "ART-GFTR",
-  "ART-GFTW"
+  "ART-GIFT_DOUBL"
 ]
 
 #TODO: make this list as a string with split inside the sc to avoid the need of updating the sc
