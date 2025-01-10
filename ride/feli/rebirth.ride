@@ -1,7 +1,13 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
-
+func isTestEnv()={
+    let testenv =  match getBoolean(this, "TESTENV") {
+      case x: Boolean => x
+      case _ => false
+    }
+    testenv
+} 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
         case a:String => a
@@ -113,8 +119,8 @@ func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   if n == 0 then true else false
 }
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
-  let jackpotRandom = getRandomNumber(300, tx, finishHeight, 1)
-  if (jackpotRandom == 1 ) then { (jackpotRandom,"jackpot") } else 
+  #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
+  #if (jackpotRandom == 1 ) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
@@ -126,7 +132,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     if (n<490 && "duckling_40" != blacklistCode) then { "duckling_40" } else
     if (n<540 && "duckling_20" != blacklistCode) then { "duckling_20" } else
     if (n<640 && "item!ART-FEED5" != blacklistCode) then { "item!ART-FEED5" } else    
-    if (n<710 && "item!ART-FEED10" != blacklistCode) then { "item!ART-FEED10" } else    
+    if (n<710 && "item!ART-FEED10" != blacklistCode) then { "item!ART-FEED10" } else
     if (n<740 && "item!ART-FEED15" != blacklistCode) then { "item!ART-FEED15" } else    
     if (n<770 && "item!ART-FEED20" != blacklistCode) then { "item!ART-FEED20" } else    
     if (n<790 && "item!ART-FEED25" != blacklistCode) then { "item!ART-FEED25" } else    
@@ -279,10 +285,10 @@ func initRebirth() = {
   if (pmtCanine.amount != 1) then throw("NFT is not attached") else
   if (pmtPete.amount != wavesAmount || pmtPete.assetId != getPeteAssetId()) then throw("Pete payment is not attached or wrong!") else
   let sendToAggreGator = pmtPete.amount/4
-  let topup = pmtPete.amount - sendToAggreGator
+  let topup = pmtPete.amount - sendToAggreGator - sendToAggreGator
 
-  strict addMore = invoke(getCanineStakingAddress(), "addPeteAndStakeMore", [], [AttachedPayment(getPeteAssetId(), topup)])
-
+  strict addMore = invoke(getCanineStakingAddress(), "addPeteAndStakeMore", [], [AttachedPayment(getPeteAssetId(), sendToAggreGator)])
+  strict payUser = invoke(getCanineStakingAddress(), "topUpReward", [], [AttachedPayment(getPeteAssetId(), sendToAggreGator)])
    
   let issuer = checkReal(assetId)
   strict gen = invoke(getCanineBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
@@ -349,3 +355,32 @@ func finishRebirthItem(initTx: String, itemCode: String) = {
       finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false,"",false)
   else throw("Invalid payments")
 }
+
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+} 
