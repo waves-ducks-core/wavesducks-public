@@ -300,7 +300,7 @@ func startHatching(refererAddress: String) = {
             eggsNeeded
     if (firstPayment.assetId != getMintAssetId()) then throw("TB: You can attach only Puzzle") else 
     if (firstPayment.amount < leftToPay) then throw("TB: To breed a Canine you following amount of Puzzle: " + leftToPay.toString()+ " "+i.caller.toString()) else
-    strict addMore = invoke(getEaglFarmingAddress(), "addPuzzleAndStakeMore", [], [AttachedPayment(unit, leftToPay)])
+    strict addMore = invoke(getEaglFarmingAddress(), "addPuzzleAndStakeMore", [], [AttachedPayment(getMintAssetId(), leftToPay)])
 
     let refund = if size(i.payments) == 2 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getMintAssetId())] else []
    

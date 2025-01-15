@@ -5,7 +5,7 @@ const deployTestEnv = require('./dapp-deploy-functions/deployTestEnv');
 const setDappScripts = require('./dapp-deploy-functions/setDapps');
 
 const { ORACLE_SEED, LOOT_BOXES_SEED } = dappSeeds;
-const dataDapps = Object.entries({  LOOT_BOXES_SEED })
+const dataDapps = Object.entries({ ORACLE_SEED, LOOT_BOXES_SEED })
 
 async function deployAllData() {
     for (const [dappKey, { seed, path, oraclePaths }] of dataDapps) {
