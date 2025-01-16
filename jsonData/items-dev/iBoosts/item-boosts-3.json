@@ -1,0 +1,60 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "boost_ART-PINGUIN",
+            "type": "integer",
+            "value": 40
+        },
+        {
+            "key": "boost_ART-SLEDGE",
+            "type": "integer",
+            "value": 40
+        },
+        {
+            "key": "boost_ART-DEER",
+            "type": "integer",
+            "value": 40
+        },
+        {
+            "key": "boost_ART-CRACKER",
+            "type": "integer",
+            "value": 40
+        },
+        {
+            "key": "boost_ART-PLR_BEAR",
+            "type": "integer",
+            "value": 40
+        },
+        {
+            "key": "boost_ART-LAMB",
+            "type": "integer",
+            "value": 40
+        }
+        ,
+        {
+            "key": "boost_ART-BUNNY",
+            "type": "integer",
+            "value": 40
+        }        ,
+        {
+            "key": "boost_ART-SKELETON",
+            "type": "integer",
+            "value": 40
+        },
+        {
+            "key": "boost_ART-XMASKRMPS",
+            "type": "integer",
+            "value": 40
+        },
+        {
+            "key": "boost_ART-XMASFOX",
+            "type": "integer",
+            "value": 40
+        }
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES",
+    "senderPublicKey": "6DknLGEJHLXmZB6ni3tGa8M3gccMMmc3uaaPhvCSuKvM"
+}
