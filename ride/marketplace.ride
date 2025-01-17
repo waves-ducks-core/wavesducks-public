@@ -36,6 +36,8 @@ func getCanineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"stati
 func getFelineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getFelineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getMutantBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_mutantIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getEagleIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_eaglIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getEagleBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_eaglBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
 func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
@@ -86,6 +88,8 @@ func getAssetGenotype(assetId: ByteVector) = {
   if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then name else
   #Felines
   if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then name else
+    #Eagles
+  if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then name else
   #Mutants
   if (issuer == getMutantBreederAddress()) then description else
   throw("MAG: Asset is not supported")
