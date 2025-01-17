@@ -19,19 +19,19 @@ func staticKey_refContractAddress() = "static_refContractAddress"
 let  keyGlobalLastInterest = "global_lastCheck_interest"
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
-func staticKey_eaglIncubatorAddress() = "static_eaglIncubatorAddress"
-func staticKey_eaglBreederAddress() = "static_eaglBreederAddress"
+func staticKey_eaglIncubatorAddress() = "static_eagleIncubatorAddress"
+func staticKey_eaglBreederAddress() = "static_eagleBreederAddress"
 func staticKey_accBoosterAddress() = "static_accBoosterAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 let keyGlobalEarned =  "global_earnings"
-func staticKey_perchFee() = "static_eaglPerchFee"
+func staticKey_perchFee() = "static_eaglePerchFee"
 func totalStakedKey() = "total_staked"
 func staticKey_pzlAssetId() = "static_puzzleAssetId"
 func staticKey_pzlDapp() = "static_puzzleDappAddress"
-func staticKey_eaglRebirthAddress() = "static_eaglRebirthAddress"
+func staticKey_eaglRebirthAddress() = "static_eagleRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
@@ -217,7 +217,8 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let power =  pow(15,1,totalGenes,0,2,DOWN)
 
   #3 months = 90 days = 1%/day roughly
-  let multiplier = (height-3750000)*100/(60*24*30*3)
+  let baseBlock = if isTestEnv() then 2500000 else 3750000
+  let multiplier = (height-baseBlock)*100/(60*24*30*3)
   #TODO make this percentage multiplier
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100

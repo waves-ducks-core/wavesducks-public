@@ -53,7 +53,7 @@ func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_felineBreederAddress() = "static_felineBreederAddress"
 func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
-func staticKey_eagleBreederAddress() = "static_eaglBreederAddress"
+func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -75,7 +75,7 @@ func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_item
 func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getCanineFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_canineStakingAddress").fromBase58String())
 func getFelineFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_felineStakingAddress").fromBase58String())
-func getEagleFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_eaglStakingAddress").fromBase58String())
+func getEagleFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_eagleStakingAddress").fromBase58String())
 func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String())
 func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
 func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())

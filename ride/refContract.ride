@@ -22,7 +22,8 @@ func staticKey_felineFarmingAddress() = "static_felineStakingAddress"
 func staticKey_canineFarmingAddress() = "static_canineStakingAddress"
 func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_felineBreederAddress() = "static_felineBreederAddress"
-
+func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
+func staticKey_eagleFarmingAddress() = "static_eagleStakingAddress"
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
         case b:Boolean => b
@@ -75,13 +76,16 @@ func getFelineFarmingAddress() = Address(tryGetStringExternal(getOracle(),static
 func getCanineFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineFarmingAddress()).fromBase58String())
 func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String())
 func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
+func getEagleFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleFarmingAddress()).fromBase58String())
+func getEagleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String())
 
 func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),
                             getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress(),getTurtleStakingAddress(),
                             getTurtleRebirthAddress(),getCapacityAddress(),getVeggFarmingAddress(), 
                             getMutantFarmingAddress(), 
                             getFelineFarmingAddress(), 
-                            getCanineFarmingAddress(), getCanineBreederAddress(), getFelineBreederAddress()]
+                            getCanineFarmingAddress(), getCanineBreederAddress(), getFelineBreederAddress(),
+                            getEagleFarmingAddress(), getEagleBreederAddress()]
 
 
 

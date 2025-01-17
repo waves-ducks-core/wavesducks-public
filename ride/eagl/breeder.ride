@@ -17,13 +17,13 @@ func tryGetString(key: String) = {
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
-func staticKey_eaglIncubator()= "static_eaglIncubatorAddress"
-func staticKey_eaglIncubationFee()= "static_eaglIncubationFee"
+func staticKey_eaglIncubator()= "static_eagleIncubatorAddress"
+func staticKey_eaglIncubationFee()= "static_eagleIncubationFee"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
-func staticKey_eaglRebirthAddress() = "static_eaglRebirthAddress"
+func staticKey_eaglRebirthAddress() = "static_eagleRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())

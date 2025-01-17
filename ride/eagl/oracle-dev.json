@@ -3,17 +3,17 @@
     "version": 1,
     "data": [
         {
-            "key": "static_eaglIncubatorAddress",
+            "key": "static_eagleIncubatorAddress",
             "type": "string",
             "value": "3MrzBHoTCQZEyP5yUGbHw4n6mHz7TzJo49r"
         },
         {
-            "key": "static_eaglRebirthAddress",
+            "key": "static_eagleRebirthAddress",
             "type": "string",
             "value": ""
         },
         {
-            "key": "static_eaglStakingAddress",
+            "key": "static_eagleStakingAddress",
             "type": "string",
             "value": "3Mqa6zGAReUUwsty7AzdVc62A8ZGtHMFeoi"
         },
@@ -23,22 +23,22 @@
             "value": "Cca5C1DNTnJaPCEJFViGxGFATXtaRsSAUNRtVcgSEuEt"
         },
         {
-            "key": "static_eaglPuzzleAddress",
+            "key": "static_eaglePuzzleAddress",
             "type": "string",
             "value": "3N7oGx2296rxeSa5jtPvUVmeeQxQkWpz15A"
         },
         {
-            "key": "static_eaglBreederAddress",
+            "key": "static_eagleBreederAddress",
             "type": "string",
             "value": "3N7oGx2296rxeSa5jtPvUVmeeQxQkWpz15A"
         },
         {
-            "key": "static_eaglIncubationFee",
+            "key": "static_eagleIncubationFee",
             "type": "integer",
             "value": 100000000
         },
         {
-            "key": "static_eaglPerchFee",
+            "key": "static_eaglePerchFee",
             "type": "integer",
             "value": 150000000
         }
