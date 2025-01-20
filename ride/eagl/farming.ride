@@ -217,7 +217,7 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let power =  pow(15,1,totalGenes,0,2,DOWN)
 
   #3 months = 90 days = 1%/day roughly
-  let baseBlock = if isTestEnv() then 2500000 else 3750000
+  let baseBlock = if isTestEnv() then 3460000 else 4530000
   let multiplier = (height-baseBlock)*100/(60*24*30*3)
   #TODO make this percentage multiplier
   let basePower = tryGetInteger(assetId+"_basePower")
