@@ -141,8 +141,9 @@ func oneTimeUseFeed() ={
         let amount = drop(artefactName,8)
         let intValue = parseIntValue(amount)
         strict topup = invoke(getMutantFarmingAddress(), "topUpReward", ["FEED",intValue/2], [])
+        let bonus = if artefactId == "" then 0 else intValue/10
         [
-          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+intValue+intValue/10),
+          IntegerEntry(keyFeedLimit(invoker), tryGetInteger(keyFeedLimit(invoker))+intValue+bonus),
           Burn(assetId,1)
         ]++validPayment
 }
