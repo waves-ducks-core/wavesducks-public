@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "tnet:dapp": "surfboard run deploy-scripts/dapp-deploy-v2.js --env=testnet",
+    "tnet:data": "surfboard run deploy-scripts/data-deploy.js --env=testnet"
+  },
   "dependencies": {
     "axios": "^0.25.0",
     "dotenv": "^16.4.5"
