@@ -65,6 +65,8 @@ func getCanineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"stati
 func getFelineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getFelineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getMutantBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_mutantIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getEagleIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getEagleBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 
 func checkAdditionalPayment(payment: AttachedPayment, amountOverride: Int)= {
   if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
@@ -128,6 +130,8 @@ func getIfAllTypesAllowed(assetId: ByteVector) = {
   if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then false else
   #Mutants
   if (issuer == getMutantBreederAddress()) then false else
+  #Eagles
+  if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then false else
   throw("MAG: Asset is not supported")
     
 
