@@ -173,8 +173,6 @@ func removeItemFromDuck(burnItem: Boolean, artefactName:String) = {
   let roboDuckId = roboDuckPayment.assetId.value().toBase58String()
 
   if (duckPayment.amount != 1 || roboDuckPayment.amount != 1) then throw("WRITD: NFT is not attached") else
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-  
   strict artefactNameRoboduck = invoke(getItemsAddress(),"checkArtefactDetails",[roboDuckId],[]).asString()
   if artefactNameRoboduck != "ART-ROBODUCK" then throw("Only rododuck can remove items!") else
   if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
