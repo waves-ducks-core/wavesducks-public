@@ -47,7 +47,7 @@ func getMarketPlaceProxy() = Address(tryGetStringExternal(getOracle(),"static_ma
 func getBuybackAddress() = Address(tryGetStringExternal(getOracle(),"static_buybackAddress").fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getPeteAddress() = Address(tryGetStringExternal(getOracle(),staticKey_peteAddress()).fromBase58String()) 
-
+func getGameAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String())
 let kGlobalCounter = "GLOBAL_COUNTER"
 
 func getFeePercent() = tryGetIntegerExternal(getOracle(),"static_marketPlaceFee")
@@ -92,6 +92,8 @@ func getAssetGenotype(assetId: ByteVector) = {
   if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then name else
   #Mutants
   if (issuer == getMutantBreederAddress()) then description else
+  #Mantles
+  if (issuer == getGameAddress()) then name else
   throw("MAG: Asset is not supported")
     
 }
