@@ -263,42 +263,42 @@
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-XMAS_FOX",
+            "key": "direct_cosmetic_ART-XMASFOX",
             "type": "integer",
             "value": 1
         },
         {
-            "key": "direct_cosmetic_ART-XMAS_FOX_max_sales",
+            "key": "direct_cosmetic_ART-XMASFOX_max_sales",
             "type": "integer",
             "value": 1000
         },
         {
-            "key": "direct_cosmetic_ART-XMAS_FOX_sale",
+            "key": "direct_cosmetic_ART-XMASFOX_sale",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "direct_cosmetic_ART-XMAS_FOX_growing_percentage",
+            "key": "direct_cosmetic_ART-XMASFOX_growing_percentage",
             "type": "integer",
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-XMAS_KRMPS",
+            "key": "direct_cosmetic_ART-XMASKRMPS",
             "type": "integer",
             "value": 1
         },
         {
-            "key": "direct_cosmetic_ART-XMAS_KRMPS_max_sales",
+            "key": "direct_cosmetic_ART-XMASKRMPS_max_sales",
             "type": "integer",
             "value": 1000
         },
         {
-            "key": "direct_cosmetic_ART-XMAS_KRMPS_sale",
+            "key": "direct_cosmetic_ART-XMASKRMPS_sale",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "direct_cosmetic_ART-XMAS_KRMPS_growing_percentage",
+            "key": "direct_cosmetic_ART-XMASKRMPS_growing_percentage",
             "type": "integer",
             "value": 0
         }
