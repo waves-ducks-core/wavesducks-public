@@ -140,7 +140,7 @@ func countEggsNeededAmount(totalEAGLsAmount: Int) = {
   let n = totalEAGLsAmount
   let g = discountCoefficient
   let t = typesAmount
-  let price = pow((100 + (n*g)/(10*t)), 2, 5, 1, 2, DOWN)+120
+  let price = pow((100 + (n*g)/(10*t)), 2, 5, 1, 2, DOWN)+600
   price * 1500000
 }
 
