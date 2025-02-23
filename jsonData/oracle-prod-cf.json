@@ -169,6 +169,11 @@
       "value": "CANI_REBIRTH"
     },
     {
+      "key": "allowed_pool_3PGJ8DVtsPk3uJtMMuDAHEsCbWMnnL3pKWB",
+      "type": "string",
+      "value": "ArkimalsPool1"
+    },
+    {
       "key": "COUPONS_ADDRESS",
       "type": "string",
       "value": "3P5W1D4UuSZrNfeZFJZcD5wT2avfbHbzTvS"

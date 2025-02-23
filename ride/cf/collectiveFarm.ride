@@ -330,26 +330,35 @@ func verify() = {
         let acceptedCallsStaking = ["stakeFarmTokens","claimReward","withdrawFarmTokens","voteToLiquidate"]
         let acceptedCallsThis = ["callUnstakeProxy","claimCeoFee","lockInvestments","unlockInvestments"]
         if (inv.function == "unstakeNFT" && inv.dApp.addressFromRecipient() == getStrA(mAccAddr, "FARMING_DAPP").addressFromStringValue() )then throw("You cannot call these functions directly") else
-        if (inv.dApp.addressFromRecipient() == this &&inv.function == "initMasterKey" && mAccPKeyString=="")then sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
-        else if (sigVerify(tx.bodyBytes, tx.proofs[0], signKey) == false) then throw("_100") else
+        if (inv.dApp.addressFromRecipient() == this &&inv.function == "initMasterKey" && mAccPKeyString=="")then sigVerify(tx.bodyBytes, tx.proofs[0], signKey)else 
+        if sigVerify(tx.bodyBytes, tx.proofs[0], signKey) == false then throw("_100") else
         if (checkStarted == false) then throw("_14") else
         if (getBool(kLocked) == true) then throw("_22") else
         # Avoid scam with high fees => allow only Waves and minimal amount
         if (inv.fee > 900000 || inv.feeAssetId != unit) then {
           throw("_15: to much fee")
-        } else if (inv.payments.size() > 5 && inv.function != "instanMergeItem") then {
+        } else 
+        if (inv.payments.size() > 5 && inv.function != "instanMergeItem") then {
           throw("_17: to big payment size")
         } else if (inv.dApp.addressFromRecipient() == this && containsElement(acceptedCallsThis,inv.function)) then {
-          sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
+          true
         } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
-          sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
+          true
         } else if (inv.dApp.addressFromRecipient() == stakingAddress && containsElement(acceptedCallsStaking,inv.function) ) then {
-          sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
+          true
         }else {
           let dappToCall = inv.dApp.addressFromRecipient().toString()
           let allowedContract = getStrA(mAccAddr, "allowed_contract_"+dappToCall)
-          if (allowedContract=="FARMING" && inv.function == "claimReward") then false
-          else allowedContract != ""
+          let allowedPool = getStrA(mAccAddr, "allowed_pool_"+dappToCall)
+          if (allowedContract=="FARMING" && inv.function == "claimReward") then throw("You can not directly claim!") else
+          if (allowedPool != "") then {
+            let allowedMethod = ["claimIndexRewards","stakeIndex","generateIndex","redeemIndex","swap","unstakeIndex"]
+            if !(containsElement(allowedMethod,inv.function)) then throw("Not allowed method "+inv.function) else
+            if inv.function == "swap" && inv.payments[0].assetId == getEggId() then throw("You can not sell egg!") else true
+            
+          }
+
+          else if allowedContract != "" then true else throw("Not allowed contract"+dappToCall+":"+allowedPool+":"+allowedContract)
         }
       }
       case ss: SetScriptTransaction => {
@@ -372,7 +381,11 @@ func verify() = {
             sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
         else false
       }
-      case unlease: LeaseCancelTransaction => true
+      case unlease: LeaseCancelTransaction => 
+      { 
+        let signKey =  if backupPKeyString== "" then tx.senderPublicKey else backupPKeyString.fromBase58String()
+        sigVerify(tx.bodyBytes, tx.proofs[0], signKey)
+      }
       case _ => false
     }
 }

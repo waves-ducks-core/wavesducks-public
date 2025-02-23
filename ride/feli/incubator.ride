@@ -113,8 +113,9 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
 }
 
 func select(color: String)={
-    let oldGenes = []
-    let newGenes = [("FELI-AAAAAAAA-G" + color, "8A-G"),("FELI-BBBBBBBB-G" + color, "8B-G"),("FELI-CCCCCCCC-G" + color, "8C-G"),("FELI-DDDDDDDD-G" + color, "8D-G")]
+    let oldGenes = [("FELI-AAAAAAAA-G" + color, "8A-G")]
+    let newGenes = [("FELI-BBBBBBBB-G" + color, "8B-G"),("FELI-CCCCCCCC-G" + color, "8C-G"),
+    ("FELI-DDDDDDDD-G" + color, "8D-G"),("FELI-EEEEEEEE-G" + color, "8E-G")]
     (oldGenes++newGenes, newGenes)
 }
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
