@@ -14,6 +14,8 @@ func makePayment() = {
   let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
   let farmingContractAddress = base58'3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD'
   let nodeDappAddress = base58'3PGZMJGVbWM8taptaK8sbxE2Ja7k54HKUJS'
+  let puzzleDappAddress = base58'3PGrthrFFZVfvZeCyrZmEXJ1P29ViPbcy5g'
+  let felineDappAddress = base58'3P6KR6QtXmPH8onFKMe276bVKUNVRzmNGSR'
   let klastRefillHeight = "lastRefillHeight"
 
   let lastRefillHeight = match getInteger(klastRefillHeight) {
@@ -27,6 +29,8 @@ func makePayment() = {
   else {
     strict burnCall = invoke(Address(farmingContractAddress), "topUpReward", [],[AttachedPayment(eggAssetId,amount)])
     strict nodeCall = invoke(Address(nodeDappAddress), "transferRewardsToCanineStaking", [],[])
+    strict puzzleCall = invoke(Address(puzzleDappAddress), "claimRewardPuzzle", [],[])
+    strict felineCall = invoke(Address(felineDappAddress), "claimRewardPete", [],[])
     [
       IntegerEntry(klastRefillHeight, height),
       ScriptTransfer(i.caller, 1_000_000, eggAssetId)

@@ -381,9 +381,7 @@ func claimRewardPete () = {
   strict peteBalanceBefore = assetBalance(this, getPeteAssetId())
   strict invokeRes = invoke(getPeteDappAddress(), "claim", [],[])
   strict peteBalanceAfter = assetBalance(this, getPeteAssetId())
-  let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore-1000_0000) ++ [
-    ScriptTransfer(i.caller,1000_0000, getPeteAssetId())
-  ]
+  let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore)
     (
       resHandleStaking, 
       true

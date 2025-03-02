@@ -215,7 +215,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
   
   if (processTxStatus == HatchingFinished) then {
     let Id = getStringValue(this, getIdKey(i.caller.toString(), txId))
-    throw("The feline was breeded and claimed already, here is the folowing: " + Id)
+    throw("The Eagle was breeded and claimed already, here is the folowing: " + Id)
   } else 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
