@@ -5,7 +5,7 @@
         {
             "key": "static_eagleIncubatorAddress",
             "type": "string",
-            "value": ""
+            "value": "3PPistJKgf9WaX3sZrPdw5oLny66N9f6WeF"
         },
         {
             "key": "static_eagleRebirthAddress",
@@ -15,7 +15,7 @@
         {
             "key": "static_eagleStakingAddress",
             "type": "string",
-            "value": ""
+            "value": "3PGrthrFFZVfvZeCyrZmEXJ1P29ViPbcy5g"
         },
         {
             "key": "static_puzzleAssetId",
@@ -30,7 +30,7 @@
         {
             "key": "static_eagleBreederAddress",
             "type": "string",
-            "value": ""
+            "value": "3PC4hrhw9jRtjacgfWrB5GsBxhtbkhQq89g"
         },
         {
             "key": "static_eagleIncubationFee",
@@ -46,7 +46,6 @@
     ],
     "fee": 700000,
     "feeAssetId": "WAVES",
-    "sender":"3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9",
-    "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
+    "senderPublicKey": "Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe"
 }
 

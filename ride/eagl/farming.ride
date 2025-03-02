@@ -30,7 +30,7 @@ let keyGlobalEarned =  "global_earnings"
 func staticKey_perchFee() = "static_eaglePerchFee"
 func totalStakedKey() = "total_staked"
 func staticKey_pzlAssetId() = "static_puzzleAssetId"
-func staticKey_pzlDapp() = "static_puzzleDappAddress"
+func staticKey_pzlDapp() = "static_eaglePuzzleAddress"
 func staticKey_eaglRebirthAddress() = "static_eagleRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
@@ -374,11 +374,11 @@ func topUpReward () = {
 }
 
 @Callable(i)
-func claimRewardPete () = {
+func claimRewardPuzzle () = {
   strict peteBalanceBefore = assetBalance(this, getPzlAssetId())
-  strict invokeRes = if isTestEnv() then nil else invoke(getPzlDappAddress(), "claim", [],[])
+  strict invokeRes = if isTestEnv() then nil else invoke(getPzlDappAddress(), "claimReward", [],[])
   strict peteBalanceAfter = assetBalance(this, getPzlAssetId())
-  let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore-1000_0000)
+  let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore)
     (
       resHandleStaking, 
       true
