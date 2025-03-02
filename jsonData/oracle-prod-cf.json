@@ -174,6 +174,11 @@
       "value": "ArkimalsPool1"
     },
     {
+      "key": "allowed_pool_3PNztLWDmZJffafREjQbUj1tpWJCx9hWDfK",
+      "type": "string",
+      "value": "PesoLatinaPool1"
+    },
+    {
       "key": "COUPONS_ADDRESS",
       "type": "string",
       "value": "3P5W1D4UuSZrNfeZFJZcD5wT2avfbHbzTvS"
