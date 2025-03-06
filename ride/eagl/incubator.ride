@@ -115,7 +115,7 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
 
 func select(color: String)={
     let oldGenes = []
-    let newGenes = [("EAGL-AAAAAAAA-G" + color, "8A-G"),("EAGL-BBBBBBBB-G" + color, "8E-G"),
+    let newGenes = [("EAGL-AAAAAAAA-G" + color, "8A-G"),("EAGL-BBBBBBBB-G" + color, "8B-G"),
                     ("EAGL-CCCCCCCC-G" + color, "8C-G"),("EAGL-DDDDDDDD-G" + color, "8D-G")]
     (oldGenes++newGenes, newGenes)
 }

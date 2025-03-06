@@ -261,7 +261,7 @@ func calculateFarmPower(assetId:String)={
   strict farmBoost = 0
   #Recalculate bonusses every claim
   strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).asInt()
-  let finalPowerRarityBoost = power+power*farmBoost/100+power*wearabledBoost/1000
+  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   ([
   ],(finalPowerRarityBoost,finalPower))
 

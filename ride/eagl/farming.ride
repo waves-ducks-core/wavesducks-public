@@ -32,6 +32,7 @@ func totalStakedKey() = "total_staked"
 func staticKey_pzlAssetId() = "static_puzzleAssetId"
 func staticKey_pzlDapp() = "static_eaglePuzzleAddress"
 func staticKey_eaglRebirthAddress() = "static_eagleRebirthAddress"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
@@ -45,6 +46,7 @@ func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticK
 func getPzlAssetId() = tryGetStringExternal(getOracle(),staticKey_pzlAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getPzlDappAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_pzlDapp()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getEaglRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eaglRebirthAddress()).fromBase58String())
+func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -225,7 +227,8 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let finalPowerRarity = finalPower*rarity/100
   strict farmBoost = 0
   #Recalculate bonusses every claim
-  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).asInt()
+  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   ([
   ],(finalPowerRarityBoost,finalPower))
 
