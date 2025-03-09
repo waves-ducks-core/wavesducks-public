@@ -2,6 +2,14 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+let startTsMs = 1741219201000
+
+func calculateDaysSinceStart()={
+  let diff = lastBlock.timestamp-startTsMs
+  let daysPassed = diff/ (86400 *1000)
+  daysPassed
+}
+
 func tryGetString(key: String) = {
     match getString(this, key) {
         case a:String => a
@@ -38,6 +46,7 @@ func getTotalBurnKeyOld() = "BURN_TOTAL_AMOUNT_OLD"
 func getLastBurnKey() = "BURN_LAST_AMOUNT"
 func getUserBurnKey(address: String) = "BURN_"+address+"_AMOUNT_NEW"
 func getUserBurnKeyOld(address: String) = "BURN_"+address+"_AMOUNT_OLD"
+func burnForDay(day: Int)= "BURN_"+day.toString()
 
 func getBurnByDapp(address: String) = "BURN_DAPP_"+address+"_AMOUNT"
 
@@ -78,6 +87,8 @@ func burnAttachedPayments()={
     let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
     let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(burner))
     let burnByDapp = tryGetInteger(getBurnByDapp(i.caller.toString()))
+    let day = calculateDaysSinceStart()
+
     [
         Burn(getEggAssetId(),amount),
         IntegerEntry(getTotalBurnKeyOld(),totalBurnTillDate),
@@ -85,7 +96,10 @@ func burnAttachedPayments()={
         IntegerEntry(getTotalBurnKey(), totalBurnTillDate+amount),
         IntegerEntry(getUserBurnKey(burner), totalBurnTillDateByUser+amount),
         IntegerEntry(getLastBurnKey(), amount),
-        IntegerEntry(getBurnByDapp(i.caller.toString()),burnByDapp+amount)
+        IntegerEntry(getBurnByDapp(i.caller.toString()),burnByDapp+amount),
+        IntegerEntry("days_since_apy", day),
+        IntegerEntry(burnForDay(day), tryGetInteger(burnForDay(day))+amount)
+
 
     ]
 }
@@ -122,6 +136,7 @@ func burnByInvoke(amount: Int)={
     let totalBurnTillDate = tryGetInteger(getTotalBurnKey())
     let totalBurnTillDateByUser = tryGetInteger(getUserBurnKey(burner))
     let burnByDapp = tryGetInteger(getBurnByDapp(i.caller.toString()))
+    let day = calculateDaysSinceStart()
     [
         Burn(getEggAssetId(),amount),
         IntegerEntry(getTotalBurnKeyOld(),totalBurnTillDate),
@@ -129,7 +144,9 @@ func burnByInvoke(amount: Int)={
         IntegerEntry(getTotalBurnKey(), totalBurnTillDate+amount),
         IntegerEntry(getUserBurnKey(burner), totalBurnTillDateByUser+amount),
         IntegerEntry(getLastBurnKey(), amount),
-        IntegerEntry(getBurnByDapp(i.caller.toString()),burnByDapp+amount)
+        IntegerEntry(getBurnByDapp(i.caller.toString()),burnByDapp+amount),
+        IntegerEntry("days_since_apy", day),
+        IntegerEntry(burnForDay(day), tryGetInteger(burnForDay(day))+amount)
 
     ]
 }

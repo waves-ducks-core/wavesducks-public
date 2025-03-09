@@ -352,7 +352,7 @@ func verify() = {
           let allowedPool = getStrA(mAccAddr, "allowed_pool_"+dappToCall)
           if (allowedContract=="FARMING" && inv.function == "claimReward") then throw("You can not directly claim!") else
           if (allowedPool != "") then {
-            let allowedMethod = ["claimIndexRewards","stakeIndex","generateIndex","redeemIndex","swap","unstakeIndex"]
+            let allowedMethod = ["claimIndexRewards","stakeIndex","generateIndex","redeemIndex","swap","unstakeIndex","setFee"]
             if !(containsElement(allowedMethod,inv.function)) then throw("Not allowed method "+inv.function) else
             if inv.function == "swap" && inv.payments[0].assetId == getEggId() then throw("You can not sell egg!") else true
             
