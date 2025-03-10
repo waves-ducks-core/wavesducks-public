@@ -266,6 +266,12 @@
             "key": "static_mutantFarmingAddress",
             "type": "string",
             "value": "3N1y6kVT6VXz9mGb7seF2wAQ2dMKG1ojx2H"
+        },
+        
+        {
+            "key": "static_eggPool",
+            "type": "string",
+            "value": "3N28mjf56ZDzhGpFQVgFTuA6U6snixN1F4F"
         }
     ],
     "fee": 700000,

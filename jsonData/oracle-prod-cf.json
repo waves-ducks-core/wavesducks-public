@@ -169,6 +169,21 @@
       "value": "CANI_REBIRTH"
     },
     {
+      "key": "allowed_contract_3PPistJKgf9WaX3sZrPdw5oLny66N9f6WeF",
+      "type": "string",
+      "value": "EAGL_INCU"
+    },
+    {
+      "key": "allowed_contract_3PC4hrhw9jRtjacgfWrB5GsBxhtbkhQq89g",
+      "type": "string",
+      "value": "EAGL_BREED"
+    },
+    {
+      "key": "allowed_contract_3PGrthrFFZVfvZeCyrZmEXJ1P29ViPbcy5g",
+      "type": "string",
+      "value": "EAGLE_STAKE"
+    },
+    {
       "key": "allowed_pool_3PGJ8DVtsPk3uJtMMuDAHEsCbWMnnL3pKWB",
       "type": "string",
       "value": "ArkimalsPool1"
