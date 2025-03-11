@@ -177,7 +177,7 @@ func nrOfTypeGenes(gen:String)={
     }
 
     func composeStringEagle(acc: String,char: String)={
-    let charCount = FOLD<8>(result._4, (0,char), isSymbol)
+    let charCount = FOLD<8>(result._5, (0,char), isSymbol)
     acc+getAmountOrClear(toString(charCount._1)+char)
   }
   let turtleGens = FOLD<26>(charList(), "", composeStringTurtle)
@@ -189,14 +189,14 @@ func nrOfTypeGenes(gen:String)={
   let finishedDuckGens = if (duckGens == "") then "" else "D:"+duckGens+"_"
   let finishedCatGens = if (catGens == "") then "" else "F:"+catGens+"_"
   let finishedHondGens = if (hondGens == "") then "" else "C:"+hondGens+"_"
-  let finishedEagleGens = if (eagleGens == "") then "" else "E:"+hondGens+"_"
+  let finishedEagleGens = if (eagleGens == "") then "" else "E:"+eagleGens+"_"
   ([
     StringEntry("DEBUG_TURTLE", turtleGens),
     StringEntry("DEBUG_DUCK", duckGens),
     StringEntry("DEBUG_CAT", catGens),
     StringEntry("DEBUG_HOND", hondGens),
     StringEntry("DEBUG_EAGLE", eagleGens)
-  ], finishedTurtleGens+finishedDuckGens+finishedCatGens+hondGens+eagleGens
+  ], finishedTurtleGens+finishedDuckGens+finishedCatGens+finishedHondGens+finishedEagleGens
   )
 }
 
