@@ -130,8 +130,11 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     if (n<900 && blacklistCode != "item!ART-MUTARIUM-D" ) then "item!ART-MUTARIUM-D" else
     if (n<940 && blacklistCode != "item!ART-FREEGENE" ) then "item!ART-FREEGENE" else    
     if (n<980 && blacklistCode != "item!ART-FIXGENE" ) then "item!ART-FIXGENE" else   
-    if (n<990 && blacklistCode != "item!ART-MIRROR" ) then "item!ART-MIRROR" else   
-    { "v_perch" }
+    if (n<990 && blacklistCode != "item!ART-MIRROR" ) then "item!ART-MIRROR" else  
+    if (n<992 && blacklistCode != "vperch_B") then "vperch_B" else
+    if (n<994 && blacklistCode != "vperch_R") then "vperch_R" else
+    if (n<996 && blacklistCode != "vperch_G") then "vperch_G" else
+    "vperch_Y"
     (n,result)
 }
 func getRandomReturn(tx: ByteVector, finishHeight: Int)={
@@ -167,6 +170,21 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
               [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
             else
               strict first = invoke(getEagleStakingAddress(), "addFreePerch", [address, color,2], [])
+                            #TODO; use a batch method 
+                [
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+                ]
+        call
+
+      } else if (win.indexOf("vperch") != unit) then {
+        let color = win.takeRight(1)
+        strict call = if !double then 
+              strict first = invoke(getVeggFarmingAddress(), "addFreePerch", [address, color,1], [])
+              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+            else
+              strict first = invoke(getVeggFarmingAddress(), "addFreePerch", [address, color,2], [])
                             #TODO; use a batch method 
                 [
                   StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
