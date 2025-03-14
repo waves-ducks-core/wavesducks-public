@@ -8,6 +8,11 @@
             "value": 500000000
         },
         {
+            "key": "static_duckRebirthAmount",
+            "type": "integer",
+            "value": 500000000
+        },
+        {
             "key": "static_proxyStakingContracts",
             "type": "string",
             "value": "3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT;3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3P8JD7RpyGZeVGj58P2ox367iMwsM3hWosS;3PGwjnnoPreHxeRDxufGD8a2iqaeM5tQKno;3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh"

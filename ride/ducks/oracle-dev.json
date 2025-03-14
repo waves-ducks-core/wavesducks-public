@@ -6,6 +6,11 @@
             "key": "static_potionFee",
             "type": "integer",
             "value": 50
+        },
+        {
+            "key": "static_duckRebirthAmount",
+            "type": "integer",
+            "value": 500000000
         }
 
         

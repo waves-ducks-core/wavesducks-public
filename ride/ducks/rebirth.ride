@@ -41,6 +41,7 @@ func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_duckRebirthAmount() = "static_duckRebirthAmount"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
@@ -55,6 +56,7 @@ func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntA
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+let feeAmount = tryGetIntExternal(getOracle(),staticKey_duckRebirthAmount())
 
 func checkReal(assetId: ByteVector) = {
   if (assetInfo(assetId).value().issuer == getBreederAddress() || assetInfo(assetId).value().issuer ==getIncubatorAddress()) then {
@@ -66,20 +68,18 @@ func checkReal(assetId: ByteVector) = {
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("RCAP: Please attach waves") else
-  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
-  if payment.amount != feeAmount then throw("RCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
-  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+  let amount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != amount then throw("RCAP: Please attach exactly "+amount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), amount, unit)]
 
 }
 
 let PHOENIXBASEOPTIONS = 1000  # base chance to get a phoenix: 1 / (1000 - 1000/2 * rarity)
 
 
+
 func tryGetInteger(key: String) = {
-    match getInteger(this, key) {
-        case b:Int => b
-        case _ => 0
-    }
+    tryGetIntExternal(this, key)
 }
 
 func asString(value: Any) = match value {
@@ -89,7 +89,7 @@ func asString(value: Any) = match value {
   case _ => throw("wrong type, expected: String")
 }
 
-let feeAmount = tryGetInteger("currentPrice")
+
 
 func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
