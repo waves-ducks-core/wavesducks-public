@@ -32,6 +32,7 @@ func couponsAddressKey() = "static_couponsAddress"
 func burnAddressKey() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_marketplaceAddress() = "static_marketplaceAddress"
 
 func getOracle() = Address(tryGetString(oracleAddressKey()).fromBase58String())
 
@@ -44,6 +45,7 @@ func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(), farmingAdd
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(), couponsAddressKey()).fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(), burnAddressKey()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getMarketplaceAddress() = Address(tryGetStringExternal(getOracle(),staticKey_marketplaceAddress()).fromBase58String())
 
 let MANTLENAME = "mantle"
 
@@ -311,6 +313,16 @@ func importMantle(artefactId: String)= {
     [StringEntry(kMantleStatus, STATUSFREE)]
   
 }
+
+@Callable(i)
+func changeOwner(artefactId: String, newOwner: String)={
+  if i.caller != getMarketplaceAddress() then throw("WCO: Can be called only by marketplace") else
+  let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
+  [
+    StringEntry(kMantleOwner, newOwner)
+  ]  
+}
+
 
 @Callable(i)
 func putOnArtefact(artefactId: String) = {

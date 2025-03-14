@@ -179,6 +179,8 @@ func initAuction(startPrice: Int, instantPrice: Int, description: String, eggSel
       BooleanEntry("auction_" + auctionId + "_isMutant", issuer == getMutantBreederAddress()),
       BooleanEntry("auction_" + auctionId + "_isCanine", issuer == getCanineBreederAddress() || issuer == getCanineIncubatorAddress()),
       BooleanEntry("auction_" + auctionId + "_isFeline", issuer == getFelineBreederAddress() || issuer == getFelineIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isEagle", issuer == getEagleBreederAddress() || issuer == getEagleIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isMantle", issuer == getGameAddress()),
       BooleanEntry("auction_" + auctionId + "_isThird", issuer == getPeteAddress()),
       IntegerEntry("auction_" + auctionId + "_instantPrice", instantPrice),
       StringEntry("address_" + i.originCaller.toString() + "_auction_" + auctionId + "_lockedNFT", assetId.toBase58String())
@@ -219,6 +221,7 @@ func instantBuy(auctionId: String) = {
 
   let finalFee = if tryGetBoolean("auction_" + auctionId + "_isArtefact") == true then getArtefactsFeePercent() else getFeePercent()
 
+
   if (pmt.assetId != paymentAssetId) then {
     throw("MIB: Auction does only support " + paymentAssetName + " payments.")
   } else {
@@ -237,6 +240,8 @@ func instantBuy(auctionId: String) = {
         strict recordAction = if amount > 50_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY50"],[]) else
                               if amount > 20_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY20"],[]) else
                               if amount > 5_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY5"],[]) else nil
+        let isMantle = tryGetBoolean("auction_" + auctionId + "_isMantle")
+        strict mantleUpdate = if isMantle then invoke(getGameAddress(),"changeOwner",[assetId,caller.toString()],[]) else nil
         ([
           StringEntry("auction_" + auctionId + "_status", "finished"),
           IntegerEntry("auction_" + auctionId + "_finalPrice", amount),
