@@ -286,6 +286,7 @@ if tryGetString(kArtefactNftId) == "" then
   issueMantleNFT, 
   StringEntry(kArtefactNftId,mantleNftId.toBase58String()),
   ScriptTransfer(i.caller, 1, mantleNftId),
+  StringEntry(mantleNftId.toBase58String(),artefactId),
   StringEntry(kMantleStatus, STATUSEXPORTED)
   ]
 else 
@@ -315,12 +316,23 @@ func importMantle(artefactId: String)= {
 }
 
 @Callable(i)
-func changeOwner(artefactId: String, newOwner: String)={
+func changeOwner(nftId: String, newOwner: String)={
   if i.caller != getMarketplaceAddress() then throw("WCO: Can be called only by marketplace") else
+  let artefactId = getStringValue(nftId)
   let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
+  let oldOwner = getStringValue(kMantleOwner)
+  let oldArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, oldOwner, artefactId.fromBase58String())
+  let oldKeyAndArtefactLevel = keyArtefactLevel(MANTLENAME, oldOwner, artefactId.fromBase58String())
+
+  let newArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, newOwner, artefactId.fromBase58String())
+  let newKeyAndArtefactLevel = keyArtefactLevel(MANTLENAME, newOwner, artefactId.fromBase58String())
   [
+    StringEntry(newArtefactOwnerAndStatus, getStringValue(oldArtefactOwnerAndStatus)),
+    DeleteEntry(oldArtefactOwnerAndStatus),
+    IntegerEntry(newKeyAndArtefactLevel, getIntegerValue(oldKeyAndArtefactLevel)),
+    DeleteEntry(oldKeyAndArtefactLevel),
     StringEntry(kMantleOwner, newOwner)
-  ]  
+  ]
 }
 
 
