@@ -270,6 +270,7 @@ let kMantleInvested = keyArtefactInvested(MANTLENAME, artefactId)
 let mantleAlreadyInvested = getIntegerValue(kMantleInvested)
 
 if i.caller.toString() != mantleOwner then throw("WEM: You dont own the mantle!") else
+if (mantleStatus == STATUSBLOCKED) then throw("WEM: Mantle is blocked") else 
 if (mantleStatus != STATUSFREE) then throw("WEM: Mantle is already used!") else
 if mantleAlreadyInvested < 1_0000_0000 then throw("WEM: You can't export mantle with less than 1_0000_0000 invested") else
 let exportFee = mantleAlreadyInvested/100*5
@@ -356,7 +357,8 @@ func putOnArtefact(artefactId: String) = {
     let kArtefactIdByType = keyArtefactIdByDuckAndType(MANTLENAME, firstPayment.assetId.value())
 
     if (!mantleExists) then throw("WPOA: Mantle with such an ID does not exist") else
-    if (mantleOwner != i.originCaller.toString()) then throw("WPOA: You're not an owner of the mantle") else 
+    if (mantleOwner != i.originCaller.toString()) then throw("WPOA: You're not an owner of the mantle") else
+    if (mantleStatus == STATUSBLOCKED) then throw("WPOA: Mantle is blocked") else 
     if (mantleStatus != STATUSFREE) then throw("WPOA: Mantle is already used!")
     else {
       strict stakeDuck = if hasSweater != "" then 
