@@ -93,7 +93,9 @@ func getAssetGenotype(assetId: ByteVector) = {
   #Mutants
   if (issuer == getMutantBreederAddress()) then description else
   #Mantles
-  if (issuer == getGameAddress()) then name else
+  if (issuer == getGameAddress()) then 
+      strict check = invoke(getGameAddress(),"checkBlocked",[assetId],[])
+      name else
   throw("MAG: Asset is not supported")
     
 }

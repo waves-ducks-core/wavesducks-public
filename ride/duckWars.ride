@@ -317,6 +317,13 @@ func importMantle(artefactId: String)= {
 }
 
 @Callable(i)
+func checkBlocked(nftId: String)= {
+  let kMantleStatus = keyArtefactStatus(MANTLENAME, nftId.fromBase58String())
+  let mantleStatus = getStringValue(kMantleStatus)
+  if mantleStatus == STATUSBLOCKED then throw("WCB: Mantle is blocked") else []
+}
+
+@Callable(i)
 func changeOwner(nftId: String, newOwner: String)={
   if i.caller != getMarketplaceAddress() then throw("WCO: Can be called only by marketplace") else
   let artefactId = getStringValue(nftId)
