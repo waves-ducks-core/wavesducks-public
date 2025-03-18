@@ -10,12 +10,17 @@
         {
             "key": "static_eagleRebirthAddress",
             "type": "string",
-            "value": ""
+            "value": "3PAtKsNKTzHWEip8WCoRxhfACF5X8KKY2eN"
         },
         {
             "key": "static_eagleStakingAddress",
             "type": "string",
             "value": "3PGrthrFFZVfvZeCyrZmEXJ1P29ViPbcy5g"
+        },
+        {
+            "key": "static_eagleRebirthPrice",
+            "type": "integer",
+            "value": 400000000
         },
         {
             "key": "static_puzzleAssetId",

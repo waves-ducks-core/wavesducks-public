@@ -50,7 +50,7 @@ func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_canineIncubatorAddress() = "static_felineIncubatorAddress"
 func staticKey_canineBreederAddress() = "static_felineBreederAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
-func staticKey_canineStakingAddress() = "static_felineStakingAddress"
+func staticKey_felineStakingAddress() = "static_felineStakingAddress"
 func staticKey_duckStakingAddress() = "static_farmingAddressNew"
 func staticKey_duckIncubatorAddress() = "static_incubatorAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
@@ -64,7 +64,7 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getCanineBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getCanineIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
-func getCanineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getFelineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getDuckStakingAddress() =  Address(tryGetStringExternal(getOracle(), staticKey_duckStakingAddress()).fromBase58String())
 func getDuckIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_duckIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
@@ -171,10 +171,10 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       strict result =  if (win.indexOf("ground") != unit) then {
         let color = win.takeRight(1)
         strict call = if !double then 
-              strict first = invoke(getCanineStakingAddress(), "addFreePerch", [address, color,1], [])
+              strict first = invoke(getFelineStakingAddress(), "addFreePerch", [address, color,1], [])
               [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
             else
-              strict first = invoke(getCanineStakingAddress(), "addFreePerch", [address, color,2], [])
+              strict first = invoke(getFelineStakingAddress(), "addFreePerch", [address, color,2], [])
                             #TODO; use a batch method 
                 [
                   StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
@@ -287,8 +287,8 @@ func initRebirth() = {
   let sendToAggreGator = pmtPete.amount/4
   let topup = pmtPete.amount - sendToAggreGator - sendToAggreGator
 
-  strict addMore = invoke(getCanineStakingAddress(), "addPeteAndStakeMore", [], [AttachedPayment(getPeteAssetId(), sendToAggreGator)])
-  strict payUser = invoke(getCanineStakingAddress(), "topUpReward", [], [AttachedPayment(getPeteAssetId(), sendToAggreGator)])
+  strict addMore = invoke(getFelineStakingAddress(), "addPeteAndStakeMore", [], [AttachedPayment(getPeteAssetId(), sendToAggreGator)])
+  strict payUser = invoke(getFelineStakingAddress(), "topUpReward", [], [AttachedPayment(getPeteAssetId(), sendToAggreGator)])
    
   let issuer = checkReal(assetId)
   strict gen = invoke(getCanineBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
