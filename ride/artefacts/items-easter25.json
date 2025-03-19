@@ -1,0 +1,74 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+{
+    "key": "direct_cosmetic_ART-EAST_HELMET",
+    "type": "integer",
+    "value": 100000000000
+},
+{
+    "key": "type_cosmetic_ART-EAST_HELMET",
+    "type": "string",
+    "value": "HEAD"
+},
+{
+    "key": "direct_cosmetic_ART-EAST_SHIELD_sale",
+    "type": "boolean",
+    "value": true
+},
+{
+    "key": "direct_cosmetic_ART-EAST_SHIELD_growing_percentage",
+    "type": "integer",
+    "value": 5
+},
+{
+    "key": "direct_cosmetic_ART-EAST_SHIELD_max_sales",
+    "type": "integer",
+    "value": 100
+},
+{
+    "key": "direct_cosmetic_ART-EAST_SHIELD",
+    "type": "integer",
+    "value": 2000000000
+},
+{
+    "key": "type_cosmetic_ART-EAST_SHIELD",
+    "type": "string",
+    "value": "LEFT_WING"
+},
+{
+    "key": "direct_cosmetic_ART-EAST_SWORD",
+    "type": "integer",
+    "value": 100000000000
+},
+{
+    "key": "type_cosmetic_ART-EAST_SWORD",
+    "type": "string",
+    "value": "RIGHT_WING"
+},
+{
+    "key": "direct_cosmetic_ART-EAST_ARMOUR",
+    "type": "integer",
+    "value": 100000000000
+},
+{
+    "key": "type_cosmetic_ART-EAST_ARMOUR",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "direct_cosmetic_ART-EAST_TAIL",
+    "type": "integer",
+    "value": 100000000000
+},
+{
+    "key": "type_cosmetic_ART-EAST_TAIL",
+    "type": "string",
+    "value": "TAIL"
+}
+],
+"fee": 600000,
+"feeAssetId": "WAVES",
+"senderPublicKey": "6DknLGEJHLXmZB6ni3tGa8M3gccMMmc3uaaPhvCSuKvM"
+}
