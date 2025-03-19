@@ -300,7 +300,7 @@ func initRebirth() = {
     IntegerEntry("address_" + address + "_initTx_" + initTx + "_finishBlock", height+delayForHatching),
     StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
     StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String()),
-    ScriptTransfer(getFeeAggregator(), sendToAggreGator, unit)
+    ScriptTransfer(getFeeAggregator(), sendToAggreGator, getPzlAssetId())
   ]
 
   
