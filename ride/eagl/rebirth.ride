@@ -288,10 +288,11 @@ func initRebirth() = {
   if (pmtEagle.amount != 1) then throw("NFT is not attached") else
   if (pmtPzl.amount != pzlAmount || pmtPzl.assetId != getPzlAssetId()) then throw("Puzzle is not attached or wrong!") else
   let sendToAggreGator = pmtPzl.amount/4
-  let topup = pmtPzl.amount - sendToAggreGator - sendToAggreGator
+  let payUserAmount = pmtPzl.amount/5
+  let topup = pmtPzl.amount - sendToAggreGator - payUserAmount
 
-  strict addMore = invoke(getEagleStakingAddress(), "addPuzzleAndStakeMore", [], [AttachedPayment(getPzlAssetId(), sendToAggreGator)])
-  strict payUser = invoke(getEagleStakingAddress(), "topUpReward", [], [AttachedPayment(getPzlAssetId(), sendToAggreGator)])
+  strict addMore = invoke(getEagleStakingAddress(), "addPuzzleAndStakeMore", [], [AttachedPayment(getPzlAssetId(), topup)])
+  strict payUser = invoke(getEagleStakingAddress(), "topUpReward", [], [AttachedPayment(getPzlAssetId(), payUserAmount)])
 
    
   let issuer = checkReal(assetId)
