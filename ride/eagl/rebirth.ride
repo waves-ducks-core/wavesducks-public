@@ -280,6 +280,7 @@ func configureOracle(oracle: String) = {
 func initRebirth() = {
   let pmtEagle = i.payments[0]
   let pmtPzl = i.payments[1]
+  strict extra = checkAdditionalPayment(i.payments[2])
 
   let assetId = pmtEagle.assetId.value()
   let initTx = i.transactionId.toBase58String()
@@ -287,9 +288,10 @@ func initRebirth() = {
   if (pmtEagle.amount != 1) then throw("NFT is not attached") else
   if (pmtPzl.amount != pzlAmount || pmtPzl.assetId != getPzlAssetId()) then throw("Puzzle is not attached or wrong!") else
   let sendToAggreGator = pmtPzl.amount/4
-  let topup = pmtPzl.amount - sendToAggreGator
+  let topup = pmtPzl.amount - sendToAggreGator - sendToAggreGator
 
-  strict addMore = invoke(getEagleStakingAddress(), "addPuzzleAndStakeMore", [], [i.payments[1]])
+  strict addMore = invoke(getEagleStakingAddress(), "addPuzzleAndStakeMore", [], [AttachedPayment(getPzlAssetId(), sendToAggreGator)])
+  strict payUser = invoke(getEagleStakingAddress(), "topUpReward", [], [AttachedPayment(getPzlAssetId(), sendToAggreGator)])
 
    
   let issuer = checkReal(assetId)
@@ -301,7 +303,7 @@ func initRebirth() = {
     StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
     StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String()),
     ScriptTransfer(getFeeAggregator(), sendToAggreGator, getPzlAssetId())
-  ]
+  ]++extra
 
   
 }
