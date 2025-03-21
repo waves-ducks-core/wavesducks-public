@@ -26,9 +26,11 @@ let wearables = [
   "ART-XSWEATER"
 ]
 
+let specialSetStarter = "ART-EAST_"
+
 func keyArtefactDuck(duckId: String, wearable: String) = duckId+"_"+wearable
 func keyTypesDuck(duckId: String, type: String) = duckId+"_"+type
-
+func amountPartsSpecial(duckId: String, type: String) = duckId+"_amountPartsSpecial_"+type
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -101,10 +103,14 @@ func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean)={
       if typeOnDuck then throw("You can only attach 1 from each type to your duck!") else 
 
       let typeResult = if type != "" then [StringEntry(keyTypesDuck(duckId,type), assetIdWearAble)] else []
+      strict counter = if artefactName.contains(specialSetStarter) then
+        let amountParts = getIntegerValue(getItemsAddress(),amountPartsSpecial(duckId,specialSetStarter))
+        [IntegerEntry(amountPartsSpecial(duckId,artefactName), amountParts+1)]
+      else []
       [
         StringEntry(keyArtefactDuck(duckId,artefactName), assetIdWearAble)
         
-      ]++typeResult
+      ]++typeResult++counter
 }
 
 func tryGetBooleanExternal(address: Address, key: String) = {
@@ -182,33 +188,17 @@ func removeItemFromDuck(burnItem: Boolean, artefactName:String) = {
     let type = tryGetType(artefactName)
     let typeResult = if type != "" then [DeleteEntry(keyTypesDuck(duckId,type))] else []
     let burn = if burnItem then [Burn(artefactId.fromBase58String(),1)] else [ScriptTransfer(i.caller, 1, artefactId.fromBase58String())]
+    strict counter = if artefactName.contains(specialSetStarter) then
+        let amountParts = getIntegerValue(getItemsAddress(),amountPartsSpecial(duckId,specialSetStarter))
+        [IntegerEntry(amountPartsSpecial(duckId,artefactName), amountParts-1)]
+      else []
+
       [
         DeleteEntry(keyArtefactDuck(duckId,artefactName)),
         ScriptTransfer(i.caller, 1, duckPayment.assetId),
         Burn(roboDuckId.fromBase58String(),1)
         
-      ]++burn++validPayment++typeResult
-}
-
-@Callable(i)
-func wearXItemsToDuck()= {
-  let validPayment = checkAdditionalPayment(i.payments[1],0)
-  if size(i.payments) < 3 then throw("WWXITD: Please attach at least 1 item and 1 duck!") else 
-  if size(i.payments) > 7 then throw("WWXITD: You can only attach 5 items and one duck!") else
-    func handleItem(acc: List[StringEntry|ScriptTransfer], payment: AttachedPayment) = {
-        let index  = indexOf(i.payments,payment)
-        if index ==0 then
-          let duckId = payment.assetId.value().toBase58String()
-          if (payment.amount != 1 ) then throw("WRITD: Duck is not attached") else
-          strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-          acc++[
-            ScriptTransfer(i.caller, 1, payment.assetId)
-          ]
-        else
-            acc++wearItem(payment.assetId.value().toBase58String(),i.payments[1].assetId.value().toBase58String(),true)
-
-    }
-    FOLD<6>(i.payments, [], handleItem)++validPayment
+      ]++burn++validPayment++typeResult++counter
 }
 
 @Callable(i)
@@ -231,8 +221,12 @@ func calculateWearblesBoost(duckId: String)= {
       acc
   }
   let totalBoost = FOLD<8>(assetIdArray, 0, countTotalBoost)
+  let specialBoost = getIntegerValue(getItemsAddress(),keyArtefactDuck(duckId,specialSetStarter))
+  let combinedBoost = if specialBoost == 5 then totalBoost+specialBoost else totalBoost
   ([
-    IntegerEntry(duckId+"_lastBoost", totalBoost)
+    IntegerEntry(duckId+"_totalBoost", totalBoost),
+    IntegerEntry(duckId+"_specialBoost", specialBoost),
+    IntegerEntry(duckId+"_lastBoost", combinedBoost)
   ],totalBoost)
 
   
