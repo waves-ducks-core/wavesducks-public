@@ -42,6 +42,7 @@ func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFelineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getEagleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_eagleRebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getFelineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felinesStakingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
@@ -225,7 +226,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 
 @Callable(i)
 func issueFree(address: String, txIdStr: String) = {
-  if (i.caller != getFelineRebirthAddress()) then {
+  if (i.caller != getFelineRebirthAddress() && i.caller != getEagleRebirthAddress()) then {
     throw("FISF: rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
