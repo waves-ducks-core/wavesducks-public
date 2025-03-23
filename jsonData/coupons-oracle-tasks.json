@@ -19,6 +19,11 @@
             "value": 50000000
             
         },
+        {
+            "key": "TASK_ROPE_5_TEXT",
+            "type": "string",
+            "value": "Rope the egg 5 times and get {{reward}} $SPICE tokens"
+        },
 
         {
             "key": "TASK_ROPE_10",
@@ -143,7 +148,7 @@
         {
             "key": "TASK_REBIRTHTURTLE_1_REWARD_WEEKLY",
             "type": "integer",
-            "value": 2000000000
+            "value": 10000000000
             
         },
 
@@ -164,7 +169,16 @@
             "value": 800000000
             
         },
-
+        {
+            "key": "TASK_FEEDDUCKLING10_1_TEXT_ENG",
+            "type": "string",
+            "value": "Feed your Genesis duckling with 10 $SPICE tokens in a one-shot and receive instant cashback in {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_FEEDDUCKLING10_1_TEXT_RU",
+            "type": "string",
+            "value": "Покормите вашего утенка Genesis 10 токенами $SPICE за один раз и получите мгновенный кэшбэк в размере {{reward}} $SPICE"
+        },
         {
             "key": "TASK_BUY5_1",
             "type": "boolean",
@@ -258,7 +272,79 @@
             "type": "integer",
             "value": 2000000000
             
-        }
+        },
+
+
+
+        {
+            "key": "TASK_REBIRTHEAGLE_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_REBIRTHEAGLE_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+        {
+            "key": "TASK_REBIRTHEAGLE_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 10000000000
+        },
+        
+        
+        {
+            "key": "TASK_REBIRTHFELINE_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_REBIRTFELINE_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+        {
+            "key": "TASK_REBIRTHFELINE_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 10000000000
+        }, 
+        
+        
+        {
+            "key": "TASK_REBIRTHCANINE_1",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_REBIRTHCANINE_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+        {
+            "key": "TASK_REBIRTHCANINE_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 10000000000
+        },
+        
+        {
+            "key": "TASK_WEARITEM_5",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "TASK_WEARITEM_5_REWARD_DAILY",
+            "type": "integer",
+            "value": 500000000
+            
+        },
+        {
+            "key": "TASK_WEARITEM_5_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 2000000000
+        } 
 
         
 
