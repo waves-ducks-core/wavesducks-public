@@ -17,7 +17,7 @@ func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_extraFeeRemove() = "static_extraFeeRemove"
 func staticKey_feeAggregator() = "static_feeAggregator"
-
+func static_couponsAddress() = "static_couponsAddress"
 
 let wearables = [
   "ART-CAPE", # Magic Cape
@@ -69,6 +69,7 @@ func getFelineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"stati
 func getMutantBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_mutantIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getEagleIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getEagleBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(), static_couponsAddress()).fromBase58String())
 
 func checkAdditionalPayment(payment: AttachedPayment, amountOverride: Int)= {
   if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
@@ -162,6 +163,7 @@ func wearItemToDuck() = {
   let secondAssetId = secondPayment.assetId.value().toBase58String()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("WRITD: NFT is not attached") else
   let allTypes = getIfAllTypesAllowed(firstPayment.assetId.value())
+  strict recordAction = invoke(getCouponsAddress(),"recordAction",["WEARITEM"],[])
   wearItem(secondAssetId,duckId,allTypes)++[
     ScriptTransfer(i.caller, 1, firstPayment.assetId)
   ]++validPayment
@@ -222,7 +224,7 @@ func calculateWearblesBoost(duckId: String)= {
   }
   let totalBoost = FOLD<8>(assetIdArray, 0, countTotalBoost)
   let specialBoost = getIntegerValue(getItemsAddress(),keyArtefactDuck(duckId,specialSetStarter))
-  let combinedBoost = if specialBoost == 5 then totalBoost+specialBoost else totalBoost
+  let combinedBoost = if specialBoost == 100 then totalBoost+specialBoost else totalBoost
   ([
     IntegerEntry(duckId+"_totalBoost", totalBoost),
     IntegerEntry(duckId+"_specialBoost", specialBoost),

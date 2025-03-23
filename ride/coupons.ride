@@ -54,6 +54,11 @@ func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_felineBreederAddress() = "static_felineBreederAddress"
 func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
+func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
+func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
+func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
+
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -80,21 +85,20 @@ func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),static
 func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
 func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
 func getEagleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String())
+func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
+func getWearablesAddress() = Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String())
+func getFelineRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String())
+func getCanineRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
 let scCanUseCoupons = [ getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),
                         getGameDappAddress(), getBabyduckAddress(),getBreedingAddress(), getTurtleStakingAddress(),
                         getTurtleRebirthAddress(),getRopeAddress(),getLevelSystemAddress(),getMarketPlaceAddress(),
-                        getCapacityAddress()
-                        ,getMutantFarmingAddress()
-                        ,getCanineFarmingAddress()
-                        ,getFelineFarmingAddress()
-                        ,getEagleBreederAddress()
-                        ,getCanineBreederAddress()
-                        ,getFelineBreederAddress()
-                        ,getTurtleBreederAddress()
-                        ,getEagleFarmingAddress()
+                        getCapacityAddress(),getMutantFarmingAddress(),getCanineFarmingAddress()
+                        ,getFelineFarmingAddress(),getEagleBreederAddress(),getCanineBreederAddress()
+                        ,getFelineBreederAddress(),getTurtleBreederAddress(),getEagleFarmingAddress(),
+                        getEagleRebirthAddress(),getWearablesAddress(),getFelineRebirthAddress(),getCanineRebirthAddress()
                         ,this]
 
 func couponsUserSpend(user:String) = user+"_spend"
