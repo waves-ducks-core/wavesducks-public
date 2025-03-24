@@ -1,0 +1,92 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let nftCreationAddress = Address(base58'3P8LVqVKhTViMJau96KNir6FhHr4WnfoW57')
+let duckWrapperAddress = Address(base58'3P3pDosq4GCwfJkvq4yqKvvoTwmoqc9qPmo')
+let oracleAddress = Address(base58'3PPfDHC6hNqDMxRArJvJRkYfC8y6S3rSnYb')
+
+let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+
+func verifyNft(nftIdStr: String) = {
+  match getString(nftCreationAddress, "nft_" + nftIdStr + "_data") {
+    case x:String => true
+    case _ => false
+  }
+}
+
+@Callable(i)
+func sendToGateway(recipient: String) = {
+  let pmt = i.payments[0].value()
+  let nftId = pmt.assetId.value()
+  let nftIdStr = nftId.toBase58String()
+
+  if (!verifyNft(nftIdStr)) then { throw("wrong NFT attached") }
+  else {
+    [
+      StringEntry("nft_" + nftIdStr + "_sentTo", recipient),
+      IntegerEntry("nft_" + nftIdStr + "_lockedAt", height),
+      StringEntry("nft_" + nftIdStr + "_lockedBy", i.caller.toString())
+    ]
+  }
+}
+
+@Callable(i)
+func stakeAndSendToGateway(recipient: String) = {
+  let pmt = i.payments[0].value()
+  let originNftId = pmt.assetId.value()
+  let originNftIdStr = originNftId.toBase58String()
+
+  strict nftIdStr = match invoke(duckWrapperAddress, "lock", [], i.payments) {
+    case x: String => x
+    case _ => throw("error while wrapping duck")
+  }
+
+  if (!verifyNft(nftIdStr)) then { throw("wrong NFT attached") }
+  else {
+    [
+      StringEntry("nft_" + nftIdStr + "_sentTo", recipient),
+      IntegerEntry("nft_" + nftIdStr + "_lockedAt", height),
+      StringEntry("nft_" + nftIdStr + "_lockedBy", i.caller.toString())
+    ]
+  }
+}
+
+@Callable(i)
+func sendFromGateway(nftIdStr: String, recipient: String) = {
+  if (i.caller != oracleAddress) then { throw("gateway address allowed only") }
+  else {
+    [
+      ScriptTransfer(Address(recipient.fromBase58String()), 1, nftIdStr.fromBase58String()),
+      StringEntry("nft_" + nftIdStr + "_unlockedTo", recipient),
+      IntegerEntry("nft_" + nftIdStr + "_unlockedAt", height)
+    ]
+  }
+}
+
+@Callable(i)
+func unstakeAndSendFromGateway(nftIdStr: String, recipient: String) = {
+  let nftId = nftIdStr.fromBase58String()
+  if (i.caller != oracleAddress) then { throw("gateway address allowed only") }
+  else {
+  	let recipientAddress = Address(recipient.fromBase58String());
+    strict assetBalanceBefore = assetBalance(this, eggAssetId)
+
+    strict originNftIdStr = match invoke(duckWrapperAddress, "unlock", [], [AttachedPayment(nftId, 1)]) {
+      case x: String => x
+      case _ => throw("error while unstaking duck")
+    }
+
+    strict eggEarned = assetBalance(this, eggAssetId) - assetBalanceBefore
+
+    [
+      ScriptTransfer(recipientAddress, 1, originNftIdStr.fromBase58String()),
+      ScriptTransfer(recipientAddress, eggEarned, eggAssetId),
+      StringEntry("nft_" + nftIdStr + "_unlockedTo", recipient),
+      IntegerEntry("nft_" + nftIdStr + "_unlockedAt", height)
+    ]
+  }
+}
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)

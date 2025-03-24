@@ -300,7 +300,7 @@
             "value": true
         },
         {
-            "key": "TASK_REBIRTFELINE_1_REWARD_DAILY",
+            "key": "TASK_REBIRTHFELINE_1_REWARD_DAILY",
             "type": "integer",
             "value": 100000000
             
