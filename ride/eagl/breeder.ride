@@ -202,6 +202,19 @@ func getGen(assetName: String) = {
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H")+"-" + generation
 }
 
+func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector, asset: Issue)= {
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  let amount = tryGetInteger(getStatsKey(duckGen))
+  let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+  [
+    StringEntry(duckIdKey, assetId.toBase58String()),
+    StringEntry(assetId.toBase58String(), duckIdKey),
+    IntegerEntry(getStatsKey(duckGen), amount + 1),
+    IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+    asset
+    ]
+}
+
 func finishHatchingInternal(txIdStr: String, i: Invocation,
       parentFixedGene: Int,positionFixedGene: Int,
       specifiqueGene: String, specifiqueGenePosition: Int)={
@@ -220,26 +233,19 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
       let Gen = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
-      let farmGen = getGen(Gen)
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
-      let amount = tryGetInteger(getStatsKey(Gen)) + 1
-      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
 
+      composeGenericData(Gen,IdKey,assetId,asset)++
       [
         StringEntry(processStatusKey, HatchingFinished),
-        StringEntry(IdKey, assetId.toBase58String()),
-        StringEntry(assetId.toBase58String(), IdKey),
-        IntegerEntry(getStatsKey(Gen), amount),
-        IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
-        asset,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
@@ -284,6 +290,25 @@ func getGenFromName(assetName: String) = {
     gen
     )
   }
+
+@Callable(i)
+func createSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
+  if (i.caller != getItemsAddress() && i.caller != this) then throw("admin or items only") else
+  let txId = i.transactionId
+  let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+  let asset = Issue(duckGen, description, 1, 0, false)
+  let assetId = asset.calculateAssetId()
+  let duckIdKey = getIdKey(i.caller.toString(), txId)
+
+  #TODO: work around for known issue dapp to dapp
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  composeGenericData(duckGen,duckIdKey,assetId,asset)++
+  [
+    IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
+    ScriptTransfer(Address(address), 1, assetId)
+  ]
+  
+ }
 
 @Callable(i)
 func startBreeding(refererAddress: String) = {
