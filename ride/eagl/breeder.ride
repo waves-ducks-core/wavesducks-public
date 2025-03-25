@@ -311,6 +311,40 @@ func createSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
  }
 
 @Callable(i)
+func validateAndGetChildren(assetId: String) = {
+  if (!checkAssetInIncubator(assetId)) then throw("You need to attach a valid NFT-duck. "+assetId+" is invalid!") else
+  let children = tryGetInteger("asset_" + assetId + "_children")
+  (
+    []
+    ,
+    children
+  )
+
+}
+
+@Callable(i)
+func copyNFT()= {
+  let firstPayment = i.payments[0].value()
+  let secondPayment = i.payments[1].value()
+  let validPayment = checkAdditionalPayment(i.payments[2])
+  let firstAssetId = firstPayment.assetId.value().toBase58String()
+  strict children = invoke(this,"validateAndGetChildren",[firstAssetId],[]).asInt()
+  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
+  if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
+  let nftInfo = assetInfo(firstPayment.assetId.value()).value()
+  let asset1Gen = nftInfo.name.split("")        
+  if (asset1Gen[14] == "G" || asset1Gen[14] == "J" || asset1Gen[14] == "O" ) then  throw("You can't mirror this NFT") else
+    let duckGen = nftInfo.name
+    strict call = invoke(this, "createSpecialGenes", [i.caller.bytes, duckGen,children], [])
+    [
+      ScriptTransfer(i.caller, 1, firstPayment.assetId),
+      Burn(secondPayment.assetId.value(),1)
+    ]++validPayment
+
+}
+
+@Callable(i)
 func startBreeding(refererAddress: String) = {
   #TODO: add validation that feeValidate payment is added!
   if size(i.payments) != 4  && size(i.payments) != 3 then throw("Wrong amount of payments!") else
