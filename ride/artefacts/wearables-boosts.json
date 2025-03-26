@@ -500,27 +500,27 @@
         {
             "key": "boost_ART-EAST_HELMET",
             "type": "integer",
-            "value": 3
+            "value": 30
         },
         {
             "key": "boost_ART-EAST_SHIELD",
             "type": "integer",
-            "value": 3
+            "value": 30
         },
         {
             "key": "boost_ART-EAST_SWORD",
             "type": "integer",
-            "value": 3
+            "value": 30
         },
         {
             "key": "boost_ART-EAST_ARMOUR",
             "type": "integer",
-            "value": 3
+            "value": 30
         },
         {
             "key": "boost_ART-EAST_TAIL",
             "type": "integer",
-            "value": 4
+            "value": 40
         }
     ],
     "fee": 700000,

@@ -30,7 +30,7 @@ let specialSetStarter = "ART-EAST_"
 
 func keyArtefactDuck(duckId: String, wearable: String) = duckId+"_"+wearable
 func keyTypesDuck(duckId: String, type: String) = duckId+"_"+type
-func amountPartsSpecial(duckId: String, type: String) = duckId+"_amountPartsSpecial_"+type
+func amountPartsSpecial(duckId: String) = duckId+"_amountPartsSpecial"
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -39,7 +39,12 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
-
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
 
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
@@ -105,8 +110,8 @@ func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean)={
 
       let typeResult = if type != "" then [StringEntry(keyTypesDuck(duckId,type), assetIdWearAble)] else []
       strict counter = if artefactName.contains(specialSetStarter) then
-        let amountParts = getIntegerValue(getItemsAddress(),amountPartsSpecial(duckId,specialSetStarter))
-        [IntegerEntry(amountPartsSpecial(duckId,artefactName), amountParts+1)]
+        let amountParts = tryGetInteger(amountPartsSpecial(duckId))
+        [IntegerEntry(amountPartsSpecial(duckId), amountParts+1)]
       else []
       [
         StringEntry(keyArtefactDuck(duckId,artefactName), assetIdWearAble)
@@ -191,8 +196,8 @@ func removeItemFromDuck(burnItem: Boolean, artefactName:String) = {
     let typeResult = if type != "" then [DeleteEntry(keyTypesDuck(duckId,type))] else []
     let burn = if burnItem then [Burn(artefactId.fromBase58String(),1)] else [ScriptTransfer(i.caller, 1, artefactId.fromBase58String())]
     strict counter = if artefactName.contains(specialSetStarter) then
-        let amountParts = getIntegerValue(getItemsAddress(),amountPartsSpecial(duckId,specialSetStarter))
-        [IntegerEntry(amountPartsSpecial(duckId,artefactName), amountParts-1)]
+        let amountParts = tryGetInteger(amountPartsSpecial(duckId))
+        [IntegerEntry(amountPartsSpecial(duckId), amountParts-1)]
       else []
 
       [
@@ -223,7 +228,7 @@ func calculateWearblesBoost(duckId: String)= {
       acc
   }
   let totalBoost = FOLD<8>(assetIdArray, 0, countTotalBoost)
-  let specialBoost = getIntegerValue(getItemsAddress(),keyArtefactDuck(duckId,specialSetStarter))
+  let specialBoost = tryGetInteger(keyArtefactDuck(duckId,specialSetStarter))
   let combinedBoost = if specialBoost == 100 then totalBoost+specialBoost else totalBoost
   ([
     IntegerEntry(duckId+"_totalBoost", totalBoost),

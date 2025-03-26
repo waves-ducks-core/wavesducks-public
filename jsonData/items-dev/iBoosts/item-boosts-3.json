@@ -31,13 +31,12 @@
             "key": "boost_ART-LAMB",
             "type": "integer",
             "value": 40
-        }
-        ,
+        },
         {
             "key": "boost_ART-BUNNY",
             "type": "integer",
             "value": 40
-        }        ,
+        },
         {
             "key": "boost_ART-SKELETON",
             "type": "integer",
@@ -50,6 +49,31 @@
         },
         {
             "key": "boost_ART-XMASFOX",
+            "type": "integer",
+            "value": 40
+        },
+        {
+            "key": "boost_ART-EAST_HELMET",
+            "type": "integer",
+            "value": 30
+        },
+        {
+            "key": "boost_ART-EAST_SHIELD",
+            "type": "integer",
+            "value": 30
+        },
+        {
+            "key": "boost_ART-EAST_SWORD",
+            "type": "integer",
+            "value": 30
+        },
+        {
+            "key": "boost_ART-EAST_ARMOUR",
+            "type": "integer",
+            "value": 30
+        },
+        {
+            "key": "boost_ART-EAST_TAIL",
             "type": "integer",
             "value": 40
         }

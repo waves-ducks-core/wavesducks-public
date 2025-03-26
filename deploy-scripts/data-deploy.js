@@ -4,10 +4,11 @@ const deployData = require('./dapp-deploy-functions/deployData');
 const deployTestEnv = require('./dapp-deploy-functions/deployTestEnv');
 const setDappScripts = require('./dapp-deploy-functions/setDapps');
 
-const { ORACLE_SEED, LOOT_BOXES_SEED, HUNT_SEED } = dappSeeds;
-const dataDapps = Object.entries({  
-    ORACLE_SEED,
-    // LOOT_BOXES_SEED,
+const { ORACLE_SEED, LOOT_BOXES_SEED, HUNT_SEED, WEARABLES_SEED } = dappSeeds;
+const dataDapps = Object.entries({
+    // ORACLE_SEED,
+    LOOT_BOXES_SEED,
+    WEARABLES_SEED
     // HUNT_SEED
 })
 
