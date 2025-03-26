@@ -30,7 +30,7 @@ let specialSetStarter = "ART-EAST_"
 
 func keyArtefactDuck(duckId: String, wearable: String) = duckId+"_"+wearable
 func keyTypesDuck(duckId: String, type: String) = duckId+"_"+type
-func amountPartsSpecial(duckId: String) = duckId+"_amountPartsSpecial"
+func amountPartsSpecial(duckId: String) = duckId+"_"+specialSetStarter
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -229,10 +229,10 @@ func calculateWearblesBoost(duckId: String)= {
   }
   let totalBoost = FOLD<8>(assetIdArray, 0, countTotalBoost)
   let specialBoost = tryGetInteger(keyArtefactDuck(duckId,specialSetStarter))
-  let combinedBoost = if specialBoost == 100 then totalBoost+specialBoost else totalBoost
+  let combinedBoost = if specialBoost == 5 then totalBoost+160 else totalBoost  #160 is the hardcoded value for 100% easter set bonus, change it later
   ([
     IntegerEntry(duckId+"_totalBoost", totalBoost),
-    IntegerEntry(duckId+"_specialBoost", specialBoost),
+    IntegerEntry(duckId+"_specialBoost", 160), #160 is the hardcoded value for 100% easter set bonus, change it later
     IntegerEntry(duckId+"_lastBoost", combinedBoost)
   ],totalBoost)
 
