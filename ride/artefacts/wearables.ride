@@ -135,15 +135,15 @@ func getIfAllTypesAllowed(assetId: ByteVector) = {
   #Ducks
   if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then true else
   #Turtles
-  if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then  false else
+  if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then  true else
   #Canines
-  if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then false else
+  if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then true else
   #Felines
-  if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then false else
+  if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then true else
   #Mutants
-  if (issuer == getMutantBreederAddress()) then false else
+  if (issuer == getMutantBreederAddress()) then true else
   #Eagles
-  if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then false else
+  if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then true else
   throw("MAG: Asset is not supported")
     
 
