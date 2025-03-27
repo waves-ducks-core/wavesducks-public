@@ -96,6 +96,24 @@ func tryGetType(wearable: String)= {
   tryGetStringExternal(getItemsAddress(), "type_cosmetic_"+wearable)
   }
 
+func validateIfItemCanBeWorn(allTypes:Boolean,type:String,artefactName:String)={
+  let blacklisted = [
+    "ART-XHAT", "ART-POMP", "ART-BLUESHIRT", "ART-BUILTBODY", "ART-FREDYSWEATER",
+    "ART-GUARDSUIT", "ART-LEATHERJCKET", "ART-PEPESHIRT", "ART-ROYALCOAT",
+    "ART-TANKTOP", "ART-TRENCHCOAT", "ART-TUXEDO", "ART-WASSERMANVST",
+    "ART-ICECREAM", "ART-ORB", "ART-TOMMYGUN", "ART-UMBRELLA", "ART-KATANA",
+    "ART-SCEPTER", "ART-SHOPBAG", "ART-SABER-PUR", "ART-SABER-BLU",
+    "ART-SABER-YEL", "ART-SABER-RED", "ART-SABER-GRN", "ART-XSCARF"
+  ]
+  if allTypes then true else
+  if containsElement(["PET","BACK","TAIL","ACCESSORY", "HEAD"], type) then true else
+  if artefactName.contains(specialSetStarter) then true else
+  if artefactName.contains("ART-FIRE_") then true else
+  if !containsElement(blacklisted, artefactName) then true else
+  false
+
+
+}
 
 func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean)={
   strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetIdWearAble],[]).asString()
@@ -104,7 +122,7 @@ func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean)={
     strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
     if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
       let type = tryGetType(artefactName)
-      if !allTypes && !containsElement(["PET","BACK","TAIL","ACCESSORY", "HEAD"], type) then throw("You can't attach this item to your NFT! wrong type: "+type) else
+      if !validateIfItemCanBeWorn(allTypes,type,artefactName) then throw("You can't attach this item to your NFT! wrong type: "+type) else
       let typeOnDuck = if type != "" then tryGetString(keyTypesDuck(duckId,type))!= "" else throw("Type undefined, please contact admins "+artefactName)
       if typeOnDuck then throw("You can only attach 1 from each type to your duck!") else 
 
@@ -133,17 +151,17 @@ func getIfAllTypesAllowed(assetId: ByteVector) = {
   if (blacklisted) then throw("GO FUCK YOURSELF") else
   let name = assetInfo(assetId).value().name
   #Ducks
-  if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then true else
+  if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then false else
   #Turtles
-  if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then  true else
+  if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then  false else
   #Canines
-  if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then true else
+  if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then false else
   #Felines
-  if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then true else
+  if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then false else
   #Mutants
-  if (issuer == getMutantBreederAddress()) then true else
+  if (issuer == getMutantBreederAddress()) then false else
   #Eagles
-  if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then true else
+  if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then false else
   throw("MAG: Asset is not supported")
     
 
