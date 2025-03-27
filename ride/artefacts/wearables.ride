@@ -229,12 +229,12 @@ func calculateWearblesBoost(duckId: String)= {
   }
   let totalBoost = FOLD<8>(assetIdArray, 0, countTotalBoost)
   let specialBoost = tryGetInteger(keyArtefactDuck(duckId,specialSetStarter))
-  let combinedBoost = if specialBoost == 5 then totalBoost+160 else totalBoost  #160 is the hardcoded value for 100% easter set bonus, change it later
+  let combinedBoost = if specialBoost == 5 then totalBoost + 1000 else totalBoost
   ([
     IntegerEntry(duckId+"_totalBoost", totalBoost),
-    IntegerEntry(duckId+"_specialBoost", 160), #160 is the hardcoded value for 100% easter set bonus, change it later
+    IntegerEntry(duckId+"_specialBoost", specialBoost),
     IntegerEntry(duckId+"_lastBoost", combinedBoost)
-  ],totalBoost)
+  ],combinedBoost)
 
   
 }
