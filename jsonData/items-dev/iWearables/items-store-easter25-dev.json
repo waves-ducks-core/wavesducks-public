@@ -35,7 +35,7 @@
         {
             "key": "type_cosmetic_ART-EAST_SHIELD",
             "type": "string",
-            "value": "LEFT_WING"
+            "value": "RIGHT_WING"
         },
         {
             "key": "direct_cosmetic_ART-EAST_SHIELD_sale",
@@ -60,7 +60,7 @@
         {
             "key": "type_cosmetic_ART-EAST_SWORD",
             "type": "string",
-            "value": "RIGHT_WING"
+            "value": "LEFT_WING"
         },
         {
             "key": "direct_cosmetic_ART-EAST_SWORD_sale",
