@@ -23,7 +23,7 @@ func staticKey_canineFarmingAddress() = "static_canineStakingAddress"
 func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_felineBreederAddress() = "static_felineBreederAddress"
 func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
-func staticKey_eagleFarmingAddress() = "static_eagleStakingAddress"
+func staticKey_eagleFarmingAddress() = "static_eagleFarmingAddress"
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
         case b:Boolean => b
