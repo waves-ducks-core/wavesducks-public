@@ -184,6 +184,11 @@
       "value": "EAGLE_STAKE"
     },
     {
+      "key": "allowed_contract_3PAtKsNKTzHWEip8WCoRxhfACF5X8KKY2eN",
+      "type": "string",
+      "value": "EAGLE_REBIRTH"
+    },
+    {
       "key": "allowed_pool_3PGJ8DVtsPk3uJtMMuDAHEsCbWMnnL3pKWB",
       "type": "string",
       "value": "ArkimalsPool1"

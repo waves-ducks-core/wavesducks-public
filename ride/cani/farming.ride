@@ -41,6 +41,7 @@ func staticKey_perchFee() = "static_caninePerchFee"
 func totalStakedKey() = "total_staked"
 func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_wearablesAddress() = "static_wearablesAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
@@ -54,6 +55,7 @@ func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticK
 func getNodeAccount()=addressFromStringValue(valueOrErrorMessage(getString(getOracle(),"static_nodeAddress"), "node_address not found!"))
 func getCanieRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -199,8 +201,9 @@ func stakeUnstake(stake:Boolean, amount:Int)={
 }
 
 func handleStakingTopUp (totalAmount: Int) = {
-    let compoundAmount = totalAmount/2
-    let payoutAmount = totalAmount-compoundAmount
+    let team = totalAmount/12
+    let compoundAmount = (totalAmount-team)/2
+    let payoutAmount = totalAmount-compoundAmount-team
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let totalStakedAmount = tryGetInteger(totalStakedKey())
     let interestDelta = if (totalStakedAmount > 0)
@@ -209,7 +212,8 @@ func handleStakingTopUp (totalAmount: Int) = {
     [
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + payoutAmount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta)),
-      IntegerEntry("global_WAVES_balance",tryGetInteger("global_WAVES_balance")+compoundAmount)
+      IntegerEntry("global_WAVES_balance",tryGetInteger("global_WAVES_balance")+compoundAmount),
+      ScriptTransfer(getFeeAggregator(), team, unit)
       
     ]++stakeUnstake(true, compoundAmount)
 }
@@ -387,8 +391,11 @@ func unstakeNFT(asset: String)={
 @Callable(i)
 func topUpReward () = {
   let firstPayment = i.payments[0].value()
-  if (firstPayment.assetId != unit) then throw("FBP: You can attach only Waves") else 
-  let resHandleStaking = handleStakingTopUp(firstPayment.amount) 
+  if (firstPayment.assetId != unit) then throw("FBP: You can attach only Waves") else
+  let amountForMutants = firstPayment.amount/2
+  strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["WAVES",0], [AttachedPayment(unit, amountForMutants)])  
+  let resHandleStaking = handleStakingTopUp(firstPayment.amount-amountForMutants) 
     (
       resHandleStaking, 
       true

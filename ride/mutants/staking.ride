@@ -31,6 +31,8 @@ func staticKey_mutariumFee() = "static_mutariumFee"
 func staticKey_babyDuckAddress() = "static_babyDuckAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
+func statisKey_puzzleAssetId() = "static_puzzleAssetId"
+func staticKey_peteAssetId() = "static_peteAssetId"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_burnAddress() = "static_burnAddress"
@@ -59,6 +61,8 @@ func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(), staticKey_
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String())
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getPuzzleAssetId() = tryGetStringExternal(getOracle(),statisKey_puzzleAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
@@ -110,7 +114,10 @@ func determineClasses(assetName: String)={
   let classes = [genotype[0],genotype[2],genotype[4],genotype[6],genotype[8],genotype[10],genotype[12],genotype[14]]
   (
     containsElement(classes,"T"),
-    containsElement(classes,"D")
+    containsElement(classes,"D"),
+    containsElement(classes,"F"),
+    containsElement(classes,"C"),
+    containsElement(classes,"E")
   )
 }
 
@@ -184,7 +191,7 @@ func updateKeysReveneuType(address: String, assetId: ByteVector, reveneuType: St
 }
 
 func deterMineClassAndClaimType(address: String, assetId: String, assetName: String, recalc: Boolean) = {
-  let (isT, isD) = determineClasses(assetName)
+  let (isT, isD, isF, isC, isE) = determineClasses(assetName)
   let tKeys = if isT then {
     claimStakingResult(address, assetId,recalc, "SPICE")++
     claimStakingResult(address, assetId,recalc, "FEED")
@@ -193,11 +200,20 @@ func deterMineClassAndClaimType(address: String, assetId: String, assetName: Str
     claimStakingResult(address, assetId, recalc, "EGG")++
     claimStakingResult(address, assetId, recalc, "VEGG")
   } else []
-  tKeys++dKeys
+  let fKeys = if isF then {
+    throw("Farming is not implemented yet for feline")
+  } else []
+  let cKeys = if isC then {
+    throw("Farming is not implemented yet for canine")
+  } else []
+  let eKeys = if isE then {
+    throw("Farming is not implemented yet for eagles")
+  } else []
+  tKeys++dKeys++fKeys++cKeys++eKeys
 }
 
 func deterMineClassAndSetType(address: String, assetId: ByteVector, fp: Int, assetName: String) = {
-  let (isT, isD) = determineClasses(assetName)
+  let (isT, isD, isF, isC, isE) = determineClasses(assetName)
   let tKeys = if isT then {
     setKeysReveneuType(address, assetId, "SPICE", fp)++
     setKeysReveneuType(address, assetId, "FEED", fp)
@@ -206,11 +222,20 @@ func deterMineClassAndSetType(address: String, assetId: ByteVector, fp: Int, ass
     setKeysReveneuType(address, assetId, "EGG", fp)++
     setKeysReveneuType(address, assetId, "VEGG", fp)
   } else []
-  tKeys++dKeys
+  let fKeys = if isF then {
+    setKeysReveneuType(address, assetId, "PETE", fp)
+  } else []
+  let cKeys = if isC then {
+    setKeysReveneuType(address, assetId, "WAVES", fp)
+  } else []
+  let eKeys = if isE then {
+    setKeysReveneuType(address, assetId, "PUZZLE", fp)
+  } else []
+  tKeys++dKeys++fKeys++cKeys++eKeys
 }
 
 func deterMineClassAndUpdateType(address: String, assetId: ByteVector, fp: Int, assetName: String) = {
-  let (isT, isD) = determineClasses(assetName)
+  let (isT, isD, isF, isC, isE) = determineClasses(assetName)
   let tKeys = if isT then {
     updateKeysReveneuType(address, assetId, "SPICE", fp)++
     updateKeysReveneuType(address, assetId, "FEED", fp)
@@ -219,7 +244,16 @@ func deterMineClassAndUpdateType(address: String, assetId: ByteVector, fp: Int, 
     updateKeysReveneuType(address, assetId, "EGG", fp)++
     updateKeysReveneuType(address, assetId, "VEGG", fp)
   } else []
-  tKeys++dKeys
+  let fKeys = if isF then {
+    updateKeysReveneuType(address, assetId, "PETE", fp)
+  } else []
+  let cKeys = if isC then {
+    updateKeysReveneuType(address, assetId, "WAVES", fp)
+  } else []
+  let eKeys = if isE then {
+    updateKeysReveneuType(address, assetId, "PUZZLE", fp)
+  } else []
+  tKeys++dKeys++fKeys++cKeys++eKeys
 }
 
 func handleStakingTopUp (amount: Int, reveneuType: String) = {
@@ -377,6 +411,18 @@ func topUpReward (reveneuType: String, amount: Int) = {
     if i.caller != getCouponsAddress() then throw("VFTUP: Only couponsdapp can do topup!") else
     handleStakingTopUp(amount, reveneuType) 
    else
+  if reveneuType == "WAVES" then
+    if i.payments[0].assetId!= unit then throw("Please attach waves!") else
+    handleStakingTopUp(i.payments[0].amount, reveneuType) 
+    else
+  if reveneuType == "PUZZLE" then
+    if i.payments[0].assetId!= getPuzzleAssetId() then throw("Please attach puzzle!") else
+    handleStakingTopUp(i.payments[0].amount, reveneuType) 
+    else
+  if reveneuType == "PETE" then
+    if i.payments[0].assetId!= getPeteAssetId() then throw("Please attach babyduck!") else
+    handleStakingTopUp(i.payments[0].amount, reveneuType) 
+    else
   throw("Unknown reveneuType")
 }
 

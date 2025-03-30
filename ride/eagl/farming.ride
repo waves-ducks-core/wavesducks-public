@@ -33,6 +33,7 @@ func staticKey_pzlAssetId() = "static_puzzleAssetId"
 func staticKey_pzlDapp() = "static_eaglePuzzleAddress"
 func staticKey_eaglRebirthAddress() = "static_eagleRebirthAddress"
 func staticKey_wearablesAddress() = "static_wearablesAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
@@ -47,6 +48,7 @@ func getPzlAssetId() = tryGetStringExternal(getOracle(),staticKey_pzlAssetId()).
 func getPzlDappAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_pzlDapp()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getEaglRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eaglRebirthAddress()).fromBase58String())
 func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -92,7 +94,7 @@ func asIntTuple(value: Any) = match value {
 }
 
 func handleStakingTopUp (totalAmount: Int) = {
-    let team = totalAmount/10
+    let team = totalAmount/12
     let compoundAmount = (totalAmount-team)/2
     let payoutAmount = totalAmount-compoundAmount-team
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
@@ -367,8 +369,11 @@ func unstakeNFT(asset: String)={
 @Callable(i)
 func topUpReward () = {
   let firstPayment = i.payments[0].value()
-  if (firstPayment.assetId != getPzlAssetId()) then throw("FBP: You can attach only"+ getPzlAssetId().toBase58String()) else 
-  let resHandleStaking = handleStakingTopUp(firstPayment.amount) 
+  if (firstPayment.assetId != getPzlAssetId()) then throw("FBP: You can attach only"+ getPzlAssetId().toBase58String()) else
+  let amountForMutants = firstPayment.amount/20
+  strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["PUZZLE",0], [AttachedPayment(getPzlAssetId(), amountForMutants)])   
+  let resHandleStaking = handleStakingTopUp(firstPayment.amount-amountForMutants) 
     (
       resHandleStaking, 
       true
@@ -381,7 +386,11 @@ func claimRewardPuzzle () = {
   strict peteBalanceBefore = assetBalance(this, getPzlAssetId())
   strict invokeRes = if isTestEnv() then nil else invoke(getPzlDappAddress(), "claimReward", [],[])
   strict peteBalanceAfter = assetBalance(this, getPzlAssetId())
-  let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore)
+  let diff = peteBalanceAfter-peteBalanceBefore
+  let amountForMutants = diff/20
+  strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["PUZZLE",0], [AttachedPayment(getPzlAssetId(), amountForMutants)])  
+  let resHandleStaking = handleStakingTopUp(diff-amountForMutants)
     (
       resHandleStaking, 
       true
