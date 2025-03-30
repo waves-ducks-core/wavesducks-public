@@ -392,7 +392,7 @@ func unstakeNFT(asset: String)={
 func topUpReward () = {
   let firstPayment = i.payments[0].value()
   if (firstPayment.assetId != unit) then throw("FBP: You can attach only Waves") else
-  let amountForMutants = firstPayment.amount/2
+  let amountForMutants = firstPayment.amount/20
   strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
         ["WAVES",0], [AttachedPayment(unit, amountForMutants)])  
   let resHandleStaking = handleStakingTopUp(firstPayment.amount-amountForMutants) 
