@@ -151,7 +151,7 @@ func getIfAllTypesAllowed(assetId: ByteVector) = {
   if (blacklisted) then throw("GO FUCK YOURSELF") else
   let name = assetInfo(assetId).value().name
   #Ducks
-  if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then false else
+  if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then true else
   #Turtles
   if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then  false else
   #Canines
