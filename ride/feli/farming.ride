@@ -33,6 +33,7 @@ func staticKey_peteAssetId() = "static_peteAssetId"
 func staticKey_peteDapp() = "static_peteDappAddress"
 func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
 func staticKey_wearablesAddress() = "static_wearablesAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
@@ -47,6 +48,7 @@ func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()
 func getPeteDappAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_peteDapp()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFelineRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String())
 func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -92,7 +94,7 @@ func asIntTuple(value: Any) = match value {
 }
 
 func handleStakingTopUp (totalAmount: Int) = {
-    let team = totalAmount/10
+    let team = totalAmount/12
     let compoundAmount = (totalAmount-team)/2
     let payoutAmount = totalAmount-compoundAmount-team
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
@@ -367,8 +369,11 @@ func unstakeNFT(asset: String)={
 @Callable(i)
 func topUpReward () = {
   let firstPayment = i.payments[0].value()
-  if (firstPayment.assetId != getPeteAssetId()) then throw("FBP: You can attach only"+ getPeteAssetId().toBase58String()) else 
-  let resHandleStaking = handleStakingTopUp(firstPayment.amount) 
+  if (firstPayment.assetId != getPeteAssetId()) then throw("FBP: You can attach only"+ getPeteAssetId().toBase58String()) else
+  let amountForMutants = firstPayment.amount/20
+  strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["PETE",0], [AttachedPayment(getPeteAssetId(), amountForMutants)]) 
+  let resHandleStaking = handleStakingTopUp(firstPayment.amount-amountForMutants) 
     (
       resHandleStaking, 
       true
@@ -381,6 +386,10 @@ func claimRewardPete () = {
   strict peteBalanceBefore = assetBalance(this, getPeteAssetId())
   strict invokeRes = invoke(getPeteDappAddress(), "claim", [],[])
   strict peteBalanceAfter = assetBalance(this, getPeteAssetId())
+  let diff = peteBalanceAfter-peteBalanceBefore
+  let amountForMutants = diff/20
+    strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["PETE",0], [AttachedPayment(getPeteAssetId(), amountForMutants)])  
   let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore)
     (
       resHandleStaking, 

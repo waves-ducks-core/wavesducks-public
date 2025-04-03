@@ -30,11 +30,8 @@ func transferRewardsToCanineStaking() = {
   #if i.caller != this then throw("ICU: admin only") else 
   let balance = wavesBalance(this).available-10_0000_0000
   if balance <0 then ([]) else
-  let topup = balance/10*9
-  let fee = balance - topup
-  strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance/10*9)])
+  strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance)])
   ([
-    ScriptTransfer(getFeeAggregatorAddress(), fee, unit)
   ],balance)
 }
 

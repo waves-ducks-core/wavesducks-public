@@ -283,6 +283,7 @@ let kArtefactNftId = keyArtefactNftId(artefactId.fromBase58String())
 if tryGetString(kArtefactNftId) == "" then 
   let issueMantleNFT = Issue("DUCK-MANTLE-0", "[Artefact] Mantle NFT for Jeduck", 1, 0, false, unit, 0)
   let mantleNftId = issueMantleNFT.calculateAssetId()
+  strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),exportFeeCapped)])
   [
   issueMantleNFT, 
   StringEntry(kArtefactNftId,mantleNftId.toBase58String()),
@@ -318,7 +319,8 @@ func importMantle(artefactId: String)= {
 
 @Callable(i)
 func checkBlocked(nftId: String)= {
-  let kMantleStatus = keyArtefactStatus(MANTLENAME, nftId.fromBase58String())
+  let connected = getStringValue(nftId)
+  let kMantleStatus = keyArtefactStatus(MANTLENAME, connected.fromBase58String())
   let mantleStatus = getStringValue(kMantleStatus)
   if mantleStatus == STATUSBLOCKED then throw("WCB: Mantle is blocked") else []
 }
@@ -441,6 +443,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 }   

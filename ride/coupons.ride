@@ -140,18 +140,25 @@ func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:
     let daysInRow = tryGetInteger(daysInRowKey)
     let daysInRowUpdate = if lastCheckDay==day-1 then daysInRow+1 else if lastCheckDay<day-1 then 1 else 0
     let lastCheckDayUpdate = day
-    let reward = if daysInRowUpdate == 7 then [
+
+    let reward = if daysInRowUpdate == 7 || daysInRowUpdate == 14 || daysInRowUpdate == 21 || daysInRowUpdate == 28 then [
         ScriptTransfer(addressFromStringValue(address),rewardAmountWeekly,getSpiceAssetId()),
-        IntegerEntry(daysInRowKey,0)
+        StringEntry("DEBUG_WEEKLY",daysInRowUpdate.toString())
         ] else [
             IntegerEntry(daysInRowKey,daysInRowUpdate)
         ]
+
+    let monthlyReward = if daysInRowUpdate == 31 then [
+        IntegerEntry(daysInRowKey,0),
+        ScriptTransfer(addressFromStringValue(address),rewardAmountWeekly,getSpiceAssetId()),
+        StringEntry("DEBUG_MONTHLY","MOTNHLY REWARD")
+    ] else []
     
     [
         IntegerEntry(checkDayKey,lastCheckDayUpdate),
         ScriptTransfer(addressFromStringValue(address),rewardAmount,getSpiceAssetId()),
         IntegerEntry(userExperienceKey,userExpTilldate+1)
-    ]++reward
+    ]++reward++monthlyReward
 }
 
 func payAction(actionName:String, userAddress: Address, amount: Int, day:Int)={
