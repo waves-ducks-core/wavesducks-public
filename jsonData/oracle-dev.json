@@ -228,6 +228,11 @@
             "value": ""
         },
         {
+            "key": "static_rentingAddress",
+            "type": "string",
+            "value": "3NB8oyxYk1GBf2iaUwSmjbmbAYp5Fdypj6B"
+        },
+        {
             "key": "static_levelSystemAddress",
             "type": "string",
             "value": "3N2iKmAK2hjZiqPD459iBpCfpoLLAiTu2Jz"
@@ -267,7 +272,6 @@
             "type": "string",
             "value": "3N1y6kVT6VXz9mGb7seF2wAQ2dMKG1ojx2H"
         },
-        
         {
             "key": "static_eggPool",
             "type": "string",
