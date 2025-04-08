@@ -249,9 +249,6 @@ func calculateWearblesBoost(duckId: String)= {
   let specialBoost = tryGetInteger(keyArtefactDuck(duckId,specialSetStarter))
   let combinedBoost = if specialBoost == 5 then totalBoost + 1000 else totalBoost
   ([
-    IntegerEntry(duckId+"_totalBoost", totalBoost),
-    IntegerEntry(duckId+"_specialBoost", specialBoost),
-    IntegerEntry(duckId+"_lastBoost", combinedBoost)
   ],combinedBoost)
 
   

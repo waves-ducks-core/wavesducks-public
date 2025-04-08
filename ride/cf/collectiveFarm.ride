@@ -33,11 +33,9 @@ let kInitialized = "INITIALIZED"
 let kLiquidityThreshold = "LIQUIDITY_THRESHOLD"
 let kTotalFarmingReward = "total_farming_reward"
 let kShareAssetId = "SHARE_ASSET_ID"
-let kIncubatorDapp = "INCUBATOR_DAPP"
-let kBreederDapp = "BREEDER_DAPP"
 let kFarmingDapp = "FARMING_DAPP"
 let kMarketProxyDapp = "MARKETPLACE_PROXY_DAPP"
-let kAuctionDapp = "AUCTION_DAPP"
+let kPuzzleLayer2 = "PUZZLE_LAYER2"
 let kLocked = "LOCKED"
 let kCeoCollectedFee = "ceo_collected_fee"
 let kCeoCollectedFeeOverall = "ceo_fee_overall"
@@ -96,6 +94,9 @@ func getMarketProxyAddr() = {
   getStrA(mAccAddr, kMarketProxyDapp)
 }
 
+func getPuzzleLayer2() = {
+  getStrA(mAccAddr, kPuzzleLayer2)
+}
 
 
 func getEggId() = {
@@ -229,12 +230,50 @@ func provideLiquidity() = {
 }
 
 @Callable(i)
+func claimFarmingRewardProxyList(ids: List[String]) = {
+  if isLiquidated() then throw("CCFRP: CF is liquidated!") else
+  if (i.callerPublicKey != mAccPKey) then throw("_23")
+  else {
+    let eggAssetId = getEggId()
+
+    let farmingDapp = getStrA(mAccAddr, kFarmingDapp).addressFromStringValue()
+
+    func claimReward(accum: Int, nftId: String) = {
+      strict invRes = invoke(farmingDapp, "claimReward", [nftId], [])
+      match invRes {
+        case int: Int => accum + int
+        case _ => throw("_5")
+      }
+    }
+
+    let foldResult = FOLD<15>(ids, 0, claimReward)
+    let claimedReward = match foldResult {
+      case int: Int => int
+      case _ => throw("_6")
+    }
+    let totalFarmingReward = getInt(kTotalFarmingReward)
+    let farmCeoFeeSize = fraction(claimedReward, feePercent, 100)
+    let currentCeoFee = getInt(kCeoCollectedFee)
+    let ceoFeeOverall = getInt(kCeoCollectedFeeOverall)
+    let amountToPay = claimedReward-farmCeoFeeSize
+    
+    strict topUp = invoke(stakingAddress,"topUpReward",[],[
+                          AttachedPayment(eggAssetId,amountToPay)]
+                          )
+    [
+      IntegerEntry(kTotalFarmingReward, totalFarmingReward + amountToPay),
+      IntegerEntry(kCeoCollectedFee, currentCeoFee + farmCeoFeeSize),
+      IntegerEntry(kCeoCollectedFeeOverall, ceoFeeOverall + farmCeoFeeSize)
+    ]
+  }
+}
+
+@Callable(i)
 func claimFarmingRewardProxy(ids: String) = {
   if isLiquidated() then throw("CCFRP: CF is liquidated!") else
   if (i.callerPublicKey != mAccPKey) then throw("_23")
   else {
     let eggAssetId = getEggId()
-    let shareAssetId = getShareAssetId()
 
     let farmingDapp = getStrA(mAccAddr, kFarmingDapp).addressFromStringValue()
 
@@ -247,7 +286,7 @@ func claimFarmingRewardProxy(ids: String) = {
     }
 
     let nftIds = ids.split(";")
-    let foldResult = FOLD<10>(nftIds, 0, claimReward)
+    let foldResult = FOLD<15>(nftIds, 0, claimReward)
     let claimedReward = match foldResult {
       case int: Int => int
       case _ => throw("_6")
@@ -345,6 +384,8 @@ func verify() = {
         } else if (inv.dApp.addressFromRecipient() == getMarketProxyAddr().addressFromStringValue() && inv.function == "callMarketplaceProxy") then {
           true
         } else if (inv.dApp.addressFromRecipient() == stakingAddress && containsElement(acceptedCallsStaking,inv.function) ) then {
+          true
+        } else if (inv.dApp.addressFromRecipient() == getPuzzleLayer2().addressFromStringValue() && inv.function == "generateIndexAndStake") then {
           true
         }else {
           let dappToCall = inv.dApp.addressFromRecipient().toString()

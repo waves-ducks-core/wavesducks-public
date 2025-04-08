@@ -514,7 +514,6 @@ func calculateFarmingPowerBoost(duckId: String, address: String)={
   let totalBoost = externalBoostDuck+externalBoostAddress
   (
     [
-      IntegerEntry(duckId+"_last_boost",totalBoost)
     ],
     totalBoost
   )

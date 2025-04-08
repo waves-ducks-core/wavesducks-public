@@ -255,6 +255,11 @@
         "type": "string",
         "value": "3PL1tnAkQUP3jQNGUu2NvfAuWuz5kqrhctt"
       },
+      {
+        "key": "PUZZLE_LAYER2",
+        "type": "string",
+        "value": "3PR1Qvi9mHT35SwWEkLSqqE2L8thiPLdVWU"
+      },
       {"key":"EGG_ASSET_ID","type":"string","value":"C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS"},
       {
 
