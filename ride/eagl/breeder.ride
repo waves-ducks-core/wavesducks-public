@@ -312,7 +312,7 @@ func createSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
 
 @Callable(i)
 func validateAndGetChildren(assetId: String) = {
-  if (!checkAssetInIncubator(assetId)) then throw("You need to attach a valid NFT-duck. "+assetId+" is invalid!") else
+  if (!checkAssetInIncubator(assetId)) then throw("You need to attach a valid NFT-Eagle. "+assetId+" is invalid!") else
   let children = tryGetInteger("asset_" + assetId + "_children")
   (
     []
