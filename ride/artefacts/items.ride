@@ -287,7 +287,6 @@ func getAsset(baseItem: String) = {
 }
 
 
-
 func userExperience(user:String) = user+"_experience"
 
 func finishShakeItBabyInternal(initTx: String, address: String, payment: AttachedPayment)={
