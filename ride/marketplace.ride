@@ -24,7 +24,7 @@ func staticKey_peteAddress() = "static_peteAddress"
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()  
 
 func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'

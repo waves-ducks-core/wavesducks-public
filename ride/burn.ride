@@ -37,7 +37,7 @@ func static_eggAssetId() = "static_eggAssetId"
 func static_babyDuckAddress() = "static_babyDuckAddress"
 func static_couponsAddress() = "static_couponsAddress"
 
-func getEggAssetId() = tryGetStringExternal(getOracle(), static_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(), static_eggAssetId()).fromBase58String()  
 func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(), static_babyDuckAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(), static_couponsAddress()).fromBase58String())
 

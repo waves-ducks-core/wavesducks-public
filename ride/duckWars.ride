@@ -39,7 +39,7 @@ func getOracle() = Address(tryGetString(oracleAddressKey()).fromBase58String())
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(), breederAddressKey()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(), incubatorAddressKey()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getEggAssetId() = tryGetStringExternal(getOracle(), eggAssetIdKey()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(), eggAssetIdKey()).fromBase58String()  
 func getWearablesAddress() = Address(tryGetStringExternal(getOracle(), wearablesAddressKey()).fromBase58String())
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(), farmingAddressKey()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(), couponsAddressKey()).fromBase58String()) 
