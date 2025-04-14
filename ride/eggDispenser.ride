@@ -11,7 +11,7 @@ func isTestEnv()={
 
 @Callable(i)
 func makePayment() = {
-  let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+  let eggAssetId = base58'59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84'
   let farmingContractAddress = base58'3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD'
   let nodeDappAddress = base58'3PGZMJGVbWM8taptaK8sbxE2Ja7k54HKUJS'
   let puzzleDappAddress = base58'3PGrthrFFZVfvZeCyrZmEXJ1P29ViPbcy5g'

@@ -6,7 +6,7 @@ let nftCreationAddress = Address(base58'3P8LVqVKhTViMJau96KNir6FhHr4WnfoW57')
 let duckWrapperAddress = Address(base58'3P3pDosq4GCwfJkvq4yqKvvoTwmoqc9qPmo')
 let oracleAddress = Address(base58'3PPfDHC6hNqDMxRArJvJRkYfC8y6S3rSnYb')
 
-let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+let eggAssetId = base58'59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84'
 
 func verifyNft(nftIdStr: String) = {
   match getString(nftCreationAddress, "nft_" + nftIdStr + "_data") {
