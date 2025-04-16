@@ -20,17 +20,17 @@
         {
             "key": "direct_cosmetic_ART-EAST_SHIELD_growing_percentage",
             "type": "integer",
-            "value": 5
+            "value": 0
         },
         {
             "key": "direct_cosmetic_ART-EAST_SHIELD_max_sales",
             "type": "integer",
-            "value": 100
+            "value": 1000
         },
         {
             "key": "direct_cosmetic_ART-EAST_SHIELD",
             "type": "integer",
-            "value": 2000000000
+            "value": 1500000000
         },
         {
             "key": "type_cosmetic_ART-EAST_SHIELD",

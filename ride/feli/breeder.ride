@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -295,7 +295,7 @@ func getGenFromName(assetName: String) = {
 
 @Callable(i)
 func createSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
-  if (i.caller != this) then throw("admin or items only") else
+  if (i.caller != this) then throw("FBCSG: admin only") else
   let txId = i.transactionId
   let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
   let asset = Issue(duckGen, description, 1, 0, false)
