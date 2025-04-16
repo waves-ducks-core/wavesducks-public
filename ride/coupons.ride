@@ -288,8 +288,9 @@ func questTwoBuyPerches(type: String, color: String)={
     let typesCompletedKey = "q1_"+invoker+"_completed"
     if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
     let method = if type =="TURTLE" then "addFreeBeach" else "addFreePerch"
-    strict invokeRes = invoke(this, "useCoupons",[5_000_0000],[]).asInt()
-    if invokeRes != 0 then throw("Not enough vEGG to complet this quest!") else
+    let amount = 5_000_0000
+    strict invokeRes = invoke(this, "useCoupons",[amount],[]).asInt()
+    if invokeRes != amount then throw("Not enough vEGG to complet this quest!") else
     let invokeAddress = if type =="TURTLE" then getTurtleStakingAddress() else
                         if type =="CANINE" then getCanineFarmingAddress() else
                         if type =="FELINE" then getFelineFarmingAddress() else
@@ -314,8 +315,9 @@ func questThree()={
     let invoker = i.caller.toString()
     let typesCompletedKey = "q1_"+invoker+"_completed"
     if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
-    strict invokeRes1 = invoke(this, "useCoupons",[1_0000_0000],[]).asInt()
-    if invokeRes1 != 0 then throw("Not enough vEGG to complet this quest!") else
+    let amount = 1_0000_0000
+    strict invokeRes1 = invoke(this, "useCoupons",[amount],[]).asInt()
+    if invokeRes1 != amount then throw("Not enough vEGG to complet this quest!") else
     let invokeKey = "q3_"+invoker+"_invoked"
     let totalQ3Key = "q3_total"
     if tryGetBoolean(invokeKey) then throw("You already invoked this type!") else
