@@ -114,9 +114,16 @@ func tryGetBoolean(key: String) = {
 
 }
 
+func wasUniqueBorn(gen: String) = {
+  func getEAGLStatsKey(genString: String) = {
+  "stats_" + genString + "_amount"
+}
+  tryGetIntegerExternal(getEagleIncubatorAddress(),getEAGLStatsKey(gen))
+}
+
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
-  #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
-  #if (jackpotRandom == 1) then { (jackpotRandom,"jackpot") } else 
+  let jackpotRandom = getRandomNumber(40, tx, finishHeight, 1)
+  if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCEASAR-JU") < 2) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
@@ -194,7 +201,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         call
 
       } else if (win == "jackpot") then {
-        strict call = invoke(getEagleIncubatorAddress(), "issueJackpot", [address, txId, "WWWWHWTF"], []) 
+        strict call = invoke(getEagleIncubatorAddress(), "issueJackpot", [address, txId, "EAGL-WWCEASAR-JU"], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
       #TODO: turn into issueFreeCanine, on double, issue free turtle aswell
       } else if (win == "incubator") then {

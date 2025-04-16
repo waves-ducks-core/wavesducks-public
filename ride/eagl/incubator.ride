@@ -120,7 +120,15 @@ func select(color: String)={
     (oldGenes++newGenes, newGenes)
 }
 
+func wasUniqueBorn(gen: String) = {
+  tryGetInteger(getEAGLStatsKey(gen))
+}
+
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
+  let jackpotRandom = getRandomNumber(50, txId, hatchingFinishHeight, 4)
+  let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
+  if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCEASAR-JU") < 2) then ("EAGL-WWCEASAR-JU", "2A1C1E1R1S2W-J", entry)
+  else 
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
     let color = getElement(["A","B","C","D"],colorRandom)
 
