@@ -277,7 +277,7 @@ func questOnePetNft (assetId: String)={
         IntegerEntry(amountNftInvokedKey,tryGetInteger(amountNftInvokedKey)+1),
         IntegerEntry(typesCompletedKey,tryGetInteger(typesCompletedKey)+1),
         IntegerEntry(totalPetKey,tryGetInteger(totalPetKey)+1)
-    ]++addCouponsInternal(i.caller.toString(),6000_0000)
+    ]++addCouponsInternal(i.caller.toString(),110_0000)
 
 }
 
@@ -288,7 +288,7 @@ func questTwoBuyPerches(type: String, color: String)={
     let typesCompletedKey = "q1_"+invoker+"_completed"
     if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
     let method = if type =="TURTLE" then "addFreeBeach" else "addFreePerch"
-    let amount = 5_000_0000
+    let amount = 100_0000
     strict invokeRes = invoke(this, "useCoupons",[amount],[]).asInt()
     if invokeRes != amount then throw("Not enough vEGG to complet this quest!") else
     let invokeAddress = if type =="TURTLE" then getTurtleStakingAddress() else
@@ -307,7 +307,7 @@ func questTwoBuyPerches(type: String, color: String)={
         IntegerEntry(amountNftInvokedKey,tryGetInteger(amountNftInvokedKey)+1),
         IntegerEntry(typesQ2CompletedKey,tryGetInteger(typesQ2CompletedKey)+1),
         IntegerEntry(totalQ2Key,tryGetInteger(totalQ2Key)+1)
-    ]++addCouponsInternal(i.caller.toString(),2_000_0000)
+    ]++addCouponsInternal(i.caller.toString(),120_0000)
 }
 #https://docs.google.com/document/d/1FHMO20W3sZEcO4VIegoi3rHksClMYJrVndlxNKGn7Yw/edit?tab=t.0
 @Callable(i)
@@ -315,7 +315,7 @@ func questThree()={
     let invoker = i.caller.toString()
     let typesCompletedKey = "q1_"+invoker+"_completed"
     if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
-    let amount = 1_0000_0000
+    let amount = 400_0000
     strict invokeRes1 = invoke(this, "useCoupons",[amount],[]).asInt()
     if invokeRes1 != amount then throw("Not enough vEGG to complet this quest!") else
     let invokeKey = "q3_"+invoker+"_invoked"
@@ -325,7 +325,7 @@ func questThree()={
     [
         BooleanEntry(invokeKey,true),
         IntegerEntry(totalQ3Key,tryGetInteger(totalQ3Key)+1)
-    ]++addCouponsInternal(i.caller.toString(),1_1000_0000)
+    ]++addCouponsInternal(i.caller.toString(),1000_0000)
 }
 
 @Callable(i)
