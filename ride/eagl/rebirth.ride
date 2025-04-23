@@ -131,7 +131,7 @@ func wasUniqueBorn(gen: String) = {
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   let jackpotRandom = getRandomNumber(40, tx, finishHeight, 1)
-  if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCEASAR-JU") < 2) then { (jackpotRandom,"jackpot") } else 
+  if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCAESAR-JU") < 2) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
