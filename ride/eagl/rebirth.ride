@@ -201,7 +201,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         call
 
       } else if (win == "jackpot") then {
-        strict call = invoke(getEagleIncubatorAddress(), "issueJackpot", [address, txId, "EAGL-WWCEASAR-JU"], []) 
+        strict call = invoke(getEagleIncubatorAddress(), "issueJackpot", [address, txId, "WWCEASAR"], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
       #TODO: turn into issueFreeCanine, on double, issue free turtle aswell
       } else if (win == "incubator") then {
