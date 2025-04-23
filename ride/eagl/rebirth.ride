@@ -79,6 +79,14 @@ func tryGetIntegerExternal(address: Address, key: String) = {
 
 }
 
+func tryGetIntegerExternalZero(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
 #TODO: PUT IN ORACLE!!!!!!!!!!!!!!!!!!!!!!!!!!
 let pzlAmount = tryGetIntegerExternal(getOracle(),staticKey_eagleRebirthPrice()) #24_0000_0000
 
@@ -116,9 +124,9 @@ func tryGetBoolean(key: String) = {
 
 func wasUniqueBorn(gen: String) = {
   func getEAGLStatsKey(genString: String) = {
-  "stats_" + genString + "_amount"
+  "stats_" + "EAGL-"+genString+"-JU" + "_amount"
 }
-  tryGetIntegerExternal(getEagleIncubatorAddress(),getEAGLStatsKey(gen))
+  tryGetIntegerExternalZero(getEagleIncubatorAddress(),getEAGLStatsKey(gen))
 }
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
