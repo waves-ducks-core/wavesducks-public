@@ -15,7 +15,7 @@ async function transferFundsToWallets(dappSeed, dappKey) {
         console.log(`${dappKey}: ${transferTx.recipient}`)
     } catch (e) {
         console.error(`TRANSFER FUNDS ERROR. [${dappKey}: ${address(dappSeed)}]`);
-        console.error(e.message);
+        console.error(e);
         throw e;
     }
 };
