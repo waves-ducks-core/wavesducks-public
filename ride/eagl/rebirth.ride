@@ -124,7 +124,7 @@ func tryGetBoolean(key: String) = {
 
 func wasUniqueBorn(gen: String) = {
   func getEAGLStatsKey(genString: String) = {
-  "stats_" + "EAGL-"+genString+"-JU" + "_amount"
+  "stats_" + genString + "_amount"
 }
   tryGetIntegerExternalZero(getEagleIncubatorAddress(),getEAGLStatsKey(gen))
 }
