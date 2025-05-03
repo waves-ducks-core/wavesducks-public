@@ -43,6 +43,7 @@ func staticKey_feeAggregator() = "static_feeAggregator"
 let keyGlobalEarned =  "global_earnings"
 func staticKey_veggPerchFee() = "static_veggPerchFee"
 func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
+func staticKey_gameDappAddress() = "static_gameDappAddress"
 
 func totalStakedKey() = "total_staked"
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
@@ -56,6 +57,7 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnA
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),staticKey_gameDappAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -71,11 +73,16 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 
 }
 
-func tryGetInteger(key: String) = {
-    match getInteger(this, key) {
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
         case b:Int => b
         case _ => 0
     }
+
+}
+
+func tryGetInteger(key: String) = {
+    tryGetIntegerExternal(this,key)
 }
 
 func asInt(value: Any) = match value {
@@ -330,6 +337,32 @@ func claimReward (assetId: String) = {
   if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else    
   if (i.payments.size() > 1) then throw("Please don't add extra payments") else claimStakingResult(i.caller.toString(), assetId)++validPayment
   }
+
+@Callable(i)
+func wearMantle (assetId: String, mantleId: String) = {
+  func keyOnlyArtefactLevel(artefactId: String) = {
+  "artefactId_" + artefactId + "_level"
+  }
+  func keyArtefactOwnerAndStatus(type: String, owner: String, artefactId: ByteVector) = {
+  "address_" + owner + "_artefact_" + type + "_artefactId_" + artefactId.toBase58String() + "_status"
+}
+
+func keyArtefactStatus(type: String, artefactId: ByteVector) = {
+  "artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_status"
+}
+  strict validPayment = checkAdditionalPayment(i.payments[0])
+  if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else    
+  if (i.payments.size() > 1) then throw("Please don't add extra payments") else
+  let mantleLevel = tryGetIntegerExternal(getGameDappAddress(),keyOnlyArtefactLevel(mantleId))
+  if (mantleLevel == 0) then throw("You don't own this mantle!!") else
+  if tryGetBoolean("mantle_equipped_" + mantleId) then throw("You already have this mantle equipped!") else
+  if tryGetStringExternal(getGameDappAddress(),keyArtefactOwnerAndStatus("mantle", i.caller.toString(), mantleId.fromBase58String())) != "FREE" then throw("You already have this mantle equipped!") else
+  if tryGetStringExternal(getGameDappAddress(),keyArtefactStatus("mantle", mantleId.fromBase58String())) != "FREE" then throw("This mantle is not free!") else  
+  strict invokeRes = invoke(getGameDappAddress(), "changeMantleStatus", [mantleId,"OCCUPIED",i.caller.toString()], [])
+  [
+    BooleanEntry("mantle_equipped_" + mantleId, true)
+  ]
+}
 
 @Verifier(tx)
 func verify() = {

@@ -33,6 +33,7 @@ func burnAddressKey() = "static_burnAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_marketplaceAddress() = "static_marketplaceAddress"
+func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
 
 func getOracle() = Address(tryGetString(oracleAddressKey()).fromBase58String())
 
@@ -46,6 +47,7 @@ func getCouponsAddress() = Address(tryGetStringExternal(getOracle(), couponsAddr
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(), burnAddressKey()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getMarketplaceAddress() = Address(tryGetStringExternal(getOracle(),staticKey_marketplaceAddress()).fromBase58String())
+func getVeggFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_veggFarmingAddress()).fromBase58String())
 
 let MANTLENAME = "mantle"
 
@@ -323,6 +325,18 @@ func checkBlocked(nftId: String)= {
   let kMantleStatus = keyArtefactStatus(MANTLENAME, connected.fromBase58String())
   let mantleStatus = getStringValue(kMantleStatus)
   if mantleStatus == STATUSBLOCKED then throw("WCB: Mantle is blocked") else []
+}
+
+@Callable(i)
+func changeMantleStatus(mantleId: String, status: String, owner: String)= {
+  let kMantleStatus = keyArtefactStatus(MANTLENAME, mantleId.fromBase58String())
+  let mantleStatus = getStringValue(kMantleStatus)
+  if mantleStatus == STATUSBLOCKED then throw("WCB: Mantle is blocked") else
+  if i.caller != getVeggFarmingAddress() then throw("WCO: Can be called only by veggfarming") else
+  [
+    StringEntry(kMantleStatus, status),
+    StringEntry(keyArtefactOwnerAndStatus(MANTLENAME,owner, mantleId.fromBase58String()), status)
+    ]
 }
 
 @Callable(i)
