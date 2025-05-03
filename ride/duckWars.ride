@@ -345,47 +345,6 @@ func changeOwner(nftId: String, newOwner: String)={
   ]
 }
 
-
-@Callable(i)
-func putOnArtefact(artefactId: String) = {
-  let firstPayment = i.payments[0].value()
-  let attachedAssetInfo = assetInfo(firstPayment.assetId.value()).value()
-  if (firstPayment.amount != 1) then throw("WPOA: NFT is not attached") else
-  if (attachedAssetInfo.issuer != getIncubatorAddress() && attachedAssetInfo.issuer != getBreederAddress()) then throw("WPOA: You can attach only DUCKs issued by incubator or breeder ")
-  else {
-    let hasSweater = tryGetStringExternal(getWearablesAddress(),firstPayment.assetId.value().toBase58String()+"_ART-XSWEATER")
-    let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
-    let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
-    let kMantleStatus = keyArtefactStatus(MANTLENAME, artefactId.fromBase58String())
-    let kArtefactOwnerAndStatus = keyArtefactOwnerAndStatus(MANTLENAME, i.originCaller.toString(), artefactId.fromBase58String())
-    let kDuckLock = keyDuckLock(i.originCaller.toString(), firstPayment.assetId.value().toBase58String())
-    let mantleExists = getBooleanValue(kMantleExists)
-    let mantleOwner = getStringValue(kMantleOwner)
-    let mantleStatus = getStringValue(kMantleStatus)
-
-    let kArtefactIdByType = keyArtefactIdByDuckAndType(MANTLENAME, firstPayment.assetId.value())
-
-    if (!mantleExists) then throw("WPOA: Mantle with such an ID does not exist") else
-    if (mantleOwner != i.originCaller.toString()) then throw("WPOA: You're not an owner of the mantle") else
-    if (mantleStatus == STATUSBLOCKED) then throw("WPOA: Mantle is blocked") else 
-    if (mantleStatus != STATUSFREE) then throw("WPOA: Mantle is already used!")
-    else {
-      strict stakeDuck = if hasSweater != "" then 
-                            if isJackpot(firstPayment.assetId.value()) then invoke(getFarmingAddress(),"stakeNFTWithoutPerch",[],i.payments) else invoke(getFarmingAddress(),"stakeNFT",[],i.payments) 
-                          else []
-
-      let kPutOnArtefact = keyPutOnArtefact(MANTLENAME, i.originCaller.toString(), firstPayment.assetId.value().toBase58String(), artefactId.fromBase58String())
-      [
-        BooleanEntry(kPutOnArtefact, true),
-        StringEntry(kMantleStatus, STATUSOCCUPIED),
-        StringEntry(kArtefactOwnerAndStatus, STATUSOCCUPIED),
-        BooleanEntry(kDuckLock, true),
-        StringEntry(kArtefactIdByType, artefactId)
-      ]
-    }
-  }
-}
-
 #TODO: check if duck wears sweater, if so unstake the duck automatically
 @Callable(i)
 func takeOffArtefact(duckId:String, artefactType: String) = {

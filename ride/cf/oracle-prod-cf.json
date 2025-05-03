@@ -286,6 +286,11 @@
         "key": "BREEDER_DAPP",
         "type": "string",
         "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
+    },
+    {
+        "key": "wars_pk",
+        "type": "string",
+        "value": "EFgn12TgFqn3cRthHnLAPr11g7urqchXEpjGspgLYskc"
     }
   ]
 }
