@@ -142,8 +142,9 @@ func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:
     let lastCheckDayUpdate = day
 
     let reward = if daysInRowUpdate == 7 || daysInRowUpdate == 14 || daysInRowUpdate == 21 || daysInRowUpdate == 28 then [
-        ScriptTransfer(addressFromStringValue(address),rewardAmountWeekly,getSpiceAssetId()),
-        StringEntry("DEBUG_WEEKLY",daysInRowUpdate.toString())
+            ScriptTransfer(addressFromStringValue(address),rewardAmountWeekly,getSpiceAssetId()),
+            StringEntry("DEBUG_WEEKLY",daysInRowUpdate.toString()),
+            IntegerEntry(daysInRowKey,daysInRowUpdate)
         ] else [
             IntegerEntry(daysInRowKey,daysInRowUpdate)
         ]
