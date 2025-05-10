@@ -574,7 +574,7 @@
         {
             "key": "TASK_WEARITEM_5",
             "type": "boolean",
-            "value": false
+            "value": true
         },
         {
             "key": "TASK_WEARITEM_5_REWARD_DAILY",
