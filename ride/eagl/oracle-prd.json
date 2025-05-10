@@ -1,0 +1,56 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_eagleIncubatorAddress",
+            "type": "string",
+            "value": "3PPistJKgf9WaX3sZrPdw5oLny66N9f6WeF"
+        },
+        {
+            "key": "static_eagleRebirthAddress",
+            "type": "string",
+            "value": "3PAtKsNKTzHWEip8WCoRxhfACF5X8KKY2eN"
+        },
+        {
+            "key": "static_eagleStakingAddress",
+            "type": "string",
+            "value": "3PGrthrFFZVfvZeCyrZmEXJ1P29ViPbcy5g"
+        },
+        {
+            "key": "static_eagleRebirthPrice",
+            "type": "integer",
+            "value": 400000000
+        },
+        {
+            "key": "static_puzzleAssetId",
+            "type": "string",
+            "value": "HEB8Qaw9xrWpWs8tHsiATYGBWDBtP2S7kcPALrMu43AS"
+        },
+        {
+            "key": "static_eaglePuzzleAddress",
+            "type": "string",
+            "value": "3PFTbywqxtFfukX3HyT881g4iW5K4QL3FAS"
+        },
+        {
+            "key": "static_eagleBreederAddress",
+            "type": "string",
+            "value": "3PC4hrhw9jRtjacgfWrB5GsBxhtbkhQq89g"
+        },
+        {
+            "key": "static_eagleIncubationFee",
+            "type": "integer",
+            "value": 100000000
+        },
+        {
+            "key": "static_eaglePerchFee",
+            "type": "integer",
+            "value": 150000000
+        }
+        
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES",
+    "senderPublicKey": "Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe"
+}
+

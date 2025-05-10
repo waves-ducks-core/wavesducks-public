@@ -1,12 +1,21 @@
 {-# STDLIB_VERSION 5 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
+func isTestEnv()={
+    let testenv =  match getBoolean(this, "TESTENV") {
+      case x: Boolean => x
+      case _ => false
+    }
+    testenv
+}
 
 @Callable(i)
 func makePayment() = {
-  let eggAssetId = base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+  let eggAssetId = base58'59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84'
   let farmingContractAddress = base58'3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD'
   let nodeDappAddress = base58'3PGZMJGVbWM8taptaK8sbxE2Ja7k54HKUJS'
+  let puzzleDappAddress = base58'3PGrthrFFZVfvZeCyrZmEXJ1P29ViPbcy5g'
+  let felineDappAddress = base58'3P6KR6QtXmPH8onFKMe276bVKUNVRzmNGSR'
   let klastRefillHeight = "lastRefillHeight"
 
   let lastRefillHeight = match getInteger(klastRefillHeight) {
@@ -20,6 +29,8 @@ func makePayment() = {
   else {
     strict burnCall = invoke(Address(farmingContractAddress), "topUpReward", [],[AttachedPayment(eggAssetId,amount)])
     strict nodeCall = invoke(Address(nodeDappAddress), "transferRewardsToCanineStaking", [],[])
+    strict puzzleCall = invoke(Address(puzzleDappAddress), "claimRewardPuzzle", [],[])
+    strict felineCall = invoke(Address(felineDappAddress), "claimRewardPete", [],[])
     [
       IntegerEntry(klastRefillHeight, height),
       ScriptTransfer(i.caller, 1_000_000, eggAssetId)
@@ -30,9 +41,12 @@ func makePayment() = {
 
 @Verifier(tx)
 func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
-    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
-    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
 
     let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
         else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
@@ -51,4 +65,4 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 2
     }
-}
+}   

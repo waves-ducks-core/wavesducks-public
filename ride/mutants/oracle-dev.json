@@ -1,0 +1,25 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_mutariumFee",
+            "type": "integer",
+            "value": 400000000
+        },
+        {
+            "key": "static_mutantIncubatorAddress",
+            "type": "string",
+            "value": "3N1mAvAyeEwnFekyjaY4BXBKUcHqAUxwQxX"
+        },
+        {
+            "key": "static_mutantFarmingAddress",
+            "type": "string",
+            "value": "3N1y6kVT6VXz9mGb7seF2wAQ2dMKG1ojx2H"
+        }
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES",
+    "sender": "3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9",
+    "senderPublicKey": "H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
+}

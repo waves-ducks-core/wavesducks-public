@@ -1,14 +1,23 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
 
+func isTestEnv()={
+  getBool("TESTENV")
+}
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_extraFeeRemove() = "static_extraFeeRemove"
 func staticKey_feeAggregator() = "static_feeAggregator"
-
+func static_couponsAddress() = "static_couponsAddress"
 
 let wearables = [
   "ART-CAPE", # Magic Cape
@@ -17,9 +26,11 @@ let wearables = [
   "ART-XSWEATER"
 ]
 
+let specialSetStarter = "ART-EAST_"
+
 func keyArtefactDuck(duckId: String, wearable: String) = duckId+"_"+wearable
 func keyTypesDuck(duckId: String, type: String) = duckId+"_"+type
-
+func amountPartsSpecial(duckId: String) = duckId+"_"+specialSetStarter
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -28,7 +39,12 @@ func tryGetStringExternal(address: Address, key: String) = {
     }
 }
 
-
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
 
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
@@ -48,7 +64,17 @@ func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58Str
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
-
+func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getCanineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_canineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getCanineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_canineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getFelineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getFelineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getMutantBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_mutantIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getEagleIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getEagleBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(), static_couponsAddress()).fromBase58String())
 
 func checkAdditionalPayment(payment: AttachedPayment, amountOverride: Int)= {
   if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
@@ -70,23 +96,77 @@ func tryGetType(wearable: String)= {
   tryGetStringExternal(getItemsAddress(), "type_cosmetic_"+wearable)
   }
 
+func validateIfItemCanBeWorn(allTypes:Boolean,type:String,artefactName:String)={
+  let blacklisted = [
+    "ART-XHAT", "ART-POMP", "ART-BLUESHIRT", "ART-BUILTBODY", "ART-FREDYSWEATER",
+    "ART-GUARDSUIT", "ART-LEATHERJCKET", "ART-PEPESHIRT", "ART-ROYALCOAT",
+    "ART-TANKTOP", "ART-TRENCHCOAT", "ART-TUXEDO", "ART-WASSERMANVST",
+    "ART-ICECREAM", "ART-ORB", "ART-TOMMYGUN", "ART-UMBRELLA", "ART-KATANA",
+    "ART-SCEPTER", "ART-SHOPBAG", "ART-SABER-PUR", "ART-SABER-BLU",
+    "ART-SABER-YEL", "ART-SABER-RED", "ART-SABER-GRN", "ART-XSCARF"
+  ]
+  if allTypes then true else
+  if containsElement(["PET","BACK","TAIL","ACCESSORY", "HEAD"], type) then true else
+  if artefactName.contains(specialSetStarter) then true else
+  if artefactName.contains("ART-FIRE_") then true else
+  if !containsElement(blacklisted, artefactName) then true else
+  false
 
-func wearItem(assetIdWearAble: String, duckId: String)={
+
+}
+
+func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean)={
   strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetIdWearAble],[]).asString()
   if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
     let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
     strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
     if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
       let type = tryGetType(artefactName)
+      if !validateIfItemCanBeWorn(allTypes,type,artefactName) then throw("You can't attach this item to your NFT! wrong type: "+type) else
       let typeOnDuck = if type != "" then tryGetString(keyTypesDuck(duckId,type))!= "" else throw("Type undefined, please contact admins "+artefactName)
       if typeOnDuck then throw("You can only attach 1 from each type to your duck!") else 
 
       let typeResult = if type != "" then [StringEntry(keyTypesDuck(duckId,type), assetIdWearAble)] else []
+      strict counter = if artefactName.contains(specialSetStarter) then
+        let amountParts = tryGetInteger(amountPartsSpecial(duckId))
+        [IntegerEntry(amountPartsSpecial(duckId), amountParts+1)]
+      else []
       [
         StringEntry(keyArtefactDuck(duckId,artefactName), assetIdWearAble)
         
-      ]++typeResult
+      ]++typeResult++counter
 }
+
+func tryGetBooleanExternal(address: Address, key: String) = {
+    match getBoolean(address, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
+
+func getIfAllTypesAllowed(assetId: ByteVector) = {
+  let issuer = assetInfo(assetId).value().issuer
+  let blacklisted = tryGetBooleanExternal(issuer,assetId.toBase58String() + "_blacklisted")
+  if (blacklisted) then throw("GO FUCK YOURSELF") else
+  let name = assetInfo(assetId).value().name
+  #Ducks
+  if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then true else
+  #Turtles
+  if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then  false else
+  #Canines
+  if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then false else
+  #Felines
+  if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then false else
+  #Mutants
+  if (issuer == getMutantBreederAddress()) then false else
+  #Eagles
+  if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then false else
+  throw("MAG: Asset is not supported")
+    
+
+}
+
 
 @Callable(i)
 func configureOracle(oracle: String) = {
@@ -105,8 +185,9 @@ func wearItemToDuck() = {
   let duckId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("WRITD: NFT is not attached") else
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-  wearItem(secondAssetId,duckId)++[
+  let allTypes = getIfAllTypesAllowed(firstPayment.assetId.value())
+  strict recordAction = invoke(getCouponsAddress(),"recordAction",["WEARITEM"],[])
+  wearItem(secondAssetId,duckId,allTypes)++[
     ScriptTransfer(i.caller, 1, firstPayment.assetId)
   ]++validPayment
 
@@ -123,8 +204,6 @@ func removeItemFromDuck(burnItem: Boolean, artefactName:String) = {
   let roboDuckId = roboDuckPayment.assetId.value().toBase58String()
 
   if (duckPayment.amount != 1 || roboDuckPayment.amount != 1) then throw("WRITD: NFT is not attached") else
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-  
   strict artefactNameRoboduck = invoke(getItemsAddress(),"checkArtefactDetails",[roboDuckId],[]).asString()
   if artefactNameRoboduck != "ART-ROBODUCK" then throw("Only rododuck can remove items!") else
   if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
@@ -134,31 +213,71 @@ func removeItemFromDuck(burnItem: Boolean, artefactName:String) = {
     let type = tryGetType(artefactName)
     let typeResult = if type != "" then [DeleteEntry(keyTypesDuck(duckId,type))] else []
     let burn = if burnItem then [Burn(artefactId.fromBase58String(),1)] else [ScriptTransfer(i.caller, 1, artefactId.fromBase58String())]
+    strict counter = if artefactName.contains(specialSetStarter) then
+        let amountParts = tryGetInteger(amountPartsSpecial(duckId))
+        [IntegerEntry(amountPartsSpecial(duckId), amountParts-1)]
+      else []
+
       [
         DeleteEntry(keyArtefactDuck(duckId,artefactName)),
         ScriptTransfer(i.caller, 1, duckPayment.assetId),
         Burn(roboDuckId.fromBase58String(),1)
         
-      ]++burn++validPayment++typeResult
+      ]++burn++validPayment++typeResult++counter
 }
 
 @Callable(i)
-func wearXItemsToDuck()= {
-  let validPayment = checkAdditionalPayment(i.payments[1],0)
-  if size(i.payments) < 3 then throw("WWXITD: Please attach at least 1 item and 1 duck!") else 
-  if size(i.payments) > 7 then throw("WWXITD: You can only attach 5 items and one duck!") else
-    func handleItem(acc: List[StringEntry|ScriptTransfer], payment: AttachedPayment) = {
-        let index  = indexOf(i.payments,payment)
-        if index ==0 then
-          let duckId = payment.assetId.value().toBase58String()
-          if (payment.amount != 1 ) then throw("WRITD: Duck is not attached") else
-          strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
-          acc++[
-            ScriptTransfer(i.caller, 1, payment.assetId)
-          ]
-        else
-            acc++wearItem(payment.assetId.value().toBase58String(),i.payments[1].assetId.value().toBase58String())
+func calculateWearblesBoost(duckId: String)= {
+  let back = tryGetString(keyTypesDuck(duckId,"BACK"))
+  let head = tryGetString(keyTypesDuck(duckId,"HEAD"))
+  let left_wing = tryGetString(keyTypesDuck(duckId,"LEFT_WING"))
+  let right_wing = tryGetString(keyTypesDuck(duckId,"RIGHT_WING"))
+  let top = tryGetString(keyTypesDuck(duckId,"TOP"))
+  let pet = tryGetString(keyTypesDuck(duckId,"PET"))
+  let tail = tryGetString(keyTypesDuck(duckId,"TAIL"))
+  let accessory = tryGetString(keyTypesDuck(duckId,"ACCESSORY"))
+  let assetIdArray = [back,head,left_wing,right_wing,top,pet,tail,accessory]
+  func countTotalBoost (acc: Int, assetId: String) = {
+    if assetId != "" then
+      strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId],[]).asString()
+      let boost = valueOrErrorMessage(getInteger("boost_"+artefactName), "No boost found for "+artefactName)
+      acc+boost
+    else
+      acc
+  }
+  let totalBoost = FOLD<8>(assetIdArray, 0, countTotalBoost)
+  let specialBoost = tryGetInteger(keyArtefactDuck(duckId,specialSetStarter))
+  let combinedBoost = if specialBoost == 5 then totalBoost + 1000 else totalBoost
+  ([
+  ],combinedBoost)
 
-    }
-    FOLD<6>(i.payments, [], handleItem)++validPayment
+  
 }
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+}   

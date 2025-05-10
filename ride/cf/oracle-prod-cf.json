@@ -1,0 +1,299 @@
+{
+  "type": 12,
+  "sender": "3P6DvvYD1qP3fPPXXzHhqifUJQL7sTRXjjW",
+  "senderPublicKey": "EB1qMWj4Wo3jC5oUtoj8yJFYbM18Ls4W9NZPy6wVwbsT",
+  "fee": 500000,
+  "feeAssetId": null,
+  "version": 2,
+  "data": [
+    {
+      "key": "allowed_contract_3P3Gtbq2raMqBkks8tr6sTZH9uHCoVTBfQ8",
+      "type": "string",
+      "value": "HUNT"
+    },
+    {
+      "key": "allowed_contract_3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw",
+      "type": "string",
+      "value": "WEARABLES"
+    },
+    {
+      "key": "allowed_contract_3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv",
+      "type": "string",
+      "value": "INCUBATOR"
+    },
+    {
+      "key": "allowed_contract_3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb",
+      "type": "string",
+      "value": "BREEDING"
+    },
+    {
+      "key": "allowed_contract_3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD",
+      "type": "string",
+      "value": "FARMING"
+    },
+          {
+      "key": "allowed_contract_3PAETTtuW7aSiyKtn9GuML3RgtV1xdq1mQW",
+      "value": null
+    },
+    {
+      "key": "allowed_contract_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ",
+      "type": "string",
+      "value": "REBIRTH"
+    },
+    {
+      "key": "allowed_contract_3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg",
+      "type": "string",
+      "value": "DUCKLING"
+    },
+    {
+      "key": "allowed_contract_3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT",
+      "type": "string",
+      "value": "WARS"
+    },
+    {
+      "key": "allowed_contract_3P5E9xamcWoymiqLx8ZdmR7o4fJSRMGp1WR",
+      "type": "string",
+      "value": "ITEMS"
+    },
+    {
+      "key": "allowed_contract_3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD",
+      "type": "string",
+      "value": "ACCOUNT_BOOSTERS"
+    },
+    {
+      "key": "allowed_contract_3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo",
+      "type": "string",
+      "value": "DH1"
+    },
+    {
+      "key": "allowed_contract_3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL",
+      "type": "string",
+      "value": "DH2"
+    },
+          {
+      "key": "allowed_contract_3P8JD7RpyGZeVGj58P2ox367iMwsM3hWosS",
+      "type": "string",
+      "value": "SDH"
+    },
+    {
+      "key": "allowed_contract_3PGwjnnoPreHxeRDxufGD8a2iqaeM5tQKno",
+      "type": "string",
+      "value": "BDH"
+    },
+
+    {
+      "key": "allowed_contract_3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh",
+      "type": "string",
+      "value": "XST"
+    },
+    {
+      "key": "allowed_contract_3PKdgEHMR7HzTQdXkHqTPRUWtBXhYF1NihS",
+      "type": "string",
+      "value": "BREEDING_BABYDUCK"
+    },
+    {
+      "key": "allowed_contract_3P472BzRvamyTwGWD2os6oQNzvy8FYt7uSG",
+      "type": "string",
+      "value": "RECHARGE_CAPACITY"
+    },
+    {
+      "key": "allowed_contract_3P3zkxHhAzRzV9PBLB14JXG4ZEEPv4LtDyQ",
+      "type": "string",
+      "value": "PETE_POOL"
+    },
+    {
+      "key": "allowed_contract_3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV",
+      "type": "string",
+      "value": "CF_POOL"
+    },
+    {
+      "key": "allowed_contract_3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ",
+      "type": "string",
+      "value": "NATIVE_POOL"
+    },
+    {
+      "key": "allowed_contract_3P4me2DmXjXs15zkcUGKrG4KdyFxQbLxNZu",
+      "type": "string",
+      "value": "LAYER2_POOL"
+    },
+    {
+      "key": "allowed_contract_3PEgzEYXMbAHU4ZuAPrd6HanY4LW4Ee5J6F",
+      "type": "string",
+      "value": "RENTING"
+    },
+    {
+      "key": "allowed_contract_3PE9yT1qVM9hsRkpiV6Y7AKEubafyT5NCuB",
+      "type": "string",
+      "value": "TRTL_INCUBATOR"
+    },
+    {
+      "key": "allowed_contract_3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t",
+      "type": "string",
+      "value": "TRTL_BREEDING"
+    },
+    {
+      "key": "allowed_contract_3PG1QrkrsZaEpo8Bhe34geNNA1d9M8REGrv",
+      "type": "string",
+      "value": "TRTL_STAKING"
+    },
+    {
+      
+      "key": "allowed_contract_3PM7TWS85ZupzH1k5wYQa4HPJjEn95j5N7P",
+      "type": "string",
+      "value": "TRTL_REBIRTH"
+    },
+    {
+      "key": "allowed_contract_3P7s9drVRL4Kw3edKv5RhNd5Qrwxu1cU3d3",
+      "type": "string",
+      "value": "VEGG_FARMING"
+    },
+    {
+      "key": "allowed_contract_3PCBQJP8XEK5sgziA9pu3AHKnegmBxxojaY",
+      "type": "string",
+      "value": "CANI_STAKING"
+    },
+    {
+      
+      "key": "allowed_contract_3PQdwhdjWHZ1hacy2dLPnRafi86cTvuJPNX",
+      "type": "string",
+      "value": "CANI_BREED"
+    },
+    {
+      "key": "allowed_contract_3PD6L4yr52Lac9qeqXNoi4mAiiak5ZBnx5D",
+      "type": "string",
+      "value": "CANI_INCUBATE"
+    },
+    {
+      "key": "allowed_contract_3P4Anrwd7rKDGyxXZRaocXVbKtg8TKEzf6D",
+      "type": "string",
+      "value": "CANI_REBIRTH"
+    },
+    {
+      "key": "allowed_contract_3PPistJKgf9WaX3sZrPdw5oLny66N9f6WeF",
+      "type": "string",
+      "value": "EAGL_INCU"
+    },
+    {
+      "key": "allowed_contract_3PC4hrhw9jRtjacgfWrB5GsBxhtbkhQq89g",
+      "type": "string",
+      "value": "EAGL_BREED"
+    },
+    {
+      "key": "allowed_contract_3PGrthrFFZVfvZeCyrZmEXJ1P29ViPbcy5g",
+      "type": "string",
+      "value": "EAGLE_STAKE"
+    },
+    {
+      "key": "allowed_contract_3PAtKsNKTzHWEip8WCoRxhfACF5X8KKY2eN",
+      "type": "string",
+      "value": "EAGLE_REBIRTH"
+    },
+    {
+      "key": "allowed_pool_3PGJ8DVtsPk3uJtMMuDAHEsCbWMnnL3pKWB",
+      "type": "string",
+      "value": "ArkimalsPool1"
+    },
+    {
+      "key": "allowed_pool_3PNztLWDmZJffafREjQbUj1tpWJCx9hWDfK",
+      "type": "string",
+      "value": "PesoLatinaPool1"
+    },
+    {
+      "key": "COUPONS_ADDRESS",
+      "type": "string",
+      "value": "3P5W1D4UuSZrNfeZFJZcD5wT2avfbHbzTvS"
+    },
+      {
+          "key": "FARMING_DAPP",
+          "type": "string",
+          "value": "3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD"
+
+      },
+      {
+          "key": "FELI_INC",
+          "value": null
+
+      },
+      {
+          "key": "FELI_BR",
+          "value": null
+
+      },
+      {
+          "key": "FELI_RE",
+          "value": null
+
+      },
+      {
+          "key": "FELI_ST",
+          "value": null
+
+      },
+      {
+        "key": "allowed_contract_3P6KR6QtXmPH8onFKMe276bVKUNVRzmNGSR",
+        "type": "string",
+        "value": "FELI_STAKING"
+      },
+      {
+        
+        "key": "allowed_contract_3PKhghDw2necJLA6mGuQuC4juWzmu7Subu2",
+        "type": "string",
+        "value": "FELI_BREED"
+      },
+      {
+        "key": "allowed_contract_3P9SJwLFhgRQG5jAQinzZFyPzE9cP3oyu8Q",
+        "type": "string",
+        "value": "FELI_INCUBATE"
+      },
+      {
+        "key": "allowed_contract_3PMUJt5Voyxy12DjsKVKtFctA4HpAEfSgc5",
+        "type": "string",
+        "value": "FELI_REBIRTH"
+      },
+      {
+        "key": "MARKETPLACE_PROXY_DAPP",
+        "type": "string",
+        "value": "3PL1tnAkQUP3jQNGUu2NvfAuWuz5kqrhctt"
+      },
+      {
+        "key": "PUZZLE_LAYER2",
+        "type": "string",
+        "value": "3PR1Qvi9mHT35SwWEkLSqqE2L8thiPLdVWU"
+      },
+      {"key":"EGG_ASSET_ID","type":"string","value":"59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"},
+      {
+
+        "key": "allowed_contract_3PJr8TE2b8bEmPXXoHcJnPanke3Yi41zzya",
+        "type": "string",
+        "value": "MUTANT_BREEDER"
+      },
+      {
+        "key": "allowed_contract_3PFDP2upzDE7Djhhey5yweAQqWsMcoAzaUc",
+        "type": "string",
+        "value": "MUTANT_FARMING"
+      },
+      {
+        "key": "AUCTION_DAPP",
+        "type": "string",
+        "value": "3PEBtiSVLrqyYxGd76vXKu8FFWWsD1c5uYG"
+      },
+      {
+        "key": "INCUBATOR_DAPP",
+        "type": "string",
+        "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+    },
+    {
+        "key": "BREEDER_DAPP",
+        "type": "string",
+        "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
+    },
+    {
+        "key": "wars_pk",
+        "type": "string",
+        "value": "EFgn12TgFqn3cRthHnLAPr11g7urqchXEpjGspgLYskc"
+    }
+  ]
+}
+
+
+

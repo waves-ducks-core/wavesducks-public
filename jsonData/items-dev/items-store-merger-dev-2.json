@@ -1,0 +1,108 @@
+{
+    "type": 12,
+    "version": 2,
+    "data": [
+        {
+            "key": "merge_ART-FEED100RCD_baseItem",
+            "type": "string",
+            "value": "ART-BONE"
+        },
+        {
+            "key": "merge_ART-FEED100RCD_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-FEED100RCD_endItem",
+            "type": "string",
+            "value": "ART-FEED100"
+        },
+        {
+            "key": "merge_ART-FEED100RCD_price",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "merge_ART-FEED100RCD_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-FEED100RCD_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+                {
+            "key": "merge_ART-FEED100RCD_genValue",
+            "type": "integer",
+            "value": 12
+        },
+
+
+        {
+            "key": "merge_ART-KATANA_amount",
+            "value": null
+        },
+        {
+            "key": "merge_ART-KATANA_endItem",
+            "value": null
+        },
+        {
+            "key": "merge_ART-KATANA_price",
+            "value": null
+        },
+        {
+            "key": "merge_ART-KATANA_instant",
+            "value": null
+        },
+        {
+            "key": "merge_ART-KATANA_asset",
+            "value": null
+        },
+        
+        {
+            "key": "merge_ART-TINSEL_amount",
+            "value": null
+        },
+        {
+            "key": "merge_ART-TINSEL_endItem",
+            "value": null
+        },
+        {
+            "key": "merge_ART-TINSEL_price",
+            "value": null
+        },
+        {
+            "key": "merge_ART-TINSEL_instant",
+            "value": null
+        },
+        {
+            "key": "merge_ART-TINSEL_asset",
+            "value": null
+        },
+        
+        {
+            "key": "merge_ART-STINSEL_amount",
+            "value": null
+        },
+        {
+            "key": "merge_ART-STINSEL_endItem",
+            "value": null
+        },
+        {
+            "key": "merge_ART-STINSEL_price",
+            "value": null
+        },
+        {
+            "key": "merge_ART-STINSEL_instant",
+            "value": null
+        },
+        {
+            "key": "merge_ART-STINSEL_asset",
+            "value": null
+        }  
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}
+

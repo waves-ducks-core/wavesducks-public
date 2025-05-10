@@ -1,6 +1,13 @@
 {-# STDLIB_VERSION 5 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
+func isTestEnv()={
+    let testenv =  match getBoolean(this, "TESTENV") {
+      case x: Boolean => x
+      case _ => false
+    }
+    testenv
+}
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -23,16 +30,19 @@ func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
+
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getTurtleIncubator() = Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubator()).fromBase58String())
 func getTurtleIncubationFee() = getIntegerValue(getOracle(),staticKey_turtleIncubationFee())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
+func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -76,7 +86,7 @@ func getTRTLIdKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_di"
 }
 
-func getTRTLStatsKey(genString: String) = {
+func getStatsKey(genString: String) = {
   "stats_" + genString + "_amount"
 }
 
@@ -186,6 +196,7 @@ func isSymbolE(accumulated: Int, sym: String) = { if (sym == "E") then {accumula
 func isSymbolF(accumulated: Int, sym: String) = { if (sym == "F") then {accumulated+1} else {accumulated+0} }
 func isSymbolG(accumulated: Int, sym: String) = { if (sym == "G") then {accumulated+1} else {accumulated+0} }
 func isSymbolH(accumulated: Int, sym: String) = { if (sym == "H") then {accumulated+1} else {accumulated+0} }
+func isSymbolI(accumulated: Int, sym: String) = { if (sym == "I") then {accumulated+1} else {accumulated+0} }
 
 func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
@@ -197,7 +208,7 @@ func getGen(assetName: String) = {
   let generation = assetName.split("")[14]
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E")+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H")
+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H")+ getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I")
 }
 
 func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
@@ -224,7 +235,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
       let asset = Issue(TRTLGen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
-      let amount = tryGetInteger(getTRTLStatsKey(TRTLGen)) + 1
+      let amount = tryGetInteger(getStatsKey(TRTLGen)) + 1
       let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let parent1Id = tryGetString(getTRTLParentKey(txId, 1))
       let parent2Id = tryGetString(getTRTLParentKey(txId, 2))
@@ -233,7 +244,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
         StringEntry(processStatusKey, HatchingFinished),
         StringEntry(TRTLIdKey, assetId.toBase58String()),
         StringEntry(assetId.toBase58String(), TRTLIdKey),
-        IntegerEntry(getTRTLStatsKey(TRTLGen), amount),
+        IntegerEntry(getStatsKey(TRTLGen), amount),
         IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
@@ -250,6 +261,19 @@ func asInt(value: Any) = match value {
   case _ => throw("wrong type, expected: Int")
 }
 
+@Callable(i)
+func increaseRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getTurtleRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ]
+  }
+}
 @Callable(i)
 func startTRTLBreeding(refererAddress: String) = {
   #TODO: add validation that feeValidate payment is added!
@@ -355,4 +379,29 @@ func configureOracle(oracle: String) = {
 }
 
 @Verifier(tx)
-func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+} 

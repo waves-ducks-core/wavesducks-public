@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -42,21 +42,22 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getBabyDuckBreedingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_babyDuckBreedingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getDucklingPrice() = tryGetIntegerExternal(getOracle(),staticKey_ducklingPrice())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
-func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String()  
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-
+func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BCAP: Please attach waves") else
   let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
@@ -84,7 +85,7 @@ func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_fh"
 }
 
-func getDuckParentKey(txId: ByteVector, parentNum: Int) = {
+func getParentKey(txId: ByteVector, parentNum: Int) = {
   "inittx_" + txId.toBase58String() + "_parent" + parentNum.toString()
 }
 
@@ -244,11 +245,22 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
       let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
+      let parent1Id = tryGetString(getParentKey(txId, 1))
+      let parent2Id = tryGetString(getParentKey(txId, 2))
+      let parentsLocked = tryGetBoolean("parentslocked_"+txIdStr)
+
+      let parentsSend = if parentsLocked then [
+        ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
+        ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
+      ] else []
+
       composeGenericData(duckGen,duckIdKey,assetId,asset)++
       [
         StringEntry(processStatusKey, HatchingFinished),
-        ScriptTransfer(addressFromStringValue(owner), 1, assetId)
-      ]
+        ScriptTransfer(addressFromStringValue(owner), 1, assetId),
+        IntegerEntry("asset_" + parent1Id + "_children", 1),
+        IntegerEntry("asset_" + parent2Id + "_children", 1)
+      ]++parentsSend
     }
 }
 
@@ -296,6 +308,20 @@ func finishDuckHatchingItems(txIdStr: String, duckGenesString: String, payment1:
 }
 
 @Callable(i)
+func increaseRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getDuckStatsKey(duckGen), tryGetInteger(getDuckStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ]
+  }
+}
+
+@Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("admin only") else 
   [
@@ -304,6 +330,37 @@ func configureOracle(oracle: String) = {
 
 }
 
+@Callable(i)
+func putChildren(oldAssetId: String, assetId: String)={
+  if i.caller != getIncubatorAddress() then throw("BPC: forbidden") else
+  [
+    IntegerEntry("asset_" + assetId + "_children", tryGetInteger("asset_" + oldAssetId + "_children"))
+  ]
+
+}
+
+@Callable(i)
+func mintAndReplaceDuck(assetId: String) ={
+  if i.caller != addressFromStringValue("3PEgzEYXMbAHU4ZuAPrd6HanY4LW4Ee5J6F") then throw("IMARD: stop") else
+  let duckIdKey = getStringValue(assetId)
+  let details = assetInfo(assetId.fromBase58String()).value()
+  let name = details.name
+  let description = details.description
+  let newAsset = Issue(name, description, 1,0, false)
+  let newAssetId = newAsset.calculateAssetId()
+  [
+    newAsset,
+    StringEntry(duckIdKey, newAssetId.toBase58String()),
+    StringEntry(newAssetId.toBase58String(),duckIdKey),
+    DeleteEntry(assetId),
+    BooleanEntry(assetId+"_blacklisted", true),
+    StringEntry(assetId+"_replacedWith", newAssetId.toBase58String()),
+    IntegerEntry("asset_" + newAssetId.toBase58String() + "_children", tryGetInteger("asset_" + assetId + "_children")),
+    ScriptTransfer(i.caller, 1, newAssetId)
+  ]
+
+
+}
 @Callable(i)
 func generateDuck(txId: ByteVector, hatchingFinishHeight: Int, 
 geneFromParent: Int, genePostion: Int, 
@@ -314,8 +371,8 @@ specifiqueGene: String, specifiqueGenePosition: Int) = {
     else if (colorRandom == 2) then "B" 
     else "R"
 
-  let parent1Id = tryGetString(getDuckParentKey(txId, 1)).fromBase58String()
-  let parent2Id = tryGetString(getDuckParentKey(txId, 2)).fromBase58String()
+  let parent1Id = tryGetString(getParentKey(txId, 1)).fromBase58String()
+  let parent2Id = tryGetString(getParentKey(txId, 2)).fromBase58String()
 
   let parent1Gen = assetInfo(parent1Id).value().name.split("")
   let parent2Gen = assetInfo(parent2Id).value().name.split("")
@@ -432,8 +489,11 @@ func startDuckBreeding(refererAddress: String) = {
                                             if i.payments[3].amount == spiceAmount && i.payments[3].assetId == getSpiceAssetId() then
                                             strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
                                                 [], [AttachedPayment(getSpiceAssetId(), spiceAmount/2)])
+                                            strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+                                                ["SPICE",0], [AttachedPayment(getSpiceAssetId(), spiceAmount/10)])
                                             [
-                                              BooleanEntry("instantPaid_"+i.transactionId.toBase58String(), true)
+                                              BooleanEntry("instantPaid_"+i.transactionId.toBase58String(), true),
+                                              Burn(i.payments[3].assetId.value(), i.payments[3].amount-spiceAmount/10-spiceAmount/2)
                                             ] 
                                             else throw("Please attach the correct amount of spice!")
                                         else 
@@ -443,14 +503,16 @@ func startDuckBreeding(refererAddress: String) = {
                                               BooleanEntry("instantPaid_"+i.transactionId.toBase58String(), false)
                                             ]
         result++[
-          StringEntry(getDuckParentKey(i.transactionId, 1), firstAssetId),
-          StringEntry(getDuckParentKey(i.transactionId, 2), secondAssetId),
+          StringEntry(getParentKey(i.transactionId, 1), firstAssetId),
+          StringEntry(getParentKey(i.transactionId, 2), secondAssetId),
           StringEntry(getProcessStatusKey(i.caller.toString(), i.transactionId), HatchingStarted),
           IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId), height + delayForHatching),
-          IntegerEntry("asset_" + firstAssetId + "_children", 1),
-          IntegerEntry("asset_" + secondAssetId + "_children", 1),
-          ScriptTransfer(i.caller, 1, firstPayment.assetId.value()),
-          ScriptTransfer(i.caller, 1, secondPayment.assetId.value())
+          BooleanEntry("parentslocked_"+i.transactionId.toBase58String(), true)
+          #,
+          #IntegerEntry("asset_" + firstAssetId + "_children", 1),
+          #IntegerEntry("asset_" + secondAssetId + "_children", 1),
+          #ScriptTransfer(i.caller, 1, firstPayment.assetId.value()),
+          #ScriptTransfer(i.caller, 1, secondPayment.assetId.value())
         ]++validPayment
       
       
@@ -547,8 +609,8 @@ func verify() = {
       sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
   else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
-    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
-    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
 
     let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
         else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
@@ -567,4 +629,4 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 2
     }
-}
+} 

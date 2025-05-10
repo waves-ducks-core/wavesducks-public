@@ -1,0 +1,197 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "merge_ART-PET0_baseItem",
+            "type": "string",
+            "value": "ART-GFTR"
+        },
+        {
+            "key": "merge_ART-PET0_amount",
+            "type": "integer",
+            "value": 4
+        },
+        {
+            "key": "merge_ART-PET0_endItem",
+            "type": "string",
+            "value": "ART-XMASFOX"
+        },
+        {
+            "key": "merge_ART-PET0_price",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "merge_ART-PET0_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-PET0_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "merge_ART-PET0_secondaryItem",
+            "type": "string",
+            "value": "ART-GFTW"
+        },
+        {
+            "key": "merge_ART-PET0_secondaryItemAmount",
+            "type": "integer",
+            "value": 6
+        },
+        
+        {
+            "key": "merge_ART-PET1_baseItem",
+            "type": "string",
+            "value": "ART-GFTR"
+        },
+        {
+            "key": "merge_ART-PET1_amount",
+            "type": "integer",
+            "value": 6
+        },
+        {
+            "key": "merge_ART-PET1_endItem",
+            "type": "string",
+            "value": "ART-XMASKRMPS"
+        },
+        {
+            "key": "merge_ART-PET1_price",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "merge_ART-PET1_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-PET1_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "merge_ART-PET1_secondaryItem",
+            "type": "string",
+            "value": "ART-GFTW"
+        },
+        {
+            "key": "merge_ART-PET1_secondaryItemAmount",
+            "type": "integer",
+            "value": 4
+        },
+        
+        {
+            "key": "merge_ART-CNDY0_baseItem",
+            "type": "string",
+            "value": "ART-GNGR_BREAD"
+        },
+        {
+            "key": "merge_ART-CNDY0_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-CNDY0_endItem",
+            "type": "string",
+            "value": "ART-CNDY"
+        },
+        {
+            "key": "merge_ART-CNDY0_price",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "merge_ART-CNDY0_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-CNDY0_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        
+        {
+            "key": "merge_ART-CNDY1_baseItem",
+            "type": "string",
+            "value": "ART-CNDY"
+        },
+        {
+            "key": "merge_ART-CNDY1_amount",
+            "type": "integer",
+            "value": 4
+        },
+        {
+            "key": "merge_ART-CNDY1_endItem",
+            "type": "string",
+            "value": "ART-CNDY_SWORD"
+        },
+        {
+            "key": "merge_ART-CNDY1_price",
+            "type": "integer",
+            "value": 500000000
+        },
+        {
+            "key": "merge_ART-CNDY1_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-CNDY1_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "merge_ART-CNDY1_secondaryItem",
+            "type": "string",
+            "value": "ART-FIRE_SWORD"
+        },
+        {
+            "key": "merge_ART-CNDY1_secondaryItemAmount",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "direct_cosmetic_ART-XMASFOX",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-XMASKRMPS",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-GFTW",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-GFTR",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-CNDY",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-FELCPN",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-CANCPN",
+            "type": "integer",
+            "value": 200000000000
+        }
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES",
+    "senderPublicKey": "6DknLGEJHLXmZB6ni3tGa8M3gccMMmc3uaaPhvCSuKvM"
+}

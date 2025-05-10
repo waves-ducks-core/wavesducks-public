@@ -1,7 +1,13 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
-
+func isTestEnv()={
+    let testenv =  match getBoolean(this, "TESTENV") {
+      case x: Boolean => x
+      case _ => false
+    }
+    testenv
+} 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
         case a:String => a
@@ -29,7 +35,10 @@ func tryGetInteger(key: String) = {
 }
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-
+func asInt(value: Any) = match value {
+  case int: Int => int
+  case _ => throw("WAI: wrong type, expected: Int")
+}
 #SC THAT CAN USE COUPONS
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
@@ -44,6 +53,12 @@ func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_felineBreederAddress() = "static_felineBreederAddress"
 func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
+func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
+func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
+func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
+func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
+
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -57,7 +72,7 @@ func getMasterAddress() = Address(tryGetStringExternal(getOracle(),"static_cfMas
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleRebirthAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getRopeAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_ropeAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String()  
 func getLevelSystemAddress() = Address(tryGetStringExternal(getOracle(),staticKey_levelSystemAddress()).fromBase58String())
 func getMarketPlaceAddress() = Address(tryGetStringExternal(getOracle(),staticKey_marketplace()).fromBase58String())
 func getVeggFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_veggFarmingAddress()).fromBase58String())
@@ -65,22 +80,25 @@ func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_item
 func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getCanineFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_canineStakingAddress").fromBase58String())
 func getFelineFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_felineStakingAddress").fromBase58String())
+func getEagleFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_eagleStakingAddress").fromBase58String())
 func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String())
 func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
 func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
+func getEagleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String())
+func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
+func getWearablesAddress() = Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String())
+func getFelineRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String())
+func getCanineRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
 let scCanUseCoupons = [ getRebirthAddress(),getIncubatorAddress(),getFarmingAddress(),
                         getGameDappAddress(), getBabyduckAddress(),getBreedingAddress(), getTurtleStakingAddress(),
                         getTurtleRebirthAddress(),getRopeAddress(),getLevelSystemAddress(),getMarketPlaceAddress(),
-                        getCapacityAddress()
-                        ,getMutantFarmingAddress()
-                        ,getCanineFarmingAddress()
-                        ,getFelineFarmingAddress()
-                        ,getCanineBreederAddress()
-                        ,getFelineBreederAddress()
-                        ,getTurtleBreederAddress()
+                        getCapacityAddress(),getMutantFarmingAddress(),getCanineFarmingAddress()
+                        ,getFelineFarmingAddress(),getEagleBreederAddress(),getCanineBreederAddress()
+                        ,getFelineBreederAddress(),getTurtleBreederAddress(),getEagleFarmingAddress(),
+                        getEagleRebirthAddress(),getWearablesAddress(),getFelineRebirthAddress(),getCanineRebirthAddress()
                         ,this]
 
 func couponsUserSpend(user:String) = user+"_spend"
@@ -122,18 +140,26 @@ func hasDoneTask7Days(day: Int,address: String, actionName:String, rewardAmount:
     let daysInRow = tryGetInteger(daysInRowKey)
     let daysInRowUpdate = if lastCheckDay==day-1 then daysInRow+1 else if lastCheckDay<day-1 then 1 else 0
     let lastCheckDayUpdate = day
-    let reward = if daysInRowUpdate == 7 then [
-        ScriptTransfer(addressFromStringValue(address),rewardAmountWeekly,getSpiceAssetId()),
-        IntegerEntry(daysInRowKey,0)
+
+    let reward = if daysInRowUpdate == 7 || daysInRowUpdate == 14 || daysInRowUpdate == 21 || daysInRowUpdate == 28 then [
+            ScriptTransfer(addressFromStringValue(address),rewardAmountWeekly,getSpiceAssetId()),
+            StringEntry("DEBUG_WEEKLY",daysInRowUpdate.toString()),
+            IntegerEntry(daysInRowKey,daysInRowUpdate)
         ] else [
             IntegerEntry(daysInRowKey,daysInRowUpdate)
         ]
+
+    let monthlyReward = if daysInRowUpdate == 31 then [
+        IntegerEntry(daysInRowKey,0),
+        ScriptTransfer(addressFromStringValue(address),rewardAmountWeekly,getSpiceAssetId()),
+        StringEntry("DEBUG_MONTHLY","MOTNHLY REWARD")
+    ] else []
     
     [
         IntegerEntry(checkDayKey,lastCheckDayUpdate),
         ScriptTransfer(addressFromStringValue(address),rewardAmount,getSpiceAssetId()),
         IntegerEntry(userExperienceKey,userExpTilldate+1)
-    ]++reward
+    ]++reward++monthlyReward
 }
 
 func payAction(actionName:String, userAddress: Address, amount: Int, day:Int)={
@@ -192,7 +218,7 @@ func resetCheater(user:String) = {
 @Callable(i)
 func addCouponsFarming(user:String,amount:Int) = {
     if i.caller != getVeggFarmingAddress() 
-    #&& i.caller != getMutantFarmingAddress() 
+    && i.caller != getMutantFarmingAddress() 
     then throw("Method only for farming sc!") else
         addCouponsInternal(user,amount)
 
@@ -232,7 +258,76 @@ func CFRefund(recipient: String,amount: Int)={
 
 }
 
+@Callable(i)
+func questOnePetNft (assetId: String)={
+    let invoker = i.caller.toString()
+    let type =  if assetInfo(assetId.fromBase58String()).value().issuer == getBreedingAddress() then "DUCK" else
+                if assetInfo(assetId.fromBase58String()).value().issuer == getCanineBreederAddress() then "CANINE" else
+                if assetInfo(assetId.fromBase58String()).value().issuer == getFelineBreederAddress() then "FELINE" else
+                if assetInfo(assetId.fromBase58String()).value().issuer == getTurtleBreederAddress() then "TURTLE" else
+                throw("Unsupported NFT!")
+    let invokedKey = "q1_"+type+"_"+invoker+"_invoked"
+    let amountNftInvokedKey = "q1_"+assetId+"_amount_invoked"
+    let typesCompletedKey = "q1_"+invoker+"_completed"
+    let totalPetKey = "q1_total"
+    if tryGetBoolean(invokedKey) then throw("You already invoked this type!") else
 
+    
+    [
+        BooleanEntry(invokedKey,true),
+        IntegerEntry(amountNftInvokedKey,tryGetInteger(amountNftInvokedKey)+1),
+        IntegerEntry(typesCompletedKey,tryGetInteger(typesCompletedKey)+1),
+        IntegerEntry(totalPetKey,tryGetInteger(totalPetKey)+1)
+    ]++addCouponsInternal(i.caller.toString(),110_0000)
+
+}
+
+@Callable(i)
+func questTwoBuyPerches(type: String, color: String)={
+    let invoker = i.caller.toString()
+    #todo: check if user completed petting
+    let typesCompletedKey = "q1_"+invoker+"_completed"
+    if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
+    let method = if type =="TURTLE" then "addFreeBeach" else "addFreePerch"
+    let amount = 100_0000
+    strict invokeRes = invoke(this, "useCoupons",[amount],[]).asInt()
+    if invokeRes != amount then throw("Not enough vEGG to complet this quest!") else
+    let invokeAddress = if type =="TURTLE" then getTurtleStakingAddress() else
+                        if type =="CANINE" then getCanineFarmingAddress() else
+                        if type =="FELINE" then getFelineFarmingAddress() else
+                        if type =="DUCK" then getBreedingAddress() else
+                        throw("Unsupported type!")
+    let invokeRes2 = invoke(invokeAddress, method, [invoker,color],[])
+    let invokedKey = "q2_"+type+"_"+invoker+"_invoked"
+    let amountNftInvokedKey = "q2_"+type+"_amount_invoked"
+    let typesQ2CompletedKey = "q2_"+invoker+"_completed"
+    let totalQ2Key = "q2_total"
+    if tryGetBoolean(invokedKey) then throw("You already invoked this type!") else
+    [
+        BooleanEntry(invokedKey,true),
+        IntegerEntry(amountNftInvokedKey,tryGetInteger(amountNftInvokedKey)+1),
+        IntegerEntry(typesQ2CompletedKey,tryGetInteger(typesQ2CompletedKey)+1),
+        IntegerEntry(totalQ2Key,tryGetInteger(totalQ2Key)+1)
+    ]++addCouponsInternal(i.caller.toString(),120_0000)
+}
+#https://docs.google.com/document/d/1FHMO20W3sZEcO4VIegoi3rHksClMYJrVndlxNKGn7Yw/edit?tab=t.0
+@Callable(i)
+func questThree()={
+    let invoker = i.caller.toString()
+    let typesCompletedKey = "q1_"+invoker+"_completed"
+    if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
+    let amount = 400_0000
+    strict invokeRes1 = invoke(this, "useCoupons",[amount],[]).asInt()
+    if invokeRes1 != amount then throw("Not enough vEGG to complet this quest!") else
+    let invokeKey = "q3_"+invoker+"_invoked"
+    let totalQ3Key = "q3_total"
+    if tryGetBoolean(invokeKey) then throw("You already invoked this type!") else
+    strict invokeRes2 = invoke(getBabyduckAddress(), "issueFreeDuckling", [invoker, i.transactionId.toBase58String(),20],[])
+    [
+        BooleanEntry(invokeKey,true),
+        IntegerEntry(totalQ3Key,tryGetInteger(totalQ3Key)+1)
+    ]++addCouponsInternal(i.caller.toString(),1000_0000)
+}
 
 @Callable(i)
 func useCoupons(amountTryingToPay:Int)= {
@@ -253,8 +348,8 @@ func useCoupons(amountTryingToPay:Int)= {
     let keySpendSc = couponsSpendOnSc(i.caller.toString())
 
     strict topUp = invoke(getVeggFarmingAddress(), "topUpReward", [amountPaid/100*25],[])
-    #strict topUp2 = if invokingSc == getMutantFarmingAddress() then unit else
-    # invoke(getMutantFarmingAddress(), "topUpReward", ["VEGG",amountPaid/100*15],[])
+    strict topUp2 = if invokingSc == getMutantFarmingAddress() then unit else
+     invoke(getMutantFarmingAddress(), "topUpReward", ["VEGG",amountPaid/100*15],[])
 
     let totalSpend = tryGetInteger(keySpend)+amountPaid
     let totalSpendSc = tryGetInteger(keySpendSc)+amountPaid
@@ -287,3 +382,42 @@ func increaseExp(address: String)={
         IntegerEntry(userExperienceKey,userExpTilldate+1)
     ]
 }
+
+@Callable(i)
+func increaseExpDefined(address: String, amount: Int)={
+    if i.caller != getItemsAddress() then [] else
+    let userExperienceKey = userExperience(address)
+    let userExpTilldate = tryGetInteger(userExperienceKey)
+    
+    [
+        IntegerEntry(userExperienceKey,userExpTilldate+amount)
+    ]
+}
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+}   

@@ -1,7 +1,13 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
-
+func isTestEnv()={
+    let testenv =  match getBoolean(this, "TESTENV") {
+      case x: Boolean => x
+      case _ => false
+    }
+    testenv
+} 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
         case a:String => a
@@ -58,12 +64,12 @@ func staticKey_turtleEggRebirthPrice() ="static_turtleEggRebirthPrice"
 
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String()  
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -77,6 +83,14 @@ func tryGetIntegerExternal(address: Address, key: String) = {
         case _ => throw("TR: Value not found in sc!")
     }
 
+}
+#TODO: deduplicate this
+func checkReal(assetId: ByteVector) = {
+  if (assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer ==getTurtleIncubatorAddress()) then {
+   assetInfo(assetId).value().issuer
+  } else {
+    throw("not valid NFT")
+  }
 }
 
 #TODO: PUT IN ORACLE!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -116,40 +130,44 @@ func tryGetBoolean(key: String) = {
 
 }
 
-func getRandomWin(tx: ByteVector, finishHeight: Int) = {
-  let jackpotEnabled = tryGetBoolean("JACKPOT_ENABLED")
-  let jackpotRandom = getRandomNumber(300, tx, finishHeight, 1)
-  if (jackpotRandom == 1 && jackpotEnabled) then { (jackpotRandom,"jackpot") } else 
+func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
+  #let jackpotRandom = getRandomNumber(300, tx, finishHeight, 1)
+  #if (jackpotRandom == 1) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
-    if (n<40) then { "item!ART-FIRE_SHIELD" } else
-    if (n<80) then { "item!ART-FIRE_TAIL" } else    
-    if (n<100) then { "item!ART-FREEGENE" } else                
-    if (n<150) then { "beach_R" } else 
-    if (n<200) then { "beach_S" } else
-    if (n<250) then { "beach_G" } else
-    if (n<300) then { "beach_D" } else
-    if (n<380) then { "item!ART-MUTARIUM-G"} else
-    if (n<400) then { "item!ART-FEED5" } else    
-    if (n<600) then { "item!ART-FEED10" } else    
-    if (n<620) then { "item!ART-FEED15" } else    
-    if (n<640) then { "item!ART-FEED20" } else    
-    if (n<660) then { "item!ART-FEED25" } else    
-    if (n<680) then { "item!ART-FEED50" } else    
-    if (n<760) then { "item!ART-FEED100" } else    
-    if (n<780) then { "perch_G" } else
-    if (n<800) then { "perch_Y" } else
-    if (n<820) then { "perch_R" } else
-    if (n<840) then { "perch_B" } else
-    if (n<880) then { "item!ART-MUTARIUM-D"} else
-    if (n<940) then { "incubator" } else
+    if (n<40 && "item!ART-FIRE_SHIELD" != blacklistCode) then { "item!ART-FIRE_SHIELD" } else
+    if (n<80 && "item!ART-FIRE_TAIL" != blacklistCode) then { "item!ART-FIRE_TAIL" } else    
+    if (n<100 && "item!ART-FREEGENE" != blacklistCode) then { "item!ART-FREEGENE" } else                
+    if (n<150 && "beach_R" != blacklistCode) then { "beach_R" } else 
+    if (n<200 && "beach_S" != blacklistCode) then { "beach_S" } else
+    if (n<250 && "beach_G" != blacklistCode) then { "beach_G" } else
+    if (n<300 && "beach_D" != blacklistCode) then { "beach_D" } else
+    if (n<380 && "item!ART-MUTARIUM-G" != blacklistCode) then { "item!ART-MUTARIUM-G"} else
+    if (n<400 && "item!ART-FEED5" != blacklistCode) then { "item!ART-FEED5" } else    
+    if (n<600 && "item!ART-FEED10" != blacklistCode) then { "item!ART-FEED10" } else    
+    if (n<620 && "item!ART-FEED15" != blacklistCode) then { "item!ART-FEED15" } else    
+    if (n<640 && "item!ART-FEED20" != blacklistCode) then { "item!ART-FEED20" } else    
+    if (n<660 && "item!ART-FEED25" != blacklistCode) then { "item!ART-FEED25" } else    
+    if (n<680 && "item!ART-FEED50" != blacklistCode) then { "item!ART-FEED50" } else    
+    if (n<760 && "item!ART-FEED100" != blacklistCode) then { "item!ART-FEED100" } else    
+    if (n<780 && "perch_G" != blacklistCode) then { "perch_G" } else
+    if (n<800 && "perch_Y" != blacklistCode) then { "perch_Y" } else
+    if (n<820 && "perch_R" != blacklistCode) then { "perch_R" } else
+    if (n<840 && "perch_B" != blacklistCode) then { "perch_B" } else
+    if (n<880 && "item!ART-MUTARIUM-D" != blacklistCode) then { "item!ART-MUTARIUM-D"} else
+    if (n<940 && "incubator" != blacklistCode) then { "incubator" } else
     { "duck_incubator" }
 
     (n,result)
 }
 
-func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean) = {
+func getRandomReturn(tx: ByteVector, finishHeight: Int)={
+  let n = getRandomNumber(2, tx, finishHeight, 1)
+  if n == 0 then true else false
+}
+
+func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean, blacklistCode: String, rescue: Boolean) = {
   let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
   strict validPayment = checkAdditionalPayment(additionalPayment)
@@ -162,7 +180,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       throw("you cannot finish rebirth, yet")
     } else {
 
-      let output = getRandomWin(initTx.fromBase58String(), finishBlock)  
+      let output = getRandomWin(initTx.fromBase58String(), finishBlock, blacklistCode)  
       let win = output._2
       let random = output._1
 
@@ -198,7 +216,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         call
 
       } else if (win == "jackpot") then {
-        strict call = invoke(getTurtleIncubatorAddress(), "issueJackpot", [address, txId, valueOrElse(getString("JACKPOT_NAME"),"WWWWXMAS")], []) 
+        strict call = invoke(getTurtleIncubatorAddress(), "issueJackpot", [address, txId, "WTGINGER"], []) 
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
 
       } else if (win == "incubator") then {
@@ -248,7 +266,15 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       }else{
         throw("RFB: Some error occured, please contact the admins!")
       }
-
+      let returnToSender =  if rescue then getRandomReturn(initTx.fromBase58String(), finishBlock) else false
+      let returnPayload = if returnToSender then
+        let assetId = getStringValue("address_" + address + "_initTx_" + initTx + "_assetId").fromBase58String()
+        let issuer = checkReal(assetId)   
+        strict gen = invoke(getTurtleBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
+        strict call = invoke(issuer, "increaseRarity", [assetId.toBase58String(), gen], [])
+        [ScriptTransfer(address.addressFromStringValue(), 1, 
+        assetId)] 
+      else []
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
@@ -322,7 +348,7 @@ func initRebirth(refererAddress: String) = {
 
 @Callable(i)
 func finishRebirth(initTx: String) = {
-  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false)
+  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false, "", false)
 }
 
 @Callable(i)
@@ -335,7 +361,64 @@ func finishRebirthDouble(initTx: String) = {
       [
         Burn(assetId,1)
       ]++
-      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true)
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true, "", false)
     else
       throw("Error! Wrong item attached to double rewards!")
 }
+
+@Callable(i)
+func finishRebirthItem(initTx: String, itemCode: String) = {
+  #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
+  if (size(i.payments) == 2 && i.payments[0].amount==1) then
+    let assetId = i.payments[0].assetId.value()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    #TODO CHANGE INTO CORRECT TYPE!!!!
+    if boosterType == "ART-HWERASE" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false, itemCode,false)
+    
+    else if boosterType == "ART-HWRESCUE" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false, "",true)
+    else if boosterType == "ART-GIFT_DOUBL" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true, "",false)
+    else
+      throw("Error! Wrong item attached ")
+  else if (size(i.payments) == 1 ) then 
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false,"",false)
+  else throw("Invalid payments")
+}
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+} 

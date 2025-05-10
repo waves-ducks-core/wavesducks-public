@@ -2,6 +2,18 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
+
+
 let Scale = 100000000
 
 func tryGetStringExternal(address: Address, key: String) = {
@@ -30,10 +42,12 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 let keyGlobalEarned =  "global_earnings"
 func staticKey_veggPerchFee() = "static_veggPerchFee"
+func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
+func staticKey_gameDappAddress() = "static_gameDappAddress"
 
 func totalStakedKey() = "total_staked"
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
@@ -42,6 +56,8 @@ func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_co
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),staticKey_gameDappAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -57,11 +73,16 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 
 }
 
-func tryGetInteger(key: String) = {
-    match getInteger(this, key) {
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
         case b:Int => b
         case _ => 0
     }
+
+}
+
+func tryGetInteger(key: String) = {
+    tryGetIntegerExternal(this,key)
 }
 
 func asInt(value: Any) = match value {
@@ -221,6 +242,21 @@ func configureOracle(oracle: String) = {
 }
 
 @Callable(i)
+func addFreePerch(address: String, color: String, amount: Int) = {
+  if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
+    throw("you need to set color properly")
+  } else if (i.caller != this  && i.caller != getEagleRebirthAddress()) then {
+    throw("rebirth and admin only")
+  } else {
+    let perchAmountKey = "address_" + address + "_perchesAvailable_" + color
+    let perchAmount = tryGetInteger(perchAmountKey)
+    ([
+      IntegerEntry(perchAmountKey, perchAmount + amount)
+    ], "")
+  }
+}
+
+@Callable(i)
 func buyPerch(colorI: String, refererAddress: String) = {
     strict validPayment = checkAdditionalPayment(i.payments[0])
     let color = if colorI == "U" then "B" else colorI
@@ -301,3 +337,57 @@ func claimReward (assetId: String) = {
   if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else    
   if (i.payments.size() > 1) then throw("Please don't add extra payments") else claimStakingResult(i.caller.toString(), assetId)++validPayment
   }
+
+@Callable(i)
+func wearMantle (assetId: String, mantleId: String) = {
+  func keyOnlyArtefactLevel(artefactId: String) = {
+  "artefactId_" + artefactId + "_level"
+  }
+  func keyArtefactOwnerAndStatus(type: String, owner: String, artefactId: ByteVector) = {
+  "address_" + owner + "_artefact_" + type + "_artefactId_" + artefactId.toBase58String() + "_status"
+}
+
+func keyArtefactStatus(type: String, artefactId: ByteVector) = {
+  "artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_status"
+}
+  strict validPayment = checkAdditionalPayment(i.payments[0])
+  if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else    
+  if (i.payments.size() > 1) then throw("Please don't add extra payments") else
+  let mantleLevel = tryGetIntegerExternal(getGameDappAddress(),keyOnlyArtefactLevel(mantleId))
+  if (mantleLevel == 0) then throw("You don't own this mantle!!") else
+  if tryGetBoolean("mantle_equipped_" + mantleId) then throw("You already have this mantle equipped!") else
+  if tryGetStringExternal(getGameDappAddress(),keyArtefactOwnerAndStatus("mantle", i.caller.toString(), mantleId.fromBase58String())) != "FREE" then throw("You already have this mantle equipped!") else
+  if tryGetStringExternal(getGameDappAddress(),keyArtefactStatus("mantle", mantleId.fromBase58String())) != "FREE" then throw("This mantle is not free!") else  
+  strict invokeRes = invoke(getGameDappAddress(), "changeMantleStatus", [mantleId,"OCCUPIED",i.caller.toString()], [])
+  [
+    BooleanEntry("mantle_equipped_" + mantleId, true)
+  ]
+}
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+}   

@@ -1,0 +1,86 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+
+func tryGetInteger(key: String) = {
+  match getInteger(this, key) {
+      case b:Int => b
+      case _ => 0
+  }
+}
+
+func tryGetString(key: String) = {
+  match getString(this, key) {
+      case b:String => b
+      case _ => ""
+  }
+}
+
+func checkNFT(asset: Asset) = {
+  asset.issuer.bytes == this.bytes && asset.decimals == 0 && asset.reissuable == false && asset.quantity == 1
+}
+
+
+@Callable(i)
+func createNFT(nftName: String, nftDesc: String, image: String, collectionName: String) = {
+  if (i.caller.toString() != "3PMki5sHBsQb4KgDknbUwsL3YgxaCzaZnCJ" && i.caller.toString() != "3P2wMCDjtxeLdfQrpR8WUe5zNeScM4UaL3o" && i.caller.toString() != "3P3pDosq4GCwfJkvq4yqKvvoTwmoqc9qPmo" && i.caller.toString() != "3PPgeYTWMRZ7S7jSLpnVuKKB9r6XuDk3ndC") then {throw("issuance of new NFTs is limited")}
+  else if (image.indexOf("https://") != 0) then {
+    throw("https link to image required")
+  } else {
+    let asset = Issue(nftName, nftDesc, 1, 0, false, unit, 0)
+    let assetId = asset.calculateAssetId()
+    let assetIdStr = assetId.toBase58String()
+
+    let collectionDomain = i.caller.toString() + "_" + if (collectionName.size() > 0) then {collectionName} else {"basic"}
+    let nftNum = tryGetInteger("collection_" + collectionDomain + "_size") + 1
+    
+    ([
+      StringEntry("nft_" + assetIdStr + "_data", "{'collection': '"+collectionDomain+"', 'num': "+nftNum.toString()+"}"),
+      StringEntry("nft_" + assetIdStr + "_image", image),
+      StringEntry("nft_" + assetIdStr + "_issuer", i.caller.toString()),
+
+      IntegerEntry("collection_" + collectionDomain + "_size", nftNum),
+      StringEntry("collection_" + collectionDomain + "_assetId_" + assetIdStr, assetIdStr),
+
+      asset,
+      ScriptTransfer(i.caller, 1, assetId)
+    ], assetIdStr)
+  }
+}
+
+@Callable(i)
+func burnNFT() = {
+  let assetId = i.payments[0].value().assetId.value()
+  let asset = assetInfo(assetId).value()
+
+  if (i.payments[0].value().amount == 1 && asset.checkNFT()) then {
+    let assetIdStr = assetId.toBase58String()
+    let issuer = tryGetString("nft_" + assetIdStr + "_issuer")
+    let data = tryGetString("nft_" + assetIdStr + "_data")
+
+    let partsData = data.split(" ,")
+    let partsCollection = partsData[0].split(": ")
+    let collectionDomain = partsCollection[1].drop(1).dropRight(1)
+
+    let nftNum = tryGetInteger("collection_" + collectionDomain + "_size")
+    # if (nftNum > 0) then {
+      let updateCollection = if (nftNum == 1)
+        then DeleteEntry("collection_" + collectionDomain + "_size")
+        else IntegerEntry("collection_" + collectionDomain + "_size", nftNum - 1)
+      [
+        updateCollection,
+        Burn(assetId, 1),
+
+        DeleteEntry("nft_" + assetIdStr + "_data"),
+        DeleteEntry("nft_" + assetIdStr + "_image"),
+        DeleteEntry("nft_" + assetIdStr + "_issuer"),
+        DeleteEntry("collection_" + collectionDomain + "_assetId_" + assetIdStr)
+      ]
+    # } else throw("Ivalid collection name")
+  } else throw("Ivalid NFT attached")
+}
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+

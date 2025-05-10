@@ -1,0 +1,61 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_turtleIncubatorAddress",
+            "type": "string",
+            "value": "3MvD6ypLdYhx8WBqi2FjCr3GqrncFiZWDbq"
+        },
+        {
+            "key": "static_turtleIncubationFee",
+            "type": "integer",
+            "value": 100000000
+            
+        },
+        {
+            "key": "static_turtleBeachFee",
+            "type": "integer",
+            "value": 200000000
+            
+        },
+        {
+            "key": "static_turtleBreederAddress",
+            "type": "string",
+            "value": "3N5LaqMhtroXEqtz3nUc4QFZuPsq85MH2RU"
+        },
+        {
+            "key": "static_turtleStakingAddress",
+            "type": "string",
+            "value": "3MvqNgAQonu6nSGGh71ohTyBPhzdJxPK7QA"
+        },
+        {
+            "key": "static_turtleRebirthAddress",
+            "type": "string",
+            "value": "3Mrq917T9DgxmZHP2wBRURvA2jUseEGaMqW"
+        },
+        {
+            "key": "static_turtleSpiceRebirthPrice",
+            "type": "integer",
+            "value": 2100000000
+            
+        },
+        {
+            "key": "static_turtleWavesRebirthPrice",
+            "type": "integer",
+            "value": 2
+            
+        },
+        {
+            "key": "static_turtleEggRebirthPrice",
+            "type": "integer",
+            "value": 110000000
+            
+        }
+        
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES",
+    "sender":"3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9",
+    "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
+}

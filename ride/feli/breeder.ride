@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 6 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -27,7 +27,7 @@ func staticKey_canineRebirthAddress() = "static_felineRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getCanineIncubator() = Address(tryGetStringExternal(getOracle(),staticKey_felineIncubator()).fromBase58String())
 func getCanineIncubationFee() = getIntegerValue(getOracle(),staticKey_felineIncubationFee())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
@@ -65,6 +65,16 @@ func getProcessStatusKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_status"
 }
 
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+func isTestEnv()={
+  getBool("TESTENV")
+}
+
 func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_fh"
 }
@@ -100,13 +110,21 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
   randomHash.toInt(offset) % variants
 }
 
-func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int) = {
+func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int,geneFromParent: Int, genePostion: Int,
+specifiqueGene: String, specifiqueGenePosition: Int) = {
+  if geneFromParent != 0 && genePostion==step then{ 
+    if geneFromParent == 1 then gen1 else 
+    if geneFromParent == 2 then gen2 else throw("Parent either needs to be 1 or 2")
+  }else if specifiqueGene != "" && specifiqueGenePosition==step then{
+    specifiqueGene
+  }else
   let randomNum = getRandomNumber(2, txId, hatchingFinishHeight, step)
   let gen = if (randomNum == 0) then gen1 else gen2
   gen
 }
-
-func generate(txId: ByteVector, hatchingFinishHeight: Int) = {
+func generate(txId: ByteVector, hatchingFinishHeight: Int,
+parentFixedGene: Int,positionFixedGene: Int,
+specifiqueGene: String, specifiqueGenePosition: Int) = {
   let colorRandom = getRandomNumber(4, txId, hatchingFinishHeight, 11)
   let color = if (colorRandom == 0) then "A"
     else if (colorRandom == 1) then "B" 
@@ -120,14 +138,14 @@ func generate(txId: ByteVector, hatchingFinishHeight: Int) = {
   let parent2Gen = assetInfo(parent2Id).value().name.split("")
 
   let gen = "FELI-" 
-            + getRandomGen(parent1Gen[5], parent2Gen[5], 0, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[6], parent2Gen[6], 1, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[7], parent2Gen[7], 2, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[8], parent2Gen[8], 3, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[9], parent2Gen[9], 4, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[10], parent2Gen[10], 5, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight)
-            + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight)
+            + getRandomGen(parent1Gen[5], parent2Gen[5], 0, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[6], parent2Gen[6], 1, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[7], parent2Gen[7], 2, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[8], parent2Gen[8], 3, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[9], parent2Gen[9], 4, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[10], parent2Gen[10], 5, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
+            + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + "-" + determineGeneration(parent1Gen[14], parent2Gen[14]) + color
     gen
 }
@@ -184,6 +202,19 @@ func getGen(assetName: String) = {
   getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H")+"-" + generation
 }
 
+func composeGenericData(Gen: String, IdKey: String, assetId: ByteVector, asset: Issue)= {
+  strict farmGen = invoke(this,"getGenFromName",[Gen],[]).asString()
+  let amount = tryGetInteger(getStatsKey(Gen))
+  let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+  [
+    StringEntry(IdKey, assetId.toBase58String()),
+    StringEntry(assetId.toBase58String(), IdKey),
+    IntegerEntry(getStatsKey(Gen), amount + 1),
+    IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+    asset
+    ]
+}
+
 func finishHatchingInternal(txIdStr: String, i: Invocation,
       parentFixedGene: Int,positionFixedGene: Int,
       specifiqueGene: String, specifiqueGenePosition: Int)={
@@ -201,27 +232,20 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
   } else 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
-      let Gen = generate(txId, processFinishHeight)
+      let Gen = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
       let farmGen = getGen(Gen)
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
-      let amount = tryGetInteger(getStatsKey(Gen)) + 1
-      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
-
+      composeGenericData(Gen,IdKey,assetId,asset)++
       [
         StringEntry(processStatusKey, HatchingFinished),
-        StringEntry(IdKey, assetId.toBase58String()),
-        StringEntry(assetId.toBase58String(), IdKey),
-        IntegerEntry(getStatsKey(Gen), amount),
-        IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
-        asset,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
@@ -241,6 +265,21 @@ func asInt(value: Any) = match value {
 }
 
 
+
+@Callable(i)
+func increaseRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getFeliRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ]
+  }
+}
+
 @Callable(i)
 func getGenFromName(assetName: String) = {
     let genotype = assetName.drop(5).dropRight(3).split("")
@@ -253,6 +292,59 @@ func getGenFromName(assetName: String) = {
     gen
     )
   }
+
+@Callable(i)
+func createSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
+  if (i.caller != this) then throw("FBCSG: admin only") else
+  let txId = i.transactionId
+  let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+  let asset = Issue(duckGen, description, 1, 0, false)
+  let assetId = asset.calculateAssetId()
+  let duckIdKey = getIdKey(i.caller.toString(), txId)
+
+  #TODO: work around for known issue dapp to dapp
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  composeGenericData(duckGen,duckIdKey,assetId,asset)++
+  [
+    IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
+    ScriptTransfer(Address(address), 1, assetId)
+  ]
+  
+ }
+
+@Callable(i)
+func validateAndGetChildren(assetId: String) = {
+  if (!checkAssetInIncubator(assetId)) then throw("You need to attach a valid NFT-feline. "+assetId+" is invalid!") else
+  let children = tryGetInteger("asset_" + assetId + "_children")
+  (
+    []
+    ,
+    children
+  )
+
+}
+
+@Callable(i)
+func copyNFT()= {
+  let firstPayment = i.payments[0].value()
+  let secondPayment = i.payments[1].value()
+  let validPayment = checkAdditionalPayment(i.payments[2])
+  let firstAssetId = firstPayment.assetId.value().toBase58String()
+  strict children = invoke(this,"validateAndGetChildren",[firstAssetId],[]).asInt()
+  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
+  if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
+  let nftInfo = assetInfo(firstPayment.assetId.value()).value()
+  let asset1Gen = nftInfo.name.split("")        
+  if (asset1Gen[14] == "G" || asset1Gen[14] == "J" || asset1Gen[14] == "O" ) then  throw("You can't mirror this NFT") else
+    let duckGen = nftInfo.name
+    strict call = invoke(this, "createSpecialGenes", [i.caller.bytes, duckGen,children], [])
+    [
+      ScriptTransfer(i.caller, 1, firstPayment.assetId),
+      Burn(secondPayment.assetId.value(),1)
+    ]++validPayment
+
+}
 
 @Callable(i)
 func startBreeding(refererAddress: String) = {
@@ -338,7 +430,7 @@ func freeGene(txIdStr: String) = {
 
   let selectedGene = getRandomOldGenes(txIdStr.fromBase58String(),processFinishHeight)
   let randomPosition = getRandomNumber(8, txIdStr.fromBase58String(), processFinishHeight, 3)
-  finishHatchingInternal(txIdStr,i,0,0,"",0)
+  finishHatchingInternal(txIdStr,i,0,0,selectedGene,randomPosition)
   ++feeValidate
   ++[Burn(firstPayment.assetId.value(),1)]
 
@@ -375,4 +467,29 @@ func reduceRarity(assetId: String, farmGen: String) = {
 }
 
 @Verifier(tx)
-func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+}
