@@ -477,10 +477,7 @@
             "key": "TASK_LEVELUP_REWARD_WEEKLY",
             "type": "integer",
             "value": 2000000000
-        }
-            
         },
-
         {
             "key": "TASK_REBIRTHEAGLE_1_TEXT_EN",
             "type": "string",
@@ -516,17 +513,17 @@
         {
             "key": "TASK_REBIRTHFELINE_1_TEXT_EN",
             "type": "string",
-            "value": "Make a rebirth of a feline and receive instant cashback in {{reward}} $SPICE'
+            "value": "Make a rebirth of a feline and receive instant cashback in {{reward}} $SPICE"
         },
         {
             "key": "TASK_REBIRTHFELINE_1_TEXT_RU",
             "type": "string",
-            "value": "Сделайте возрождение кошки и получите мгновенный кэшбэк в размере {{reward}} $SPICE'
+            "value": "Сделайте возрождение кошки и получите мгновенный кэшбэк в размере {{reward}} $SPICE"
         },
         {
             "key": "TASK_REBIRTHFELINE_1_TEXT_ES",
             "type": "string",
-            "value": "Haz renacer un felino y recibe reembolso instantáneo de {{reward}} $SPICE'
+            "value": "Haz renacer un felino y recibe reembolso instantáneo de {{reward}} $SPICE"
         },
         {
             "key": "TASK_REBIRTHFELINE_1",
