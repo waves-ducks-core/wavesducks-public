@@ -87,6 +87,26 @@
             "value": 0
         },
         {
+            "key": "direct_cosmetic_ART-FEED500",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED500_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED500_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED500_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
             "key": "direct_cosmetic_ART-FEED5",
             "type": "integer",
             "value": 1
