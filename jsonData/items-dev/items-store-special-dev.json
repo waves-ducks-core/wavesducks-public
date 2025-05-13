@@ -137,11 +137,6 @@
             "value": 1
         },
         {
-            "key": "direct_cosmetic_ART-FEED500",
-            "type": "integer",
-            "value": 1
-        },
-        {
             "key": "direct_cosmetic_ART-POTION",
             "type": "integer",
             "value": 1
