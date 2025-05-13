@@ -162,6 +162,12 @@ func claimStakingResult (address: String, assetId: String, recalc: Boolean, reve
       [ScriptTransfer(addressFromStringValue(address), reward , getSpiceAssetId())] else
       if reveneuType == "EGG" then
       [ScriptTransfer(addressFromStringValue(address), reward , getEggAssetId())] else
+      if reveneuType == "WAVES" then
+      [ScriptTransfer(addressFromStringValue(address), reward , unit)] else
+      if reveneuType == "PUZZLE" then
+      [ScriptTransfer(addressFromStringValue(address), reward , getPuzzleAssetId())] else
+      if reveneuType == "PETE" then
+      [ScriptTransfer(addressFromStringValue(address), reward , getPeteAssetId())] else
       if reveneuType == "FEED" then
       strict invokeResult = if (reward >0 ) then  invoke(getAccBoosterAddress(),"addFeedLimit",[reward,address],[]) else unit
       [] else
@@ -201,13 +207,13 @@ func deterMineClassAndClaimType(address: String, assetId: String, assetName: Str
     claimStakingResult(address, assetId, recalc, "VEGG")
   } else []
   let fKeys = if isF then {
-    throw("Farming is not implemented yet for feline")
+    claimStakingResult(address, assetId, recalc, "PETE")
   } else []
   let cKeys = if isC then {
-    throw("Farming is not implemented yet for canine")
+    claimStakingResult(address, assetId, recalc, "WAVES")
   } else []
   let eKeys = if isE then {
-    throw("Farming is not implemented yet for eagles")
+    claimStakingResult(address, assetId, recalc, "PUZZLE")
   } else []
   tKeys++dKeys++fKeys++cKeys++eKeys
 }
