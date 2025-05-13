@@ -115,10 +115,11 @@ func validateIfItemCanBeWorn(allTypes:Boolean,type:String,artefactName:String)={
 
 }
 
-func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean)={
+func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean, isDuck: Boolean)={
   strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetIdWearAble],[]).asString()
   if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
     let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
+    if artefactName == "ART-XSCARF" && isDuck then throw("WRITD: You can't wear this item on duck") else
     strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
     if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
       let type = tryGetType(artefactName)
@@ -187,7 +188,7 @@ func wearItemToDuck() = {
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("WRITD: NFT is not attached") else
   let allTypes = getIfAllTypesAllowed(firstPayment.assetId.value())
   strict recordAction = invoke(getCouponsAddress(),"recordAction",["WEARITEM"],[])
-  wearItem(secondAssetId,duckId,allTypes)++[
+  wearItem(secondAssetId,duckId,allTypes, (assetInfo(firstPayment.assetId.value()).value().issuer == getIncubatorAddress() || assetInfo(firstPayment.assetId.value()).value().issuer == getBreederAddress()))++[
     ScriptTransfer(i.caller, 1, firstPayment.assetId)
   ]++validPayment
 
