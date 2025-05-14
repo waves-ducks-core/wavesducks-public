@@ -114,7 +114,7 @@ func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean, isDuck
   strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetIdWearAble],[]).asString()
   if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
     let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
-    if artefactName == "ART-XSCARF" && isDuck then throw("WRITD: You can't wear this item on duck") else
+    if artefactName == "ART-XSCARF" && !isDuck then throw("WRITD: You can only wear this item on ducks") else
     strict boostDuck = if artefactName == "ART-XSCARF" then invoke(getItemsAddress(),"manipulateBoost",[69,duckId],[]) else nil
     if artefactId != "" then throw("Duck is already wearing a "+artefactName) else
       let type = tryGetType(artefactName)
