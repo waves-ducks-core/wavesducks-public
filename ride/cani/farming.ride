@@ -80,13 +80,6 @@ func tryGetInteger(key: String) = {
 }
 
 
-func asIntTuple(value: Any) = match value {
-  case int: (Int,Int) => int
-  case _ => throw("FAI: wrong type, expected: (Int,Int)")
-}
-
-
-
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -133,7 +126,7 @@ func updateFarmingPower(address: String, asset:String) ={
   let totalStaked = tryGetInteger(totalStakedKey())
   let totalStakedUser = tryGetInteger(totalStakedUserKey(address))
   let currentFP = tryGetInteger(assetFarmingPower(address,asset))
-  let newFP = invoke(this,"calculateFarmPower",[asset, address],[]).asIntTuple()
+  let newFP = invoke(this,"calculateFarmPower",[asset, address],[]).exactAs[(Int,Int)]
   if currentFP != 0 then
   [
       IntegerEntry(totalStakedKey(),totalStaked-currentFP+newFP._1),
@@ -341,7 +334,7 @@ func stakeNFT(jColor: String) = {
   
   if (pmt.amount != 1) then throw("NFT is not attached") else
   
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).asIntTuple()
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).exactAs[(Int,Int)]
     strict result = claimStakingResult(address,assetId.toBase58String(), false)
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower._1),

@@ -68,11 +68,6 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnA
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
-func asIntTuple(value: Any) = match value {
-  case int: (Int,Int) => int
-  case _ => throw("FAI: wrong type, expected: (Int,Int)")
-}
-
 func asBoolean(value: Any) = match value {
   case boolean: Boolean => boolean
   case _ => throw("FAB: wrong type, expected: Boolean")
@@ -132,7 +127,7 @@ func updateFarmingPower(address: String, asset:String,reveneuType: String) ={
   let totalStaked = tryGetInteger(totalStakedKey(reveneuType))
   let totalStakedUser = tryGetInteger(totalStakedUserKey(address,reveneuType))
   let currentFP = tryGetInteger(assetFarmingPower(address,asset))
-  let newFP = invoke(this,"calculateFarmPower",[asset],[]).asIntTuple()
+  let newFP = invoke(this,"calculateFarmPower",[asset],[]).exactAs[(Int,Int)]
   if currentFP != 0 then
   [
       IntegerEntry(totalStakedKey(reveneuType),totalStaked-currentFP+newFP._1),
@@ -381,7 +376,7 @@ func stakeNFT() = {
   
   if (pmt.amount != 1) then throw("NFT is not attached") else
   
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asIntTuple()
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).exactAs[(Int,Int)]
     strict result = deterMineClassAndClaimType(address,assetId.toBase58String(),assetName,false)
     [
       StringEntry(assetId.toBase58String()+"_owner",address),

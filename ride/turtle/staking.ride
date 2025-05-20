@@ -70,11 +70,6 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
-}
-
 func claimStakingResult (address: Address) = {
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let lastCheckInterest = tryGetInteger(keyLastCheckInterest(address))

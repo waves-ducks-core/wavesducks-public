@@ -10,11 +10,6 @@ func calculateDaysSinceStart()={
   daysPassed
 }
 
-func asIntTuple(value: Any) = match value {
-  case int: (Int,Int) => int
-  case _ => throw("Wrong type, expected: Tuple Int")
-}
-
 func staticKey_eggAssetId () = "static_eggAssetId"
 func staticKey_spiceAssetId () = "static_spiceAssetId"
 func staticKey_peteAssetId () = "static_peteAssetId"
@@ -543,7 +538,7 @@ func swap(assetOut: String, minimum: Int) ={
   let AmountIn = i.payments[0].amount.value()
   let AssetIn = pmt.assetId
 
-  strict invokeSwap = reentrantInvoke(this,"swapInternal",[assetOut,minimum,AmountIn,AssetIn.getAssetString(), i.caller.toString()],[]).asIntTuple()
+  strict invokeSwap = reentrantInvoke(this,"swapInternal",[assetOut,minimum,AmountIn,AssetIn.getAssetString(), i.caller.toString()],[]).exactAs[(Int,Int)]
   strict cleanAmountOut = invokeSwap._1 
   strict feeAmount = invokeSwap._2
 

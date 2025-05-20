@@ -111,11 +111,6 @@ func keyArtefactNftId(artefactId: ByteVector)={
 
 func isJackpot(assetId: ByteVector ) = assetInfo(assetId).value().name.value().takeRight(1) == "U"
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("WAI: wrong type, expected: Int")
-}
-
 
 func upgradeMantleFunc(i: Invocation, artefactId: String, amount: Int) = {
     let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
@@ -254,7 +249,7 @@ func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
     else 0
   if (couponsAmount+amount < upgradePointPrice) then throw("WUMBC: Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
   else {
-      strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[couponsAmount],[]).asInt()
+      strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[couponsAmount],[]).exactAs[Int]
       if couponsAmount != amountPaidByCoupons then throw("WUMBC: Not enough coupons! Please make sure to pick lower coupon amount!") else
       upgradeMantleFunc(i,artefactId,couponsAmount+amount)
   }
@@ -378,7 +373,7 @@ func takeOffArtefact(duckId:String, artefactType: String) = {
     let hasSweater = tryGetStringExternal(getWearablesAddress(),duckId+"_ART-XSWEATER")
     let isStaked = if tryGetStringExternal(getFarmingAddress(),"address_"+i.originCaller.toString()+"_asset_"+duckId+"_unstaker") == "" then false else true
     strict unstakeDuck = if hasSweater != "" && isStaked then
-                            if isJackpot(duckId.fromBase58String()) then invoke(getFarmingAddress(),"unstakeJackpot",[duckId],i.payments).asInt() else invoke(getFarmingAddress(),"unstakeNFT",[duckId],i.payments).asInt()
+                            if isJackpot(duckId.fromBase58String()) then invoke(getFarmingAddress(),"unstakeJackpot",[duckId],i.payments).exactAs[Int] else invoke(getFarmingAddress(),"unstakeNFT",[duckId],i.payments).exactAs[Int]
                          else 0
     let sendRewards = if unstakeDuck > 0 then [ScriptTransfer(i.originCaller, unstakeDuck, getEggAssetId())] else []
     [
