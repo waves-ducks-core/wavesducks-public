@@ -199,11 +199,6 @@ func asString(value: Any) = match value {
   case _ => throw("wrong type, expected: String")
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
-
 func asBoolean(value: Any) = match value {
   case boolean: Boolean => boolean
   case _ => throw("BDA: wrong type, expected: Boolean")
@@ -455,7 +450,7 @@ func startDuckBreeding(refererAddress: String) = {
   let secondAssetId = secondPayment.assetId.value().toBase58String()
 
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getDucklingPrice()],[]).asInt()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getDucklingPrice()],[]).exactAs[Int]
 
     let leftToPay = getDucklingPrice()-amountPaidByCoupons
 
@@ -475,8 +470,8 @@ func startDuckBreeding(refererAddress: String) = {
         leftToPay
     }else 0
 
-  strict children1 = invoke(this,"validateAndGetChildren",[firstAssetId],[]).asInt()
-  strict children2 = invoke(this,"validateAndGetChildren",[secondAssetId],[]).asInt()
+  strict children1 = invoke(this,"validateAndGetChildren",[firstAssetId],[]).exactAs[Int]
+  strict children2 = invoke(this,"validateAndGetChildren",[secondAssetId],[]).exactAs[Int]
     if ( children1 > 0 || children2 > 0) then throw("One duck can be used for breeding only once in its lifetime.") else 
       let breededStatus = canBeBreeded(firstAssetId.fromBase58String(), secondAssetId.fromBase58String())
       if (breededStatus != "true") then throw("These ducks cannot be breeded: " + breededStatus) else

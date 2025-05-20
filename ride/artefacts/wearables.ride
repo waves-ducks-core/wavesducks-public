@@ -50,11 +50,6 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
-
 func asString(value: Any) = match value {
   case string: String => string
   case _ => throw("wrong type, expected: String")

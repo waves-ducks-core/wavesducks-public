@@ -49,10 +49,6 @@ func asString(value: Any) = match value {
   case _ => throw("wrong type, expected: String")
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
 
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
@@ -171,7 +167,7 @@ func stakeDuck(duckHouseId: String, JColor: String)={
 @Callable(i)
 func unstakeDuck(asset: String)={
     strict duckHouseId = validateOwnerAndGetHouse(asset,i)
-    strict unstakeDuckReward = invoke(getFarmingAddress(),"unstakeNFT",[asset],i.payments).asInt()
+    strict unstakeDuckReward = invoke(getFarmingAddress(),"unstakeNFT",[asset],i.payments).exactAs[Int]
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
     if filledSpots == 0 then throw("You aren't staking any ducks!") else
     strict unboostDuck = invoke(getItemsAddress(),"manipulateBoost",[-boost(),asset],[])
@@ -187,7 +183,7 @@ func unstakeDuck(asset: String)={
 @Callable(i)
 func claimDuckRewards(asset: String)={
     strict owner = validateOwnerAndGetHouse(asset,i)
-    strict claimRewards = invoke(getFarmingAddress(),"claimReward",[asset],i.payments).asInt()
+    strict claimRewards = invoke(getFarmingAddress(),"claimReward",[asset],i.payments).exactAs[Int]
     [
         ScriptTransfer(i.caller, claimRewards, getEggAssetId())
     ]

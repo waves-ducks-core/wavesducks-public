@@ -197,11 +197,6 @@ func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
-
 func getGen(assetName: String) = {
   # getGen("TRTL-ABCDDCBA-GY") -> 2A2B2C2D-G
   let genotype = assetName.drop(5).dropRight(3).split("")
@@ -309,7 +304,7 @@ func startBreeding(refererAddress: String) = {
   let firstPayment = i.payments[1].value()
   let secondPayment = i.payments[2].value()
   
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getCanineIncubationFee()],[]).asInt()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getCanineIncubationFee()],[]).exactAs[Int]
   let leftToPay = getCanineIncubationFee()-amountPaidByCoupons
   if leftToPay == 0 && size(i.payments) == 4 then throw("You need to attach 3 payments") else
   strict payment = if leftToPay!=0 then {

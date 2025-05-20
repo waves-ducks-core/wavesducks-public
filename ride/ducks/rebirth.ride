@@ -169,11 +169,6 @@ func getOrigin(assetId: ByteVector) = {
   }
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case string: String => throw("RAI: wrong type, expected: Int, but got: "+string)
-  case _ => throw("RAI: wrong type, expected: Int")
-}
 
 func getBool(key: String) = {
   match getBoolean(this, key) {
@@ -317,7 +312,7 @@ func initRebirth(refererAddress: String) = {
   if (pmt.amount != 1) then throw("NFT is not attached") else
 
 
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[feeAmount/2],[]).asInt()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[feeAmount/2],[]).exactAs[Int]
   let leftToPay = feeAmount-amountPaidByCoupons
 
   strict validPayment = checkAdditionalPayment(i.payments[1])

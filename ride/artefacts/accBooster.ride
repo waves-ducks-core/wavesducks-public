@@ -62,10 +62,6 @@ func asString(value: Any) = match value {
   case _ => throw("wrong type, expected: String")
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else

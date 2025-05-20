@@ -40,10 +40,6 @@ func asString(value: Any) = match value {
   case _ => throw("wrong type, expected: String")
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
 
 func isJackpotDuck(assetNameParts: List[String]) = { assetNameParts[assetNameParts.size() - 2] == "J" }
 
@@ -63,7 +59,7 @@ func getAssetRarity(genotype: String, generation: String) = {
 
 func getAssetFarmingPower(assetId: ByteVector) = {
   if (assetInfo(assetId).value().issuer == getBreederAddress() || assetInfo(assetId).value().issuer == getIncubatorAddress()) then {  
-    strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId.toBase58String(),"UnusedAddress"],[]).asInt()
+    strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId.toBase58String(),"UnusedAddress"],[]).exactAs[Int]
     let assetName = assetInfo(assetId).value().name
     let isJackpot = assetName.value().takeRight(1) == "U"
 

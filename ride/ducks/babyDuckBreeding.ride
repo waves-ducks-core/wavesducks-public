@@ -137,11 +137,6 @@ func calculateNewDucklingLevel(ducklingId: String, paymentAmount: Int) = {
   (result, ["currentLevel=" + currentLevel.toString(), "newLevel=" + newLevel.toString(), "growth=" + growth.toString(), "lastFedTs=" + lastFedTimestampChecked.toString(), "fedDiff=" + fedDiff.toString()])
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("BAI: wrong type, expected: Int")
-}
-
 func tryGetBoolean(key: String) = {
     match getBoolean(key) {
         case b:Boolean => b

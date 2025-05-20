@@ -119,7 +119,7 @@ func unstakeNFTInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
     let color = if colorFromName == "U" then "G" else colorFromName
     let appendPerches = [IntegerEntry("address_"+address+"_beachesAvailable_"+color, tryGetInteger("address_"+address+"_beachesAvailable_"+color) + 1)]
     if getStringValue(assetId.toBase58String()+"_owner") != address then throw("This is not your turtle to claim!!") else
-    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asInt()
+    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).exactAs[Int]
 
     #TODO: send turtle to the user, 
     #TODO: lower fp
@@ -157,7 +157,7 @@ func calculateFarmPower(assetId:String)={
   let power = pow(15,1,totalGenes,0,2,DOWN)
   strict farmBoost = 0
   #Recalculate bonusses every claim
-  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).asInt()
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
   let finalPowerRarityBoost = power+power*farmBoost/100+power*wearabledBoost/1000
 
   ([
@@ -206,7 +206,7 @@ func buyBeach(color: String, refererAddress: String) = {
     } else {
       let exactPrice = getIntegerValue(getOracle(),staticKey_turtleBeachFee())
       let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice/2],[]).asInt()
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice/2],[]).exactAs[Int]
           exactPrice-amountPaidByCoupons
         }else {
             exactPrice
@@ -260,7 +260,7 @@ func stakeNFT() = {
 
   if (pmt.amount != 1) then throw("NFT is not attached") else
   if (availablePerches <= 0) then throw("no beach available for the type " + color) else 
-    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asInt() 
+    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).exactAs[Int]
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower),

@@ -179,11 +179,6 @@ func getBackendProof(maxFeedAmount: Int, userNonce: Int, address: String) = {
   makeString([maxFeedAmount.toString(), userNonce.toString(), address], ";")
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("BAI: wrong type, expected: Int")
-}
-
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("BCO: admin only") else 
@@ -207,7 +202,7 @@ func buyDuckling(refererAddress: String)={
   strict feeValidate = checkAdditionalPayment(i.payments[0])
   let exactPrice = getDucklingPrice()
   if exactPrice < 50000000 then throw("BBD: Invalid price from oracle!") else
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).exactAs[Int]
   let leftToPay = exactPrice-amountPaidByCoupons
 
   strict payment = if leftToPay!=0 then {
@@ -352,7 +347,7 @@ func turnDucklingIntoDuck() = {
     let blackListed = tryGetBoolean(keyBlacklisted(pmt.id.toBase58String()))
     if blackListed then throw("BTD: Can not convert blacklisted duckling!") else
 
-    strict adultPriceCall =  invoke(this,"calculateDucklingPriceTwoDecimals",[],[]).asInt()
+    strict adultPriceCall =  invoke(this,"calculateDucklingPriceTwoDecimals",[],[]).exactAs[Int]
     let normalizedPrice = fraction(adultPriceCall, oneSpicePrecsion ,100)
     if (getCurrentLevelBigInt(pmt.id.toBase58String()) < normalizedPrice.toBigInt()) then throw("BTD: Duckling is not grown yet...") else
 

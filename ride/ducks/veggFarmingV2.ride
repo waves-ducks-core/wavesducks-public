@@ -85,11 +85,6 @@ func tryGetInteger(key: String) = {
     tryGetIntegerExternal(this,key)
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
-}
-
 func asIntTuple(value: Any) = match value {
   case int: (Int,Int) => int
   case _ => throw("FAI: wrong type, expected: (Int,Int)")

@@ -105,12 +105,6 @@ func getEggId() = {
 func getShareAssetId() = {
   getStr(kShareAssetId).fromBase58String()
 }
-
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
-
 @Callable(i)
 func initMasterKey(publicKey: String)={
   if (i.caller != this) then {

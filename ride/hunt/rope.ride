@@ -64,11 +64,6 @@ func asBoolean(value: Any) = match value {
   case _ => throw("TI: wrong type, expected: Boolean")
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
-}
-
 func asString(value: Any) = match value {
   case string: String => string
   case _ => throw("wrong type, expected: String")
@@ -113,7 +108,7 @@ func buyRopeInverted(eggId: String, price: Int, distance: Int, backendSignature:
   if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), getBackendPubKey())) then throw("RBR: Invalid proof from backend") else
     if distance > 1200 then throw("RBR: You can only maximum boost 1200 meters distance!") else
     let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[halfPrice],[]).asInt()
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[halfPrice],[]).exactAs[Int]
           halfPrice-amountPaidByCoupons
         }else {
             halfPrice

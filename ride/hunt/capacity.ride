@@ -35,11 +35,6 @@ func tryGetInteger(key: String) = {
   }
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
-
 func asBoolean(value: Any) = match value {
   case boolean: Boolean => boolean
   case _ => throw("CAB: wrong type, expected: Boolean")
@@ -69,12 +64,12 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnA
 func keyDuckOwner(assetId: String) = "duck_" + assetId + "_owner"
 
 func common(nftId: String, payments: List[AttachedPayment], addedCapacity: Int,refererAddress: String)={
-    strict children = invoke(getBreederAddress(),"validateAndGetChildren",[nftId],[]).asInt()
+    strict children = invoke(getBreederAddress(),"validateAndGetChildren",[nftId],[]).exactAs[Int]
     let capacity = getDuckCapacity(nftId)
     let totalCapacity = capacity+addedCapacity
-    strict diff = invoke(this,"calculateDiffEggs",[capacity,totalCapacity],[]).asInt()
+    strict diff = invoke(this,"calculateDiffEggs",[capacity,totalCapacity],[]).exactAs[Int]
 
-    strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[diff],[]).asInt()
+    strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[diff],[]).exactAs[Int]
 
     let leftToPay = diff-amountPaidByCoupons
 
@@ -141,8 +136,8 @@ func calculateTotalPriceEggs(eggs: Int)={
 
 @Callable(i)
 func calculateDiffEggs(oldEggs: Int, newEggs: Int)={
-    strict alreadyPaid = invoke(this,"calculateTotalPriceEggs",[oldEggs],[]).asInt()
-    strict totalToPay = invoke(this,"calculateTotalPriceEggs",[newEggs],[]).asInt()
+    strict alreadyPaid = invoke(this,"calculateTotalPriceEggs",[oldEggs],[]).exactAs[Int]
+    strict totalToPay = invoke(this,"calculateTotalPriceEggs",[newEggs],[]).exactAs[Int]
     let diff = totalToPay - alreadyPaid  
     let debug = makeString(["oldPaid=" + alreadyPaid.toString(), "newPaid=" + totalToPay.toString()],";")
     ([

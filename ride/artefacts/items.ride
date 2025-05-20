@@ -169,11 +169,6 @@ func asString(value: Any) = match value {
   case _ => throw("wrong type, expected: String")
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
-
 func manipulateName(assetName: String, position: Int, char: String) = {
   assetName.take(position-1)+char+assetName.takeRight(16-position)
 }
@@ -564,7 +559,7 @@ func copyDuck()= {
   let secondPayment = i.payments[1].value()
   let validPayment = checkAdditionalPayment(i.payments[2])
   let firstAssetId = firstPayment.assetId.value().toBase58String()
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).asInt()
+  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).exactAs[Int]
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
   strict artefact = invoke(this,"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
   if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
@@ -587,7 +582,7 @@ func addArteFactToDuck()= {
   let validPayment = checkAdditionalPayment(i.payments[2])
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).asInt()
+  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).exactAs[Int]
   if children == 0 then throw("You can only pick a sterile NFT-duck") else
   strict artefact = invoke(this,"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
   if artefact != "ART-XHAT" && artefact != "ART-POMP" then  throw("You need to attach a ART-XHAT or ART-POMP artefact") else

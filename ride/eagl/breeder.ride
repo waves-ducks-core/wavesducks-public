@@ -258,12 +258,6 @@ func getRandomOldGenes(txId: ByteVector, h: Int) = {
   let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
   freeGenes[randomNumber]
 }
-
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
-
 @Callable(i)
 func increaseRarity(assetId: String, farmGen: String) = {
   let asset = assetId.fromBase58String()
@@ -328,7 +322,7 @@ func copyNFT()= {
   let secondPayment = i.payments[1].value()
   let validPayment = checkAdditionalPayment(i.payments[2])
   let firstAssetId = firstPayment.assetId.value().toBase58String()
-  strict children = invoke(this,"validateAndGetChildren",[firstAssetId],[]).asInt()
+  strict children = invoke(this,"validateAndGetChildren",[firstAssetId],[]).exactAs[Int]
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
   strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
   if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
@@ -352,7 +346,7 @@ func startBreeding(refererAddress: String) = {
   let firstPayment = i.payments[1].value()
   let secondPayment = i.payments[2].value()
   
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getEaglIncubationFee()],[]).asInt()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getEaglIncubationFee()],[]).exactAs[Int]
   let leftToPay = getEaglIncubationFee()-amountPaidByCoupons
   if leftToPay == 0 && size(i.payments) == 4 then throw("You need to attach 3 payments") else
   strict payment = if leftToPay!=0 then {

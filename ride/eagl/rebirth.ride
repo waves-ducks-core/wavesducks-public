@@ -3,10 +3,11 @@
 {-# SCRIPT_TYPE ACCOUNT #-}
 
 func tryGetStringExternal(address: Address, key: String) = {
-    match getString(address, key) {
-        case a:String => a
-        case _ => ""
-    }
+  address.getString(key).valueOrElse("")
+}
+
+func tryGetAddressExternal(address: Address, key: String) = {
+  Address(address.getString(key).valueOrElse("").fromBase58String())
 }
 
 func tryGetInteger(key: String) = {
@@ -20,11 +21,6 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case string: String => throw("RAI: wrong type, expected: Int, but got: "+string)
-  case _ => throw("RAI: wrong type, expected: Int")
-}
 
 func asBoolean(value: Any) = match value {
   case boolean: Boolean => boolean
@@ -61,15 +57,15 @@ func staticKey_puzzleAssetId() = "static_puzzleAssetId"
 func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
-func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
-func getEagleBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getEagleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_eagleIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
-func getEagleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_eagleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getFelineIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
-func getPzlAssetId() = tryGetStringExternal(getOracle(),staticKey_puzzleAssetId()).fromBase58String() 
-func getVeggFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_veggFarmingAddress()).fromBase58String())
+func getFeeAggregator() = tryGetAddressExternal(getOracle(),staticKey_feeAggregator())
+func getEagleBreederAddress() =  tryGetAddressExternal(getOracle(),staticKey_eagleBreederAddress())
+func getEagleIncubatorAddress() =  tryGetAddressExternal(getOracle(),staticKey_eagleIncubatorAddress())
+func getCouponsAddress() = tryGetAddressExternal(getOracle(),staticKey_couponsAddress())
+func getEagleStakingAddress() =  tryGetAddressExternal(getOracle(),staticKey_eagleStakingAddress())
+func getFelineIncubatorAddress() =  tryGetAddressExternal(getOracle(),staticKey_felineIncubatorAddress())
+func getItemsAddress() =  tryGetAddressExternal(getOracle(),staticKey_itemsAddress())
+func getPzlAssetId() = tryGetStringExternal(getOracle(),staticKey_puzzleAssetId()).fromBase58String()
+func getVeggFarmingAddress() = tryGetAddressExternal(getOracle(),staticKey_veggFarmingAddress())
 
 func tryGetIntegerExternal(address: Address, key: String) = {
     match getInteger(address, key) {

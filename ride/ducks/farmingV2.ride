@@ -96,11 +96,6 @@ func tryGetInteger(key: String) = {
     }
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
-}
-
 func asIntTuple(value: Any) = match value {
   case int: (Int,Int) => int
   case _ => throw("FAI: wrong type, expected: (Int,Int)")
@@ -245,8 +240,8 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
-  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).asInt()
-  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).asInt()
+  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).exactAs[Int]
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
   #Recalculate bonusses every claim
   let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   ([
@@ -272,7 +267,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
     } else {
       let exactPrice = calculatePerchPrice(i.caller.toString())
         let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).exactAs[Int]
           exactPrice-amountPaidByCoupons
         }else {
             exactPrice

@@ -52,10 +52,6 @@ func tryGetInteger (key: String) = {
     tryGetIntegerExternal(this, key)
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("RAI: wrong type, expected: Int")
-}
 let Generations = ["G", "H", "I", "K", "L", "M", "N", "O"]
 
 
@@ -72,7 +68,7 @@ func putForRentInternal(i: Invocation,durationInMs: Int, percentage: Int)={
   let firstPayment = i.payments[0].value()
   let duckId = firstPayment.assetId.value().toBase58String()
   if (firstPayment.amount != 1) then throw("RPFR: NFT is not attached") else
-  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).asInt()
+  strict children = invoke(getBreederAddress(),"validateAndGetChildren",[duckId],[]).exactAs[Int]
   #Check if owner has free AR-glasses
   let boughtSpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBought(i.caller.toString()))
   let busySpots = tryGetIntegerExternal(getHuntAddress(),key_spotsBusy(i.caller.toString()))

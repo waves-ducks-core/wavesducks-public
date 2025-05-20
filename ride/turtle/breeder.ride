@@ -256,11 +256,6 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
     }
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("wrong type, expected: Int")
-}
-
 @Callable(i)
 func increaseRarity(assetId: String, farmGen: String) = {
   let asset = assetId.fromBase58String()
@@ -283,7 +278,7 @@ func startTRTLBreeding(refererAddress: String) = {
   let secondPayment = i.payments[2].value()
   let thirdPayment = i.payments[3].value()
 
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getTurtleIncubationFee()/2],[]).asInt()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getTurtleIncubationFee()/2],[]).exactAs[Int]
   let leftToPay = getTurtleIncubationFee()-amountPaidByCoupons
 
   strict payment = if leftToPay!=0 then {

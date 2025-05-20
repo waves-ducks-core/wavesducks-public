@@ -26,12 +26,6 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case string: String => throw("RAI: wrong type, expected: Int, but got: "+string)
-  case _ => throw("RAI: wrong type, expected: Int")
-}
-
 func asBoolean(value: Any) = match value {
   case boolean: Boolean => boolean
   case _ => throw("FAB: wrong type, expected: Boolean")

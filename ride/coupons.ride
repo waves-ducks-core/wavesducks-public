@@ -35,10 +35,6 @@ func tryGetInteger(key: String) = {
 }
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("WAI: wrong type, expected: Int")
-}
 #SC THAT CAN USE COUPONS
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
@@ -290,7 +286,7 @@ func questTwoBuyPerches(type: String, color: String)={
     if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
     let method = if type =="TURTLE" then "addFreeBeach" else "addFreePerch"
     let amount = 100_0000
-    strict invokeRes = invoke(this, "useCoupons",[amount],[]).asInt()
+    strict invokeRes = invoke(this, "useCoupons",[amount],[]).exactAs[Int]
     if invokeRes != amount then throw("Not enough vEGG to complet this quest!") else
     let invokeAddress = if type =="TURTLE" then getTurtleStakingAddress() else
                         if type =="CANINE" then getCanineFarmingAddress() else
@@ -317,7 +313,7 @@ func questThree()={
     let typesCompletedKey = "q1_"+invoker+"_completed"
     if tryGetInteger(typesCompletedKey) <4 then throw("You need to complete the first quest!") else
     let amount = 400_0000
-    strict invokeRes1 = invoke(this, "useCoupons",[amount],[]).asInt()
+    strict invokeRes1 = invoke(this, "useCoupons",[amount],[]).exactAs[Int]
     if invokeRes1 != amount then throw("Not enough vEGG to complet this quest!") else
     let invokeKey = "q3_"+invoker+"_invoked"
     let totalQ3Key = "q3_total"
