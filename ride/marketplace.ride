@@ -330,6 +330,8 @@ func acceptBid(auctionId: String, bidId: String) = {
       let recordPrice = tryGetInteger(assetId+"_recordPrice")
       let newRecordPrice = max([recordPrice, bidAmount])
       strict burnCall = processFees(isEggSell,bidAmount, finalFee)
+      let isMantle = tryGetBoolean("auction_" + auctionId + "_isMantle")
+        strict mantleUpdate = if isMantle then invoke(getGameAddress(),"changeOwner",[assetId,i.originCaller.toString()],[]) else nil
       [
         StringEntry("auction_" + auctionId + "_bid_" + bidId + "_status", "finished"),
         StringEntry("auction_" + auctionId + "_status", "finished"),
