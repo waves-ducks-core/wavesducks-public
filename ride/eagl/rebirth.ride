@@ -7,7 +7,7 @@ func tryGetStringExternal(address: Address, key: String) = {
 }
 
 func tryGetAddressExternal(address: Address, key: String) = {
-  Address(address.getString(key).valueOrElse("").fromBase58String())
+  Address(address.getString(key).valueOrErrorMessage(key+" undefined").fromBase58String())
 }
 
 func tryGetInteger(key: String) = {
@@ -126,8 +126,8 @@ func wasUniqueBorn(gen: String) = {
 }
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
-  let jackpotRandom = getRandomNumber(40, tx, finishHeight, 1)
-  if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCAESAR-JU") < 2) then { (jackpotRandom,"jackpot") } else 
+  #let jackpotRandom = getRandomNumber(40, tx, finishHeight, 1)
+  #if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCAESAR-JU") < 2) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 

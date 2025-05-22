@@ -2,18 +2,15 @@
 {-# SCRIPT_TYPE ACCOUNT #-}
 {-# CONTENT_TYPE DAPP #-}
 func tryGetStringExternal(address: Address, key: String) = {
-    match getString(address, key) {
-        case a:String => a
-        case _ => ""
-    }
+  address.getString(key).valueOrErrorMessage(key+" undefined")
 }
 
 func tryGetIntegerExternal(address: Address, key: String) = {
-    match getInteger(address, key) {
-        case b:Int => b
-        case _ => 0
-    }
+  address.getInteger(key).valueOrElse(0)
+}
 
+func tryGetAddressExternal(address: Address, key: String) = {
+  Address(address.getString(key).valueOrErrorMessage(key+" undefined").fromBase58String())
 }
 
 func tryGetString(key: String) = {
@@ -26,28 +23,27 @@ func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String
 
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()  
 
-func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getTurtleIncubatorAddress() =  tryGetAddressExternal(getOracle(),"static_turtleIncubatorAddress")
+func getTurtleBreederAddress() =  tryGetAddressExternal(getOracle(),"static_turtleBreederAddress")
+func getIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_incubatorAddress")
+func getBreederAddress()=  tryGetAddressExternal(getOracle(),"static_breederAddress")
+func getCanineIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_canineIncubatorAddress")
+func getCanineBreederAddress()=  tryGetAddressExternal(getOracle(),"static_canineBreederAddress")
+func getFelineIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_felineIncubatorAddress")
+func getFelineBreederAddress()=  tryGetAddressExternal(getOracle(),"static_felineBreederAddress")
+func getMutantBreederAddress()=  tryGetAddressExternal(getOracle(),"static_mutantIncubatorAddress")
+func getEagleIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_eagleIncubatorAddress")
+func getEagleBreederAddress()=  tryGetAddressExternal(getOracle(),"static_eagleBreederAddress")
 
-func getCanineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_canineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getCanineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_canineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getFelineIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getFelineBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_felineBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getMutantBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_mutantIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getEagleIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getEagleBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-
-func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
-func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
-func getEggPoolAddress() =  Address(tryGetStringExternal(getOracle(),"static_eggPool").fromBase58String())
-func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
-func getMarketPlaceProxy() = Address(tryGetStringExternal(getOracle(),"static_marketPlaceProxyAddress").fromBase58String())
-func getBuybackAddress() = Address(tryGetStringExternal(getOracle(),"static_buybackAddress").fromBase58String())
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
-func getPeteAddress() = Address(tryGetStringExternal(getOracle(),staticKey_peteAddress()).fromBase58String()) 
-func getGameAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String())
+func getItemsAddress() =  tryGetAddressExternal(getOracle(),"static_itemsAddress")
+func getFeeAggregatorAddress() =  tryGetAddressExternal(getOracle(),"static_feeAggregator")
+func getEggPoolAddress() =  tryGetAddressExternal(getOracle(),"static_eggPool")
+func getBurnAddress() = tryGetAddressExternal(getOracle(),"static_burnAddress")
+func getMarketPlaceProxy() = tryGetAddressExternal(getOracle(),"static_marketPlaceProxyAddress")
+func getBuybackAddress() = tryGetAddressExternal(getOracle(),"static_buybackAddress")
+func getCouponsAddress() = tryGetAddressExternal(getOracle(),staticKey_couponsAddress())
+func getPeteAddress() = tryGetAddressExternal(getOracle(),staticKey_peteAddress())
+func getGameAddress() = tryGetAddressExternal(getOracle(),"static_gameDappAddress")
 let kGlobalCounter = "GLOBAL_COUNTER"
 
 func getFeePercent() = tryGetIntegerExternal(getOracle(),"static_marketPlaceFee")
@@ -330,6 +326,8 @@ func acceptBid(auctionId: String, bidId: String) = {
       let recordPrice = tryGetInteger(assetId+"_recordPrice")
       let newRecordPrice = max([recordPrice, bidAmount])
       strict burnCall = processFees(isEggSell,bidAmount, finalFee)
+      let isMantle = tryGetBoolean("auction_" + auctionId + "_isMantle")
+      strict mantleUpdate = if isMantle then invoke(getGameAddress(),"changeOwner",[assetId,bidAuthor],[]) else nil
       [
         StringEntry("auction_" + auctionId + "_bid_" + bidId + "_status", "finished"),
         StringEntry("auction_" + auctionId + "_status", "finished"),
