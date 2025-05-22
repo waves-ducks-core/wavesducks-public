@@ -125,10 +125,10 @@ func wasUniqueBorn(gen: String) = {
 }
 
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
-  let jackpotRandom = getRandomNumber(50, txId, hatchingFinishHeight, 1)
-  let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
-  if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCAESAR-JU") < 2) then ("EAGL-WWCAESAR-JU", "2A1C1E1R1S2W-J")
-  else 
+  #let jackpotRandom = getRandomNumber(50, txId, hatchingFinishHeight, 1)
+  #let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
+  #if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCAESAR-JU") < 2) then ("EAGL-WWCAESAR-JU", "2A1C1E1R1S2W-J")
+  #else 
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
     let color = getElement(["A","B","C","D"],colorRandom)
 
