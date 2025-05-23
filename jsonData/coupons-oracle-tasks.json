@@ -3,6 +3,21 @@
     "version": 2,
     "data": [
         {
+            "key": "TASK_ROPE_5_TEXT_EN",
+            "type": "string",
+            "value": "Rope the egg 5 times and get {{reward}} $SPICE tokens"
+        },
+        {
+            "key": "TASK_ROPE_5_TEXT_RU",
+            "type": "string",
+            "value": "Поймайте яйцо 5 раз и получите {{reward}} токенов $SPICE"
+        },
+        {
+            "key": "TASK_ROPE_5_TEXT_ES",
+            "type": "string",
+            "value": "Ata el egg 5 veces y obtén {{reward}} tokens $SPICE"
+        },
+        {
             "key": "TASK_ROPE_5",
             "type": "boolean",
             "value": true
@@ -11,20 +26,28 @@
             "key": "TASK_ROPE_5_REWARD_DAILY",
             "type": "integer",
             "value": 25000000
-            
         },
         {
             "key": "TASK_ROPE_5_REWARD_WEEKLY",
             "type": "integer",
             "value": 50000000
-            
-        },
-        {
-            "key": "TASK_ROPE_5_TEXT",
-            "type": "string",
-            "value": "Rope the egg 5 times and get {{reward}} $SPICE tokens"
         },
 
+        {
+            "key": "TASK_ROPE_10_TEXT_EN",
+            "type": "string",
+            "value": "Rope the egg 10 times and get {{reward}} $SPICE tokens"
+        },
+        {
+            "key": "TASK_ROPE_10_TEXT_RU",
+            "type": "string",
+            "value": "Поймайте яйцо 10 раз и получите {{reward}} токенов $SPICE"
+        },
+        {
+            "key": "TASK_ROPE_10_TEXT_ES",
+            "type": "string",
+            "value": "Ata el egg 10 veces y obtén {{reward}} tokens $SPICE"
+        },
         {
             "key": "TASK_ROPE_10",
             "type": "boolean",
@@ -40,9 +63,23 @@
             "key": "TASK_ROPE_10_REWARD_WEEKLY",
             "type": "integer",
             "value": 100000000
-            
         },
 
+        {
+            "key": "TASK_ROPE_15_TEXT_EN",
+            "type": "string",
+            "value": "Rope the egg 15 times and get {{reward}} $SPICE tokens"
+        },
+        {
+            "key": "TASK_ROPE_15_TEXT_RU",
+            "type": "string",
+            "value": "Поймайте яйцо 15 раз и получите {{reward}} токенов $SPICE"
+        },
+        {
+            "key": "TASK_ROPE_15_TEXT_ES",
+            "type": "string",
+            "value": "Ata el egg 15 veces y obtén {{reward}} tokens $SPICE"
+        },
         {
             "key": "TASK_ROPE_15",
             "type": "boolean",
@@ -60,7 +97,22 @@
             "value": 200000000
             
         },
-
+        
+        {
+            "key": "TASK_ROPE_50_TEXT_EN",
+            "type": "string",
+            "value": "Rope the egg 50 times and get {{reward}} $SPICE tokens"
+        },
+        {
+            "key": "TASK_ROPE_50_TEXT_RU",
+            "type": "string",
+            "value": "Поймайте яйцо 50 раз и получите {{reward}} токенов $SPICE"
+        },
+        {
+            "key": "TASK_ROPE_50_TEXT_ES",
+            "type": "string",
+            "value": "Ata el egg 50 veces y obtén {{reward}} tokens $SPICE"
+        },
         {
             "key": "TASK_ROPE_50",
             "type": "boolean",
@@ -80,6 +132,21 @@
         },
 
         {
+            "key": "TASK_VEGG500000_1_TEXT_EN",
+            "type": "string",
+            "value": "Earn 0.005 $vEGG in duck wars and get {{reward}} $SPICE tokens"
+        },
+        {
+            "key": "TASK_VEGG500000_1_TEXT_RU",
+            "type": "string",
+            "value": "Заработайте 0.005 $vEGG в войнах уток и получите {{reward}} токенов $SPICE"
+        },
+        {
+            "key": "TASK_VEGG500000_1_TEXT_ES",
+            "type": "string",
+            "value": "Gané 0.005 $vEGG en Duck wars y consigue {{reward}} tokens $SPICE"
+        },
+        {
             "key": "TASK_VEGG500000_1",
             "type": "boolean",
             "value": true
@@ -98,6 +165,21 @@
         },
 
         {
+            "key": "TASK_VEGG10000000_1_TEXT_EN",
+            "type": "string",
+            "value": "Earn 0.1 $vEGG in duck wars and get {{reward}} $SPICE tokens"
+        },
+        {
+            "key": "TASK_VEGG10000000_1_TEXT_RU",
+            "type": "string",
+            "value": "Заработайте 0.1 $vEGG в войнах уток и получите {{reward}} токенов $SPICE"
+        },
+        {
+            "key": "TASK_VEGG10000000_1_TEXT_ES",
+            "type": "string",
+            "value": "Gané 0.1 $vEGG en Duck wars y consigue {{reward}} tokens $SPICE"
+        },
+        {
             "key": "TASK_VEGG10000000_1",
             "type": "boolean",
             "value": true
@@ -115,7 +197,21 @@
             
         },
 
-
+        {
+            "key": "TASK_REBIRTH_1_TEXT_EN",
+            "type": "string",
+            "value": "Make a rebirth of a duck and receive instant cashback in {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_REBIRTH_1_TEXT_RU",
+            "type": "string",
+            "value": "Сделайте возрождение утки и получите мгновенный кэшбэк в размере {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_REBIRTH_1_TEXT_ES",
+            "type": "string",
+            "value": "Haz que un pato renazca y recibe un reembolso instantáneo en {{reward}} $SPICE"
+        },
         {
             "key": "TASK_REBIRTH_1",
             "type": "boolean",
@@ -135,6 +231,21 @@
         },
 
         {
+            "key": "TASK_REBIRTHTURTLE_1_TEXT_EN",
+            "type": "string",
+            "value": "Make a rebirth of a turtle and receive instant cashback in {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_REBIRTHTURTLE_1_TEXT_RU",
+            "type": "string",
+            "value": "Сделайте возрождение черепахи и получите мгновенный кэшбэк в размере {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_REBIRTHTURTLE_1_TEXT_ES",
+            "type": "string",
+            "value": "Haz que una tortuga renazca y recibe un reembolso instantáneo en {{reward}} $SPICE"
+        },
+        {
             "key": "TASK_REBIRTHTURTLE_1",
             "type": "boolean",
             "value": true
@@ -151,7 +262,22 @@
             "value": 10000000000
             
         },
-
+        
+        {
+            "key": "TASK_FEEDDUCKLING10_1_TEXT_EN",
+            "type": "string",
+            "value": "Feed your Genesis duckling with 10 $SPICE tokens in a one-shot and receive instant cashback in {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_FEEDDUCKLING10_1_TEXT_RU",
+            "type": "string",
+            "value": "Покормите вашего утенка Genesis 10 токенами $SPICE за один раз и получите мгновенный кэшбэк в размере {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_FEEDDUCKLING10_1_TEXT_ES",
+            "type": "string",
+            "value": "Alimenta tu patito Genesis con 10 tokens $SPICE en una sola vez y reciba un reembolso instantáneo en {{reward}} $SPICE"
+        },
         {
             "key": "TASK_FEEDDUCKLING10_1",
             "type": "boolean",
@@ -161,23 +287,27 @@
             "key": "TASK_FEEDDUCKLING10_1_REWARD_DAILY",
             "type": "integer",
             "value": 150000000
-            
         },
         {
             "key": "TASK_FEEDDUCKLING10_1_REWARD_WEEKLY",
             "type": "integer",
             "value": 800000000
-            
+        },
+
+        {
+            "key": "TASK_BUY5_1_TEXT_EN",
+            "type": "string",
+            "value": "Buy item/turtle/duck worth 5 $WAVES and receive {{reward}} $SPICE"
         },
         {
-            "key": "TASK_FEEDDUCKLING10_1_TEXT_ENG",
+            "key": "TASK_BUY5_1_TEXT_RU",
             "type": "string",
-            "value": "Feed your Genesis duckling with 10 $SPICE tokens in a one-shot and receive instant cashback in {{reward}} $SPICE"
+            "value": "Купите предмет/черепаху/утку стоимостью 5 $WAVES и получите {{reward}} $SPICE"
         },
         {
-            "key": "TASK_FEEDDUCKLING10_1_TEXT_RU",
+            "key": "TASK_BUY5_1_TEXT_ES",
             "type": "string",
-            "value": "Покормите вашего утенка Genesis 10 токенами $SPICE за один раз и получите мгновенный кэшбэк в размере {{reward}} $SPICE"
+            "value": "Compra un artículo/tortuga/pato por valor de 5 $WAVES y recibe {{reward}} $SPICE"
         },
         {
             "key": "TASK_BUY5_1",
@@ -198,6 +328,21 @@
         },
 
         {
+            "key": "TASK_RECHARGE_1_TEXT_EN",
+            "type": "string",
+            "value": "Recharge a duck in hunt and get {{reward}} $SPICE tokens"
+        },
+        {
+            "key": "TASK_RECHARGE_1_TEXT_RU",
+            "type": "string",
+            "value": "Перезарядите утку на охоте и получите {{reward}} токенов $SPICE"
+        },
+        {
+            "key": "TASK_RECHARGE_1_TEXT_ES",
+            "type": "string",
+            "value": "Recarga un pato en el hunt y consigue {{reward}} tokens $SPICE"
+        },
+        {
             "key": "TASK_RECHARGE_1",
             "type": "boolean",
             "value": true
@@ -216,6 +361,21 @@
         },
 
         {
+            "key": "TASK_BUY20_1_TEXT_EN",
+            "type": "string",
+            "value": "Buy item/turtle/duck worth 20 $WAVES and receive {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_BUY20_1_TEXT_RU",
+            "type": "string",
+            "value": "Купите предмет/черепаху/утку стоимостью 20 $WAVES и получите {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_BUY20_1_TEXT_ES",
+            "type": "string",
+            "value": "Compra un artículo/tortuga/pato por valor de 20 $WAVES y recibe {{reward}} $SPICE"
+        },
+        {
             "key": "TASK_BUY20_1",
             "type": "boolean",
             "value": true
@@ -232,7 +392,22 @@
             "value": 1000000000
             
         },
-
+        
+        {
+            "key": "TASK_BUY50_1_TEXT_EN",
+            "type": "string",
+            "value": "Buy item/turtle/duck worth 50 $WAVES and receive {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_BUY50_1_TEXT_RU",
+            "type": "string",
+            "value": "Купите предмет/черепаху/утку стоимостью 50 $WAVES и получите {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_BUY50_1_TEXT_ES",
+            "type": "string",
+            "value": "Compra artículo/tortuga/pato por valor de 50 $WAVES y recibe {{reward}} $SPICE"
+        },
         {
             "key": "TASK_BUY50_1",
             "type": "boolean",
@@ -248,9 +423,23 @@
             "key": "TASK_BUY50_1_REWARD_WEEKLY",
             "type": "integer",
             "value": 1500000000
-            
         },
 
+        {
+            "key": "TASK_LEVELUP_TEXT_EN",
+            "type": "string",
+            "value": "Level up your skill tree and receive {{reward}} $SPICE for each level!"
+        },
+        {
+            "key": "TASK_LEVELUP_TEXT_RU",
+            "type": "string",
+            "value": "Повышайте уровень вашего дерева навыков и получайте {{reward}} $SPICE за каждый уровень!"
+        },
+        {
+            "key": "TASK_LEVELUP_TEXT_ES",
+            "type": "string",
+            "value": "¡Sube de nivel tu árbol de habilidades y recibe {{reward}} $SPICE por cada nivel!"
+        },
         {
             "key": "TASK_LEVELUP",
             "type": "boolean",
@@ -271,11 +460,22 @@
             "key": "TASK_LEVELUP_REWARD_WEEKLY",
             "type": "integer",
             "value": 2000000000
-            
         },
-
-
-
+        {
+            "key": "TASK_REBIRTHEAGLE_1_TEXT_EN",
+            "type": "string",
+            "value": "Make a rebirth of an eagle and receive instant cashback in {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_REBIRTHEAGLE_1_TEXT_RU",
+            "type": "string",
+            "value": "Сделайте возрождение орла и получите мгновенный кэшбэк в размере {{reward}} $SPICE"
+        },
+{
+            "key": "TASK_REBIRTHEAGLE_1_TEXT_ES",
+            "type": "string",
+            "value": "Haz renacer un águila y recibe reembolso instantáneo de {{reward}} $SPICE"
+        },
         {
             "key": "TASK_REBIRTHEAGLE_1",
             "type": "boolean",
@@ -293,7 +493,21 @@
             "value": 10000000000
         },
         
-        
+        {
+            "key": "TASK_REBIRTHFELINE_1_TEXT_EN",
+            "type": "string",
+            "value": "Make a rebirth of a feline and receive instant cashback in {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_REBIRTHFELINE_1_TEXT_RU",
+            "type": "string",
+            "value": "Сделайте возрождение кошки и получите мгновенный кэшбэк в размере {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_REBIRTHFELINE_1_TEXT_ES",
+            "type": "string",
+            "value": "Haz renacer un felino y recibe reembolso instantáneo de {{reward}} $SPICE"
+        },
         {
             "key": "TASK_REBIRTHFELINE_1",
             "type": "boolean",
@@ -309,9 +523,23 @@
             "key": "TASK_REBIRTHFELINE_1_REWARD_WEEKLY",
             "type": "integer",
             "value": 10000000000
-        }, 
-        
-        
+        },     
+
+        {
+            "key": "TASK_REBIRTHCANINE_1_TEXT_EN",
+            "type": "string",
+            "value": "Make a rebirth of a canine and receive instant cashback in {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_REBIRTHCANINE_1_TEXT_RU",
+            "type": "string",
+            "value": "Сделайте возрождение собаки и получите мгновенный кэшбэк в размере {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_REBIRTHCANINE_1_TEXT_ES",
+            "type": "string",
+            "value": "Haz renacer un canino y recibe reembolso instantáneo de {{reward}} $SPICE"
+        },
         {
             "key": "TASK_REBIRTHCANINE_1",
             "type": "boolean",
@@ -328,7 +556,21 @@
             "type": "integer",
             "value": 10000000000
         },
-        
+        {
+            "key": "TASK_WEARITEM_5_TEXT_EN",
+            "type": "string",
+            "value": "Wear 5 items and receive {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_WEARITEM_5_TEXT_RU",
+            "type": "string",
+            "value": "Наденьте 5 предметов и получите {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_WEARITEM_5_TEXT_ES",
+            "type": "string",
+            "value": "Usa 5 artículos y recibe {{reward}} $SPICE"
+        },
         {
             "key": "TASK_WEARITEM_5",
             "type": "boolean",
@@ -338,15 +580,12 @@
             "key": "TASK_WEARITEM_5_REWARD_DAILY",
             "type": "integer",
             "value": 500000000
-            
         },
         {
             "key": "TASK_WEARITEM_5_REWARD_WEEKLY",
             "type": "integer",
             "value": 2000000000
-        } 
-
-        
+        }  
 
         
     ],
