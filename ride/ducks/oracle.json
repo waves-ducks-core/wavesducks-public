@@ -6,9 +6,24 @@
             "key": "static_potionFee",
             "type": "integer",
             "value": 500000000
+        },
+        {
+            "key": "static_duckRebirthAmount",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "static_proxyStakingContracts",
+            "type": "string",
+            "value": "3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT;3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3P8JD7RpyGZeVGj58P2ox367iMwsM3hWosS;3PGwjnnoPreHxeRDxufGD8a2iqaeM5tQKno;3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh"
+        },        {
+            "key": "static_trustedContracts",
+            "type": "string",
+            "value": "3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw;3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD;3P8JD7RpyGZeVGj58P2ox367iMwsM3hWosS;3PGwjnnoPreHxeRDxufGD8a2iqaeM5tQKno;3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh"
         }
     ],
     "fee": 700000,
-    "feeAssetId": "WAVES"
+    "feeAssetId": "WAVES",
+    "senderPublicKey": "Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe"
 }
 

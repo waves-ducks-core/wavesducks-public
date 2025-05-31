@@ -1,0 +1,158 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+{
+    "key": "type_cosmetic_ART-JERSEY_MEXIC",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_WALES",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_USA",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_POL",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_SENEG",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_ECUAD",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_MOROC",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_CAMER",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_CANAD",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_JAPAN",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_GHANA",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_SKOR",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_QATAR",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_IRAN",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_SAUDI",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_COSTA",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_ASTRL",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-JERSEY_TUNIS",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-FIRE_ARMOUR",
+    "type": "string",
+    "value": "TOP"
+},
+{
+    "key": "type_cosmetic_ART-CAT",
+    "type": "string",
+    "value": "PET"
+},
+{
+    "key": "type_cosmetic_ART-BORZOI",
+    "type": "string",
+    "value": "PET"
+},
+{
+    "key": "type_cosmetic_ART-HAMSTER",
+    "type": "string",
+    "value": "PET"
+},
+{
+    "key": "type_cosmetic_ART-PUG",
+    "type": "string",
+    "value": "PET"
+},
+{
+    "key": "type_cosmetic_ART-SNAKE",
+    "type": "string",
+    "value": "PET"
+},
+{
+    "key": "type_cosmetic_ART-ROBODUCK",
+    "type": "string",
+    "value": "PET"
+},
+{
+    "key": "type_cosmetic_ART-TURTLE",
+    "type": "string",
+    "value": "PET"
+},
+{
+    "key": "type_cosmetic_ART-SNOWMAN",
+    "type": "string",
+    "value": "PET"
+},
+{
+    "key": "type_cosmetic_ART-CUPID",
+    "type": "string",
+    "value": "PET"
+},
+{
+    "key": "type_cosmetic_ART-PEACOCKTAIL",
+    "type": "string",
+    "value": "TAIL"
+},
+{
+    "key": "type_cosmetic_ART-FIRE_TAIL",
+    "type": "string",
+    "value": "TAIL"
+}
+],
+"fee": 700000,
+"feeAssetId": "WAVES"
+}

@@ -2,18 +2,15 @@
 {-# SCRIPT_TYPE ACCOUNT #-}
 {-# CONTENT_TYPE DAPP #-}
 func tryGetStringExternal(address: Address, key: String) = {
-    match getString(address, key) {
-        case a:String => a
-        case _ => ""
-    }
+  address.getString(key).valueOrErrorMessage(key+" undefined")
 }
 
 func tryGetIntegerExternal(address: Address, key: String) = {
-    match getInteger(address, key) {
-        case b:Int => b
-        case _ => 0
-    }
+  address.getInteger(key).valueOrElse(0)
+}
 
+func tryGetAddressExternal(address: Address, key: String) = {
+  Address(address.getString(key).valueOrErrorMessage(key+" undefined").fromBase58String())
 }
 
 func tryGetString(key: String) = {
@@ -24,20 +21,29 @@ func staticKey_peteAddress() = "static_peteAddress"
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()  
 
-func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),"static_turtleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),"static_itemsAddress").fromBase58String())
-func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
-func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
-func getMarketPlaceProxy() = Address(tryGetStringExternal(getOracle(),"static_marketPlaceProxyAddress").fromBase58String())
-func getBuybackAddress() = Address(tryGetStringExternal(getOracle(),"static_buybackAddress").fromBase58String())
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
-func getPeteAddress() = Address(tryGetStringExternal(getOracle(),staticKey_peteAddress()).fromBase58String()) 
+func getTurtleIncubatorAddress() =  tryGetAddressExternal(getOracle(),"static_turtleIncubatorAddress")
+func getTurtleBreederAddress() =  tryGetAddressExternal(getOracle(),"static_turtleBreederAddress")
+func getIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_incubatorAddress")
+func getBreederAddress()=  tryGetAddressExternal(getOracle(),"static_breederAddress")
+func getCanineIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_canineIncubatorAddress")
+func getCanineBreederAddress()=  tryGetAddressExternal(getOracle(),"static_canineBreederAddress")
+func getFelineIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_felineIncubatorAddress")
+func getFelineBreederAddress()=  tryGetAddressExternal(getOracle(),"static_felineBreederAddress")
+func getMutantBreederAddress()=  tryGetAddressExternal(getOracle(),"static_mutantIncubatorAddress")
+func getEagleIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_eagleIncubatorAddress")
+func getEagleBreederAddress()=  tryGetAddressExternal(getOracle(),"static_eagleBreederAddress")
 
+func getItemsAddress() =  tryGetAddressExternal(getOracle(),"static_itemsAddress")
+func getFeeAggregatorAddress() =  tryGetAddressExternal(getOracle(),"static_feeAggregator")
+func getEggPoolAddress() =  tryGetAddressExternal(getOracle(),"static_eggPool")
+func getBurnAddress() = tryGetAddressExternal(getOracle(),"static_burnAddress")
+func getMarketPlaceProxy() = tryGetAddressExternal(getOracle(),"static_marketPlaceProxyAddress")
+func getBuybackAddress() = tryGetAddressExternal(getOracle(),"static_buybackAddress")
+func getCouponsAddress() = tryGetAddressExternal(getOracle(),staticKey_couponsAddress())
+func getPeteAddress() = tryGetAddressExternal(getOracle(),staticKey_peteAddress())
+func getGameAddress() = tryGetAddressExternal(getOracle(),"static_gameDappAddress")
 let kGlobalCounter = "GLOBAL_COUNTER"
 
 func getFeePercent() = tryGetIntegerExternal(getOracle(),"static_marketPlaceFee")
@@ -47,12 +53,15 @@ func tryGetInteger(key: String) = {
   tryGetIntegerExternal(this,key)
 }
 
-
-func tryGetBoolean(key: String) = {
-    match getBoolean(this, key) {
+func tryGetBooleanExternal(address: Address, key: String) = {
+    match getBoolean(address, key) {
         case b:Boolean => b
         case _ => false
     }
+}
+
+func tryGetBoolean(key: String) = {
+    tryGetBooleanExternal(this,key)
 }
 
 func getGlobalCounter() = {
@@ -60,32 +69,31 @@ func getGlobalCounter() = {
 }
 
 func getAssetGenotype(assetId: ByteVector) = {
-  if (assetInfo(assetId).value().issuer == getPeteAddress()) then "PETE" else 
-  if (assetInfo(assetId).value().issuer == getItemsAddress()) then "ART" else 
-  let asset1 = match getString(getIncubatorAddress(), assetId.toBase58String()) {
-        case b:String => b
-        case _ => ""
-    }
-  if (asset1 != "") then asset1  else 
-    let asset2 = match getString(getBreederAddress(), assetId.toBase58String()) {
-      case c:String => c
-      case _ => ""
-    }
-    if (asset2 != "") then asset2 else 
-      let asset3 = match getString(getTurtleIncubatorAddress(), assetId.toBase58String()) {
-          case b:String => b
-          case _ => ""
-      }
-      if (asset3 != "") then asset3  else 
-        let asset4 = match getString(getTurtleBreederAddress(), assetId.toBase58String()) {
-          case c:String => c
-          case _ => ""
-        }
-        if (asset4 != "") then asset4 else ""
+  let issuer = assetInfo(assetId).value().issuer
+  let blacklisted = tryGetBooleanExternal(issuer,assetId.toBase58String() + "_blacklisted")
+  if (blacklisted) then throw("GO FUCK YOURSELF") else
+  let name = assetInfo(assetId).value().name
+  let description = assetInfo(assetId).value().description
+  if (issuer == getPeteAddress()) then "PETE" else 
+  if (issuer == getItemsAddress()) then "ART" else
+  #Ducks
+  if (issuer == getIncubatorAddress() || issuer == getBreederAddress()) then name else
+  #Turtles
+  if (issuer == getTurtleIncubatorAddress() || issuer == getTurtleBreederAddress()) then name else
+  #Canines
+  if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then name else
+  #Felines
+  if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then name else
+    #Eagles
+  if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then name else
+  #Mutants
+  if (issuer == getMutantBreederAddress()) then description else
+  #Mantles
+  if (issuer == getGameAddress()) then 
+      strict check = invoke(getGameAddress(),"checkBlocked",[assetId.toBase58String()],[])
+      name else
+  throw("MAG: Asset is not supported")
     
-  
-  
-  
 }
 
 func getBidCancelResults(auctionId: String, bidId: String) = {
@@ -115,6 +123,22 @@ func isTestEnv()={
   getBool("TESTENV")
 }
 
+func processFees(isEggSell: Boolean, amount: Int, finalFee: Int) = {
+  if isEggSell then {
+          strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 1000))])
+          []
+      }else   {
+          let eggAssetId = getEggAssetId()
+          strict eggBalance = assetBalance(this, eggAssetId)
+          strict liquidateUsdt = invoke(getEggPoolAddress(), "swap", [eggAssetId.toBase58String(),0],[AttachedPayment(unit,fraction(amount, fraction(finalFee,4,10), 1000))])
+          strict eggBalanceAfter = assetBalance(this, eggAssetId)
+          strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(eggAssetId,eggBalanceAfter-eggBalance)])
+          [
+            ScriptTransfer(getFeeAggregatorAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit)
+          ]
+      }
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("MCO: admin only") else 
@@ -135,9 +159,8 @@ func initAuction(startPrice: Int, instantPrice: Int, description: String, eggSel
 
   if (pmt.amount != 1) then throw("MIA: NFT is not attached") else
   if (eggSell == "true") then throw("MIA: Same rules for everyone!") else
-  if (asset == "") then {
-    throw("MIA: You can only sell an NFT-duck created in incubator or breeder")
-  } else {
+  if (asset == "") then throw("MIA: You can only sell an NFT-duck created in incubator or breeder") else
+    let issuer = assetInfo(assetId).value().issuer
     [
       StringEntry("auction_" + auctionId + "_status", "open"),
       BooleanEntry("auction_" + auctionId + "_eggSell", eggSell == "true"),
@@ -149,13 +172,18 @@ func initAuction(startPrice: Int, instantPrice: Int, description: String, eggSel
       StringEntry("auction_" + auctionId + "_owner", i.originCaller.toString()),
       StringEntry("auction_" + auctionId + "_description", description),
       IntegerEntry("auction_" + auctionId + "_startPrice", startPrice),
-      BooleanEntry("auction_" + auctionId + "_isArtefact", assetInfo(assetId).value().issuer == getItemsAddress()),
-      BooleanEntry("auction_" + auctionId + "_isTurtle", assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer == getTurtleIncubatorAddress()),
-      BooleanEntry("auction_" + auctionId + "_isThird", assetInfo(assetId).value().issuer == getPeteAddress()),
+      BooleanEntry("auction_" + auctionId + "_isArtefact", issuer == getItemsAddress()),
+      BooleanEntry("auction_" + auctionId + "_isTurtle", issuer == getTurtleBreederAddress() || issuer == getTurtleIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isMutant", issuer == getMutantBreederAddress()),
+      BooleanEntry("auction_" + auctionId + "_isCanine", issuer == getCanineBreederAddress() || issuer == getCanineIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isFeline", issuer == getFelineBreederAddress() || issuer == getFelineIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isEagle", issuer == getEagleBreederAddress() || issuer == getEagleIncubatorAddress()),
+      BooleanEntry("auction_" + auctionId + "_isMantle", issuer == getGameAddress()),
+      BooleanEntry("auction_" + auctionId + "_isThird", issuer == getPeteAddress()),
       IntegerEntry("auction_" + auctionId + "_instantPrice", instantPrice),
       StringEntry("address_" + i.originCaller.toString() + "_auction_" + auctionId + "_lockedNFT", assetId.toBase58String())
     ]
-  }
+  
 }
 
 @Callable(i)
@@ -191,6 +219,7 @@ func instantBuy(auctionId: String) = {
 
   let finalFee = if tryGetBoolean("auction_" + auctionId + "_isArtefact") == true then getArtefactsFeePercent() else getFeePercent()
 
+
   if (pmt.assetId != paymentAssetId) then {
     throw("MIB: Auction does only support " + paymentAssetName + " payments.")
   } else {
@@ -204,16 +233,13 @@ func instantBuy(auctionId: String) = {
         let auctionOwner = tryGetString("auction_" + auctionId + "_owner")
         let recordPrice = tryGetInteger(assetId+"_recordPrice")
         let newRecordPrice = max([recordPrice, amount])
-              let burnCall = if isEggSell then {
-                strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(amount, finalFee, 1000))])
-                []
-                }else [
-            ScriptTransfer(getFeeAggregatorAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit),
-            ScriptTransfer(getBuybackAddress(),fraction(amount, fraction(finalFee,6,10), 1000),unit)]
+        strict burnCall = processFees(isEggSell,amount, finalFee)
         let caller = if getMarketPlaceProxy() == i.caller then i.originCaller else i.caller
         strict recordAction = if amount > 50_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY50"],[]) else
                               if amount > 20_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY20"],[]) else
                               if amount > 5_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY5"],[]) else nil
+        let isMantle = tryGetBoolean("auction_" + auctionId + "_isMantle")
+        strict mantleUpdate = if isMantle then invoke(getGameAddress(),"changeOwner",[assetId,caller.toString()],[]) else nil
         ([
           StringEntry("auction_" + auctionId + "_status", "finished"),
           IntegerEntry("auction_" + auctionId + "_finalPrice", amount),
@@ -299,13 +325,9 @@ func acceptBid(auctionId: String, bidId: String) = {
     } else {
       let recordPrice = tryGetInteger(assetId+"_recordPrice")
       let newRecordPrice = max([recordPrice, bidAmount])
-              let burnCall = if isEggSell then {
-                strict invokeResult = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),fraction(bidAmount, finalFee, 1000))])
-                []
-                }else [
-                  ScriptTransfer(getFeeAggregatorAddress(),fraction(bidAmount, fraction(finalFee,6,10), 1000),unit),
-                  ScriptTransfer(getBuybackAddress(),fraction(bidAmount, fraction(finalFee,6,10), 1000),unit)
-        ]
+      strict burnCall = processFees(isEggSell,bidAmount, finalFee)
+      let isMantle = tryGetBoolean("auction_" + auctionId + "_isMantle")
+      strict mantleUpdate = if isMantle then invoke(getGameAddress(),"changeOwner",[assetId,bidAuthor],[]) else nil
       [
         StringEntry("auction_" + auctionId + "_bid_" + bidId + "_status", "finished"),
         StringEntry("auction_" + auctionId + "_status", "finished"),
@@ -328,8 +350,8 @@ func verify() = {
       sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
   else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
-    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
-    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
 
     let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
         else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
@@ -346,6 +368,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
-}
+}   

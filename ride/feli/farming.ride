@@ -32,9 +32,11 @@ func totalStakedKey() = "total_staked"
 func staticKey_peteAssetId() = "static_peteAssetId"
 func staticKey_peteDapp() = "static_peteDappAddress"
 func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
@@ -42,9 +44,11 @@ func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_co
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
-func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()).fromBase58String()  
 func getPeteDappAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_peteDapp()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFelineRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String())
+func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -61,6 +65,17 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 
 }
 
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
+
 func tryGetInteger(key: String) = {
     match getInteger(this, key) {
         case b:Int => b
@@ -68,18 +83,8 @@ func tryGetInteger(key: String) = {
     }
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
-}
-
-func asIntTuple(value: Any) = match value {
-  case int: (Int,Int) => int
-  case _ => throw("FAI: wrong type, expected: (Int,Int)")
-}
-
 func handleStakingTopUp (totalAmount: Int) = {
-    let team = totalAmount/10
+    let team = totalAmount/12
     let compoundAmount = (totalAmount-team)/2
     let payoutAmount = totalAmount-compoundAmount-team
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
@@ -144,7 +149,7 @@ func updateFarmingPower(address: String, asset:String) ={
   let totalStaked = tryGetInteger(totalStakedKey())
   let totalStakedUser = tryGetInteger(totalStakedUserKey(address))
   let currentFP = tryGetInteger(assetFarmingPower(address,asset))
-  let newFP = invoke(this,"calculateFarmPower",[asset, address],[]).asIntTuple()
+  let newFP = invoke(this,"calculateFarmPower",[asset, address],[]).exactAs[(Int,Int)]
   if currentFP != 0 then
   [
       IntegerEntry(totalStakedKey(),totalStaked-currentFP+newFP._1),
@@ -206,14 +211,16 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let power =  pow(15,1,totalGenes,0,2,DOWN)
 
   #3 months = 90 days = 1%/day roughly
-  let multiplier = (height-3750000)*100/(60*24*30*3)
+  let baseBlock = if isTestEnv() then 2500000 else 3750000
+  let multiplier = (height-baseBlock)*100/(60*24*30*3)
   #TODO make this percentage multiplier
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
   strict farmBoost = 0
   #Recalculate bonusses every claim
-  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
+  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   ([
   ],(finalPowerRarityBoost,finalPower))
 
@@ -237,7 +244,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
     } else {
       let exactPrice = calculatePerchPrice(i.caller.toString())
         let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).exactAs[Int]
           exactPrice-amountPaidByCoupons
         }else {
             exactPrice
@@ -306,7 +313,7 @@ func stakeNFT(jColor: String) = {
   
   if (pmt.amount != 1) then throw("NFT is not attached") else
   
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).asIntTuple()
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).exactAs[(Int,Int)]
     strict result = claimStakingResult(address,assetId.toBase58String(), false)
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower._1),
@@ -352,8 +359,11 @@ func unstakeNFT(asset: String)={
 @Callable(i)
 func topUpReward () = {
   let firstPayment = i.payments[0].value()
-  if (firstPayment.assetId != getPeteAssetId()) then throw("FBP: You can attach only"+ getPeteAssetId().toBase58String()) else 
-  let resHandleStaking = handleStakingTopUp(firstPayment.amount) 
+  if (firstPayment.assetId != getPeteAssetId()) then throw("FBP: You can attach only"+ getPeteAssetId().toBase58String()) else
+  let amountForMutants = firstPayment.amount/20
+  strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["PETE",0], [AttachedPayment(getPeteAssetId(), amountForMutants)]) 
+  let resHandleStaking = handleStakingTopUp(firstPayment.amount-amountForMutants) 
     (
       resHandleStaking, 
       true
@@ -366,9 +376,11 @@ func claimRewardPete () = {
   strict peteBalanceBefore = assetBalance(this, getPeteAssetId())
   strict invokeRes = invoke(getPeteDappAddress(), "claim", [],[])
   strict peteBalanceAfter = assetBalance(this, getPeteAssetId())
-  let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore-1000_0000) ++ [
-    ScriptTransfer(i.caller,1000_0000, getPeteAssetId())
-  ]
+  let diff = peteBalanceAfter-peteBalanceBefore
+  let amountForMutants = diff/20
+    strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["PETE",0], [AttachedPayment(getPeteAssetId(), amountForMutants)])  
+  let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore)
     (
       resHandleStaking, 
       true
@@ -403,3 +415,45 @@ func claimReward (assetId: String) = {
     result._2
   )
   }
+
+@Callable(i)
+func liquidateUSDT() = {
+  let wxPool = addressFromStringValue("3P4PFYKHyxitgwVb4WVWEcdH7ZsuR4GgcXC")
+  let usdtAssetId = "9wc3LXNA4TEBsXyKtoLE9mrbDD7WMHXvXrCjZvabLAsi".fromBase58String()
+  let peteAssetId = "GAzAEjApmjMYZKPzri2g2VUXNvTiQGF7KDYZFFsP3AEq".fromBase58String()
+  strict peteBefore = assetBalance(this,peteAssetId)
+  strict liquidateUsdt = invoke(wxPool, "swap", [peteAssetId.toBase58String(),0],[AttachedPayment(usdtAssetId,assetBalance(this,usdtAssetId))])
+  strict peteAfter = assetBalance(this,peteAssetId)
+  strict invokeRes = invoke(getPeteDappAddress(), "stake", [],[AttachedPayment(peteAssetId,peteAfter-peteBefore)])
+  [
+    IntegerEntry("global_PETE_balance",tryGetInteger("global_PETE_balance")+(peteAfter-peteBefore))
+  ]
+}
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+}

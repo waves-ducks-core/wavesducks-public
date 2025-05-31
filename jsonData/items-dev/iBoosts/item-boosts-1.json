@@ -1,0 +1,283 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "boost_ART-CAPE",
+            "type": "integer",
+            "value": 30
+        },
+        {
+            "key": "boost_ART-HAT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-XHAT",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "boost_ART-POMP",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "boost_ART-TOPHAT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-CROWN",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-JESTERHAT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-PANAMAHAT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-PEPEHAT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-SOMBRERO",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-MAFIAHAT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-PUMPKIN",
+            "type": "integer",
+            "value": 50
+        },
+        {
+            "key": "boost_ART-FIRE_HELMET",
+            "type": "integer",
+            "value": 4
+        },
+        {
+            "key": "boost_ART-FAWKESMASK",
+            "type": "integer",
+            "value": 50
+        },
+        {
+            "key": "boost_ART-XSCARF",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "boost_ART-ICECREAM",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-ORB",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-TOMMYGUN",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-UMBRELLA",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-FIRE_SHIELD",
+            "type": "integer",
+            "value": 30
+        },
+        {
+            "key": "boost_ART-KATANA",
+            "type": "integer",
+            "value": 4
+        },
+        {
+            "key": "boost_ART-SCEPTER",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-SHOPBAG",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-SABER-PUR",
+            "type": "integer",
+            "value": 50
+        },
+        {
+            "key": "boost_ART-SABER-BLU",
+            "type": "integer",
+            "value": 50
+        },
+        {
+            "key": "boost_ART-SABER-YEL",
+            "type": "integer",
+            "value": 50
+        },
+        {
+            "key": "boost_ART-SABER-RED",
+            "type": "integer",
+            "value": 50
+        },
+        {
+            "key": "boost_ART-SABER-GRN",
+            "type": "integer",
+            "value": 50
+        },
+        {
+            "key": "boost_ART-FIRE_SWORD",
+            "type": "integer",
+            "value": 4
+        },
+        {
+            "key": "boost_ART-XSWEATER",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "boost_ART-BLUESHIRT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-BUILTBODY",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-FREDYSWEATER",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-GUARDSUIT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-LEATHERJCKET",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-PEPESHIRT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-ROYALCOAT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-TANKTOP",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-TRENCHCOAT",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-TUXEDO",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-WASSERMANVST",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "boost_ART-JERSEY_BRAZ",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_FRAN",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_ARG",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_ENG",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_SPAIN",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_GERM",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_NETH",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_PORT",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_BELG",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_DENM",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_CROAT",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_URUG",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_SWITZ",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "boost_ART-JERSEY_SERB",
+            "type": "integer",
+            "value": 3
+        }
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES"
+}

@@ -10,6 +10,17 @@ func tryGetStringExternal(address: Address, key: String) = {
         case _ => ""
     }
 }
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
 
 func staticKey_mutantIncubatorAddress() = "static_mutantIncubatorAddress"
 func staticKey_oracleAddress() = "static_oracleAddress"
@@ -20,6 +31,8 @@ func staticKey_mutariumFee() = "static_mutariumFee"
 func staticKey_babyDuckAddress() = "static_babyDuckAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_spiceAssetId() = "static_spiceAssetId"
+func statisKey_puzzleAssetId() = "static_puzzleAssetId"
+func staticKey_peteAssetId() = "static_peteAssetId"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_burnAddress() = "static_burnAddress"
@@ -33,6 +46,7 @@ func keyLastCheckInterest(address: String, asset: String, reveneuType: String) =
 func keyGlobalEarned(reveneuType: String) =  "global_earnings_"+reveneuType
 func staticKey_extraFee() = "static_extraFee"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
 
 
 func tryGetString(key: String) = {
@@ -45,25 +59,18 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
 func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(), staticKey_babyDuckAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String())
-func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String()  
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
+func getPuzzleAssetId() = tryGetStringExternal(getOracle(),statisKey_puzzleAssetId()).fromBase58String()  
+func getPeteAssetId() = tryGetStringExternal(getOracle(),staticKey_peteAssetId()).fromBase58String()  
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
-
-func asIntTuple(value: Any) = match value {
-  case int: (Int,Int) => int
-  case _ => throw("FAI: wrong type, expected: (Int,Int)")
-}
+func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func asBoolean(value: Any) = match value {
   case boolean: Boolean => boolean
   case _ => throw("FAB: wrong type, expected: Boolean")
-}
-
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
 }
 func asRarity(value: Any) = match value {
   case strIntTuple: (String,Int) => strIntTuple
@@ -97,7 +104,10 @@ func determineClasses(assetName: String)={
   let classes = [genotype[0],genotype[2],genotype[4],genotype[6],genotype[8],genotype[10],genotype[12],genotype[14]]
   (
     containsElement(classes,"T"),
-    containsElement(classes,"D")
+    containsElement(classes,"D"),
+    containsElement(classes,"F"),
+    containsElement(classes,"C"),
+    containsElement(classes,"E")
   )
 }
 
@@ -117,7 +127,7 @@ func updateFarmingPower(address: String, asset:String,reveneuType: String) ={
   let totalStaked = tryGetInteger(totalStakedKey(reveneuType))
   let totalStakedUser = tryGetInteger(totalStakedUserKey(address,reveneuType))
   let currentFP = tryGetInteger(assetFarmingPower(address,asset))
-  let newFP = invoke(this,"calculateFarmPower",[asset],[]).asIntTuple()
+  let newFP = invoke(this,"calculateFarmPower",[asset],[]).exactAs[(Int,Int)]
   if currentFP != 0 then
   [
       IntegerEntry(totalStakedKey(reveneuType),totalStaked-currentFP+newFP._1),
@@ -142,7 +152,14 @@ func claimStakingResult (address: String, assetId: String, recalc: Boolean, reve
       [ScriptTransfer(addressFromStringValue(address), reward , getSpiceAssetId())] else
       if reveneuType == "EGG" then
       [ScriptTransfer(addressFromStringValue(address), reward , getEggAssetId())] else
+      if reveneuType == "WAVES" then
+      [ScriptTransfer(addressFromStringValue(address), reward , unit)] else
+      if reveneuType == "PUZZLE" then
+      [ScriptTransfer(addressFromStringValue(address), reward , getPuzzleAssetId())] else
+      if reveneuType == "PETE" then
+      [ScriptTransfer(addressFromStringValue(address), reward , getPeteAssetId())] else
       if reveneuType == "FEED" then
+      strict invokeResult = if (reward >0 ) then  invoke(getAccBoosterAddress(),"addFeedLimit",[reward,address],[]) else unit
       [] else
       if reveneuType == "VEGG" then
       strict invokeResult = if (reward >0 ) then  invoke(getCouponsAddress(),"addCouponsFarming",[address, reward],[]) else unit
@@ -170,7 +187,7 @@ func updateKeysReveneuType(address: String, assetId: ByteVector, reveneuType: St
 }
 
 func deterMineClassAndClaimType(address: String, assetId: String, assetName: String, recalc: Boolean) = {
-  let (isT, isD) = determineClasses(assetName)
+  let (isT, isD, isF, isC, isE) = determineClasses(assetName)
   let tKeys = if isT then {
     claimStakingResult(address, assetId,recalc, "SPICE")++
     claimStakingResult(address, assetId,recalc, "FEED")
@@ -179,11 +196,20 @@ func deterMineClassAndClaimType(address: String, assetId: String, assetName: Str
     claimStakingResult(address, assetId, recalc, "EGG")++
     claimStakingResult(address, assetId, recalc, "VEGG")
   } else []
-  tKeys++dKeys
+  let fKeys = if isF then {
+    claimStakingResult(address, assetId, recalc, "PETE")
+  } else []
+  let cKeys = if isC then {
+    claimStakingResult(address, assetId, recalc, "WAVES")
+  } else []
+  let eKeys = if isE then {
+    claimStakingResult(address, assetId, recalc, "PUZZLE")
+  } else []
+  tKeys++dKeys++fKeys++cKeys++eKeys
 }
 
 func deterMineClassAndSetType(address: String, assetId: ByteVector, fp: Int, assetName: String) = {
-  let (isT, isD) = determineClasses(assetName)
+  let (isT, isD, isF, isC, isE) = determineClasses(assetName)
   let tKeys = if isT then {
     setKeysReveneuType(address, assetId, "SPICE", fp)++
     setKeysReveneuType(address, assetId, "FEED", fp)
@@ -192,11 +218,20 @@ func deterMineClassAndSetType(address: String, assetId: ByteVector, fp: Int, ass
     setKeysReveneuType(address, assetId, "EGG", fp)++
     setKeysReveneuType(address, assetId, "VEGG", fp)
   } else []
-  tKeys++dKeys
+  let fKeys = if isF then {
+    setKeysReveneuType(address, assetId, "PETE", fp)
+  } else []
+  let cKeys = if isC then {
+    setKeysReveneuType(address, assetId, "WAVES", fp)
+  } else []
+  let eKeys = if isE then {
+    setKeysReveneuType(address, assetId, "PUZZLE", fp)
+  } else []
+  tKeys++dKeys++fKeys++cKeys++eKeys
 }
 
 func deterMineClassAndUpdateType(address: String, assetId: ByteVector, fp: Int, assetName: String) = {
-  let (isT, isD) = determineClasses(assetName)
+  let (isT, isD, isF, isC, isE) = determineClasses(assetName)
   let tKeys = if isT then {
     updateKeysReveneuType(address, assetId, "SPICE", fp)++
     updateKeysReveneuType(address, assetId, "FEED", fp)
@@ -205,7 +240,16 @@ func deterMineClassAndUpdateType(address: String, assetId: ByteVector, fp: Int, 
     updateKeysReveneuType(address, assetId, "EGG", fp)++
     updateKeysReveneuType(address, assetId, "VEGG", fp)
   } else []
-  tKeys++dKeys
+  let fKeys = if isF then {
+    updateKeysReveneuType(address, assetId, "PETE", fp)
+  } else []
+  let cKeys = if isC then {
+    updateKeysReveneuType(address, assetId, "WAVES", fp)
+  } else []
+  let eKeys = if isE then {
+    updateKeysReveneuType(address, assetId, "PUZZLE", fp)
+  } else []
+  tKeys++dKeys++fKeys++cKeys++eKeys
 }
 
 func handleStakingTopUp (amount: Int, reveneuType: String) = {
@@ -239,13 +283,18 @@ func calculateFarmPower(assetId:String)={
   let power = pow(15,1,totalGenes,0,2,DOWN)
 
   #3 months = 90 days = 1%/day roughly
-  let multiplier = (height-3750000)*100/(60*24*30*3)
+  let baseBlock = if isTestEnv() then 2500000 else 3750000
+  let multiplier = (height-baseBlock)*100/(60*24*30*3)
   #TODO make this percentage multiplier
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*asRarityResult._2/100
+  strict farmBoost = 0
+  #Recalculate bonusses every claim
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
+  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   ([
-  ],(finalPowerRarity,finalPower))
+  ],(finalPowerRarityBoost,finalPower))
 
 }
 
@@ -277,7 +326,7 @@ func buyMutuarium(color: String, refererAddress: String) = {
     } else {
       let exactPrice = calculatePerchPrice(i.caller.toString())
         let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).exactAs[Int]
           exactPrice-amountPaidByCoupons
         }else {
             exactPrice
@@ -327,7 +376,7 @@ func stakeNFT() = {
   
   if (pmt.amount != 1) then throw("NFT is not attached") else
   
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).asIntTuple()
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).exactAs[(Int,Int)]
     strict result = deterMineClassAndClaimType(address,assetId.toBase58String(),assetName,false)
     [
       StringEntry(assetId.toBase58String()+"_owner",address),
@@ -359,6 +408,18 @@ func topUpReward (reveneuType: String, amount: Int) = {
     if i.caller != getCouponsAddress() then throw("VFTUP: Only couponsdapp can do topup!") else
     handleStakingTopUp(amount, reveneuType) 
    else
+  if reveneuType == "WAVES" then
+    if i.payments[0].assetId!= unit then throw("Please attach waves!") else
+    handleStakingTopUp(i.payments[0].amount, reveneuType) 
+    else
+  if reveneuType == "PUZZLE" then
+    if i.payments[0].assetId!= getPuzzleAssetId() then throw("Please attach puzzle!") else
+    handleStakingTopUp(i.payments[0].amount, reveneuType) 
+    else
+  if reveneuType == "PETE" then
+    if i.payments[0].assetId!= getPeteAssetId() then throw("Please attach babyduck!") else
+    handleStakingTopUp(i.payments[0].amount, reveneuType) 
+    else
   throw("Unknown reveneuType")
 }
 
@@ -366,14 +427,14 @@ func topUpReward (reveneuType: String, amount: Int) = {
 func unstakeNFT(assetId: String) = {
   let address = i.caller.toString()
   if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else
-  let assetName = assetInfo(assetId.fromBase58String()).value().name.value()   
+  let assetName = assetInfo(assetId.fromBase58String()).value().description.value()   
   strict result = deterMineClassAndClaimType(address,assetId,assetName,false)
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let color = tryGetString("address_"+address+"_asset_"+assetId+"_perchColor")
   strict assetFP = tryGetInteger(assetFarmingPower(address,assetId))
   let updateKeys = deterMineClassAndUpdateType(address, assetId.fromBase58String(), assetFP, assetName)
   [
-    IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color)+1),
+    IntegerEntry("address_"+address+"_mutariumAvailable_"+color, tryGetInteger("address_"+address+"_mutariumAvailable_"+color)+1),
     DeleteEntry(assetId+"_owner"),
     DeleteEntry(assetFarmingPower(address,assetId)),
     DeleteEntry("address_"+address+"_asset_"+assetId+"_perchColor"),
@@ -388,6 +449,35 @@ func unstakeNFT(assetId: String) = {
 @Callable(i)
 func claimReward (assetId: String) = {
   strict validPayment =  checkAdditionalPayment(i.payments[0])
-  let assetName = assetInfo(assetId.fromBase58String()).value().name.value()  
+  let assetName = assetInfo(assetId.fromBase58String()).value().description.value()  
   if (i.payments.size() > 1) then throw("Please don't add extra payments") else deterMineClassAndClaimType(i.caller.toString(),assetId,assetName, true)++validPayment
   }
+
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+} 

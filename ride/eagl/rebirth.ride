@@ -1,0 +1,401 @@
+{-# STDLIB_VERSION 7 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func tryGetStringExternal(address: Address, key: String) = {
+  address.getString(key).valueOrElse("")
+}
+
+func tryGetAddressExternal(address: Address, key: String) = {
+  Address(address.getString(key).valueOrErrorMessage(key+" undefined").fromBase58String())
+}
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+
+func asBoolean(value: Any) = match value {
+  case boolean: Boolean => boolean
+  case _ => throw("FAB: wrong type, expected: Boolean")
+}
+
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+func asString(value: Any) = match value {
+  case s: String => s
+  case s: Int => throw("wrong type, expected: String, got: Int")
+  case s: Unit => throw("wrong type, expected: String, got: Unit")
+  case _ => throw("wrong type, expected: String")
+}
+func isTestEnv()={
+  getBool("TESTENV")
+}
+
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_eagleIncubatorAddress() = "static_eagleIncubatorAddress"
+func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
+func staticKey_couponsAddress() = "static_couponsAddress"
+func staticKey_eagleStakingAddress() = "static_eagleStakingAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_felineIncubatorAddress() = "static_felineIncubatorAddress"
+func staticKey_eagleRebirthPrice() = "static_eagleRebirthPrice"
+func staticKey_puzzleAssetId() = "static_puzzleAssetId"
+func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getFeeAggregator() = tryGetAddressExternal(getOracle(),staticKey_feeAggregator())
+func getEagleBreederAddress() =  tryGetAddressExternal(getOracle(),staticKey_eagleBreederAddress())
+func getEagleIncubatorAddress() =  tryGetAddressExternal(getOracle(),staticKey_eagleIncubatorAddress())
+func getCouponsAddress() = tryGetAddressExternal(getOracle(),staticKey_couponsAddress())
+func getEagleStakingAddress() =  tryGetAddressExternal(getOracle(),staticKey_eagleStakingAddress())
+func getFelineIncubatorAddress() =  tryGetAddressExternal(getOracle(),staticKey_felineIncubatorAddress())
+func getItemsAddress() =  tryGetAddressExternal(getOracle(),staticKey_itemsAddress())
+func getPzlAssetId() = tryGetStringExternal(getOracle(),staticKey_puzzleAssetId()).fromBase58String()
+func getVeggFarmingAddress() = tryGetAddressExternal(getOracle(),staticKey_veggFarmingAddress())
+
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => throw("TR: Value not found in sc!")
+    }
+
+}
+
+func tryGetIntegerExternalZero(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
+#TODO: PUT IN ORACLE!!!!!!!!!!!!!!!!!!!!!!!!!!
+let pzlAmount = tryGetIntegerExternal(getOracle(),staticKey_eagleRebirthPrice()) #24_0000_0000
+
+let delayForHatching = 2
+
+func checkReal(assetId: ByteVector) = {
+  if (assetInfo(assetId).value().issuer == getEagleBreederAddress() || assetInfo(assetId).value().issuer ==getEagleIncubatorAddress()) then {
+   assetInfo(assetId).value().issuer
+  } else {
+    throw("not valid NFT")
+  }
+}
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("RCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != feeAmount then throw("RCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+
+}
+
+func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, offset: Int) = {
+  let randomSeedBlock = blockInfoByHeight(hatchingFinishHeight-1).value()
+  let randomHash = sha256(txId + randomSeedBlock.vrf.value())
+  randomHash.toInt(offset*8) % options
+}
+
+func tryGetBoolean(key: String) = {
+    match getBoolean(key) {
+        case b:Boolean => b
+        case _ => false
+    }
+
+}
+
+func wasUniqueBorn(gen: String) = {
+  func getEAGLStatsKey(genString: String) = {
+  "stats_" + genString + "_amount"
+}
+  tryGetIntegerExternalZero(getEagleIncubatorAddress(),getEAGLStatsKey(gen))
+}
+
+func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
+  #let jackpotRandom = getRandomNumber(40, tx, finishHeight, 1)
+  #if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCAESAR-JU") < 2) then { (jackpotRandom,"jackpot") } else 
+    #Every % means 10 numbers
+    let n = getRandomNumber(1000, tx, finishHeight, 0)
+    let result = 
+    if (n<100 && blacklistCode != "garage_A" ) then "garage_A" else
+    if (n<200 && blacklistCode != "garage_B" ) then "garage_B" else
+    if (n<300 && blacklistCode != "garage_C" ) then "garage_C" else
+    if (n<400 && blacklistCode != "garage_D" ) then "garage_D" else
+    if (n<700 && blacklistCode != "incubator" ) then "incubator" else
+    if (n<800 && blacklistCode != "feli_incubator" ) then "feli_incubator" else    
+    if (n<850 && blacklistCode != "item!ART-MUTARIUM-G" ) then "item!ART-MUTARIUM-G" else
+    if (n<900 && blacklistCode != "item!ART-MUTARIUM-D" ) then "item!ART-MUTARIUM-D" else
+    if (n<940 && blacklistCode != "item!ART-FREEGENE" ) then "item!ART-FREEGENE" else    
+    if (n<980 && blacklistCode != "item!ART-FIXGENE" ) then "item!ART-FIXGENE" else   
+    if (n<990 && blacklistCode != "item!ART-MIRROR" ) then "item!ART-MIRROR" else  
+    if (n<992 && blacklistCode != "vperch_B") then "vperch_B" else
+    if (n<994 && blacklistCode != "vperch_R") then "vperch_R" else
+    if (n<996 && blacklistCode != "vperch_G") then "vperch_G" else
+    "vperch_Y"
+    (n,result)
+}
+func getRandomReturn(tx: ByteVector, finishHeight: Int)={
+  let n = getRandomNumber(2, tx, finishHeight, 1)
+  if n == 0 then true else false
+}
+
+func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment,
+ double: Boolean, blacklistCode: String, rescue: Boolean) = {
+  let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
+  let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
+  strict validPayment = checkAdditionalPayment(additionalPayment)
+  strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTHEAGLE"],[])
+
+  if (status != "open") then {
+    throw("rebirth is finished or not open")
+  } else {
+    if (height < finishBlock) then {
+      throw("you cannot finish rebirth, yet")
+    } else {
+
+      let output = getRandomWin(initTx.fromBase58String(), finishBlock, blacklistCode)  
+      let win = output._2
+      let random = output._1
+
+      let txId = initTx
+
+      #TODO: change into docking
+      strict result =  if (win.indexOf("garage") != unit) then {
+        let color = win.takeRight(1)
+        strict call = if !double then 
+              strict first = invoke(getEagleStakingAddress(), "addFreePerch", [address, color,1], [])
+              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+            else
+              strict first = invoke(getEagleStakingAddress(), "addFreePerch", [address, color,2], [])
+                            #TODO; use a batch method 
+                [
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+                ]
+        call
+
+      } else if (win.indexOf("vperch") != unit) then {
+        let color = win.takeRight(1)
+        strict call = if !double then 
+              strict first = invoke(getVeggFarmingAddress(), "addFreePerch", [address, color,1], [])
+              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+            else
+              strict first = invoke(getVeggFarmingAddress(), "addFreePerch", [address, color,2], [])
+                            #TODO; use a batch method 
+                [
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+                ]
+        call
+
+      } else if (win == "jackpot") then {
+        strict call = invoke(getEagleIncubatorAddress(), "issueJackpot", [address, txId, "WWCAESAR"], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+      #TODO: turn into issueFreeCanine, on double, issue free turtle aswell
+      } else if (win == "incubator") then {
+        strict call = if !double then 
+            strict first =invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
+            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+          else 
+            strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
+            strict second = invoke(getFelineIncubatorAddress(), "issueFree", [address, txId], [])
+            [
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "incubator")
+            ]
+
+        call
+      #TODO: turn into issueFreeTurtle, on double, issue free canine aswell
+      } else if (win == "feli_incubator") then {
+        strict call = if !double then 
+            strict first = invoke(getFelineIncubatorAddress(), "issueFree", [address, txId], [])
+            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+          else 
+            strict first = invoke(getFelineIncubatorAddress(), "issueFree", [address, txId], [])
+            strict second = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
+            [
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "feli_incubator")
+            ]
+        call
+      #TODO; should work
+      }else if (win.indexOf("item") !=unit) then {
+        let itemName = win.split("!")[1]
+        strict call = if !double then 
+                strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+                [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+
+            else 
+                strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
+                strict second = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
+                [
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+                ]
+          call
+      }else{
+        throw("RFB: Some error occured, please contact the admins! "+win)
+      }
+      let returnToSender =  if rescue then getRandomReturn(initTx.fromBase58String(), finishBlock) else false
+      let returnPayload = if returnToSender then
+        let assetId = getStringValue("address_" + address + "_initTx_" + initTx + "_assetId").fromBase58String()
+        let issuer = checkReal(assetId)   
+        strict gen = invoke(getEagleBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
+        strict call = invoke(issuer, "increaseRarity", [assetId.toBase58String(), gen], [])
+        [ScriptTransfer(address.addressFromStringValue(), 1, 
+        assetId)] 
+      else []
+
+      result ++ [
+        StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
+        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
+      ]++validPayment++returnPayload
+    }
+  }
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("RCU: admin only") else 
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+#Payment 0 = turtle
+#payment 1 = waves
+#TODO: send 1/4th to fee aggregator and 3/4th to canine lock sc
+
+@Callable(i)
+func initRebirth() = {
+  let pmtEagle = i.payments[0]
+  let pmtPzl = i.payments[1]
+  strict extra = checkAdditionalPayment(i.payments[2])
+
+  let assetId = pmtEagle.assetId.value()
+  let initTx = i.transactionId.toBase58String()
+  let address = i.caller.toString()
+  if (pmtEagle.amount != 1) then throw("NFT is not attached") else
+  if (pmtPzl.amount != pzlAmount || pmtPzl.assetId != getPzlAssetId()) then throw("Puzzle is not attached or wrong!") else
+  let sendToAggreGator = pmtPzl.amount/4
+  let payUserAmount = pmtPzl.amount/5
+  let topup = pmtPzl.amount - sendToAggreGator - payUserAmount
+
+  strict addMore = invoke(getEagleStakingAddress(), "addPuzzleAndStakeMore", [], [AttachedPayment(getPzlAssetId(), topup)])
+  strict payUser = invoke(getEagleStakingAddress(), "topUpReward", [], [AttachedPayment(getPzlAssetId(), payUserAmount)])
+
+   
+  let issuer = checkReal(assetId)
+  strict gen = invoke(getEagleBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
+  strict call = invoke(issuer, "reduceRarity", [assetId.toBase58String(), gen], [])
+
+  [
+    IntegerEntry("address_" + address + "_initTx_" + initTx + "_finishBlock", height+delayForHatching),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),
+    StringEntry("address_" + address + "_initTx_" + initTx + "_assetId", assetId.toBase58String()),
+    ScriptTransfer(getFeeAggregator(), sendToAggreGator, getPzlAssetId())
+  ]++extra
+
+  
+}
+
+
+
+@Callable(i)
+func finishRebirth(initTx: String) = {
+  finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false,"",false)
+}
+
+@Callable(i)
+func finishRebirthDouble(initTx: String) = {
+  #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
+  if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
+    let assetId = i.payments[0].assetId.value()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    if boosterType == "ART-GIFT_DOUBL" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true,"",false)
+    else
+      throw("Error! Wrong item attached to double rewards!")
+}
+
+@Callable(i)
+func finishRebirthItem(initTx: String, itemCode: String) = {
+  #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
+  if (size(i.payments) == 2 && i.payments[0].amount==1) then
+    let assetId = i.payments[0].assetId.value()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    #TODO CHANGE INTO CORRECT TYPE!!!!
+    if boosterType == "ART-HWERASE" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false, itemCode,false)
+    
+    else if boosterType == "ART-HWRESCUE" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], false, "",true)
+    else if boosterType == "ART-GIFT_DOUBL" then 
+      [
+        Burn(assetId,1)
+      ]++
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[1], true, "",false)
+    else
+      throw("Error! Wrong item attached ")
+  else if (size(i.payments) == 1 ) then 
+      finishRebirthInternal(initTx, i.caller.toString(),i.payments[0], false,"",false)
+  else throw("Invalid payments")
+}
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+}

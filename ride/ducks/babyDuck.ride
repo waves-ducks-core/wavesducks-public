@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -53,8 +53,8 @@ func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getDucklingPrice() = tryGetIntegerExternal(getOracle(),staticKey_ducklingPrice())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
-func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
+func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String()  
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
@@ -179,11 +179,6 @@ func getBackendProof(maxFeedAmount: Int, userNonce: Int, address: String) = {
   makeString([maxFeedAmount.toString(), userNonce.toString(), address], ";")
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("BAI: wrong type, expected: Int")
-}
-
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("BCO: admin only") else 
@@ -207,7 +202,7 @@ func buyDuckling(refererAddress: String)={
   strict feeValidate = checkAdditionalPayment(i.payments[0])
   let exactPrice = getDucklingPrice()
   if exactPrice < 50000000 then throw("BBD: Invalid price from oracle!") else
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).exactAs[Int]
   let leftToPay = exactPrice-amountPaidByCoupons
 
   strict payment = if leftToPay!=0 then {
@@ -232,7 +227,9 @@ func buyDuckling(refererAddress: String)={
 
 @Callable(i)
 func issueFreeDuckling(address: String, txIdStr: String, percentage: Int) = {
-  if i.caller != this && i.caller != getRebirthAddress() && i.caller != getCanineRebirthAddress() && i.caller != getFelineRebirthAddress() then throw("BIFD: You can't issue free duckling") else
+  if i.caller != this && i.caller != getRebirthAddress() &&
+   i.caller != getCanineRebirthAddress() && i.caller != getFelineRebirthAddress() &&
+   i.caller != getCouponsAddress() then throw("BIFD: You can't issue free duckling") else
   let asset = Issue("BABY-11111111-GZ", "", 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
     ([
@@ -282,8 +279,8 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
     let ducklingOwner = tryGetString(keyOwner(realDucklingId))
     strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
         [], [AttachedPayment(getSpiceAssetId(), currentPayment/2)])
-    #strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
-    #    ["SPICE",0], [AttachedPayment(getSpiceAssetId(), currentPayment/10)])
+    strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["SPICE",0], [AttachedPayment(getSpiceAssetId(), currentPayment/10)])
     strict recordAction = if currentPayment >= 10_0000_0000 then  invoke(getCouponsAddress(),"recordAction",["FEEDDUCKLING10"],[]) else nil
 
     if ducklingOwner != i.caller.toString()&& !isTestEnv() then 
@@ -298,7 +295,7 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
         IntegerEntry(kFeedTxStats, currentPayment),
         StringEntry(kNewLevel, calculateResults._1),
         StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";")),
-        Burn(getSpiceAssetId(), currentPayment/2)#- currentPayment/10)
+        Burn(getSpiceAssetId(), currentPayment/2- currentPayment/10)
       ]++feeValidate
   
 }
@@ -340,7 +337,7 @@ func turnDucklingIntoDuck() = {
   let address = i.caller.toString()
   let txId = i.transactionId.toBase58String()
   let lastIssuedDucklingTs = tryGetInteger(KGlobalIssuedTimestamp)
-  let fiveMinInMs = 1 * 30 * 1000
+  let fiveMinInMs = if isTestEnv() then 0 else 1 * 30 * 1000
   let timeDiff = lastBlock.timestamp - (lastIssuedDucklingTs+fiveMinInMs);
   if (lastIssuedDucklingTs > 0 && timeDiff < 0) then throw("BTD: Can issue ducklings only once per 30s, please wait for " + fraction(timeDiff, 1, 1000).toString() + " sec.") else 
   if (i.payments.size() != 2) then throw("BTD: Bad payment attached (asset[s] or amount)") else {
@@ -350,7 +347,7 @@ func turnDucklingIntoDuck() = {
     let blackListed = tryGetBoolean(keyBlacklisted(pmt.id.toBase58String()))
     if blackListed then throw("BTD: Can not convert blacklisted duckling!") else
 
-    strict adultPriceCall =  invoke(this,"calculateDucklingPriceTwoDecimals",[],[]).asInt()
+    strict adultPriceCall =  invoke(this,"calculateDucklingPriceTwoDecimals",[],[]).exactAs[Int]
     let normalizedPrice = fraction(adultPriceCall, oneSpicePrecsion ,100)
     if (getCurrentLevelBigInt(pmt.id.toBase58String()) < normalizedPrice.toBigInt()) then throw("BTD: Duckling is not grown yet...") else
 
@@ -372,8 +369,8 @@ func verify() = {
       sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
   else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
-    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
-    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
 
     let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
         else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
@@ -390,6 +387,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
-}
+} 

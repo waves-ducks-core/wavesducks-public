@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -15,6 +15,14 @@ func staticKey_burnAddress() ="static_burnAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_extraFee() = "static_extraFee"
+
+func isTestEnv()={
+    let testenv =  match getBoolean(this, "TESTENV") {
+      case x: Boolean => x
+      case _ => false
+    }
+    testenv
+}
 
 func eggIdKey(eggId: String, user: String) = "eggId_"+eggId+"_"+user
 func boosterIdKey(type: String, user: String, height: Int) = "booster_"+type+"_"+user+"_"+height.toString()
@@ -54,11 +62,6 @@ func checkAdditionalPayment(payment: AttachedPayment, amount: Int)= {
 func asBoolean(value: Any) = match value {
   case boolean: Boolean => boolean
   case _ => throw("TI: wrong type, expected: Boolean")
-}
-
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
 }
 
 func asString(value: Any) = match value {
@@ -105,7 +108,7 @@ func buyRopeInverted(eggId: String, price: Int, distance: Int, backendSignature:
   if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), getBackendPubKey())) then throw("RBR: Invalid proof from backend") else
     if distance > 1200 then throw("RBR: You can only maximum boost 1200 meters distance!") else
     let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[halfPrice],[]).asInt()
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[halfPrice],[]).exactAs[Int]
           halfPrice-amountPaidByCoupons
         }else {
             halfPrice
@@ -136,3 +139,31 @@ func buyRopeInverted(eggId: String, price: Int, distance: Int, backendSignature:
         StringEntry(eggIdKey(eggId, i.originCaller.toString()),price.toString()+";"+distance.toString())
     ]++validPayment++refund
 }
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 2
+    }
+} 

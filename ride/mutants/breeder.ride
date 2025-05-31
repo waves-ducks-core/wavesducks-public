@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -15,6 +15,11 @@ func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_burnAddress() = "static_burnAddress"
+func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
+func staticKey_canineBreederAddress() = "static_canineBreederAddress"
+func staticKey_felineBreederAddress() = "static_felineBreederAddress"
+func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
 
 func getStatsKey_amount() = "stats_amount"
 func getStatsKey(genString: String) = "stats_" + genString + "_amount"
@@ -45,9 +50,15 @@ func tryGetInteger(key: String) = {
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getTurtleBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String()) 
 func getDuckBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_duckBreederAddress()).fromBase58String())
+func getEagleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String())
+func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String())
+func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
+
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() 
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String()
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func getAllowedMutants() = [getTurtleBreederAddress(),getDuckBreederAddress()]
 
@@ -132,19 +143,21 @@ func nrOfTypeGenes(gen:String)={
   let parts7=genotype[12]+genotype[13]
   let parts8=genotype[14]+genotype[15]
   let parts=[parts1,parts2,parts3,parts4,parts5,parts6,parts7,parts8]
-  func sortPartsByType(acc: (List[String],List[String],List[String],List[String]), part: String) ={
+  func sortPartsByType(acc: (List[String],List[String],List[String],List[String],List[String]), part: String) ={
     let splitParts = part.split("")
     if splitParts[0] == "T" then
-      (acc._1:+splitParts[1], acc._2,acc._3,acc._4)
+      (acc._1:+splitParts[1], acc._2,acc._3,acc._4, acc._5)
     else if splitParts[0] == "D" then
-      (acc._1,acc._2:+splitParts[1],acc._3,acc._4)
+      (acc._1,acc._2:+splitParts[1],acc._3,acc._4, acc._5)
+    else if splitParts[0] == "F" then
+      (acc._1,acc._2,acc._3:+splitParts[1],acc._4, acc._5)
     else if splitParts[0] == "C" then
-      (acc._1,acc._2,acc._3:+splitParts[1],acc._4)
-    else if splitParts[0] == "H" then
-      (acc._1,acc._2,acc._3,acc._4:+splitParts[1])
+      (acc._1,acc._2,acc._3,acc._4:+splitParts[1], acc._5)
+    else if splitParts[0] == "E" then
+      (acc._1,acc._2,acc._3,acc._4, acc._5:+splitParts[1])
     else throw("UNKNOWN TYPE")
   }
-  strict result = FOLD<8>(parts, ([],[],[],[]), sortPartsByType)
+  strict result = FOLD<8>(parts, ([],[],[],[], []), sortPartsByType)
 
   func composeStringTurtle(acc: String,char: String)={
     let charCount = FOLD<8>(result._1, (0,char), isSymbol)
@@ -161,21 +174,29 @@ func nrOfTypeGenes(gen:String)={
     func composeStringDog(acc: String,char: String)={
     let charCount = FOLD<8>(result._4, (0,char), isSymbol)
     acc+getAmountOrClear(toString(charCount._1)+char)
+    }
+
+    func composeStringEagle(acc: String,char: String)={
+    let charCount = FOLD<8>(result._5, (0,char), isSymbol)
+    acc+getAmountOrClear(toString(charCount._1)+char)
   }
   let turtleGens = FOLD<26>(charList(), "", composeStringTurtle)
   let duckGens = FOLD<26>(charList(), "", composeStringDuck)
   let catGens = FOLD<26>(charList(), "", composeStringCat)
   let hondGens = FOLD<26>(charList(), "", composeStringDog)
+  let eagleGens = FOLD<26>(charList(), "", composeStringEagle)
   let finishedTurtleGens = if (turtleGens == "") then "" else "T:"+turtleGens+"_"
   let finishedDuckGens = if (duckGens == "") then "" else "D:"+duckGens+"_"
-  let finishedCatGens = if (catGens == "") then "" else "C:"+catGens+"_"
-  let finishedHondGens = if (hondGens == "") then "" else "H:"+hondGens+"_"
+  let finishedCatGens = if (catGens == "") then "" else "F:"+catGens+"_"
+  let finishedHondGens = if (hondGens == "") then "" else "C:"+hondGens+"_"
+  let finishedEagleGens = if (eagleGens == "") then "" else "E:"+eagleGens+"_"
   ([
     StringEntry("DEBUG_TURTLE", turtleGens),
     StringEntry("DEBUG_DUCK", duckGens),
     StringEntry("DEBUG_CAT", catGens),
-    StringEntry("DEBUG_HOND", hondGens)
-  ], finishedTurtleGens+finishedDuckGens+finishedCatGens+hondGens
+    StringEntry("DEBUG_HOND", hondGens),
+    StringEntry("DEBUG_EAGLE", eagleGens)
+  ], finishedTurtleGens+finishedDuckGens+finishedCatGens+finishedHondGens+finishedEagleGens
   )
 }
 
@@ -255,10 +276,16 @@ func checkTypeAndValidObstinate(info: Asset)={
     let gen = splitted[14]
 
     if gen != "O" then throw("MCTAVO: Only obstinates can be turned into mutants") else
-    let breederSc = if type == "T" then getTurtleBreederAddress() else if type == "D" then getDuckBreederAddress() else throw("MCTAVO: Invalid type")
+    let breederSc = 
+          if type == "T" then getTurtleBreederAddress() else 
+          if type == "D" then getDuckBreederAddress() else 
+          if type == "C" then getCanineBreederAddress() else
+          if type == "F" then getFelineBreederAddress() else
+          if type == "E" then getEagleBreederAddress() else
+          throw("MCTAVO: Invalid type")
     if breederSc != info.issuer then throw("MCTAVO: Only obstinates from the breeder contract can be turned into mutants") else
     if tryGetStringExternal(breederSc, info.id.toBase58String()) == "" then throw("MCTAVO: Invalid nft") else
-    if tryGetString(getChildren(info.id.toBase58String())) != "" then throw("MCTAVO: NFT already used") else
+    if tryGetInteger(getChildren(info.id.toBase58String())) == 1  then throw("MCTAVO: NFT already used") else
 
     type
 
@@ -293,12 +320,16 @@ func startMutantHatching(refererAddress: String) = {
     let nft2 = assetInfo(i.payments[1].assetId.value()).value()
     let type1 = checkTypeAndValidObstinate(nft1)
     let type2 = checkTypeAndValidObstinate(nft2)
+    strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),assetBalance(this,getEggAssetId()))])
+    strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
+        [], [AttachedPayment(getSpiceAssetId(), assetBalance(this,getSpiceAssetId())/5)])
     if type1 == type2 then throw("MSMH: NFTs can not be of the same type") else
     [
         StringEntry(getParentKey(i.transactionId, 1), nft1.id.toBase58String()),
         StringEntry(getParentKey(i.transactionId, 2), nft2.id.toBase58String()),
         StringEntry(getProcessStatusKey(i.caller.toString(), i.transactionId.toBase58String()), hatchingStarted()),
-        IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId.toBase58String()), height + delayForHatching())
+        IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId.toBase58String()), height + delayForHatching()),
+        Burn(getSpiceAssetId(), assetBalance(this,getSpiceAssetId()))
     ]++validPayment
 }
 
@@ -336,8 +367,8 @@ func verify() = {
       sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
   else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
-    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
-    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
 
     let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
         else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
@@ -354,6 +385,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
-}
+} 

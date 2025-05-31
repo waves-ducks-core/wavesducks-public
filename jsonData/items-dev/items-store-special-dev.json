@@ -1,0 +1,207 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "direct_cosmetic_ART-FEED10",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED10_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED10_max_sales",
+            "value": 1000
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED10_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED10_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM_max_sales",
+            "type": "integer",
+            "value": 1000
+        },
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-CUST-COSM_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED50_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED50_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED50_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED100",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED100_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED100_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED100_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED500",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED500_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED500_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED500_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED5",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED5_priceAsset",
+            "type": "string",
+            "value": "CS4Md7Bub7fsVZft2cDbTmKeSi6UnYKQQLYnAukKzgST"
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED5_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED15",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED20",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-FEED25",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-POTION",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-BONE",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-BONE_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-BONE_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-BONE_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SKELHEAD",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-SKELHEAD_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-SKELHEAD_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-SKELHEAD_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-HWRESCUE",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-HWERASE",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-SNW_GLBES",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "direct_cosmetic_ART-ROBODUCK",
+            "type": "integer",
+            "value": 1
+        }
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}

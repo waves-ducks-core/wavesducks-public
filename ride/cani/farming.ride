@@ -1,6 +1,16 @@
 {-# STDLIB_VERSION 5 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
 
 let Scale = 100000000
 
@@ -30,9 +40,11 @@ let keyGlobalEarned =  "global_earnings"
 func staticKey_perchFee() = "static_caninePerchFee"
 func totalStakedKey() = "total_staked"
 func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
+func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
@@ -42,6 +54,8 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getNodeAccount()=addressFromStringValue(valueOrErrorMessage(getString(getOracle(),"static_nodeAddress"), "node_address not found!"))
 func getCanieRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
+func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -64,17 +78,6 @@ func tryGetInteger(key: String) = {
         case _ => 0
     }
 }
-
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
-}
-
-func asIntTuple(value: Any) = match value {
-  case int: (Int,Int) => int
-  case _ => throw("FAI: wrong type, expected: (Int,Int)")
-}
-
 
 
 
@@ -123,7 +126,7 @@ func updateFarmingPower(address: String, asset:String) ={
   let totalStaked = tryGetInteger(totalStakedKey())
   let totalStakedUser = tryGetInteger(totalStakedUserKey(address))
   let currentFP = tryGetInteger(assetFarmingPower(address,asset))
-  let newFP = invoke(this,"calculateFarmPower",[asset, address],[]).asIntTuple()
+  let newFP = invoke(this,"calculateFarmPower",[asset, address],[]).exactAs[(Int,Int)]
   if currentFP != 0 then
   [
       IntegerEntry(totalStakedKey(),totalStaked-currentFP+newFP._1),
@@ -187,8 +190,9 @@ func stakeUnstake(stake:Boolean, amount:Int)={
 }
 
 func handleStakingTopUp (totalAmount: Int) = {
-    let compoundAmount = totalAmount/2
-    let payoutAmount = totalAmount-compoundAmount
+    let team = totalAmount/12
+    let compoundAmount = (totalAmount-team)/2
+    let payoutAmount = totalAmount-compoundAmount-team
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let totalStakedAmount = tryGetInteger(totalStakedKey())
     let interestDelta = if (totalStakedAmount > 0)
@@ -197,7 +201,8 @@ func handleStakingTopUp (totalAmount: Int) = {
     [
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + payoutAmount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta)),
-      IntegerEntry("global_WAVES_balance",tryGetInteger("global_WAVES_balance")+compoundAmount)
+      IntegerEntry("global_WAVES_balance",tryGetInteger("global_WAVES_balance")+compoundAmount),
+      ScriptTransfer(getFeeAggregator(), team, unit)
       
     ]++stakeUnstake(true, compoundAmount)
 }
@@ -227,14 +232,16 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let power =  pow(15,1,totalGenes,0,2,DOWN)
 
   #3 months = 90 days = 1%/day roughly
-  let multiplier = (height-3750000)*100/(60*24*30*3)
+  let baseBlock = if isTestEnv() then 2500000 else 3750000
+  let multiplier = (height-baseBlock)*100/(60*24*30*3)
   #TODO make this percentage multiplier
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
   strict farmBoost = 0
   #Recalculate bonusses every claim
-  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
+  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   ([
   ],(finalPowerRarityBoost,finalPower))
 
@@ -258,7 +265,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
     } else {
       let exactPrice = calculatePerchPrice(i.caller.toString())
         let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).exactAs[Int]
           exactPrice-amountPaidByCoupons
         }else {
             exactPrice
@@ -327,7 +334,7 @@ func stakeNFT(jColor: String) = {
   
   if (pmt.amount != 1) then throw("NFT is not attached") else
   
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).asIntTuple()
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).exactAs[(Int,Int)]
     strict result = claimStakingResult(address,assetId.toBase58String(), false)
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower._1),
@@ -373,8 +380,11 @@ func unstakeNFT(asset: String)={
 @Callable(i)
 func topUpReward () = {
   let firstPayment = i.payments[0].value()
-  if (firstPayment.assetId != unit) then throw("FBP: You can attach only Waves") else 
-  let resHandleStaking = handleStakingTopUp(firstPayment.amount) 
+  if (firstPayment.assetId != unit) then throw("FBP: You can attach only Waves") else
+  let amountForMutants = firstPayment.amount/20
+  strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["WAVES",0], [AttachedPayment(unit, amountForMutants)])  
+  let resHandleStaking = handleStakingTopUp(firstPayment.amount-amountForMutants) 
     (
       resHandleStaking, 
       true
@@ -406,3 +416,31 @@ func claimReward (assetId: String) = {
     result._2
   )
   }
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+}

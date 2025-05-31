@@ -1,6 +1,14 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
+
+let startTsMs = 1747612799000
+
+func calculateDaysSinceStart()={
+  let diff = lastBlock.timestamp-startTsMs
+  let daysPassed = diff/ (86400 *1000)
+  daysPassed
+}
 
 let Scale = 100000000
 
@@ -16,6 +24,16 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
 func staticKey_refContractAddress() = "static_refContractAddress"
 let  keyGlobalLastInterest = "global_lastCheck_interest"
 func staticKey_oracleAddress() = "static_oracleAddress"
@@ -37,10 +55,11 @@ func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
 func staticKey_cfMasterAddress() = "static_cfMasterAddress"
 func staticKey_potionFee() = "static_potionFee"
 func staticKey_canineStakingAddress() = "static_canineStakingAddress"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
@@ -54,6 +73,7 @@ func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakin
 func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_cfMasterAddress()).fromBase58String())
 func getPotionFee() =  getIntegerValue(getOracle(),staticKey_potionFee())
 func getCanineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -76,23 +96,18 @@ func tryGetInteger(key: String) = {
     }
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("FAI: wrong type, expected: Int")
-}
-
-func asIntTuple(value: Any) = match value {
-  case int: (Int,Int) => int
-  case _ => throw("FAI: wrong type, expected: (Int,Int)")
-}
-
 func handleStakingTopUp (amount: Int) = {
+    func burnForDay(day: Int)= "TOPUP_"+day.toString()
+    let day = calculateDaysSinceStart()
+
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let totalStakedAmount = tryGetInteger(totalStakedKey())
     let interestDelta = if (totalStakedAmount > 0)
         then fraction(amount, Scale, totalStakedAmount)
         else 0
     [
+      IntegerEntry("days_since_apy", day),
+      IntegerEntry(burnForDay(day), tryGetInteger(burnForDay(day))+amount),
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + amount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta))
       
@@ -145,7 +160,7 @@ func updateFarmingPower(address: String, asset:String, originCaller: String) ={
   let totalStaked = tryGetInteger(totalStakedKey())
   let totalStakedUser = tryGetInteger(totalStakedUserKey(address))
   let currentFP = tryGetInteger(assetFarmingPower(address,asset))
-  let newFP = invoke(this,"calculateFarmPower",[asset, originCaller],[]).asIntTuple()
+  let newFP = invoke(this,"calculateFarmPower",[asset, originCaller],[]).exactAs[(Int,Int)]
   if currentFP != 0 then
   [
       IntegerEntry(totalStakedKey(),totalStaked-currentFP+newFP._1),
@@ -198,6 +213,7 @@ func isProxyStakingSc(address: String)={
 func calculateFarmPower(assetId:String, bonusAddress: String)={
   if !(assetInfo(assetId.fromBase58String()).value().issuer == getBreederAddress() 
       ||assetInfo(assetId.fromBase58String()).value().issuer == getIncubatorAddress()) then throw("This does not seem like a valid Duck!") else
+  if tryGetBooleanExternal(getBreederAddress(),assetId+"_blacklisted") || tryGetBooleanExternal(getIncubatorAddress(),assetId+"_blacklisted") then throw("Screw urself") else
   let assetName = assetInfo(assetId.fromBase58String()).value().name
   let gen = assetName.takeRight(1)
   let isJackpot = assetName.takeRight(1) == "U"
@@ -213,14 +229,16 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let power =  pow(15,1,totalGenes,0,2,DOWN)
 
   #3 months = 90 days = 1%/day roughly
-  let multiplier = (height-3750000)*100/(60*24*30*3)
+  let baseBlock = if isTestEnv() then 2500000 else 3750000
+  let multiplier = (height-baseBlock)*100/(60*24*30*3)
   #TODO make this percentage multiplier
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
-  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).asInt()
+  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).exactAs[Int]
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
   #Recalculate bonusses every claim
-  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100
+  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   ([
   ],(finalPowerRarityBoost,finalPower))
 
@@ -244,7 +262,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
     } else {
       let exactPrice = calculatePerchPrice(i.caller.toString())
         let leftToPay = if i.originCaller==i.caller then {
-          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).asInt()
+          strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[exactPrice],[]).exactAs[Int]
           exactPrice-amountPaidByCoupons
         }else {
             exactPrice
@@ -279,7 +297,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
 func addFreePerch(address: String, color: String, amount: Int) = {
   if (["B", "R", "G", "Y"].indexOf(color).value() < 0) then {
     throw("you need to set color properly")
-  } else if (i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != this ) then {
+  } else if (i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != this && i.caller != getCouponsAddress() ) then {
     throw("rebirth and admin only")
   } else {
     let perchAmountKey = "address_" + address + "_perchesAvailable_" + color
@@ -317,7 +335,6 @@ func migratePerches(address: String) ={
 
 @Callable(i)
 func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolean) = {
-  #if true then throw("Staking is disabled") else
   if stakeWithoutPerch && !isProxyStakingSc(i.caller.toString()) then throw("You can't stake without a perch") else
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let pmt = i.payments[1].value()
@@ -340,7 +357,7 @@ func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolea
   
   if (pmt.amount != 1) then throw("NFT is not attached") else
   
-    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).asIntTuple()
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(),i.originCaller.toString()],[]).exactAs[(Int,Int)]
     strict result = claimStakingResult(address,assetId.toBase58String(), false, address, i.originCaller.toString())
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower._1),
@@ -444,3 +461,32 @@ strict addMore = invoke(getCanineStakingAddress(), "addWavesAndStakeMore", [], [
   
 ]
 }
+
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 1
+    }
+} 

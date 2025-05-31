@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -18,7 +18,7 @@ func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String() #base58'C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS'
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()  
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
@@ -100,10 +100,10 @@ func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
       else if (colorRandom == 2) then "B" 
       else "R"
 
-    if (typeRandom == 0) then ("DUCK-LLLLLLLL-G" + color, "8L-G", entry)
-      else if (typeRandom == 1) then ("DUCK-MMMMMMMM-G" + color, "8M-G", entry)
-      else if (typeRandom == 2) then ("DUCK-NNNNNNNN-G" + color, "8N-G", entry)
-      else ("DUCK-OOOOOOOO-G" + color, "8O-G", entry)
+    if (typeRandom == 0) then ("DUCK-MMMMMMMM-G" + color, "8M-G", entry)
+      else if (typeRandom == 1) then ("DUCK-NNNNNNNN-G" + color, "8N-G", entry)
+      else if (typeRandom == 2) then ("DUCK-OOOOOOOO-G" + color, "8O-G", entry)
+      else ("DUCK-PPPPPPPP-G" + color, "8P-G", entry)
   #}
 }
 
@@ -120,10 +120,6 @@ func countEggsNeededAmount(totalDucksAmount: Int) = {
     price *1000000 /100*(100-saleCoefficient)
 }
 
-func asInt(value: Any) = match value {
-  case int: Int => int
-  case _ => throw("IAI: wrong type, expected: Int")
-}
 
 
 func finishHatchingInternal(txIdStr: String, owner: String)={
@@ -177,6 +173,20 @@ func getBool(key: String) = {
 
 func isTestEnv()={
   getBool("TESTENV")
+}
+
+@Callable(i)
+func increaseRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getDuckStatsKey(duckGen), tryGetInteger(getDuckStatsKey(duckGen)) + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ]
+  }
 }
 
 @Callable(i)
@@ -397,8 +407,8 @@ func verify() = {
       sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
   else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
-    let secondUser = base58'E23yUg8eun5nXB1nZRDf7RTyRADKxQhGNXdpTYonEvtU'
-    let thirdUser = base58'Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
 
     let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
         else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
@@ -417,6 +427,6 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 2
     }
-}
+} 
 
         

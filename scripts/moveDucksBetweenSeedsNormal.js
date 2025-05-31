@@ -34,7 +34,7 @@ const massTx = transfer(
   {
     additionalFee: 400000,
     senderPublicKey: senderPublicKey,
-    assetId: "C1iWsKGqLwjHUndiQ7iXpdmPum9PeCDFfyXBdJJosDRS",
+    assetId: "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84",
     recipient: recipient,
     amount: 1423736393,
   },
