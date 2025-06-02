@@ -98,11 +98,6 @@
             "value": 1500000000
         },
         {
-            "key": "TASK_VEGG10000000_1_REWARD_DAILY",
-            "type": "integer",
-            "value": 50000000
-        },
-        {
             "key": "TASK_REBIRTH_1_REWARD_DAILY",
             "type": "integer",
             "value": 100000000
@@ -188,19 +183,9 @@
             "value": true
         },
         {
-            "key": "TASK_VEGG10000000_1_REWARD_WEEKLY",
-            "type": "integer",
-            "value": 500000000
-        },
-        {
             "key": "TASK_FEEDDUCKLING10_1_REWARD_DAILY",
             "type": "integer",
             "value": 150000000
-        },
-        {
-            "key": "TASK_VEGG10000000_1",
-            "type": "boolean",
-            "value": true
         },
         {
             "key": "TASK_VEGG500000_1_REWARD_DAILY",
@@ -453,16 +438,6 @@
             "value": "Rope the egg 15 times and get {{reward}} $SPICE tokens"
         },
         {
-            "key": "TASK_VEGG10000000_1_TEXT_WEEKLY_EN",
-            "type": "string",
-            "value": "Earn 0.1 $vEGG in duck wars 7 days in a row and receive {{reward}} $SPICE"
-        },
-        {
-            "key": "TASK_VEGG10000000_1_TEXT_DAILY_EN",
-            "type": "string",
-            "value": "Earn 0.1 $vEGG in duck wars and get {{reward}} $SPICE tokens"
-        },
-        {
             "key": "TASK_ROPE_10_TEXT_WEEKLY_EN",
             "type": "string",
             "value": "Rope the egg 10 times in 7 days in a row and get {{reward}} $SPICE tokens"
@@ -548,24 +523,9 @@
             "value": "Заработайте 0.005 $vEGG в войнах уток в течение 7 дней подряд и получите {{reward}} $SPICE"
         },
         {
-            "key": "TASK_VEGG10000000_1_TEXT_DAILY_ES",
-            "type": "string",
-            "value": "Gané 0.1 $vEGG en Duck wars y consigue {{reward}} tokens $SPICE"
-        },
-        {
-            "key": "TASK_VEGG10000000_1_TEXT_WEEKLY_RU",
-            "type": "string",
-            "value": "Заработайте 0.1 $vEGG в войнах уток в течение 7 дней подряд и получите {{reward}} $SPICE"
-        },
-        {
             "key": "TASK_ROPE_10_TEXT_DAILY_ES",
             "type": "string",
             "value": "Ata el egg 10 veces y obtén {{reward}} tokens $SPICE"
-        },
-        {
-            "key": "TASK_VEGG10000000_1_TEXT_WEEKLY_ES",
-            "type": "string",
-            "value": "Gané 0.1 $vEGG en Duck wars por 7 días seguidos y recibe {{reward}} $SPICE"
         },
         {
             "key": "TASK_ROPE_10_TEXT_WEEKLY_RU",
@@ -651,11 +611,6 @@
             "key": "TASK_ROPE_50_TEXT_DAILY_EN",
             "type": "string",
             "value": "Rope the egg 50 times and get {{reward}} $SPICE tokens"
-        },
-        {
-            "key": "TASK_VEGG10000000_1_TEXT_DAILY_RU",
-            "type": "string",
-            "value": "Заработайте 0.1 $vEGG в войнах уток и получите {{reward}} токенов $SPICE"
         },
         {
             "key": "TASK_VEGG500000_1_TEXT_WEEKLY_EN",
@@ -836,4 +791,3 @@
     "fee": 600000,
     "feeAssetId": "WAVES"
 }
-
