@@ -70,7 +70,7 @@
         {
             "key": "TASK_VEGG500000_1_TEXT_DAILY_ES",
             "type": "string",
-            "value": "Gané 0.005 $vEGG en Duck wars y consigue {{reward}} tokens $SPICE"
+            "value": "Gané 0.005 $vEGG y consigue {{reward}} tokens $SPICE"
         },
         {
             "key": "TASK_ROPE_15_TEXT_WEEKLY_RU",
@@ -95,7 +95,7 @@
         {
             "key": "TASK_VEGG500000_1_TEXT_DAILY_RU",
             "type": "string",
-            "value": "Заработайте 0.005 $vEGG в войнах уток и получите {{reward}} токенов $SPICE"
+            "value": "Заработайте 0.005 $vEGG и получите {{reward}} токенов $SPICE"
         },
         {
             "key": "TASK_REBIRTHTURTLE_1_TEXT_DAILY_EN",
@@ -135,7 +135,7 @@
         {
             "key": "TASK_VEGG500000_1_TEXT_WEEKLY_RU",
             "type": "string",
-            "value": "Заработайте 0.005 $vEGG в войнах уток в течение 7 дней подряд и получите {{reward}} $SPICE"
+            "value": "Заработайте по 0.005 $vEGG в день в течение 7 дней подряд и получите {{reward}} $SPICE"
         },
         {
             "key": "TASK_ROPE_10_TEXT_DAILY_ES",
@@ -210,7 +210,7 @@
         {
             "key": "TASK_VEGG500000_1_TEXT_WEEKLY_ES",
             "type": "string",
-            "value": "Gané 0.005 $vEGG en Duck wars por 7 días seguidos y recibe {{reward}} $SPICE"
+            "value": "Gané 0.005 $vEGG por 7 días seguidos y recibe {{reward}} $SPICE"
         },
         {
             "key": "TASK_ROPE_10_TEXT_WEEKLY_ES",
@@ -230,7 +230,7 @@
         {
             "key": "TASK_VEGG500000_1_TEXT_WEEKLY_EN",
             "type": "string",
-            "value": "Earn 0.005 $vEGG in duck wars 7 days in a row and receive {{reward}} $SPICE"
+            "value": "Earn 0.005 $vEGG for 7 days in a row and receive {{reward}} $SPICE"
         },
         {
             "key": "TASK_ROPE_10_TEXT_DAILY_EN",
@@ -250,7 +250,7 @@
         {
             "key": "TASK_VEGG500000_1_TEXT_DAILY_EN",
             "type": "string",
-            "value": "Earn 0.005 $vEGG in duck wars and get {{reward}} $SPICE tokens"
+            "value": "Earn 0.005 $vEGG and get {{reward}} $SPICE tokens"
         },
         {
             "key": "TASK_FEEDDUCKLING10_1_TEXT_WEEKLY_ES",
@@ -401,6 +401,36 @@
             "key": "TASK_WEARITEM_1_TEXT_WEEKLY_EN",
             "type": "string",
             "value": "Wear 5 items 7 days in a row and receive {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_VEGG10000000_1_TEXT_DAILY_RU",
+            "type": "string",
+            "value": "Заработайте 0.1 $vEGG и получите {{reward}} токенов $SPICE"
+        },
+        {
+            "key": "TASK_VEGG10000000_1_TEXT_DAILY_EN",
+            "type": "string",
+            "value": "Earn 0.1 $vEGG and get {{reward}} $SPICE tokens"
+        },
+        {
+            "key": "TASK_VEGG10000000_1_TEXT_DAILY_ES",
+            "type": "string",
+            "value": "Gané 0.1 $vEGG y consigue {{reward}} tokens $SPICE"
+        },
+        {
+            "key": "TASK_VEGG10000000_1_TEXT_WEEKLY_RU",
+            "type": "string",
+            "value": "Заработайте 0.1 $vEGG в день в течение 7 дней подряд и получите {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_VEGG10000000_1_TEXT_WEEKLY_ES",
+            "type": "string",
+            "value": "Gané 0.1 $vEGG por 7 días seguidos y recibe {{reward}} $SPICE"
+        },
+        {
+            "key": "TASK_VEGG10000000_1_TEXT_WEEKLY_EN",
+            "type": "string",
+            "value": "Earn 0.1 $vEGG for 7 days in a row and receive {{reward}} $SPICE"
         }
     ],
     "fee": 600000,
