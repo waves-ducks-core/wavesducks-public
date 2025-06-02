@@ -256,6 +256,11 @@
             "key": "direct_cosmetic_ART-UMBRELLA_priceAsset",
             "type": "string",
             "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-FAWKESMASK",
+            "type": "integer",
+            "value": 20000000000
         }, 
         {
             "key": "direct_cosmetic_ART-UMBRELLA",

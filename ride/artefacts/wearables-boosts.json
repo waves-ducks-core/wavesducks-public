@@ -74,6 +74,11 @@
             "value": 50
         },
         {
+            "key": "boost_ART-PILGRIMHAT",
+            "type": "integer",
+            "value": 50
+        },
+        {
             "key": "boost_ART-XSCARF",
             "type": "integer",
             "value": 0

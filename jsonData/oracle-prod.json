@@ -261,6 +261,11 @@
             "key": "static_eggPool",
             "type": "string",
             "value": "3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ"
+        },
+        {
+            "key": "static_nativeBridgeAddress",
+            "type": "string",
+            "value": "3PKgN8rfmvF7hK7RWJbpvkh59e1pQkUzero"
         }
     ],
     "fee": 700000,
