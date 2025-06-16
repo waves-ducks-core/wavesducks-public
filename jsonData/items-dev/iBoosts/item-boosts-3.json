@@ -76,6 +76,11 @@
             "key": "boost_ART-EAST_TAIL",
             "type": "integer",
             "value": 40
+        },
+        {
+            "key": "boost_ART-XSWEATER",
+            "type": "integer",
+            "value": 1
         }
     ],
     "fee": 700000,
