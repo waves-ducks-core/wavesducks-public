@@ -1,7 +1,6 @@
 {-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
-func getReveneuTypes() = ["EGG","SPICE","VEGG","FEED"]
 let Scale = 100000000
 
 func tryGetStringExternal(address: Address, key: String) = {
