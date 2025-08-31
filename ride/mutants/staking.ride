@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 func getReveneuTypes() = ["EGG","SPICE","VEGG","FEED"]
@@ -381,9 +381,9 @@ func stakeNFT() = {
     [
       StringEntry(assetId.toBase58String()+"_owner",address),
       IntegerEntry(assetId.toBase58String()+"_basePower",farmingPower._2),
-      IntegerEntry(assetFarmingPower(address,assetId.toBase58String()),farmingPower._2)
+      IntegerEntry(assetFarmingPower(address,assetId.toBase58String()),farmingPower._1)
     ]
-    ++deterMineClassAndSetType(address, assetId, farmingPower._2, assetName)
+    ++deterMineClassAndSetType(address, assetId, farmingPower._1, assetName)
     ++validPayment
     ++perches
     ++result
