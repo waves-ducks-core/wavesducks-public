@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 {-# CONTENT_TYPE DAPP #-}
 func tryGetStringExternal(address: Address, key: String) = {
@@ -235,9 +235,9 @@ func instantBuy(auctionId: String) = {
         let newRecordPrice = max([recordPrice, amount])
         strict burnCall = processFees(isEggSell,amount, finalFee)
         let caller = if getMarketPlaceProxy() == i.caller then i.originCaller else i.caller
-        strict recordAction = if amount > 50_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY50"],[]) else
-                              if amount > 20_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY20"],[]) else
-                              if amount > 5_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY5"],[]) else nil
+        strict recordAction = if amount >= 50_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY50"],[]) else
+                              if amount >= 20_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY20"],[]) else
+                              if amount >= 5_0000_0000 then invoke(getCouponsAddress(),"recordAction",["BUY5"],[]) else nil
         let isMantle = tryGetBoolean("auction_" + auctionId + "_isMantle")
         strict mantleUpdate = if isMantle then invoke(getGameAddress(),"changeOwner",[assetId,caller.toString()],[]) else nil
         ([
