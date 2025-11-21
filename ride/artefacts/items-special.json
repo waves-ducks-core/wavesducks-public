@@ -254,6 +254,12 @@
             "type": "integer",
             "value": 200000000000
         }
+        ,
+        {
+            "key": "direct_cosmetic_ART-GHOSTY",
+            "type": "integer",
+            "value": 200000000000
+        }
 
     ],
     "fee": 600000,
