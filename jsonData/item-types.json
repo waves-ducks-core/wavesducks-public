@@ -501,7 +501,12 @@
             "key": "type_cosmetic_ART-XMASKRMPS",
             "type": "string",
             "value": "PET"
-        }
+        },
+        {
+            "key": "type_cosmetic_ART-GHOSTY",
+            "type": "string",
+            "value": "PET"
+        },
     ],
     "fee": 700000,
     "feeAssetId": "WAVES",
