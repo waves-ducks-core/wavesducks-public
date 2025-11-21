@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 func getBool(key: String) = {
@@ -32,17 +32,17 @@ func tryGetString(key: String) = {
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
-func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_caniRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_caniFarmingAddress() = "static_canineStakingAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_rebirthAddress() = "static_rebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getMintAssetId() = unit
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
-func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getCaniRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_caniRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getDuckRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getCaniFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_caniFarmingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
@@ -118,8 +118,14 @@ func select(color: String)={
                     ("CANI-EEEEEEEE-G" + color, "8E-G"),("CANI-FFFFFFFF-G" + color, "8F-G")]
     (oldGenes++newGenes, newGenes)
 }
-
+func wasUniqueBorn(gen: String) = {
+  tryGetInteger(getCANIStatsKey(gen))
+}
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
+  #let jackpotRandom = getRandomNumber(250, txId, hatchingFinishHeight, 1)
+  #let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
+  #if (jackpotRandom == 1 && wasUniqueBorn("CANI-WWWWWOLF-JU") < 2) then ("CANI-WWWWWOLF-JU", "1O1F1L5W-J")
+  #else 
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
     let color = getElement(["A","B","C","D"],colorRandom)
 
@@ -141,11 +147,6 @@ func countEggsNeededAmount(totalCANIsAmount: Int) = {
   let t = typesAmount
   let price = pow((100 + (n*g)/(10*t)), 2, 5, 1, 2, DOWN)+55
   price * 1500000
-}
-
-func asBoolean(value: Any) = match value {
-  case boolean: Boolean => boolean
-  case _ => throw("TI: wrong type, expected: Boolean")
 }
 
 @Callable(i)
@@ -228,7 +229,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 
 @Callable(i)
 func issueFree(address: String, txIdStr: String) = {
-  if (i.caller != getCaniRebirthAddress()) then {
+  if (i.caller != getCaniRebirthAddress()&& i.caller != getDuckRebirthAddress()) then {
     throw("CIF: rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)

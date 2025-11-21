@@ -31,6 +31,15 @@ func getBool(key: String) = {
       case _ => false
   }
 }
+
+func tryGetIntegerExternalZero(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
 func asString(value: Any) = match value {
   case s: String => s
   case s: Int => throw("wrong type, expected: String, got: Int")
@@ -110,9 +119,16 @@ func tryGetBoolean(key: String) = {
 
 }
 
+func wasUniqueBorn(gen: String) = {
+  func getCaniStatsKey(genString: String) = {
+  "stats_" + genString + "_amount"
+}
+  tryGetIntegerExternalZero(getCanineIncubatorAddress(),getCaniStatsKey(gen))
+}
+
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
-  #if (jackpotRandom == 1) then { (jackpotRandom,"jackpot") } else 
+  #if (jackpotRandom == 1 && wasUniqueBorn("CANI-WWWWWOLF-JU") < 2) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
@@ -140,7 +156,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
 }
 func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   let n = getRandomNumber(2, tx, finishHeight, 1)
-  if n == 0 then true else false
+  if n == 1 then true else false
 }
 
 func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment,
@@ -247,12 +263,19 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
-
+      #let bonusOutput = if (random %10 ==0) then
+      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART_CNDY",address,0],[])
+      #  [StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.asString()),
+      #  IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)]
+      #else
+      #  [
+      #    IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
+      #  ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment++returnPayload
+      ]++validPayment++returnPayload#++bonusOutput
     }
   }
 }
