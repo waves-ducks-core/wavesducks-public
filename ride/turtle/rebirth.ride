@@ -73,7 +73,7 @@ func tryGetIntegerExternal(address: Address, key: String) = {
     }
 
 }
-#TODO: deduplicate this
+
 func checkReal(assetId: ByteVector) = {
   if (assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer ==getTurtleIncubatorAddress()) then {
    assetInfo(assetId).value().issuer
@@ -88,14 +88,6 @@ let eggAmount = tryGetIntegerExternal(getOracle(),staticKey_turtleEggRebirthPric
 let wavesAmount = tryGetIntegerExternal(getOracle(),staticKey_turtleWavesRebirthPrice()) #2_0000_0000
 
 let delayForHatching = 2
-
-func checkRealTurtle(assetId: ByteVector) = {
-  if (assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer ==getTurtleIncubatorAddress()) then {
-   true
-  } else {
-    throw("not valid NFT")
-  }
-}
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("RCAP: Please attach waves") else
@@ -153,7 +145,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
 
 func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   let n = getRandomNumber(2, tx, finishHeight, 1)
-  if n == 0 then true else false
+  if n == 1 then true else false
 }
 
 func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean, blacklistCode: String, rescue: Boolean) = {
@@ -264,11 +256,19 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
+      #let bonusOutput = if (random %10 ==0) then
+      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART_CNDY",address,0],[])
+      #  [StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.asString()),
+      #  IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)]
+      #else
+      #  [
+      #    IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
+      #  ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment
+      ]++validPayment++returnPayload#++bonusOutput
     }
   }
 }
@@ -322,7 +322,7 @@ func initRebirth(refererAddress: String) = {
         leftToPay
   } else 0
    
-  strict realTurtle = checkRealTurtle(assetId)  
+  strict realTurtle = checkReal(assetId)  
   [
     IntegerEntry("address_" + address + "_initTx_" + initTx + "_finishBlock", height+delayForHatching),
     StringEntry("address_" + address + "_initTx_" + initTx + "_status", "open"),

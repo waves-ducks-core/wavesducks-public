@@ -45,8 +45,6 @@ func staticKey_canineIncubatorAddress() = "static_felineIncubatorAddress"
 func staticKey_canineBreederAddress() = "static_felineBreederAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_felineStakingAddress() = "static_felineStakingAddress"
-func staticKey_duckStakingAddress() = "static_farmingAddressNew"
-func staticKey_duckIncubatorAddress() = "static_incubatorAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_canineWavesRebirthPrice() = "static_felinePeteRebirthPrice"
 func staticKey_turtleIncubatorAddress() = "static_turtleIncubatorAddress"
@@ -59,8 +57,6 @@ func getCanineBreederAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getCanineIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getFelineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getDuckStakingAddress() =  Address(tryGetStringExternal(getOracle(), staticKey_duckStakingAddress()).fromBase58String())
-func getDuckIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_duckIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
@@ -110,7 +106,7 @@ func tryGetBoolean(key: String) = {
 }
 func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   let n = getRandomNumber(2, tx, finishHeight, 1)
-  if n == 0 then true else false
+  if n == 01 then true else false
 }
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
@@ -245,11 +241,19 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
+      #let bonusOutput = if (random %10 ==0) then
+      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART_CNDY",address,0],[])
+      #  [StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.asString()),
+      #  IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)]
+      #else
+      #  [
+      #    IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
+      #  ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment
+      ]++validPayment++returnPayload#++bonusOutput
     }
   }
 }
