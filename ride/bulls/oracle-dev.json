@@ -1,0 +1,20 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "static_bullAssetId",
+            "type": "string",
+            "value": "DDbgwqvbAyiWTahPXcPECiYwAyw7wHy5FaK5Dg4PbDjN"
+        }
+
+        
+
+        
+    ],
+    "fee": 700000,
+    "feeAssetId": "WAVES",
+    "sender":"3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9",
+    "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
+}
+
