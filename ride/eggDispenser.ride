@@ -33,7 +33,7 @@ func makePayment() = {
     strict nodeCall = invoke(Address(nodeDappAddress), "transferRewardsToCanineStaking", [],[])
     strict puzzleCall = invoke(Address(puzzleDappAddress), "claimRewardPuzzle", [],[])
     strict felineCall = invoke(Address(felineDappAddress), "claimRewardPete", [],[])
-    strict veggFarmingCall = invoke(Address(veggFarmingDappAddress), "topUpReward", [],[AttachedPayment(eggAssetId,amount)])
+    strict veggFarmingCall = invoke(Address(veggFarmingDappAddress), "topUpReward", [veggAmount],[])
     [
       IntegerEntry(klastRefillHeight, height),
       ScriptTransfer(i.caller, 1_000_000, eggAssetId)
