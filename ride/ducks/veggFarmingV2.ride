@@ -44,6 +44,7 @@ let keyGlobalEarned =  "global_earnings"
 func staticKey_veggPerchFee() = "static_veggPerchFee"
 func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
 func staticKey_gameDappAddress() = "static_gameDappAddress"
+func staticKey_topUpDappAddress() = "static_topUpDappAddress"
 
 func totalStakedKey() = "total_staked"
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
@@ -58,6 +59,7 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),staticKey_gameDappAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
+func getTopUpDappAddress() = Address(tryGetStringExternal(getOracle(),staticKey_topUpDappAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -314,7 +316,7 @@ func stakeNFT(jColor: String) = {
 
 @Callable(i)
 func topUpReward (amount: Int) = {
-  if i.caller != getCouponsAddress() then throw("VFTUP: Only couponsdapp can do topup!") else
+  if i.caller != getCouponsAddress() && i.caller != getTopUpDappAddress() then throw("VFTUP: Only couponsdapp can do topup!") else
   let resHandleStaking = handleStakingTopUp(amount) 
     (
       resHandleStaking, 
