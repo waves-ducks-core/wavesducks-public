@@ -17,11 +17,6 @@ func tryGetIntExternal(address: Address, key: String) = {
     }
 }
 
-func asBoolean(value: Any) = match value {
-  case boolean: Boolean => boolean
-  case _ => throw("FAB: wrong type, expected: Boolean")
-}
-
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
@@ -30,13 +25,14 @@ let delayForHatching = 2
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_incubatorAddress() = "static_incubatorAddress"
+func staticKey_eagleIncubatorAddress() = "static_eagleIncubatorAddress"
+func staticKey_turtleIncubatorAddress() = "static_turtleIncubatorAddress"
+func staticKey_canineIncubatorAddress() = "static_canineIncubatorAddress"
 func staticKey_breederAddress() = "static_breederAddress"
 func staticKey_farmingAddress() = "static_farmingAddressNew"
 func staticKey_babyDuckAddress() = "static_babyDuckAddress"
-func staticKey_gameDappAddress() = "static_gameDappAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
-func staticKey_huntAddress() = "static_huntAddress"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_extraFee() = "static_extraFee"
@@ -46,13 +42,14 @@ func staticKey_duckRebirthAmount() = "static_duckRebirthAmount"
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getEagleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_eagleIncubatorAddress()).fromBase58String())
+func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String())
+func getCanineIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineIncubatorAddress()).fromBase58String())
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(), staticKey_farmingAddress()).fromBase58String())
 func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
-func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),staticKey_gameDappAddress()).fromBase58String())
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String())
-func getHuntAddress() = Address(tryGetStringExternal(getOracle(),staticKey_huntAddress()).fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -74,7 +71,7 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 
 }
 
-let PHOENIXBASEOPTIONS = 1000  # base chance to get a phoenix: 1 / (1000 - 1000/2 * rarity)
+#let PHOENIXBASEOPTIONS = 1000  # base chance to get a phoenix: 1 / (1000 - 1000/2 * rarity)
 
 
 
@@ -122,41 +119,85 @@ func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, 
   randomHash.toInt(offset*8) % options
 }
 
+func wasUniqueBorn(gen: String) = {
+  func getCaniStatsKey(genString: String) = {
+  "stats_" + genString + "_amount"
+}
+  tryGetIntExternal(getIncubatorAddress(),getCaniStatsKey(gen))
+}
+
 func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklistCode: String) = {
-  let phoenixOptions = PHOENIXBASEOPTIONS - fraction(PHOENIXBASEOPTIONS / 2, assetRarity, 100)  # chance = 0.1% + 0.1% * rarity (from 0.02 to 1)
+  #let phoenixOptions = PHOENIXBASEOPTIONS - fraction(PHOENIXBASEOPTIONS / 2, assetRarity, 100)  # chance = 0.1% + 0.1% * rarity (from 0.02 to 1)
+  #let phoenixOptions = if (assetRarity < 50)
+  #  then 500 - ((250 * (assetRarity - 1)) / 49)
+  #  else 250 - ((200 * (assetRarity - 50)) / 50)
+  #let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
+  let n = getRandomNumber(1000, tx, finishHeight, 0)
+  #let result = if (jackpotRandom == 1) then { "phoenix" } else 
 
-  let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
-  #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
-  if (jackpotRandom == 1) then { "phoenix" } else 
+  let jackpotRandom = getRandomNumber(75, tx, finishHeight, 1)
+  let result = if (jackpotRandom == 1 && wasUniqueBorn("DUCK-WPBRDUCK-JU") < 4) then { "phoenix"} else 
     #Every % means 10 numbers
-    let n = getRandomNumber(1000, tx, finishHeight, 0)
-    if (n < 10 && blacklistCode != "item!ART-FREEGENE") then {"item!ART-FREEGENE"} else
-    if (n < 126 && blacklistCode != "ar") then { "ar" } else
-    if (n < 186 && blacklistCode != "item!ART-FIRE_ARMOUR") then { "item!ART-FIRE_ARMOUR" } else
-    if (n < 206 && blacklistCode != "item!ART-FEED5") then { "item!ART-FEED5" } else    
-    if (n < 226 && blacklistCode != "item!ART-FEED10") then { "item!ART-FEED10" } else    
-    if (n < 246 && blacklistCode != "item!ART-FEED15") then { "item!ART-FEED15" } else    
-    if (n < 266 && blacklistCode != "item!ART-FEED20") then { "item!ART-FEED20" } else    
-    if (n < 286 && blacklistCode != "item!ART-FEED25") then { "item!ART-FEED25" } else    
-    if (n < 296 && blacklistCode != "item!ART-FEED50") then { "item!ART-FEED50" } else   
-    if (n < 300 && blacklistCode != "item!ART-FEED100") then { "item!ART-FEED100" } else
-    if (n < 310 && blacklistCode != "item!ART-CROWN") then  { "item!ART-CROWN" } else 
-    if (n < 350 && blacklistCode != "incubator") then { "incubator" } else
-    if (n < 460 && blacklistCode != "item!ART-BUILTBODY") then if assetRarity < 50 then { "item!ART-BUILTBODY" } else { "item!ART-MUTARIUM-D" } else
-    if (n < 480 && blacklistCode != "item!ART-SNAKE") then { "item!ART-SNAKE" } else
-    if (n < 510 && blacklistCode != "item!ART-ROBODUCK") then { "item!ART-ROBODUCK" } else
-    if (n < 600 && blacklistCode != "item!ART-KATANA") then { "item!ART-KATANA" } else
-    if (n < 650 && blacklistCode != "item!ART-SCEPTER") then if assetRarity < 50 then { "item!ART-SCEPTER" } else { "item!ART-MUTARIUM-D" } else
-    if (n < 710 && blacklistCode != "item!ART-MUTARIUM-D") then { "item!ART-MUTARIUM-D" } else
-    if (n < 720 && blacklistCode != "item!ART-MUTARIUM-G") then { "item!ART-MUTARIUM-G" } else
-    if (n < 890 && blacklistCode != "duckling_10") then { "duckling_10" } else 
-    if (n < 960 && blacklistCode != "duckling_20") then { "duckling_20" } else
-    { "duckling_40" }
+    
+    if assetRarity < 50 then
+      if (n < 30 && blacklistCode != "item!ART-FREEGENE") then {"item!ART-FREEGENE"} else
+      if (n < 80 && blacklistCode != "item!ART-FIRE_ARMOUR") then { "item!ART-FIRE_ARMOUR" } else
+      if (n < 110 && blacklistCode != "item!ART-FEED5") then { "item!ART-FEED5" } else    
+      if (n < 140 && blacklistCode != "item!ART-FEED10") then { "item!ART-FEED10" } else    
+      if (n < 170 && blacklistCode != "item!ART-FEED15") then { "item!ART-FEED15" } else    
+      if (n < 200 && blacklistCode != "item!ART-FEED20") then { "item!ART-FEED20" } else    
+      if (n < 220 && blacklistCode != "item!ART-FEED25") then { "item!ART-FEED25" } else    
+      if (n < 240 && blacklistCode != "item!ART-FEED50") then { "item!ART-FEED50" } else   
+      if (n < 250 && blacklistCode != "item!ART-FEED100") then { "item!ART-FEED100" } else
+      if (n < 260 && blacklistCode != "item!ART-CROWN") then { "item!ART-CROWN" } else
+      if (n < 300 && blacklistCode != "incubator") then { "incubator" } else
+      if (n < 360 && blacklistCode != "item!ART-BUILTBODY") then { "item!ART-BUILTBODY" } else
+      if (n < 380 && blacklistCode != "item!ART-SNAKE") then { "item!ART-SNAKE" } else
+      if (n < 410 && blacklistCode != "item!ART-ROBODUCK") then { "item!ART-ROBODUCK" } else
+      if (n < 490 && blacklistCode != "item!ART-KATANA") then { "item!ART-KATANA" } else
+      if (n < 520 && blacklistCode != "item!ART-SCEPTER") then { "item!ART-SCEPTER" } else
+      if (n < 580 && blacklistCode != "item!ART-MUTARIUM-D") then { "item!ART-MUTARIUM-D" } else
+      if (n < 590 && blacklistCode != "item!ART-MUTARIUM-G") then { "item!ART-MUTARIUM-G" } else
+      if (n < 740 && blacklistCode != "duckling_10") then { "duckling_10" } else 
+      if (n < 830 && blacklistCode != "duckling_20") then { "duckling_20" } else
+      if (n < 890 && blacklistCode != "duckling_40") then { "duckling_40" } else
+      if (n < 930 && blacklistCode != "duckling_60") then { "duckling_60" } else
+      if (n < 960 && blacklistCode != "item!ART-FIXGENE") then { "item!ART-FIXGENE" } else
+      if (n < 970 && blacklistCode != "item!ART-MIRROR") then { "item!ART-MIRROR" } else
+      if (n < 980 && blacklistCode != "incubator_eagle") then { "incubator_eagle" } else
+      { "item!ART-CANCPN" }
+      
 
+    else 
+      if (n <30 && blacklistCode != "item!ART-FREEGENE") then {"item!ART-FREEGENE"} else
+      if (n <60 && blacklistCode != "item!ART-FIRE_ARMOUR") then { "item!ART-FIRE_ARMOUR" } else
+      if (n <80 && blacklistCode != "item!ART-FEED5") then { "item!ART-FEED5" } else
+      if (n <120 && blacklistCode != "item!ART-FEED10") then { "item!ART-FEED10" } else
+      if (n <170 && blacklistCode != "item!ART-FEED15") then { "item!ART-FEED15" } else
+      if (n <210 && blacklistCode != "item!ART-FEED20") then { "item!ART-FEED20" } else
+      if (n <240 && blacklistCode != "item!ART-FEED25") then { "item!ART-FEED25" } else
+      if (n <270 && blacklistCode != "item!ART-FEED50") then { "item!ART-FEED50" } else
+      if (n <290 && blacklistCode != "item!ART-FEED100") then { "item!ART-FEED100" } else
+      if (n <330 && blacklistCode != "incubator") then { "incubator" } else
+      if (n <350 && blacklistCode != "item!ART-ROBODUCK") then { "item!ART-ROBODUCK" } else
+      if (n <470 && blacklistCode != "item!ART-MUTARIUM-D") then { "item!ART-MUTARIUM-D" } else
+      if (n <490 && blacklistCode != "item!ART-MUTARIUM-G") then { "item!ART-MUTARIUM-G" } else
+      if (n <630 && blacklistCode != "duckling_10") then { "duckling_10" } else
+      if (n <720 && blacklistCode != "duckling_20") then { "duckling_20" } else
+      if (n <780 && blacklistCode != "duckling_40") then { "duckling_40" } else
+      if (n <840 && blacklistCode != "duckling_60") then { "duckling_60" } else
+      if (n <870 && blacklistCode != "item!ART-FIXGENE") then { "item!ART-FIXGENE" } else
+      if (n <890 && blacklistCode != "item!ART-MIRROR") then { "item!ART-MIRROR" } else
+      if (n <910 && blacklistCode != "incubator_eagle") then { "incubator_eagle" } else
+      if (n < 960 && blacklistCode != "item!ART-CANCPN") then { "item!ART-CANCPN" } else
+      if ( n < 980 && blacklistCode != "incubator_turtle") then { "incubator_turtle" } else
+      { "incubator_canine" }
+    
+  (n,result,jackpotRandom)
 }
 func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   let n = getRandomNumber(2, tx, finishHeight, 1)
-  if n == 0 then true else false
+  if n == 1 then true else false
 }
 
 func getOrigin(assetId: ByteVector) = {
@@ -198,7 +239,11 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
     if (height < finishBlock) then {
       throw("you cannot finish rebirth, yet")
     } else {
-      let win = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity, blacklistCode)  
+      let output = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity, blacklistCode)  
+      let win = output._2
+      let random = output._1
+      let jackpotRandom = output._3
+
 
       let txId = initTx
 
@@ -220,31 +265,66 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         result
       } else if (win == "incubator") then {
         strict result = if !double then 
-				strict first = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
-                [
-					StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
-				]
-			else
-				strict first = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
-				strict second = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,100], [])
-				[
-					StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-					StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
-					StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "duckling_100")
-				] 
-        
+                            strict first = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            [
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+                            ]
+			                  else
+                            strict first = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            strict second = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId,100], [])
+                            [
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "duckling_100")
+                            ]
         result
-
-      } else if (win == "ar") then {
-		let assetId = getAccessItemAssetId(getHuntAddress())
-        let price = getAccessItemPrice(getHuntAddress())
-        strict call = invoke(getHuntAddress(), "buyAccessItemOther", [address], [AttachedPayment(assetId,price)])
-        [
-			StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())
-		]
-
+      }else if (win == "incubator_eagle") then {
+        strict result = if !double then 
+                            strict first = invoke(getEagleIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            [
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+                            ]
+			                  else
+                            strict first = invoke(getEagleIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            strict second = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            [
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "duckling_100")
+                            ]
+        result
+      }else if (win == "incubator_turtle") then {
+        strict result = if !double then 
+                            strict first = invoke(getTurtleIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            [
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+                            ]
+			                  else
+                            strict first = invoke(getTurtleIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            strict second = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            [
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "duckling_100")
+                            ]
+        result
+      }else if (win == "incubator_canine") then {
+        strict result = if !double then 
+                            strict first = invoke(getCanineIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            [
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())
+                            ]
+			                  else
+                            strict first = invoke(getCanineIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            strict second = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
+                            [
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+                              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "duckling_100")
+                            ]
+        result
       }else if (win == "phoenix") then {
-        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
+        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WPBRDUCK"], []) 
         [
 			StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())
 		]
@@ -283,13 +363,23 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         let issuer = checkReal(assetId)   
         strict gen = invoke(getBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
         strict call = invoke(issuer, "increaseRarity", [assetId.toBase58String(), gen], [])
-        [ScriptTransfer(address.addressFromStringValue(), 1, 
-        assetId)] 
+        [ScriptTransfer(address.addressFromStringValue(), 1,assetId)] 
       else []
+      #let bonusOutput = if (random %10 ==0) then
+      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-CNDY",address,0],[])
+      #  [StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.asString()),
+      #  IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)]
+      #else
+      #  [
+      #    IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
+      #  ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
-        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish")
-      ]++validPayment
+        StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
+        
+      ]++validPayment++returnPayload#++bonusOutput
     }
   }
 }
@@ -324,7 +414,7 @@ func initRebirth(refererAddress: String) = {
     if (feePayment.amount < leftToPay)  then throw("You need to attach the following amount of EGG tokens as fee: 0." + leftToPay.toString()) else
         let refererRewardForPerch = fraction(leftToPay, 5, 100)
         strict refCall = invoke(getRefContractAddress(), "refPayment",
-        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).asBoolean()
+        [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForPerch)]).exactAs[Boolean]
         let topup = feeAmount/4
         let toBurn = if refCall then leftToPay-refererRewardForPerch-topup else leftToPay-topup
         strict bonusTopUp = invoke(getFarmingAddress(), "topUpReward", [],[AttachedPayment(getEggAssetId(),topup)])
