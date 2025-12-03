@@ -1,0 +1,377 @@
+{
+    "type": 12,
+    "version": 2,
+    "data": [
+    {
+        "key": "merge_ART-LOVE0_baseItem",
+        "type": "string",
+        "value": "ART-GFTR"
+    },
+    {
+        "key": "merge_ART-LOVE0_amount",
+        "type": "integer",
+        "value": 2
+    },
+    {
+        "key": "merge_ART-LOVE0_endItem",
+        "type": "string",
+        "value": "ART-EAGLCPN"
+    },
+    {
+        "key": "merge_ART-LOVE0_secondaryItem",
+        "type": "string",
+        "value": "ART-GFTW"
+    },
+    {
+        "key": "merge_ART-LOVE0_secondaryItemAmount",
+        "type": "integer",
+        "value": 0
+    },
+    {
+        "key": "merge_ART-LOVE0_instant",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "merge_ART-LOVE0_asset",
+        "type": "string",
+        "value": "WAVES"
+    },
+    {
+        "key": "merge_ART-LOVE0_price",
+        "type": "integer",
+        "value": 0
+    },
+
+    {
+        "key": "merge_ART-LOVE1_baseItem",
+        "type": "string",
+        "value": "ART-GFTW"
+    },
+    {
+        "key": "merge_ART-LOVE1_amount",
+        "type": "integer",
+        "value": 2
+    },
+    {
+        "key": "merge_ART-LOVE1_endItem",
+        "type": "string",
+        "value": "ART-EAGLCPN"
+    },
+    {
+        "key": "merge_ART-LOVE1_secondaryItem",
+        "type": "string",
+        "value": "ART-GFTR"
+    },
+    {
+        "key": "merge_ART-LOVE1_secondaryItemAmount",
+        "type": "integer",
+        "value": 0
+    },
+    {
+        "key": "merge_ART-LOVE1_instant",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "merge_ART-LOVE1_asset",
+        "type": "string",
+        "value": "WAVES"
+    },
+    {
+        "key": "merge_ART-LOVE1_price",
+        "type": "integer",
+        "value": 0
+    },
+
+    {
+        "key": "merge_ART-LOVE2_baseItem",
+        "type": "string",
+        "value": "ART-GFTR"
+    },
+    {
+        "key": "merge_ART-LOVE2_amount",
+        "type": "integer",
+        "value": 1
+    },
+    {
+        "key": "merge_ART-LOVE2_endItem",
+        "type": "string",
+        "value": "ART-EAGLCPN"
+    },
+    {
+        "key": "merge_ART-LOVE2_secondaryItem",
+        "type": "string",
+        "value": "ART-GFTW"
+    },
+    {
+        "key": "merge_ART-LOVE2_secondaryItemAmount",
+        "type": "integer",
+        "value": 1
+    },
+    {
+        "key": "merge_ART-LOVE2_instant",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "merge_ART-LOVE2_asset",
+        "type": "string",
+        "value": "WAVES"
+    },
+    {
+        "key": "merge_ART-LOVE2_price",
+        "type": "integer",
+        "value": 0
+    },
+
+    {
+        "key": "merge_ART-LOVE3_baseItem",
+        "type": "string",
+        "value": "ART-GFTR"
+    },
+    {
+        "key": "merge_ART-LOVE3_amount",
+        "type": "integer",
+        "value": 7
+    },
+    {
+        "key": "merge_ART-LOVE3_endItem",
+        "type": "string",
+        "value": "ART-LOVE_TAIL"
+    },
+    {
+        "key": "merge_ART-LOVE3_secondaryItem",
+        "type": "string",
+        "value": "ART-GFTW"
+    },
+    {
+        "key": "merge_ART-LOVE3_secondaryItemAmount",
+        "type": "integer",
+        "value": 3
+    },
+    {
+        "key": "merge_ART-LOVE3_instant",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "merge_ART-LOVE3_asset",
+        "type": "string",
+        "value": "WAVES"
+    },
+    {
+        "key": "merge_ART-LOVE3_price",
+        "type": "integer",
+        "value": 0
+    },
+
+    {
+        "key": "merge_ART-LOVE4_baseItem",
+        "type": "string",
+        "value": "ART-GFTR"
+    },
+    {
+        "key": "merge_ART-LOVE4_amount",
+        "type": "integer",
+        "value": 6
+    },
+    {
+        "key": "merge_ART-LOVE4_endItem",
+        "type": "string",
+        "value": "ART-LOVE_HELMET"
+    },
+    {
+        "key": "merge_ART-LOVE4_secondaryItem",
+        "type": "string",
+        "value": "ART-GFTW"
+    },
+    {
+        "key": "merge_ART-LOVE4_secondaryItemAmount",
+        "type": "integer",
+        "value": 4
+    },
+    {
+        "key": "merge_ART-LOVE4_instant",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "merge_ART-LOVE4_asset",
+        "type": "string",
+        "value": "WAVES"
+    },
+    {
+        "key": "merge_ART-LOVE4_price",
+        "type": "integer",
+        "value": 0
+    },
+
+    {
+        "key": "merge_ART-LOVE5_baseItem",
+        "type": "string",
+        "value": "ART-GFTR"
+    },
+    {
+        "key": "merge_ART-LOVE5_amount",
+        "type": "integer",
+        "value": 5
+    },
+    {
+        "key": "merge_ART-LOVE5_endItem",
+        "type": "string",
+        "value": "ART-LOVE_ARMOUR"
+    },
+    {
+        "key": "merge_ART-LOVE5_secondaryItem",
+        "type": "string",
+        "value": "ART-GFTW"
+    },
+    {
+        "key": "merge_ART-LOVE5_secondaryItemAmount",
+        "type": "integer",
+        "value": 5
+    },
+    {
+        "key": "merge_ART-LOVE5_instant",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "merge_ART-LOVE5_asset",
+        "type": "string",
+        "value": "WAVES"
+    },
+    {
+        "key": "merge_ART-LOVE5_price",
+        "type": "integer",
+        "value": 0
+    },
+
+    {
+        "key": "merge_ART-LOVE6_baseItem",
+        "type": "string",
+        "value": "ART-GFTR"
+    },
+    {
+        "key": "merge_ART-LOVE6_amount",
+        "type": "integer",
+        "value": 4
+    },
+    {
+        "key": "merge_ART-LOVE6_endItem",
+        "type": "string",
+        "value": "ART-LOVE_HELMET"
+    },
+    {
+        "key": "merge_ART-LOVE6_secondaryItem",
+        "type": "string",
+        "value": "ART-GFTW"
+    },
+    {
+        "key": "merge_ART-LOVE6_secondaryItemAmount",
+        "type": "integer",
+        "value": 6
+    },
+    {
+        "key": "merge_ART-LOVE6_instant",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "merge_ART-LOVE6_asset",
+        "type": "string",
+        "value": "WAVES"
+    },
+    {
+        "key": "merge_ART-LOVE6_price",
+        "type": "integer",
+        "value": 0
+    },
+
+    {
+        "key": "merge_ART-LOVE7_baseItem",
+        "type": "string",
+        "value": "ART-GFTR"
+    },
+    {
+        "key": "merge_ART-LOVE7_amount",
+        "type": "integer",
+        "value": 3
+    },
+    {
+        "key": "merge_ART-LOVE7_endItem",
+        "type": "string",
+        "value": "ART-LOVE_SHIELD"
+    },
+    {
+        "key": "merge_ART-LOVE7_secondaryItem",
+        "type": "string",
+        "value": "ART-GFTW"
+    },
+    {
+        "key": "merge_ART-LOVE7_secondaryItemAmount",
+        "type": "integer",
+        "value": 7
+    },
+    {
+        "key": "merge_ART-LOVE7_instant",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "merge_ART-LOVE7_asset",
+        "type": "string",
+        "value": "WAVES"
+    },
+    {
+        "key": "merge_ART-LOVE7_price",
+        "type": "integer",
+        "value": 0
+    },
+
+    {
+        "key": "merge_ART-LOVE8_baseItem",
+        "type": "string",
+        "value": "ART-GFTR"
+    },
+    {
+        "key": "merge_ART-LOVE8_amount",
+        "type": "integer",
+        "value": 2
+    },
+    {
+        "key": "merge_ART-LOVE8_endItem",
+        "type": "string",
+        "value": "ART-LOVE_BOW"
+    },
+    {
+        "key": "merge_ART-LOVE8_secondaryItem",
+        "type": "string",
+        "value": "ART-GFTW"
+    },
+    {
+        "key": "merge_ART-LOVE8_secondaryItemAmount",
+        "type": "integer",
+        "value": 8
+    },
+    {
+        "key": "merge_ART-LOVE8_instant",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "merge_ART-LOVE8_asset",
+        "type": "string",
+        "value": "WAVES"
+    },
+    {
+        "key": "merge_ART-LOVE8_price",
+        "type": "integer",
+        "value": 0
+    }
+],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}
+
