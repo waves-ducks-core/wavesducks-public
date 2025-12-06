@@ -101,11 +101,6 @@ func handleStakingTopUp (amount: Int) = {
 }
 
 
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("FAS: wrong type, expected: String")
-}
-
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
         case b:Boolean => b
@@ -136,7 +131,7 @@ func getAssetRarityComplete(isJackpot: Boolean, assetName: String)={
   let rarity = if isJackpot then 100 else{
       
       let generation = assetName.takeRight(2).take(1)
-      strict farmGen = invoke(getBreederAddress(),"getGenFromName",[assetName],[]).asString()
+      strict farmGen = invoke(getBreederAddress(),"getGenFromName",[assetName],[]).exactAs[String]
 
       getAssetRarity(farmGen, generation)
     }
@@ -216,7 +211,7 @@ func calculateFarmPower(assetId:String)={
   let finalPowerRarity = finalPower*rarity/100
   let mantle = tryGetString(assetId+"_mantleId")
   let mantleLevel = if mantle != "" then tryGetIntegerExternal(getGameDappAddress(),"artefactId_" + mantle + "_level") else 0
-  let powerWithMantle = if mantleLevel > 0 then finalPowerRarity *mantleLevel / 100 else finalPowerRarity
+  let powerWithMantle = if mantleLevel > 0 then finalPowerRarity + (finalPowerRarity *mantleLevel / 100) else finalPowerRarity
   ([
     IntegerEntry("DEBUG_"+assetName, finalPower),
     IntegerEntry("DEBUG_RARITY"+assetName, rarity),
