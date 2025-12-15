@@ -27,10 +27,11 @@ let wearables = [
 ]
 
 let specialSetStarter = "ART-EAST_"
+let secondSpecialSetStarter = "ART-LOVE_"
 
 func keyArtefactDuck(duckId: String, wearable: String) = duckId+"_"+wearable
 func keyTypesDuck(duckId: String, type: String) = duckId+"_"+type
-func amountPartsSpecial(duckId: String) = duckId+"_"+specialSetStarter
+func amountPartsSpecial(duckId: String, specialSet: String) = duckId+"_"+specialSet
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -48,11 +49,6 @@ func tryGetInteger(key: String) = {
 
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
-}
-
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("wrong type, expected: String")
 }
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
@@ -102,8 +98,7 @@ func validateIfItemCanBeWorn(allTypes:Boolean,type:String,artefactName:String)={
   ]
   if allTypes then true else
   if containsElement(["PET","BACK","TAIL","ACCESSORY", "HEAD"], type) then true else
-  if artefactName.contains(specialSetStarter) then true else
-  if artefactName.contains("ART-FIRE_") then true else
+  if artefactName.contains(specialSetStarter) || artefactName.contains(secondSpecialSetStarter) || artefactName.contains("ART-FIRE_") then true else
   if !containsElement(blacklisted, artefactName) then true else
   false
 
@@ -111,7 +106,7 @@ func validateIfItemCanBeWorn(allTypes:Boolean,type:String,artefactName:String)={
 }
 
 func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean, isDuck: Boolean)={
-  strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetIdWearAble],[]).asString()
+  strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetIdWearAble],[]).exactAs[String]
   if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
     let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
     if artefactName == "ART-XSCARF" && !isDuck then throw("WRITD: You can only wear this item on ducks") else
@@ -124,8 +119,8 @@ func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean, isDuck
 
       let typeResult = if type != "" then [StringEntry(keyTypesDuck(duckId,type), assetIdWearAble)] else []
       strict counter = if artefactName.contains(specialSetStarter) then
-        let amountParts = tryGetInteger(amountPartsSpecial(duckId))
-        [IntegerEntry(amountPartsSpecial(duckId), amountParts+1)]
+        let amountParts = tryGetInteger(amountPartsSpecial(duckId,specialSetStarter))
+        [IntegerEntry(amountPartsSpecial(duckId,specialSetStarter), amountParts+1)]
       else []
       [
         StringEntry(keyArtefactDuck(duckId,artefactName), assetIdWearAble)
@@ -200,7 +195,7 @@ func removeItemFromDuck(burnItem: Boolean, artefactName:String) = {
   let roboDuckId = roboDuckPayment.assetId.value().toBase58String()
 
   if (duckPayment.amount != 1 || roboDuckPayment.amount != 1) then throw("WRITD: NFT is not attached") else
-  strict artefactNameRoboduck = invoke(getItemsAddress(),"checkArtefactDetails",[roboDuckId],[]).asString()
+  strict artefactNameRoboduck = invoke(getItemsAddress(),"checkArtefactDetails",[roboDuckId],[]).exactAs[String]
   if artefactNameRoboduck != "ART-ROBODUCK" then throw("Only rododuck can remove items!") else
   if !containsElement(wearables, artefactName) && !isDefined(tryGetCosmeticItem(artefactName)) then throw("WRITD: Unsupported wearable") else
     let artefactId = tryGetString(keyArtefactDuck(duckId,artefactName))
@@ -210,8 +205,8 @@ func removeItemFromDuck(burnItem: Boolean, artefactName:String) = {
     let typeResult = if type != "" then [DeleteEntry(keyTypesDuck(duckId,type))] else []
     let burn = if burnItem then [Burn(artefactId.fromBase58String(),1)] else [ScriptTransfer(i.caller, 1, artefactId.fromBase58String())]
     strict counter = if artefactName.contains(specialSetStarter) then
-        let amountParts = tryGetInteger(amountPartsSpecial(duckId))
-        [IntegerEntry(amountPartsSpecial(duckId), amountParts-1)]
+        let amountParts = tryGetInteger(amountPartsSpecial(duckId,specialSetStarter))
+        [IntegerEntry(amountPartsSpecial(duckId,specialSetStarter), amountParts-1)]
       else []
 
       [
@@ -235,7 +230,7 @@ func calculateWearblesBoost(duckId: String)= {
   let assetIdArray = [back,head,left_wing,right_wing,top,pet,tail,accessory]
   func countTotalBoost (acc: Int, assetId: String) = {
     if assetId != "" then
-      strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId],[]).asString()
+      strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId],[]).exactAs[String]
       let boost = valueOrErrorMessage(getInteger("boost_"+artefactName), "No boost found for "+artefactName)
       acc+boost
     else

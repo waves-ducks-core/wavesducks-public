@@ -115,7 +115,7 @@ func getAssetRarityComplete(isJackpot: Boolean, assetName: String)={
   let rarity = if isJackpot then 100 else{
       
       let generation = assetName.takeRight(2).take(1)
-      strict farmGen = invoke(getBreederAddress(),"getGenFromName",[assetName],[]).asString()
+      strict farmGen = invoke(getBreederAddress(),"getGenFromName",[assetName],[]).exactAs[String]
 
       getAssetRarity(farmGen, generation)
     }
