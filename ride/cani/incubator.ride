@@ -122,10 +122,10 @@ func wasUniqueBorn(gen: String) = {
   tryGetInteger(getCANIStatsKey(gen))
 }
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
-  #let jackpotRandom = getRandomNumber(250, txId, hatchingFinishHeight, 1)
-  #let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
-  #if (jackpotRandom == 1 && wasUniqueBorn("CANI-WWWWWOLF-JU") < 2) then ("CANI-WWWWWOLF-JU", "1O1F1L5W-J")
-  #else 
+  let jackpotRandom = getRandomNumber(250, txId, hatchingFinishHeight, 1)
+  let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
+  if (jackpotRandom == 1 && wasUniqueBorn("CANI-WWCSANTA-JU") < 4) then ("CANI-WWCSANTA-JU", "2A1C1N1S1T2W-J")
+  else 
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
     let color = getElement(["A","B","C","D"],colorRandom)
 
@@ -292,7 +292,7 @@ func startHatching(refererAddress: String) = {
 
     let firstPayment = i.payments[1].value()
     let leftToPay = if size(i.payments) == 3 then {
-          strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).asString()
+          strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).exactAs[String]
           if (boosterType == "ART-CANCPN") then  eggsNeeded/100* 85 else 100
 
           }else 
