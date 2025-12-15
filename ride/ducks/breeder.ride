@@ -205,7 +205,7 @@ func asBoolean(value: Any) = match value {
 }
 
 func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector, asset: Issue)= {
-  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).exactAs[String]
   let amount = tryGetInteger(getDuckStatsKey(duckGen))
   let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
   [
@@ -233,7 +233,7 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
 
-      strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).asString() else duckGenesString
+      strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).exactAs[String] else duckGenesString
       
       let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
@@ -296,7 +296,7 @@ func finishDuckHatchingItems(txIdStr: String, duckGenesString: String, payment1:
                       finishDuckHatch(txIdStr, owner, duckGenesString)  
                   else
   
-                      strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],[payment1,payment2]).asString()
+                      strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],[payment1,payment2]).exactAs[String]
                       let ducklingLinked = tryGetString(getDucklingKey(owner, txIdStr.fromBase58String()))
                       if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else 
                       finishDuckHatch(txIdStr, owner, duckGenesString)
@@ -428,7 +428,7 @@ func createDuckSpecialGenes(address: ByteVector, duckGen: String, children: Int)
   let duckIdKey = getDuckIdKey(i.caller.toString(), txId)
 
   #TODO: work around for known issue dapp to dapp
-  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).exactAs[String]
   composeGenericData(duckGen,duckIdKey,assetId,asset)++
   [
     IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
@@ -492,7 +492,7 @@ func startDuckBreeding(refererAddress: String) = {
                                             ] 
                                             else throw("Please attach the correct amount of spice!")
                                         else 
-                                            strict res = invoke(getBabyDuckBreedingAddress(),"issueDuckling",[i.caller.toString(),i.transactionId.toBase58String(), spiceAmount/1_0000_0000, newG],[]).asString()
+                                            strict res = invoke(getBabyDuckBreedingAddress(),"issueDuckling",[i.caller.toString(),i.transactionId.toBase58String(), spiceAmount/1_0000_0000, newG],[]).exactAs[String]
                                             [
                                               StringEntry(getDucklingKey(i.caller.toString(), i.transactionId),res),
                                               BooleanEntry("instantPaid_"+i.transactionId.toBase58String(), false)
@@ -526,7 +526,7 @@ func finishDuckHatching(txIdStr: String) = {
   if instantPaid then 
                       finishDuckHatch(txIdStr, owner, "")  
                   else
-                      strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).asString()
+                      strict ducklingFinish = invoke(getBabyDuckBreedingAddress(),"turnDucklingIntoDuck",[],i.payments).exactAs[String]
                       if ducklingLinked != ducklingFinish then throw("Please attach the correct duckling!") else
                       finishDuckHatch(txIdStr, owner, "") 
 }
@@ -543,7 +543,7 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
   let firstPayment = i.payments[0].value()
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstAssetId],[]).asString()
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstAssetId],[]).exactAs[String]
   if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
 
   let txId = fromBase58String(txIdStr)
@@ -551,7 +551,7 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
   let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txId)
   let processFinishHeight = getIntegerValue(this, finishHeightKey)
 
-  strict duckGenesString = invoke(this,"generateDuck",[txId, processFinishHeight,parentFixedGene,positionFixedGene,"",0],[]).asString()
+  strict duckGenesString = invoke(this,"generateDuck",[txId, processFinishHeight,parentFixedGene,positionFixedGene,"",0],[]).exactAs[String]
   
   let strictFinish = finishDuckHatchingItems(txIdStr, duckGenesString, i.payments[1],i.payments[2], i.originCaller.toString())
   [
@@ -565,7 +565,7 @@ func freeGene(txIdStr: String) = {
   let firstPayment = i.payments[0].value()
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstAssetId],[]).asString()
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstAssetId],[]).exactAs[String]
   if artefact != "ART-FREEGENE" then  throw("You need to attach a ART-FREEGENE artefact") else
   
   let txId = fromBase58String(txIdStr)
@@ -576,7 +576,7 @@ func freeGene(txIdStr: String) = {
   let selectedGene = getRandomGenes(txId,processFinishHeight)
   let randomPosition = getRandomNumber(8, txId, processFinishHeight, 3)
 
-  strict duckGenesString = invoke(this,"generateDuck",[txId, processFinishHeight,0,0,selectedGene,randomPosition],[]).asString()
+  strict duckGenesString = invoke(this,"generateDuck",[txId, processFinishHeight,0,0,selectedGene,randomPosition],[]).exactAs[String]
   
   let strictFinish = finishDuckHatchingItems(txIdStr, duckGenesString, i.payments[1],i.payments[2], i.originCaller.toString())
   [
