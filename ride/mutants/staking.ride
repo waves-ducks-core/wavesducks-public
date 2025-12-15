@@ -302,7 +302,7 @@ func redeemMutuarium()={
   let validPayment = checkAdditionalPayment(i.payments[1])
   if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
     let assetId = i.payments[0].assetId.value()
-    strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).exactAs[String]
     if !artefactName.contains("ART-MUTARIUM-") then throw("You can't use this artafect to redeem mutarium!") else
         let color = artefactName.takeRight(1)
         let perchAmountKey = "address_" + i.caller.toString() + "_mutariumAvailable_" + color

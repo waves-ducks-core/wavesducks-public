@@ -20,6 +20,7 @@ func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_felineBreederAddress() = "static_felineBreederAddress"
 func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
 
 func getStatsKey_amount() = "stats_amount"
 func getStatsKey(genString: String) = "stats_" + genString + "_amount"
@@ -59,7 +60,7 @@ func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-
+func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getAllowedMutants() = [getTurtleBreederAddress(),getDuckBreederAddress()]
 
 func calcPriceInAsset(baseAmount: Int)= {
@@ -110,7 +111,7 @@ func generate(txId: ByteVector, finishHeight: Int,parent1Id: ByteVector, parent2
     +getRandomGen(parent1Gen[0]+parent1Gen[11], parent2Gen[0]+parent2Gen[11], 6, txId, finishHeight)
     +getRandomGen(parent1Gen[0]+parent1Gen[12], parent2Gen[0]+parent2Gen[12], 7, txId, finishHeight)
     +"-G"+color
-    gen
+    (gen,colorRandom)
 }
 
 func isSymbol(acc: (Int, String), sym: String) = { if (sym == acc._2) then {(acc._1+1, acc._2)} else {(acc._1+0, acc._2)} }
@@ -224,7 +225,9 @@ func finishHatchingInternal(txId: String, owner: String)={
       let parent1IdBytes = parent1Id.fromBase58String()
       let parent2IdBytes = parent2Id.fromBase58String()
 
-      let gen = generate(txId.fromBase58String(), processFinishHeight,parent1IdBytes, parent2IdBytes)
+      let output = generate(txId.fromBase58String(), processFinishHeight,parent1IdBytes, parent2IdBytes)
+      let gen = output._1
+      let random = output._2
       let farmGen = nrOfTypeGenes(gen)
       let rarityFromName = getRarityFromName(gen)
 
@@ -242,7 +245,14 @@ func finishHatchingInternal(txId: String, owner: String)={
       let transferOrBurn = if failed then Burn(assetId,1) else ScriptTransfer(ownerAsAddress, 1, assetId)
       let transferOrBurnParent1 = if getRandomNumber(10, txId.fromBase58String(), processFinishHeight, 2) == 5 then Burn(parent1IdBytes,1) else ScriptTransfer(ownerAsAddress, 1, parent1IdBytes)
       let transferOrBurnParent2 = if getRandomNumber(10, txId.fromBase58String(), processFinishHeight, 3) == 5 then Burn(parent2IdBytes,1) else ScriptTransfer(ownerAsAddress, 1, parent2IdBytes)
-      
+      let bonusOutput = if (random %10 ==0) then
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-SNOWBALL",owner,0],[])
+        [StringEntry("address_" + owner + "_initTx_" + txId + "_bonusItem", "ART-SNOWBALL"),
+        IntegerEntry("address_" + owner + "_initTx_" + txId + "_bonusRandom",random)]
+      else
+        [
+          IntegerEntry("address_" + owner + "_initTx_" + txId + "_bonusRandom",random)
+        ]
       [
         StringEntry(processStatusKey, hatchingFinished()),
         StringEntry(IdKey, assetId.toBase58String()),
@@ -257,7 +267,7 @@ func finishHatchingInternal(txId: String, owner: String)={
         transferOrBurn,
         transferOrBurnParent1,
         transferOrBurnParent2
-      ]
+      ]++bonusOutput
     }
 
 }
