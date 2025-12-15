@@ -206,6 +206,11 @@
               "type": "string",
               "value": "3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ,3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV,3P3zkxHhAzRzV9PBLB14JXG4ZEEPv4LtDyQ"
             },
+            {
+                "key": "static_ammPZLUI",
+                "type": "string",
+                "value": "3PGJ8DVtsPk3uJtMMuDAHEsCbWMnnL3pKWB,3PNztLWDmZJffafREjQbUj1tpWJCx9hWDfK"
+            },
         {
             "key": "static_capacityAddress",
             "type": "string",
