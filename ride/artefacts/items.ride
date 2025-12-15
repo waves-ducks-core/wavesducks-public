@@ -20,6 +20,13 @@ func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
 func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
 func staticKey_babyDuckAddress() = "static_babyDuckAddress"
 func staticKey_burnAddress() = "static_burnAddress"
+func staticKey_mutantIncubatorAddress() = "static_mutantIncubatorAddress"
+func staticKey_felineBreederAddress() = "static_felineBreederAddress"
+func staticKey_canineBreederAddress() = "static_canineBreederAddress"
+func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
+func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
+func staticKey_duckBreederAddress() = "static_breederAddress"
+
 
 #TODO: make sure to allow coupons contract when we release new items
 func key_artefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
@@ -63,16 +70,16 @@ let allArtefact = [
 #TODO: make this list as a string with split inside the sc to avoid the need of updating the sc
 let snow_boosters = [
   "ART-TINSEL",
+  "ART-TINSEL",
   "ART-FEED5",
   "ART-FEED10",
   "ART-FEED15",
+  "ART-FEED20",
   "ART-GNGR_BREAD",
   "ART-SNOWBALL",
-  "ART-GIFT_DOUBL",
   "ART-FELCPN",
   "ART-CANCPN",
-  "ART-GFTR",
-  "ART-GFTW"
+  "ART-YETI"
 ]
 
 #TODO: make this list as a string with split inside the sc to avoid the need of updating the sc
@@ -155,6 +162,12 @@ func getDuplicatorFee() = tryGetIntegerExternal(getOracle(),staticKey_duplicator
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getMutantIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_mutantIncubatorAddress()).fromBase58String())
+func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
+func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String())
+func getEagleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String())
+func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
+func getDuckBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_duckBreederAddress()).fromBase58String())
 
 func tryGetCosmeticItemPrice(item:String)= {
   let key = key_priceCosmetic(item)
@@ -225,7 +238,7 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
       (accumulated._1,accumulated._2, accumulated._3, accumulated._4+limit, accumulated._5)
       
     else
-      strict artefact = invoke(this,"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+      strict artefact = invoke(this,"checkArtefactDetails",[assetId.toBase58String()],[]).exactAs[String]
       if (artefact == baseItem) then 
         (accumulated._1++[Burn(assetId,1)],accumulated._2+1, accumulated._3, accumulated._4, accumulated._5)
       else
@@ -316,7 +329,7 @@ func startShakeItBaby()={
   let itemAssetId = itemPayment.assetId.value().toBase58String()
   if itemPayment.amount != 1 then throw("IID: Item NFT is not attached") else
 
-  strict globeArtefact = invoke(this,"checkArtefactDetails",[itemAssetId],[]).asString()
+  strict globeArtefact = invoke(this,"checkArtefactDetails",[itemAssetId],[]).exactAs[String]
   if indexOf(shake_artefact,globeArtefact) == unit then  throw("IID: You need to attach a valid artefact") else
   let address = i.caller.toString()
   let initTx = i.transactionId.toBase58String()
@@ -532,10 +545,10 @@ func itemDuplicator()={
   if eggAssetId != getEggAssetId() then throw("IID: Please attach eggs!") else
   if (eggPayment.amount < getDuplicatorFee())  then throw("IID: to duplicate an items you need the following amount of egglets: " + getDuplicatorFee().toString())else
 
-  strict duplicatorArtefact = invoke(this,"checkArtefactDetails",[duplicatorAssetId],[]).asString()
+  strict duplicatorArtefact = invoke(this,"checkArtefactDetails",[duplicatorAssetId],[]).exactAs[String]
   if duplicatorArtefact != "ART-ITEM_DUPLI" then  throw("IID: You need to attach a ART-ITEM_DUPLI artefact") else
 
-  strict artefactName = invoke(this,"checkArtefactDetails",[itemAssetId],[]).asString()
+  strict artefactName = invoke(this,"checkArtefactDetails",[itemAssetId],[]).exactAs[String]
 
   let artefact = Issue(artefactName, "NFT artefact of Waves Ducks game: "+artefactName, 1, 0, false, unit, 0)
   let artefactId = artefact.calculateAssetId()
@@ -561,7 +574,7 @@ func copyDuck()= {
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).exactAs[Int]
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
-  strict artefact = invoke(this,"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
+  strict artefact = invoke(this,"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).exactAs[String]
   if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
   let nftInfo = assetInfo(firstPayment.assetId.value()).value()
   let asset1Gen = nftInfo.name.split("")        
@@ -584,7 +597,7 @@ func addArteFactToDuck()= {
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
   strict children = invoke(getBreederAddress(),"validateAndGetChildren",[firstAssetId],[]).exactAs[Int]
   if children == 0 then throw("You can only pick a sterile NFT-duck") else
-  strict artefact = invoke(this,"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
+  strict artefact = invoke(this,"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).exactAs[String]
   if artefact != "ART-XHAT" && artefact != "ART-POMP" then  throw("You need to attach a ART-XHAT or ART-POMP artefact") else
   let nftInfo = assetInfo(firstPayment.assetId.value()).value()
   let asset1Gen = nftInfo.name.split("")        
@@ -593,7 +606,7 @@ func addArteFactToDuck()= {
 
     let char = if artefact == "ART-XHAT" then "T" else if artefact=="ART-POMP" then "S" else throw("No char defined")
     let oldDuckGen = nftInfo.name
-    strict oldFarmGen = invoke(getBreederAddress(),"getGenFromName",[oldDuckGen],[]).asString()
+    strict oldFarmGen = invoke(getBreederAddress(),"getGenFromName",[oldDuckGen],[]).exactAs[String]
     let duckGen = manipulateName(oldDuckGen,6,char)
     strict call = invoke(getBreederAddress(), "createDuckSpecialGenes", [i.caller.bytes, duckGen,children], [])
     strict callReduce = invoke(getBreederAddress(), "reduceRarity", [firstAssetId,oldFarmGen], [])
@@ -619,7 +632,9 @@ func preInit() = {
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
 
-  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey() &&  !isTestEnv()) then throw("IIA: admin only") else 
+  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress() 
+  
+  && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey() &&  !isTestEnv()) then throw("IIA: admin only") else 
     if ((i.caller == getHuntDistroAddress()
     #|| i.callerPublicKey == getWarsPKey()
     ) 
@@ -634,8 +649,13 @@ func issueArtefact(type: String, receiver: String) = {
 @Callable(i)
 func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
 
-  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress()
-  && i.caller != getEagleRebirthAddress() 
+  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getMutantIncubatorAddress()
+  && i.caller != getEagleRebirthAddress()
+  && i.caller != getDuckBreederAddress()
+  && i.caller != getEagleBreederAddress()
+  && i.caller != getTurtleBreederAddress()
+  && i.caller != getCanineBreederAddress()
+  && i.caller != getFelineBreederAddress() 
   && i.caller != getCanineRebirthAddress() && i.caller != getFelineeRebirthAddress() && i.caller != getHuntDistroAddress()
   && i.callerPublicKey != getWarsPKey()) then throw("IIAI: admin only") else 
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else

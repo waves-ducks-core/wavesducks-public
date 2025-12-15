@@ -577,6 +577,91 @@
             "type": "string",
             "value": "WAVES"
         }
+
+
+        ,
+        {
+            "key": "merge_ART-POTION0_baseItem",
+            "type": "string",
+            "value": "ART-FREEGENE"
+        },
+        {
+            "key": "merge_ART-POTION0_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-POTION0_endItem",
+            "type": "string",
+            "value": "ART-POTION"
+        },
+        {
+            "key": "merge_ART-POTION0_price",
+            "type": "integer",
+            "value": 500000000
+        },
+        {
+            "key": "merge_ART-POTION0_secondaryItem",
+            "type": "string",
+            "value": "ART-SNOWBALL"
+        },
+        {
+            "key": "merge_ART-POTION0_secondaryItemAmount",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "merge_ART-POTION0_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-POTION0_asset",
+            "type": "string",
+            "value": "WAVES"
+        }
+
+        ,
+        {
+            "key": "merge_ART-POTION1_baseItem",
+            "type": "string",
+            "value": "ART-FIXGENE"
+        },
+        {
+            "key": "merge_ART-POTION1_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-POTION1_endItem",
+            "type": "string",
+            "value": "ART-POTION"
+        },
+        {
+            "key": "merge_ART-POTION1_price",
+            "type": "integer",
+            "value": 500000000
+        },
+        {
+            "key": "merge_ART-POTION1_secondaryItem",
+            "type": "string",
+            "value": "ART-SNOWBALL"
+        },
+        {
+            "key": "merge_ART-POTION1_secondaryItemAmount",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "merge_ART-POTION1_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-POTION1_asset",
+            "type": "string",
+            "value": "WAVES"
+        }
     ],
     "fee": 600000,
     "feeAssetId": "WAVES",

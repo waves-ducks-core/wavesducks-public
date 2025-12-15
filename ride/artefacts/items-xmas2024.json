@@ -2,87 +2,6 @@
     "type": 12,
     "version": 1,
     "data": [
-        {
-            "key": "merge_ART-PET0_baseItem",
-            "type": "string",
-            "value": "ART-GFTR"
-        },
-        {
-            "key": "merge_ART-PET0_amount",
-            "type": "integer",
-            "value": 4
-        },
-        {
-            "key": "merge_ART-PET0_endItem",
-            "type": "string",
-            "value": "ART-XMASFOX"
-        },
-        {
-            "key": "merge_ART-PET0_price",
-            "type": "integer",
-            "value": 0
-        },
-        {
-            "key": "merge_ART-PET0_instant",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "merge_ART-PET0_asset",
-            "type": "string",
-            "value": "WAVES"
-        },
-        {
-            "key": "merge_ART-PET0_secondaryItem",
-            "type": "string",
-            "value": "ART-GFTW"
-        },
-        {
-            "key": "merge_ART-PET0_secondaryItemAmount",
-            "type": "integer",
-            "value": 6
-        },
-        
-        {
-            "key": "merge_ART-PET1_baseItem",
-            "type": "string",
-            "value": "ART-GFTR"
-        },
-        {
-            "key": "merge_ART-PET1_amount",
-            "type": "integer",
-            "value": 6
-        },
-        {
-            "key": "merge_ART-PET1_endItem",
-            "type": "string",
-            "value": "ART-XMASKRMPS"
-        },
-        {
-            "key": "merge_ART-PET1_price",
-            "type": "integer",
-            "value": 0
-        },
-        {
-            "key": "merge_ART-PET1_instant",
-            "type": "boolean",
-            "value": true
-        },
-        {
-            "key": "merge_ART-PET1_asset",
-            "type": "string",
-            "value": "WAVES"
-        },
-        {
-            "key": "merge_ART-PET1_secondaryItem",
-            "type": "string",
-            "value": "ART-GFTW"
-        },
-        {
-            "key": "merge_ART-PET1_secondaryItemAmount",
-            "type": "integer",
-            "value": 4
-        },
         
         {
             "key": "merge_ART-CNDY0_baseItem",
@@ -189,7 +108,13 @@
             "key": "direct_cosmetic_ART-CANCPN",
             "type": "integer",
             "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-EAGLCPN",
+            "type": "integer",
+            "value": 200000000000
         }
+
     ],
     "fee": 600000,
     "feeAssetId": "WAVES",

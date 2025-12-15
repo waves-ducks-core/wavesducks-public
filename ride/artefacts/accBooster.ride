@@ -27,7 +27,8 @@ let stakeable = [
   "ART-LAKE",
   "ART-XTREE",
   "ART-XSOCK",
-  "ART-XMISTL"
+  "ART-XMISTL",
+  "ART-FRZLAKE"
 ]
 
 func tryGetString(key: String) = {
@@ -93,13 +94,14 @@ func stakeItem() = {
     let validPayment = checkAdditionalPayment(i.payments[1])
     if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
       let assetId = i.payments[0].assetId.value()
-      strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+      strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).exactAs[String]
       if !containsElement(stakeable, artefactName) then throw("You can't stake this artafect") else 
         if itemIsInCoolDown(artefactName,assetId.toBase58String()) then throw("Item can't be staked yet, it's in cooldown") else
           let invoker = i.caller.toString()
           let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
           if artefactId != "" then throw("You are already staking "+ artefactName) else 
             strict boostDuck = 
+            if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[1,invoker],[]) else
             if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[2,invoker],[]) else
             if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[3,invoker],[]) else nil
             [
@@ -116,6 +118,7 @@ func unstakeItem(artefactName: String) = {
       if artefactName == "ART-XSOCK" then throw("You can not unstake ART-XSOCK anymore") else
       if artefactId == "" then throw("You didnt stake "+artefactName) else
         strict boostDuck = 
+        if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-1,invoker],[]) else
         if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],[]) else
         if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[-3,invoker],[]) else nil
         [
@@ -130,7 +133,7 @@ func oneTimeUseFeed() ={
   let validPayment = checkAdditionalPayment(i.payments[1])
   if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
     let assetId = i.payments[0].assetId.value()
-    strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).exactAs[String]
     let artefactId = tryGetString(keyArtefactOwner("ART-XSOCK",i.caller.toString()))
     if !artefactName.contains("ART-FEED") then throw("You can't use this artafect to earn feedlimit!") else
         let invoker = i.caller.toString()

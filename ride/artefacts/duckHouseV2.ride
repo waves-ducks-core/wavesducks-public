@@ -122,7 +122,7 @@ func stakeDuckHouse()={
   let validPayment = checkAdditionalPayment(i.payments[1])
   let artefactAssetId = artefactPayment.assetId.value().toBase58String()
   if (artefactPayment.amount != 1) then throw("NFT is not attached") else
-  strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[artefactAssetId],[]).asString()
+  strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[artefactAssetId],[]).exactAs[String]
   if artefactName != type() then throw("Wrong artefact") else
   [
       StringEntry(keyOwner(artefactAssetId),owner)

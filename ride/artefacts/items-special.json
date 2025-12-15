@@ -259,6 +259,40 @@
             "key": "direct_cosmetic_ART-GHOSTY",
             "type": "integer",
             "value": 200000000000
+        },
+
+
+
+
+        {
+            "key": "direct_cosmetic_ART-FRZLAKE",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-GNOME",
+            "type": "integer",
+            "value": 1000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-GNOME_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-GNOME_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-GNOME_max_sales",
+            "type": "integer",
+            "value": 200
+        },
+        {
+            "key": "direct_cosmetic_ART-YETI",
+            "type": "integer",
+            "value": 200000000000
         }
 
     ],
