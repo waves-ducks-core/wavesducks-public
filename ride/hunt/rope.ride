@@ -88,7 +88,7 @@ func useBooster()={
   strict validPayment = checkAdditionalPayment(i.payments[0],getIntegerValue(getOracle(),staticKey_extraFee()))
   if !(size(i.payments) == 2 && i.payments[1].amount==1) then throw("Invalid payment") else 
   let assetId = i.payments[1].assetId.value()
-  strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+  strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).exactAs[String]
   [
       Burn(assetId,1),
       StringEntry(boosterIdKey(boosterType, i.caller.toString(),height),assetId.toBase58String())

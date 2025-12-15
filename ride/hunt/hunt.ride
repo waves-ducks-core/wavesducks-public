@@ -247,7 +247,7 @@ func buyAccessItemAndLockDuck()={
   let addressStr = i.originCaller.toString()
   if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
-  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).asString()
+  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).exactAs[String]
   strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),eggPayment.amount)])
   strict validPayment = if i.caller == getRentingAddress() then [] else  checkAdditionalPayment(i.payments[2])
   let lockData = lockDuckInternal(addressStr, addressStr,duckPayment)++validPayment
@@ -261,7 +261,7 @@ func buyAccessItem() = {
   let eggPayment = i.payments[0].value()
   if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached "+ getAccessItemAssetId().toBase58String())} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
-  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).asString()
+  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressStr], []).exactAs[String]
   strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),eggPayment.amount)])
   strict validPayment = if i.caller == getRentingAddress() then [] else checkAdditionalPayment(i.payments[1])
 
@@ -274,7 +274,7 @@ func buyAccessItemOther(addressOther: String) = {
   let eggPayment = i.payments[0].value()
   if (eggPayment.assetId != getAccessItemAssetId()) then {throw("3BAI: Wrong asset attached")} else 
   if (eggPayment.amount != getAccessItemPrice()) then {throw("3BAI: Wrong amount of assets attached")} else
-  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressOther], []).asString()
+  strict accessItemData = invoke(this, "buyAccessItemInternal", [addressOther], []).exactAs[String]
   strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),eggPayment.amount)])
   ([], accessItemData)
 
