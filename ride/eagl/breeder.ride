@@ -203,7 +203,7 @@ func getGen(assetName: String) = {
 }
 
 func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector, asset: Issue)= {
-  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).exactAs[String]
   let amount = tryGetInteger(getStatsKey(duckGen))
   let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
   [
@@ -295,7 +295,7 @@ func createSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
   let duckIdKey = getIdKey(i.caller.toString(), txId)
 
   #TODO: work around for known issue dapp to dapp
-  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).asString()
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).exactAs[String]
   composeGenericData(duckGen,duckIdKey,assetId,asset)++
   [
     IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
@@ -324,7 +324,7 @@ func copyNFT()= {
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   strict children = invoke(this,"validateAndGetChildren",[firstAssetId],[]).exactAs[Int]
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).asString()
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).exactAs[String]
   if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
   let nftInfo = assetInfo(firstPayment.assetId.value()).value()
   let asset1Gen = nftInfo.name.split("")        
@@ -399,7 +399,7 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
   if parentFixedGene != 1 && parentFixedGene != 2 then throw("FG: Parent fixed gene can be only 1 or 2") else
   let firstPayment = i.payments[0].value()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).asString()
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).exactAs[String]
   if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
   finishHatchingInternal(txIdStr,i,parentFixedGene,positionFixedGene,"",0)
   ++feeValidate
@@ -414,7 +414,7 @@ func freeGene(txIdStr: String) = {
   strict feeValidate = checkAdditionalPayment(i.payments[1])
   let firstPayment = i.payments[0].value()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).asString()
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).exactAs[String]
   if artefact != "ART-FREEGENE" then  throw("You need to attach a ART-FREEGENE artefact") else
 
   let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txIdStr.fromBase58String())

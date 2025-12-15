@@ -22,23 +22,13 @@ func tryGetString(key: String) = {
 }
 
 
-func asBoolean(value: Any) = match value {
-  case boolean: Boolean => boolean
-  case _ => throw("FAB: wrong type, expected: Boolean")
-}
-
 func getBool(key: String) = {
   match getBoolean(this, key) {
       case b:Boolean => b
       case _ => false
   }
 }
-func asString(value: Any) = match value {
-  case s: String => s
-  case s: Int => throw("wrong type, expected: String, got: Int")
-  case s: Unit => throw("wrong type, expected: String, got: Unit")
-  case _ => throw("wrong type, expected: String")
-}
+
 func isTestEnv()={
   getBool("TESTENV")
 }
@@ -110,14 +100,6 @@ func getRandomNumber(options: Int, txId: ByteVector, hatchingFinishHeight: Int, 
   randomHash.toInt(offset*8) % options
 }
 
-func tryGetBoolean(key: String) = {
-    match getBoolean(key) {
-        case b:Boolean => b
-        case _ => false
-    }
-
-}
-
 func wasUniqueBorn(gen: String) = {
   func getEAGLStatsKey(genString: String) = {
   "stats_" + genString + "_amount"
@@ -126,8 +108,8 @@ func wasUniqueBorn(gen: String) = {
 }
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
-  #let jackpotRandom = getRandomNumber(40, tx, finishHeight, 1)
-  #if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCAESAR-JU") < 2) then { (jackpotRandom,"jackpot") } else 
+  let jackpotRandom = getRandomNumber(40, tx, finishHeight, 1)
+  if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWESANTA-JU") < 4) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
@@ -150,7 +132,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
 }
 func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   let n = getRandomNumber(2, tx, finishHeight, 1)
-  if n == 0 then true else false
+  if n == 1 then true else false
 }
 
 func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment,
@@ -178,13 +160,13 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         let color = win.takeRight(1)
         strict call = if !double then 
               strict first = invoke(getEagleStakingAddress(), "addFreePerch", [address, color,1], [])
-              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
             else
               strict first = invoke(getEagleStakingAddress(), "addFreePerch", [address, color,2], [])
                             #TODO; use a batch method 
                 [
-                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.exactAs[String]),
                   StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
                 ]
         call
@@ -193,31 +175,31 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         let color = win.takeRight(1)
         strict call = if !double then 
               strict first = invoke(getVeggFarmingAddress(), "addFreePerch", [address, color,1], [])
-              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
             else
               strict first = invoke(getVeggFarmingAddress(), "addFreePerch", [address, color,2], [])
                             #TODO; use a batch method 
                 [
-                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.exactAs[String]),
                   StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
                 ]
         call
 
       } else if (win == "jackpot") then {
-        strict call = invoke(getEagleIncubatorAddress(), "issueJackpot", [address, txId, "WWCAESAR"], []) 
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.asString())]
+        strict call = invoke(getEagleIncubatorAddress(), "issueJackpot", [address, txId, "WWWMUMMY"], []) 
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])]
       #TODO: turn into issueFreeCanine, on double, issue free turtle aswell
       } else if (win == "incubator") then {
         strict call = if !double then 
             strict first =invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
-            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
           else 
             strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
             strict second = invoke(getFelineIncubatorAddress(), "issueFree", [address, txId], [])
             [
-              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
               StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "incubator")
             ]
 
@@ -226,13 +208,13 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       } else if (win == "feli_incubator") then {
         strict call = if !double then 
             strict first = invoke(getFelineIncubatorAddress(), "issueFree", [address, txId], [])
-            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
           else 
             strict first = invoke(getFelineIncubatorAddress(), "issueFree", [address, txId], [])
             strict second = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
             [
-              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
               StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "feli_incubator")
             ]
         call
@@ -241,14 +223,14 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         let itemName = win.split("!")[1]
         strict call = if !double then 
                 strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
-                [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString())]
+                [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
 
             else 
                 strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
                 strict second = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,1], [])
                 [
-                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.asString()),
-                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.asString()),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
                   StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
                 ]
           call
@@ -259,17 +241,24 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       let returnPayload = if returnToSender then
         let assetId = getStringValue("address_" + address + "_initTx_" + initTx + "_assetId").fromBase58String()
         let issuer = checkReal(assetId)   
-        strict gen = invoke(getEagleBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
+        strict gen = invoke(getEagleBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).exactAs[String]  
         strict call = invoke(issuer, "increaseRarity", [assetId.toBase58String(), gen], [])
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
-
+      let bonusOutput = if (random %10 ==0) then
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-CNDY",address,0],[])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)]
+      else
+        [
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
+        ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment++returnPayload
+      ]++validPayment++returnPayload++bonusOutput
     }
   }
 }
@@ -307,7 +296,7 @@ func initRebirth() = {
 
    
   let issuer = checkReal(assetId)
-  strict gen = invoke(getEagleBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).asString()  
+  strict gen = invoke(getEagleBreederAddress(),"getGenFromName",[assetInfo(assetId).value().name],[]).exactAs[String] 
   strict call = invoke(issuer, "reduceRarity", [assetId.toBase58String(), gen], [])
 
   [
@@ -332,7 +321,7 @@ func finishRebirthDouble(initTx: String) = {
   #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
   if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
     let assetId = i.payments[0].assetId.value()
-    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).exactAs[String]
     if boosterType == "ART-GIFT_DOUBL" then 
       [
         Burn(assetId,1)
@@ -347,7 +336,7 @@ func finishRebirthItem(initTx: String, itemCode: String) = {
   #TODO CHECK IF ITEM IS ATTACHED, CHECK IT IN SC, AND THEN BURN ITEM
   if (size(i.payments) == 2 && i.payments[0].amount==1) then
     let assetId = i.payments[0].assetId.value()
-    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).asString()
+    strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).exactAs[String]
     #TODO CHANGE INTO CORRECT TYPE!!!!
     if boosterType == "ART-HWERASE" then 
       [

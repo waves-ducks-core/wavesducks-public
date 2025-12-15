@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 func getBool(key: String) = {
@@ -6,13 +6,6 @@ func getBool(key: String) = {
       case b:Boolean => b
       case _ => false
   }
-}
-
-func asString(value: Any) = match value {
-  case s: String => s
-  case s: Int => throw("wrong type, expected: String, got: Int")
-  case s: Unit => throw("wrong type, expected: String, got: Unit")
-  case _ => throw("wrong type, expected: String")
 }
 
 func isTestEnv()={
@@ -37,6 +30,7 @@ func staticKey_eaglRebirthAddress() = "static_eagleRebirthAddress"
 func staticKey_eaglFarmingAddress() = "static_eagleStakingAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_puzzleAssetId() = "static_puzzleAssetId"
+func staticKey_rebirthAddress() = "static_rebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -44,6 +38,7 @@ func getMintAssetId() = tryGetStringExternal(getOracle(),staticKey_puzzleAssetId
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getEaglRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_eaglRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getDuckRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getEaglFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_eaglFarmingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
@@ -125,10 +120,10 @@ func wasUniqueBorn(gen: String) = {
 }
 
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
-  #let jackpotRandom = getRandomNumber(50, txId, hatchingFinishHeight, 1)
-  #let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
-  #if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWCAESAR-JU") < 2) then ("EAGL-WWCAESAR-JU", "2A1C1E1R1S2W-J")
-  #else 
+  let jackpotRandom = getRandomNumber(40, txId, hatchingFinishHeight, 1)
+  let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
+  if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWESANTA-JU") < 4) then ("EAGL-WWESANTA-JU", "2A1E1N1S1T2W-J")
+  else 
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
     let color = getElement(["A","B","C","D"],colorRandom)
 
@@ -237,8 +232,8 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 
 @Callable(i)
 func issueFree(address: String, txIdStr: String) = {
-  if (i.caller != getEaglRebirthAddress()) then {
-    throw("CIF: rebirth only")
+  if (i.caller != getEaglRebirthAddress() && i.caller != getDuckRebirthAddress()) then {
+    throw("EIF: rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
     let hatchingStatusKey = getHatchingStatusKey(address, txId)
@@ -300,11 +295,11 @@ func startHatching(refererAddress: String) = {
 
     let firstPayment = i.payments[1].value()
     let leftToPay = 
-    #if size(i.payments) == 3 then {
-    #      strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).asString()
-    #      if (boosterType == "ART-CANCPN") then  eggsNeeded/100* 85 else 100
+    if size(i.payments) == 3 then {
+          strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).exactAs[String]
+          if (boosterType == "ART-EAGLCPN") then  eggsNeeded/100* 80 else 100
 
-    #      }else 
+          }else 
             eggsNeeded
     if (firstPayment.assetId != getMintAssetId()) then throw("TB: You can attach only Puzzle") else 
     if (firstPayment.amount < leftToPay) then throw("TB: To breed a Eagle you following amount of Puzzle: " + leftToPay.toString()+ " "+i.caller.toString()) else
