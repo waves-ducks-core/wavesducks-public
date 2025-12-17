@@ -109,6 +109,9 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
   randomHash.toInt(offset) % variants
 }
 
+
+
+
 func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int,geneFromParent: Int, genePostion: Int,
 specifiqueGene: String, specifiqueGenePosition: Int) = {
   if geneFromParent != 0 && genePostion==step then{ 
@@ -202,14 +205,7 @@ func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
 }
 
-func getGen(assetName: String) = {
-  # getGen("TRTL-ABCDDCBA-GY") -> 2A2B2C2D-G
-  let genotype = assetName.drop(5).dropRight(3).split("")
-  let generation = assetName.split("")[14]
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E")+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H")+ getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I")
-}
+
 
 func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
       parentFixedGene: Int,positionFixedGene: Int,
@@ -229,7 +225,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
       let TRTLGen = generateTRTL(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
-      let farmGen = getGen(TRTLGen)
+      strict farmGen = invoke(this,"getGenFromName",[TRTLGen],[]).exactAs[String]
       let description = "{\"genotype\": \"" + TRTLGen + "\", \"crossbreeding\": true}"
 
       let asset = Issue(TRTLGen, description, 1, 0, false, unit, processFinishHeight)
@@ -254,6 +250,20 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
       ]
     }
+}
+
+@Callable(i)
+func getGenFromName(assetName: String) = {
+  # getGen("TRTL-ABCDDCBA-GY") -> 2A2B2C2D-G
+  let genotype = assetName.drop(5).dropRight(3).split("")
+  let generation = assetName.split("")[14]
+  let gen = getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E")+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H")+ getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolI)) + "I")
+      (
+    [],
+    gen
+    )
 }
 
 @Callable(i)
@@ -328,7 +338,7 @@ func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = 
   if parentFixedGene != 1 && parentFixedGene != 2 then throw("FG: Parent fixed gene can be only 1 or 2") else
   let firstPayment = i.payments[0].value()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).asString()
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).exactAs[String]
   if artefact != "ART-FIXGENE" then  throw("You need to attach a ART-FIXGENE artefact") else
   finishTRTLHatchingInternal(txIdStr,i,parentFixedGene,positionFixedGene,"",0)
   ++feeValidate
@@ -343,7 +353,7 @@ func freeGene(txIdStr: String) = {
   strict feeValidate = checkAdditionalPayment(i.payments[1])
   let firstPayment = i.payments[0].value()
   if firstPayment.amount != 1 then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).asString()
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[firstPayment.assetId.value().toBase58String()],[]).exactAs[String]
   if artefact != "ART-FREEGENE" then  throw("You need to attach a ART-FREEGENE artefact") else
 
   let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txIdStr.fromBase58String())
