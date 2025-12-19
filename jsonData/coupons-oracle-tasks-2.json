@@ -313,87 +313,127 @@
             "value": "Compra un artículo/tortuga/pato por valor de 5 $WAVES en 7 días seguidos y recibe {{reward}} $SPICE"
         },
         {
-            "key": "TASK_LEVELUP_30",
+            "key": "TASK_LEVELUP_EVERY",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "TASK_LEVELUP_30_TEXT_WEEKLY_RU",
+            "key": "TASK_LEVELUP_EVERY_TEXT_WEEKLY_RU",
             "type": "string",
             "value": "Повышайте уровень вашего дерева навыков в течение 7 дней подряд и получайте {{reward}} $SPICE!"
         },
         {
-            "key": "TASK_LEVELUP_30_TEXT_DAILY_EN",
+            "key": "TASK_LEVELUP_EVERY_TEXT_DAILY_EN",
             "type": "string",
             "value": "Level up your skill tree and receive {{reward}} $SPICE for each level!"
         },
         {
-            "key": "TASK_LEVELUP_30_TEXT_DAILY_ES",
+            "key": "TASK_LEVELUP_EVERY_TEXT_DAILY_ES",
             "type": "string",
             "value": "¡Sube de nivel tu árbol de habilidades y recibe {{reward}} $SPICE por cada nivel!"
         },
         {
-            "key": "TASK_LEVELUP_30_TEXT_WEEKLY_ES",
+            "key": "TASK_LEVELUP_EVERY_TEXT_WEEKLY_ES",
             "type": "string",
             "value": "Sube de nivel tu árbol de habilidades durante 7 días seguidos y recibe {{reward}} $SPICE!"
         },
         {
-            "key": "TASK_LEVELUP_30_TEXT_WEEKLY_EN",
+            "key": "TASK_LEVELUP_EVERY_TEXT_WEEKLY_EN",
             "type": "string",
             "value": "Level up your skill tree for 7 days in a row and receive {{reward}} $SPICE!"
         },
         {
-            "key": "TASK_LEVELUP_30_TEXT_DAILY_RU",
+            "key": "TASK_LEVELUP_EVERY_TEXT_DAILY_RU",
             "type": "string",
             "value": "Повышайте уровень вашего дерева навыков и получайте {{reward}} $SPICE за каждый уровень!"
         },
         {
-            "key": "TASK_LEVELUP_30_REWARD_DAILY",
+            "key": "TASK_LEVELUP_EVERY_REWARD_DAILY",
             "type": "integer",
             "value": 500000000
         },
         {
-            "key": "TASK_LEVELUP_30_REWARD_WEEKLY",
+            "key": "TASK_LEVELUP_EVERY_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 2000000000
+        },
+            {
+        "key": "TASK_WEARITEM_1_REWARD_WEEKLY",
+        "type": "integer",
+        "value": 2000000000
+    },
+    {
+        "key": "TASK_WEARITEM_1_TEXT_WEEKLY_RU",
+        "type": "string",
+        "value": "Наденьте 1 предмет 7 дней подряд и получите {{reward}} $SPICE"
+    },
+    {
+        "key": "TASK_WEARITEM_1_TEXT_DAILY_ES",
+        "type": "string",
+        "value": "Usa 1 artículo y recibe {{reward}} $SPICE"
+    },
+    {
+        "key": "TASK_WEARITEM_1",
+        "type": "boolean",
+        "value": true
+    },
+    {
+        "key": "TASK_WEARITEM_1_TEXT_DAILY_EN",
+        "type": "string",
+        "value": "Wear 1 item and receive {{reward}} $SPICE"
+    },
+    {
+        "key": "TASK_WEARITEM_1_TEXT_WEEKLY_ES",
+        "type": "string",
+        "value": "Usa 1 artículo 7 días seguidos y recibe {{reward}} $SPICE"
+    },
+    {
+        "key": "TASK_WEARITEM_1_REWARD_DAILY",
+        "type": "integer",
+        "value": 500000000
+    },
+    {
+        "key": "TASK_WEARITEM_1_TEXT_DAILY_RU",
+        "type": "string",
+        "value": "Наденьте 1 предмет и получите {{reward}} $SPICE"
+    },
+        {
+            "key": "TASK_WEARITEM_5_REWARD_WEEKLY",
             "type": "integer",
             "value": 2000000000
         },
         {
-            "key": "TASK_WEARITEM_1_REWARD_WEEKLY",
-            "type": "integer",
-            "value": 2000000000
-        },
-        {
-            "key": "TASK_WEARITEM_1_TEXT_WEEKLY_RU",
+            "key": "TASK_WEARITEM_5_TEXT_WEEKLY_RU",
             "type": "string",
             "value": "Наденьте 5 предметов 7 дней подряд и получите {{reward}} $SPICE"
         },
         {
-            "key": "TASK_WEARITEM_1_TEXT_DAILY_ES",
+            "key": "TASK_WEARITEM_5_TEXT_DAILY_ES",
             "type": "string",
             "value": "Usa 5 artículos y recibe {{reward}} $SPICE"
         },
         {
-            "key": "TASK_WEARITEM_1",
+            "key": "TASK_WEARITEM_5",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "TASK_WEARITEM_1_TEXT_DAILY_EN",
+            "key": "TASK_WEARITEM_5_TEXT_DAILY_EN",
             "type": "string",
             "value": "Wear 5 items and receive {{reward}} $SPICE"
         },
         {
-            "key": "TASK_WEARITEM_1_TEXT_WEEKLY_ES",
+            "key": "TASK_WEARITEM_5_TEXT_WEEKLY_ES",
             "type": "string",
             "value": "Usa 5 artículos 7 días seguidos y recibe {{reward}} $SPICE"
         },
         {
-            "key": "TASK_WEARITEM_1_REWARD_DAILY",
+            "key": "TASK_WEARITEM_5_REWARD_DAILY",
             "type": "integer",
             "value": 500000000
         },
         {
-            "key": "TASK_WEARITEM_1_TEXT_DAILY_RU",
+            "key": "TASK_WEARITEM_5_TEXT_DAILY_RU",
             "type": "string",
             "value": "Наденьте 5 предметов и получите {{reward}} $SPICE"
         },
