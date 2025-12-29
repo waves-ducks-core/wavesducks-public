@@ -329,17 +329,34 @@ func claimReward (assetId: String) = {
   }
 
 @Callable(i)
+func updateFarmingPowerCallable (assetId: String) = {
+  let owner = tryGetString(assetId+"_owner")   
+  let fpUpdate = updateFarmingPower(owner, assetId)
+  fpUpdate
+}
+
+@Callable(i)
+func int_wear_mantle(assetId: String,mantleId:String)={
+  if i.caller != this then throw("admin only") else
+  [
+    BooleanEntry("mantle_equipped_" + mantleId, true),
+    StringEntry(assetId+"_mantleId", mantleId)
+  ]
+
+}
+
+@Callable(i)
 func wearMantle (assetId: String, mantleId: String) = {
   func keyOnlyArtefactLevel(artefactId: String) = {
   "artefactId_" + artefactId + "_level"
   }
   func keyArtefactOwnerAndStatus(type: String, owner: String, artefactId: ByteVector) = {
   "address_" + owner + "_artefact_" + type + "_artefactId_" + artefactId.toBase58String() + "_status"
-}
+  }
 
-func keyArtefactStatus(type: String, artefactId: ByteVector) = {
+  func keyArtefactStatus(type: String, artefactId: ByteVector) = {
   "artefact_ " + type + "_artefactId_" + artefactId.toBase58String() + "_status"
-}
+  }
   strict validPayment = checkAdditionalPayment(i.payments[0])
   if tryGetString(assetId+"_owner") != i.caller.toString() then throw("You don't own this duck!!") else
   if tryGetString(assetId+"_mantleId") != "" then throw("You already have a mantle equipped!") else    
@@ -350,11 +367,9 @@ func keyArtefactStatus(type: String, artefactId: ByteVector) = {
   if tryGetStringExternal(getGameDappAddress(),keyArtefactOwnerAndStatus("mantle", i.caller.toString(), mantleId.fromBase58String())) != "FREE" then throw("You already have this mantle equipped!") else
   if tryGetStringExternal(getGameDappAddress(),keyArtefactStatus("mantle", mantleId.fromBase58String())) != "FREE" then throw("This mantle is not free!") else  
   strict invokeRes = invoke(getGameDappAddress(), "changeMantleStatus", [mantleId,"OCCUPIED",i.caller.toString()], [])
+  strict int_wear_mantle_res = invoke(this, "int_wear_mantle", [assetId, mantleId], [])
   let fpUpdate = updateFarmingPower(i.caller.toString(), assetId)
-  [
-    BooleanEntry("mantle_equipped_" + mantleId, true),
-    StringEntry(assetId+"_mantleId", mantleId)
-  ]++fpUpdate++validPayment
+  fpUpdate++validPayment
 }
 
 @Verifier(tx)

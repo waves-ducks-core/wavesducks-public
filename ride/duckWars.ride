@@ -112,7 +112,7 @@ func keyArtefactNftId(artefactId: ByteVector)={
 func isJackpot(assetId: ByteVector ) = assetInfo(assetId).value().name.value().takeRight(1) == "U"
 
 
-func upgradeMantleFunc(i: Invocation, artefactId: String, amount: Int) = {
+func upgradeMantleFunc(i: Invocation, artefactId: String, amount: Int, assetId: String) = {
     let kMantleExists = keyArtefactExists(MANTLENAME, artefactId.fromBase58String())
     let kMantleOwner = keyArtefactOwner(MANTLENAME, artefactId.fromBase58String())
 
@@ -131,6 +131,13 @@ func upgradeMantleFunc(i: Invocation, artefactId: String, amount: Int) = {
       let totalInvested = mantleAlreadyInvested + amount
       let newLevel = (10 * pow(totalInvested, 8, 6, 1, 8, HALFUP) + 100000000) / 100000000
       if newLevel >= 340 then throw("DUMF: You reached the max level! Max level is 340!") else
+      let status = getStringValue( keyArtefactStatus(MANTLENAME, artefactId.fromBase58String()) )
+      strict extraCall = if status == STATUSOCCUPIED then
+                          if assetId== "" then throw("WUM: assetId must be provided when mantle is worn by a duck") else
+                        invoke(getVeggFarmingAddress(),"updateFarmingPowerCallable",[assetId],[])
+                      else
+                        if assetId != "" then throw("WUM: assetId must be empty when mantle is not worn by a duck "+status+" "+artefactId) else
+                        nil
       [
         IntegerEntry(kMantleLevel, newLevel),
         IntegerEntry(kMantleInvested, totalInvested),
@@ -225,19 +232,19 @@ func buyArtefact(type: String) = {
 }
 
 @Callable(i)
-func upgradeMantle(artefactId: String) = {
+func upgradeMantle(artefactId: String, assetId: String) = {
   let upgradePointPrice = 1_000_000
   let firstPayment = i.payments[0].value()
   let amount = firstPayment.amount
   if (firstPayment.assetId != getEggAssetId()) then throw("WUM: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String())
   else if (firstPayment.amount < upgradePointPrice) then throw("WUM: Minimal payment for upgrading mantle is: " + upgradePointPrice.toString())
   else {
-      upgradeMantleFunc(i,artefactId,amount)
+      upgradeMantleFunc(i,artefactId,amount, assetId)
   }
 }
 
 @Callable(i)
-func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
+func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int, assetId: String) = {
   let upgradePointPrice = 1_000_000
   let amount = if size(i.payments)==1 then {
       let firstPayment = i.payments[0].value()
@@ -251,7 +258,7 @@ func upgradeMantleByCoupons(artefactId: String, couponsAmount: Int) = {
   else {
       strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[couponsAmount],[]).exactAs[Int]
       if couponsAmount != amountPaidByCoupons then throw("WUMBC: Not enough coupons! Please make sure to pick lower coupon amount!") else
-      upgradeMantleFunc(i,artefactId,couponsAmount+amount)
+      upgradeMantleFunc(i,artefactId,couponsAmount+amount, assetId)
   }
 }
 
