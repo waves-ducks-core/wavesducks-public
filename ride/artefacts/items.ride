@@ -45,6 +45,8 @@ func key_startTsCosmetic(item:String) = "direct_cosmetic_"+item+"_startTs"
 func key_endTsCosmetic(item:String) = "direct_cosmetic_"+item+"_endTs"
 func key_processFinishHeight(address: String, txId: ByteVector) = address + "_" + txId.toBase58String() +  "_fh"
 func staticKey_couponsAddress() = "static_couponsAddress"
+func last_height_key() = "last_height_processed"
+func last_height_key_receiver(receiver: String) = "last_height_processed_" + receiver
 
 #TODO: CONVERT THIS TO STORE 
 let allArtefact = [
@@ -631,6 +633,7 @@ func preInit() = {
 
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
+  if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress() 
   
@@ -641,13 +644,22 @@ func issueArtefact(type: String, receiver: String) = {
               && !type.contains("ART-FIRE_") 
               && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let address = Address(fromBase58String(receiver))
+    let lastHeight = tryGetInteger(last_height_key())
+    let lastHeightUser = tryGetInteger(last_height_key_receiver(receiver))
+    if (lastHeight+3 > height || lastHeightUser+10 > height) && !isTestEnv() then throw("Too early to issue artefact again") else
 
-    issueItem(type,0,address)
+    let res = issueItem(type,0,address)
+    (res._1++
+    [
+      IntegerEntry(last_height_key(), height),
+      IntegerEntry(last_height_key_receiver(receiver), height)
+    ], res._2)
   
 }
 
 @Callable(i)
 func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
+  if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getMutantIncubatorAddress()
   && i.caller != getEagleRebirthAddress()
@@ -661,9 +673,15 @@ func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let address = Address(fromBase58String(receiver))
 
-    let issueResult = issueItem(type,nonce,address)
-
-    issueResult
+    let res = issueItem(type,nonce,address)
+    let lastHeight = tryGetInteger(last_height_key())
+    let lastHeightUser = tryGetInteger(last_height_key_receiver(receiver))
+    if (lastHeight+3 > height || lastHeightUser+10 > height) && !isTestEnv() then throw("Too early to issue artefact again") else
+    (res._1++
+    [
+      IntegerEntry(last_height_key(), height),
+      IntegerEntry(last_height_key_receiver(receiver), height)
+    ], res._2)
   
 }
 
@@ -697,7 +715,14 @@ if i.caller != addressFromStringValue(tryGetStringExternal(getOracle(),staticKey
 @Verifier(tx)
 func verify() = {
   if isTestEnv() then 
+      match (tx) {
+      case inv:SetScriptTransaction => {
+        let admin = base58'CDrmZxBvy2FzqKNtVWQbURJzLnG44gBZjFqKKU33xdf9'
+        sigVerify(tx.bodyBytes, tx.proofs[0], admin)
+      }
+      case _ =>
       sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+      }
   else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
     let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
