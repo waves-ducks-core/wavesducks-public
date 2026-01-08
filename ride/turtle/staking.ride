@@ -182,8 +182,8 @@ func calculateFarmPower(assetId:String)={
 func addFreeBeach(address: String, color: String) = {
   if (["R", "D", "S", "G"].indexOf(color).value() < 0) then {
     throw("you need to set color properly")
-  } else if (i.caller != getTurtleRebirthAddress() && i.caller != this ) then {
-    throw("rebirth and swop promo only")
+  } else if (i.caller != getTurtleRebirthAddress() && i.caller != this && i.caller != getCouponsAddress() ) then {
+    throw("SAFB: rebirth and swop promo only")
   } else {
     let perchAmountKey = "address_" + address + "_beachesAvailable_" + color
     let perchAmount = tryGetInteger(perchAmountKey)
@@ -326,6 +326,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 } 

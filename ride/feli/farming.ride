@@ -103,6 +103,18 @@ func handleStakingTopUp (totalAmount: Int) = {
       
 }
 
+func handleStakingTopUpSpecial(totalAmount: Int)={
+    let currentInterest = tryGetInteger(keyGlobalLastInterest)
+    let totalStakedAmount = tryGetInteger(totalStakedKey())
+    let interestDelta = if (totalStakedAmount > 0)
+        then fraction(totalAmount, Scale, totalStakedAmount)
+        else 0
+    [
+      IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + totalAmount)), 
+      IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta))
+    ]
+}
+
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -138,7 +150,7 @@ func getAssetRarityComplete(isJackpot: Boolean, assetName: String)={
   let rarity = if isJackpot then 100 else{
       
       let generation = assetName.takeRight(2).take(1)
-      strict farmGen = invoke(getBreederAddress(),"getGenFromName",[assetName],[]).asString()
+      strict farmGen = invoke(getBreederAddress(),"getGenFromName",[assetName],[]).exactAs[String]
 
       getAssetRarity(farmGen, generation)
     }
@@ -279,7 +291,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
 func addFreePerch(address: String, color: String, amount: Int) = {
   if (["A", "B", "C", "D"].indexOf(color).value() < 0) then {
     throw("you need to set color properly")
-  } else if (i.caller != this && i.caller != getFelineRebirthAddress() ) then {
+  } else if (i.caller != this && i.caller != getFelineRebirthAddress()  && i.caller != getCouponsAddress() ) then {
     throw("rebirth and admin only")
   } else {
     let perchAmountKey = "address_" + address + "_perchesAvailable_" + color
@@ -364,6 +376,19 @@ func topUpReward () = {
   strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
         ["PETE",0], [AttachedPayment(getPeteAssetId(), amountForMutants)]) 
   let resHandleStaking = handleStakingTopUp(firstPayment.amount-amountForMutants) 
+    (
+      resHandleStaking, 
+      true
+    )
+
+}
+
+@Callable(i)
+func topUpRewardSpecial () = {
+  let firstPayment = i.payments[0].value()
+  if (firstPayment.assetId != getPeteAssetId()) then throw("FBP: You can attach only"+ getPeteAssetId().toBase58String()) else
+  let amountForMutants = firstPayment.amount/20
+  let resHandleStaking = handleStakingTopUpSpecial(firstPayment.amount) 
     (
       resHandleStaking, 
       true

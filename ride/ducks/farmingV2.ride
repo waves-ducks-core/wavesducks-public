@@ -207,7 +207,6 @@ func isProxyStakingSc(address: String)={
   allowedContractsList.indexOf(address) !=unit
 }
 
-
 #TODO: count userfarmingboosts, add in multiplier for rarity!
 @Callable(i)
 func calculateFarmPower(assetId:String, bonusAddress: String)={

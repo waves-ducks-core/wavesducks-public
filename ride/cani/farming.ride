@@ -300,7 +300,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
 func addFreePerch(address: String, color: String, amount: Int) = {
   if (["A", "B", "C", "D"].indexOf(color).value() < 0) then {
     throw("you need to set color properly")
-  } else if (i.caller != this  && i.caller != getCanieRebirthAddress()) then {
+  } else if (i.caller != this  && i.caller != getCanieRebirthAddress()  && i.caller != getCouponsAddress() ) then {
     throw("rebirth and admin only")
   } else {
     let perchAmountKey = "address_" + address + "_perchesAvailable_" + color
