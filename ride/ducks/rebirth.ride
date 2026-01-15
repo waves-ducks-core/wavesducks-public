@@ -17,6 +17,14 @@ func tryGetIntExternal(address: Address, key: String) = {
     }
 }
 
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
 func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
@@ -121,7 +129,7 @@ func wasUniqueBorn(gen: String) = {
   func getCaniStatsKey(genString: String) = {
   "stats_" + genString + "_amount"
 }
-  tryGetIntExternal(getIncubatorAddress(),getCaniStatsKey(gen))
+  tryGetIntegerExternal(getIncubatorAddress(),getCaniStatsKey(gen))
 }
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklistCode: String) = {
@@ -130,11 +138,11 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklist
   let phoenixOptions = if (assetRarity < 50)
     then 500 - ((250 * (assetRarity - 1)) / 49)
     else 250 - ((200 * (assetRarity - 50)) / 50)
-  #let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
-  #let result = if (jackpotRandom == 1) then { "phoenix" } else 
+  let jackpotRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
+  let result = if (jackpotRandom == 1) then { "phoenix" } else 
 
-  let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
-  let result = if (jackpotRandom == 1 && wasUniqueBorn("DUCK-WPBRDUCK-JU") < 4) then { "phoenix"} else 
+  #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
+  #let result = if (jackpotRandom == 1 && wasUniqueBorn("DUCK-WPBRDUCK-JU") < 4) then { "phoenix"} else 
     #Every % means 10 numbers
     
     if assetRarity < 50 then
@@ -228,8 +236,6 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
   strict validPayment = checkAdditionalPayment(additionalPayment)
   strict recordAction = invoke(getCouponsAddress(),"recordAction",["REBIRTH"],[])
-  func getAccessItemAssetId(address: Address) = tryGetStringExternal(address,"static_accessItemAssetId").fromBase58String()
-  func getAccessItemPrice(address: Address) = tryGetIntExternal(address,"static_accessItemPrice")
 
   if (status != "open") then {
     throw("rebirth is finished or not open")
@@ -321,11 +327,11 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                               StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "duckling_100")
                             ]
         result
-      }else if (win == "phoenix") then {
-        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WPBRDUCK"], []) 
-        [
-			StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])
-		]
+      #}else if (win == "phoenix") then {
+      #  strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
+      #  [
+			#StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])
+		#]
 
       } else if (win.indexOf("duckling") !=unit) then {
         let level = parseIntValue(win.split("_")[1])
@@ -363,21 +369,21 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         strict call = invoke(issuer, "increaseRarity", [assetId.toBase58String(), gen], [])
         [ScriptTransfer(address.addressFromStringValue(), 1,assetId)] 
       else []
-      let bonusOutput = if (random %10 ==0) then
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-CNDY",address,0],[])
-        [StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)]
-      else
-        [
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
-        ]
+      #let bonusOutput = if (random %10 ==0) then
+      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-CNDY",address,0],[])
+      #  [StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
+      #  IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)]
+      #else
+      #  [
+      #    IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
+      #  ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
         
-      ]++validPayment++returnPayload++bonusOutput
+      ]++validPayment++returnPayload#++bonusOutput
     }
   }
 }

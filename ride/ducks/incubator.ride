@@ -90,8 +90,8 @@ func wasUniqueBorn(gen: String) = {
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int) = {
   let jackpotRandom = getRandomNumber(200, txId, hatchingFinishHeight, 4)
   let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
-  if (jackpotRandom == 1 && wasUniqueBorn("DUCK-WPBRDUCK-JU") < 4) then ("DUCK-WPBRDUCK-JU", "1B1C1D1K1P1R1U1W-J",entry)
-  else 
+  #if (jackpotRandom == 1 && wasUniqueBorn("DUCK-WPBRDUCK-JU") < 4) then ("DUCK-WPBRDUCK-JU", "1B1C1D1K1P1R1U1W-J",entry)
+  #else 
     let typeRandom = getRandomNumber(4, txId, hatchingFinishHeight, 5)
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 6)
     let color = if (colorRandom == 0) then "Y"
@@ -403,7 +403,14 @@ func finishDuckHatchingAdmin(txIdStr: String, owner: String) = {
 @Verifier(tx)
 func verify() = {
   if isTestEnv() then 
+      match (tx) {
+      case inv:SetScriptTransaction => {
+        let admin = base58'CDrmZxBvy2FzqKNtVWQbURJzLnG44gBZjFqKKU33xdf9'
+        sigVerify(tx.bodyBytes, tx.proofs[0], admin)
+      }
+      case _ =>
       sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+      }
   else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
     let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'

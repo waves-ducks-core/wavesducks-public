@@ -25,6 +25,11 @@
             "key": "static_topUpDappAddress",
             "type": "string",
             "value": "3PFqCJBjiSVX2JePAdFyNtDpzi2tNsEQ6Kg"
+        },
+        {
+            "key": "static_stableAddress",
+            "type": "string",
+            "value": "3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh"
         }
     ],
     "fee": 700000,

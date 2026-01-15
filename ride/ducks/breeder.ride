@@ -360,6 +360,7 @@ func mintAndReplaceDuck(assetId: String) ={
 func generateDuck(txId: ByteVector, hatchingFinishHeight: Int, 
 geneFromParent: Int, genePostion: Int, 
 specifiqueGene: String, specifiqueGenePosition: Int) = {
+  if i.caller != this then throw("Go fuck urself") else
   let colorRandom = getRandomNumber(4, txId, hatchingFinishHeight, 11)
   let color = if (colorRandom == 0) then "Y"
     else if (colorRandom == 1) then "G" 
@@ -601,7 +602,14 @@ func reduceRarity(assetId: String, farmGen: String) = {
 @Verifier(tx)
 func verify() = {
   if isTestEnv() then 
+      match (tx) {
+      case inv:SetScriptTransaction => {
+        let admin = base58'CDrmZxBvy2FzqKNtVWQbURJzLnG44gBZjFqKKU33xdf9'
+        sigVerify(tx.bodyBytes, tx.proofs[0], admin)
+      }
+      case _ =>
       sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+      }
   else
     let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
     let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
