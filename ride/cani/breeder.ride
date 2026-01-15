@@ -210,6 +210,18 @@ func asString(value: Any) = match value {
   case string: String => string
   case _ => throw("wrong type, expected: String")
 }
+func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector, asset: Issue)= {
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).exactAs[String]
+  let amount = tryGetInteger(getStatsKey(duckGen))
+  let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
+  [
+    StringEntry(duckIdKey, assetId.toBase58String()),
+    StringEntry(assetId.toBase58String(), duckIdKey),
+    IntegerEntry(getStatsKey(duckGen), amount + 1),
+    IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
+    asset
+    ]
+}
 func finishHatchingInternal(txIdStr: String, i: Invocation,
       parentFixedGene: Int,positionFixedGene: Int,
       specifiqueGene: String, specifiqueGenePosition: Int)={
@@ -238,21 +250,72 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
       let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
-
-      [
+      strict recordAction = invoke(getCouponsAddress(),"recordAction",["BREEDCANINE"],[])
+      composeGenericData(Gen,IdKey,assetId,asset)++[
         StringEntry(processStatusKey, HatchingFinished),
-        StringEntry(IdKey, assetId.toBase58String()),
-        StringEntry(assetId.toBase58String(), IdKey),
-        IntegerEntry(getStatsKey(Gen), amount),
-        IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
-        asset,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
+ 
       ]
     }
+}
+
+
+
+@Callable(i)
+func createSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
+  if (i.caller != this) then throw("EBCSG: admin only") else
+  let txId = i.transactionId
+  let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+  let asset = Issue(duckGen, description, 1, 0, false)
+  let assetId = asset.calculateAssetId()
+  let duckIdKey = getIdKey(i.caller.toString(), txId)
+
+  #TODO: work around for known issue dapp to dapp
+  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).exactAs[String]
+  composeGenericData(duckGen,duckIdKey,assetId,asset)++
+  [
+    IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
+    ScriptTransfer(Address(address), 1, assetId)
+  ]
+  
+ }
+
+@Callable(i)
+func validateAndGetChildren(assetId: String) = {
+  if (!checkAssetInIncubator(assetId)) then throw("You need to attach a valid NFT-Eagle. "+assetId+" is invalid!") else
+  let children = tryGetInteger("asset_" + assetId + "_children")
+  (
+    []
+    ,
+    children
+  )
+
+}
+
+@Callable(i)
+func copyNFT()= {
+  let firstPayment = i.payments[0].value()
+  let secondPayment = i.payments[1].value()
+  let validPayment = checkAdditionalPayment(i.payments[2])
+  let firstAssetId = firstPayment.assetId.value().toBase58String()
+  strict children = invoke(this,"validateAndGetChildren",[firstAssetId],[]).exactAs[Int]
+  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
+  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).exactAs[String]
+  if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
+  let nftInfo = assetInfo(firstPayment.assetId.value()).value()
+  let asset1Gen = nftInfo.name.split("")        
+  if (asset1Gen[14] == "G" || asset1Gen[14] == "J" || asset1Gen[14] == "O" ) then  throw("You can't mirror this NFT") else
+    let duckGen = nftInfo.name
+    strict call = invoke(this, "createSpecialGenes", [i.caller.bytes, duckGen,children], [])
+    [
+      ScriptTransfer(i.caller, 1, firstPayment.assetId),
+      Burn(secondPayment.assetId.value(),1)
+    ]++validPayment
+
 }
 
 @Callable(i)
