@@ -122,8 +122,8 @@ func wasUniqueBorn(gen: String) = {
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
   let jackpotRandom = getRandomNumber(40, txId, hatchingFinishHeight, 1)
   let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
-  if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWESANTA-JU") < 4) then ("EAGL-WWESANTA-JU", "2A1E1N1S1T2W-J")
-  else 
+  #if (jackpotRandom == 1 && wasUniqueBorn("EAGL-WWESANTA-JU") < 4) then ("EAGL-WWESANTA-JU", "2A1E1N1S1T2W-J")
+  #else 
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
     let color = getElement(["A","B","C","D"],colorRandom)
 
@@ -305,7 +305,7 @@ func startHatching(refererAddress: String) = {
     if (firstPayment.amount < leftToPay) then throw("TB: To breed a Eagle you following amount of Puzzle: " + leftToPay.toString()+ " "+i.caller.toString()) else
     strict addMore = invoke(getEaglFarmingAddress(), "addPuzzleAndStakeMore", [], [AttachedPayment(getMintAssetId(), leftToPay)])
 
-    let refund = if size(i.payments) == 2 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getMintAssetId())] else []
+    let refund = if i.payments[1].amount - leftToPay > 0 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getMintAssetId())] else []
    
     results ++ refund++feeValidate
 
