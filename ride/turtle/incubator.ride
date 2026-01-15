@@ -110,7 +110,14 @@ func select(color: String)={
     (oldGenes++newGenes, newGenes)
 }
 
+func wasUniqueBorn(gen: String) = {
+  tryGetInteger(getStatsKey(gen))
+}
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
+  let jackpotRandom = getRandomNumber(200, txId, hatchingFinishHeight, 1)
+  let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
+  #if (jackpotRandom == 1 && wasUniqueBorn("TRTL-WXMSTREE-JU") < 4) then ("TRTL-WXMSTREE-JU", "2E1M1R1S1T1W1X-J")
+  #else 
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
     let color = getElement(["R","D","S","G"],colorRandom)
 
@@ -279,7 +286,7 @@ func startTRTLHatching(refererAddress: String) = {
         leftToPay
       }else 0
 
-      let refund = if size(i.payments) == 2 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getEggAssetId())] else []
+      let refund = if i.payments[1].amount - leftToPay > 0 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getEggAssetId())] else []
 
     
       results ++ refund++feeValidate

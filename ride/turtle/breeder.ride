@@ -235,7 +235,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
       let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let parent1Id = tryGetString(getTRTLParentKey(txId, 1))
       let parent2Id = tryGetString(getTRTLParentKey(txId, 2))
-
+      strict recordAction = invoke(getCouponsAddress(),"recordAction",["BREEDTURTLE"],[])
       [
         StringEntry(processStatusKey, HatchingFinished),
         StringEntry(TRTLIdKey, assetId.toBase58String()),
