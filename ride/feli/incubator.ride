@@ -119,7 +119,15 @@ func select(color: String)={
     ("FELI-DDDDDDDD-G" + color, "8D-G"),("FELI-EEEEEEEE-G" + color, "8E-G")]
     (oldGenes++newGenes, newGenes)
 }
+
+func wasUniqueBorn(gen: String) = {
+  tryGetInteger(getStatsKey(gen))
+}
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
+  let jackpotRandom = getRandomNumber(50, txId, hatchingFinishHeight, 1)
+  let entry = IntegerEntry("last_jackpot_random", jackpotRandom)
+  #if (jackpotRandom == 1 && wasUniqueBorn("FELI-WWXMSELF-JU") < 4) then ("FELI-WWXMSELF-JU", "1E1F1L1M1S2W1X-J")
+  #else 
     let colorRandom = getRandomNumber(4,  txId, hatchingFinishHeight, 1)
     let color = getElement(["A","B","C","D"],colorRandom)
 
@@ -289,7 +297,7 @@ func startHatching(refererAddress: String) = {
 
     let firstPayment = i.payments[1].value()
     let leftToPay = if size(i.payments) == 3 then {
-          strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).asString()
+          strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).exactAs[String]
           if (boosterType == "ART-FELCPN") then  eggsNeeded/100* 85 else 100
 
           }else 
@@ -298,7 +306,7 @@ func startHatching(refererAddress: String) = {
     if (firstPayment.amount < leftToPay) then throw("TB: To breed a Feline you following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
     strict addMore = invoke(getFelineStakingAddress(), "addPeteAndStakeMore", [], [AttachedPayment(getPeteAssetId(), leftToPay)])
 
-    let refund = if size(i.payments) == 2 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getPeteAssetId())] else []
+    let refund = if i.payments[1].amount - leftToPay > 0 then [ScriptTransfer(i.caller, i.payments[1].amount - leftToPay, getPeteAssetId())] else []
 
       results ++ refund++feeValidate
 
