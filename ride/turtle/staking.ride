@@ -1,6 +1,15 @@
 {-# STDLIB_VERSION 5 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
+
+let startTsMs = 1747612799000
+
+func calculateDaysSinceStart()={
+  let diff = lastBlock.timestamp-startTsMs
+  let daysPassed = diff/ (86400 *1000)
+  daysPassed
+}
+
 func isTestEnv()={
     let testenv =  match getBoolean(this, "TESTENV") {
       case x: Boolean => x
@@ -87,12 +96,17 @@ func claimStakingResult (address: Address) = {
     }
 
 func handleStakingTopUp (amount: Int) = {
+    func burnForDay(day: Int)= "TOPUP_"+day.toString()
+    let day = calculateDaysSinceStart()
+
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let totalStakedAmount = tryGetInteger(totalStakedKey())
     let interestDelta = if (totalStakedAmount > 0)
         then fraction(amount, Scale, totalStakedAmount)
         else 0
     [
+      IntegerEntry("days_since_apy", day),
+      IntegerEntry(burnForDay(day), tryGetInteger(burnForDay(day))+amount),
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + amount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta))
       

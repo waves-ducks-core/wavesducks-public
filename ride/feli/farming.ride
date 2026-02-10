@@ -2,6 +2,14 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+let startTsMs = 1747612799000
+
+func calculateDaysSinceStart()={
+  let diff = lastBlock.timestamp-startTsMs
+  let daysPassed = diff/ (86400 *1000)
+  daysPassed
+}
+
 let Scale = 100000000
 
 func tryGetStringExternal(address: Address, key: String) = {
@@ -84,6 +92,9 @@ func tryGetInteger(key: String) = {
 }
 
 func handleStakingTopUp (totalAmount: Int) = {
+    func burnForDay(day: Int)= "TOPUP_"+day.toString()
+    let day = calculateDaysSinceStart()
+
     let team = totalAmount/12
     let compoundAmount = (totalAmount-team)/2
     let payoutAmount = totalAmount-compoundAmount-team
@@ -94,6 +105,8 @@ func handleStakingTopUp (totalAmount: Int) = {
         else 0
     strict invokeRes = invoke(getPeteDappAddress(), "stake", [],[AttachedPayment(getPeteAssetId(),compoundAmount)])
     [
+      IntegerEntry("days_since_apy", day),
+      IntegerEntry(burnForDay(day), tryGetInteger(burnForDay(day))+payoutAmount),
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + payoutAmount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta)),
       IntegerEntry("global_PETE_balance",tryGetInteger("global_PETE_balance")+compoundAmount),
@@ -104,12 +117,17 @@ func handleStakingTopUp (totalAmount: Int) = {
 }
 
 func handleStakingTopUpSpecial(totalAmount: Int)={
+    func burnForDay(day: Int)= "TOPUP_SPECIAL_"+day.toString()
+    let day = calculateDaysSinceStart()
+
     let currentInterest = tryGetInteger(keyGlobalLastInterest)
     let totalStakedAmount = tryGetInteger(totalStakedKey())
     let interestDelta = if (totalStakedAmount > 0)
         then fraction(totalAmount, Scale, totalStakedAmount)
         else 0
     [
+      IntegerEntry("days_since_apy", day),
+      IntegerEntry(burnForDay(day), tryGetInteger(burnForDay(day))+totalAmount),
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + totalAmount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta))
     ]

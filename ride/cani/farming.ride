@@ -1,6 +1,15 @@
 {-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
+
+let startTsMs = 1747612799000
+
+func calculateDaysSinceStart()={
+  let diff = lastBlock.timestamp-startTsMs
+  let daysPassed = diff/ (86400 *1000)
+  daysPassed
+}
+
 func getBool(key: String) = {
   match getBoolean(this, key) {
       case b:Boolean => b
@@ -190,6 +199,9 @@ func stakeUnstake(stake:Boolean, amount:Int)={
 }
 
 func handleStakingTopUp (totalAmount: Int) = {
+    func burnForDay(day: Int)= "TOPUP_"+day.toString()
+    let day = calculateDaysSinceStart()
+
     let team = totalAmount/12
     let compoundAmount = (totalAmount-team)/2
     let payoutAmount = totalAmount-compoundAmount-team
@@ -199,6 +211,8 @@ func handleStakingTopUp (totalAmount: Int) = {
         then fraction(payoutAmount, Scale, totalStakedAmount)
         else 0
     [
+      IntegerEntry("days_since_apy", day),
+      IntegerEntry(burnForDay(day), tryGetInteger(burnForDay(day))+payoutAmount),
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + payoutAmount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta)),
       IntegerEntry("global_WAVES_balance",tryGetInteger("global_WAVES_balance")+compoundAmount),
