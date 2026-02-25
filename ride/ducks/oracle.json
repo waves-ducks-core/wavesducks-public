@@ -15,11 +15,11 @@
         {
             "key": "static_proxyStakingContracts",
             "type": "string",
-            "value": "3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT;3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3P8JD7RpyGZeVGj58P2ox367iMwsM3hWosS;3PGwjnnoPreHxeRDxufGD8a2iqaeM5tQKno;3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh"
+            "value": "3PR87TwfWio6HVUScSaHGMnFYkGyaVdFeqT;3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3P8JD7RpyGZeVGj58P2ox367iMwsM3hWosS;3PGwjnnoPreHxeRDxufGD8a2iqaeM5tQKno;3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh;3PGL5WbCp5D3eFN9VVxNf6CFhNi6bpNWSAJ"
         },        {
             "key": "static_trustedContracts",
             "type": "string",
-            "value": "3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw;3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD;3P8JD7RpyGZeVGj58P2ox367iMwsM3hWosS;3PGwjnnoPreHxeRDxufGD8a2iqaeM5tQKno;3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh"
+            "value": "3PFfetFUtrnxjv8Q66t9U5fqLFbyoFxzCQo;3PDbviVyp8vGmCnnjf2rHT4fpUMYe8XtgSL;3PCxXZk5r9nL8ppcqRjDAqeYWzRQSDapxWw;3PNbBGH1omxP5yMewxvDcuLrb4RAKgKt1uD;3P8JD7RpyGZeVGj58P2ox367iMwsM3hWosS;3PGwjnnoPreHxeRDxufGD8a2iqaeM5tQKno;3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh;3PGL5WbCp5D3eFN9VVxNf6CFhNi6bpNWSAJ"
         },
         {
             "key": "static_topUpDappAddress",

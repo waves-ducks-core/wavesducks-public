@@ -52,6 +52,7 @@ func last_height_key_receiver(receiver: String) = "last_height_processed_" + rec
 let allArtefact = [
   "ART-LAKE",
   "ART-HOUSE",
+  "ART-MEDHOUSE",
   "ART-BIGHOUSE",
   "ART-FIXGENE",
   "ART-FREEGENE", 
@@ -626,6 +627,8 @@ func preInit() = {
     IntegerEntry("static_ART-LAKE_farmingBoost", 2),
     IntegerEntry("static_ART-HOUSE_farmingSlots", 4),
     IntegerEntry("static_ART-HOUSE_farmingBoost", 30),
+    IntegerEntry("static_ART-MEDHOUSE_farmingSlots", 6),
+    IntegerEntry("static_ART-MEDHOUSE_farmingBoost", 15),
     IntegerEntry("static_ART-BIGHOUSE_farmingSlots", 10),
     IntegerEntry("static_ART-BIGHOUSE_farmingBoost", 15)
   ]

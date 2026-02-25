@@ -95,12 +95,12 @@
         {
             "key": "static_trustedContracts",
             "type": "string",
-            "value": "3N1oZwpYE3p4x63jWiKpszmfLU3Lk3KtSWe;3NA6gug1TT67nGzrAGa36rG5nzTzUGtFQG9;3MunHm9yAJrfSpj9C4NAdWUXFm4kY5r9HgK;3MpLnByEzrxP1Qkvy9BM1wrc9vmnmYbhdDY;3NCyT9Mj2u1Xmwb2PHUJDm9sTFA7U1t4R9J"
+            "value": "3N1oZwpYE3p4x63jWiKpszmfLU3Lk3KtSWe;3NA6gug1TT67nGzrAGa36rG5nzTzUGtFQG9;3MunHm9yAJrfSpj9C4NAdWUXFm4kY5r9HgK;3MpLnByEzrxP1Qkvy9BM1wrc9vmnmYbhdDY;3NCyT9Mj2u1Xmwb2PHUJDm9sTFA7U1t4R9J;3N85nfJxyfAPSpFyHfdHCxTZkvWBSExAN7j"
         },
         {
             "key": "static_proxyStakingContracts",
             "type": "string",
-            "value": "3N3ow28aEESPBAtyxhjWAyRhpMaXSTLcy33;3MpLnByEzrxP1Qkvy9BM1wrc9vmnmYbhdDY;3MunHm9yAJrfSpj9C4NAdWUXFm4kY5r9HgK;3NCyT9Mj2u1Xmwb2PHUJDm9sTFA7U1t4R9J"
+            "value": "3N3ow28aEESPBAtyxhjWAyRhpMaXSTLcy33;3MpLnByEzrxP1Qkvy9BM1wrc9vmnmYbhdDY;3MunHm9yAJrfSpj9C4NAdWUXFm4kY5r9HgK;3NCyT9Mj2u1Xmwb2PHUJDm9sTFA7U1t4R9J;3N85nfJxyfAPSpFyHfdHCxTZkvWBSExAN7j"
         },
         {
             "key": "static_maintenance",
