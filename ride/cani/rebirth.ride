@@ -132,7 +132,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
-    if (jackpotRandom == 1 && wasUniqueBorn("CANI-WWROBCNJ-JU") < 4) then "jackpot_canine" else
+    if (jackpotRandom == 1 && wasUniqueBorn("CANI-WWROBCNJ-JU") < 2) then "jackpot_canine" else
     if (n<100 && blacklistCode != "docking_A" ) then "docking_A" else
     if (n<200 && blacklistCode != "docking_B" ) then "docking_B" else
     if (n<300 && blacklistCode != "docking_C" ) then "docking_C" else

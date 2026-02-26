@@ -122,7 +122,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
-    if (jackpotRandom == 1 && wasUniqueBorn("TRTL-WWNINJTU-JU") < 4) then { "jackpot_turtle" } else
+    if (jackpotRandom == 1 && wasUniqueBorn("TRTL-WWNINJTU-JU") < 2) then { "jackpot_turtle" } else
     if (n<40 && "item!ART-FIRE_SHIELD" != blacklistCode) then { "item!ART-FIRE_SHIELD" } else
     if (n<80 && "item!ART-FIRE_TAIL" != blacklistCode) then { "item!ART-FIRE_TAIL" } else    
     if (n<100 && "item!ART-FREEGENE" != blacklistCode) then { "item!ART-FREEGENE" } else                
