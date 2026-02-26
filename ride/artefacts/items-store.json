@@ -880,11 +880,6 @@
             "type": "integer",
             "value": 0
         },
-        {
-            "key": "ART-MECHAEGG_issue",
-            "type": "boolean",
-            "value": true
-        }
     ],
     "fee": 600000,
     "feeAssetId": "WAVES"
