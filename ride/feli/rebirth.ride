@@ -247,16 +247,15 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
-      let bonusRandom = getRandomNumber(1000, initTx.fromBase58String(), finishBlock, 6)
-      let bonusOutput = if (bonusRandom < 50) then
+      let bonusOutput = if (random %10 ==0) then
         strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-MECHAEGG",address,0],[])
         [
           StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
         ]
       else
         [
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
         ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),

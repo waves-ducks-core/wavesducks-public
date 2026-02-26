@@ -122,7 +122,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
-    if (jackpotRandom < 2) then { "jackpot_turtle" } else
+    if (jackpotRandom == 1 && wasUniqueBorn("TRTL-WWNINJTU-JU") < 4) then { "jackpot_turtle" } else
     if (n<40 && "item!ART-FIRE_SHIELD" != blacklistCode) then { "item!ART-FIRE_SHIELD" } else
     if (n<80 && "item!ART-FIRE_TAIL" != blacklistCode) then { "item!ART-FIRE_TAIL" } else    
     if (n<100 && "item!ART-FREEGENE" != blacklistCode) then { "item!ART-FREEGENE" } else                
@@ -267,16 +267,15 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
-      let bonusRandom = getRandomNumber(1000, initTx.fromBase58String(), finishBlock, 6)
-      let bonusOutput = if (bonusRandom < 50) then
+      let bonusOutput = if (random %10 ==0) then
         strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-MECHAEGG",address,0],[])
         [
           StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
         ]
       else
         [
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
         ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
