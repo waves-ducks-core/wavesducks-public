@@ -725,15 +725,6 @@ if i.caller != addressFromStringValue(tryGetStringExternal(getOracle(),staticKey
 
 }
 
-@Callable(i)
-func setStoreItemBurn(item: String, burn: Boolean)={
-if i.caller != addressFromStringValue(tryGetStringExternal(getOracle(),staticKey_pipelineUser())) then throw("ISIB: Only for trusted users!") else
-
-[
-  BooleanEntry(key_burnCosmetic(item),burn)
-]
-
-}
 
 @Verifier(tx)
 func verify() = {
@@ -769,4 +760,3 @@ func verify() = {
         case _ => signaturesCount >= 1
     }
 }   
-
