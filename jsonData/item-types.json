@@ -93,6 +93,11 @@
             "value": "LEFT_WING"
         },
         {
+            "key": "type_cosmetic_ART-EORB",
+            "type": "string",
+            "value": "LEFT_WING"
+        },
+        {
             "key": "type_cosmetic_ART-TOMMYGUN",
             "type": "string",
             "value": "LEFT_WING"
@@ -483,6 +488,17 @@
         }
         ,
         {
+            "key": "type_cosmetic_ART-GLAMB",
+            "type": "string",
+            "value": "PET"
+        },
+        {
+            "key": "type_cosmetic_ART-HUMPTY",
+            "type": "string",
+            "value": "PET"
+        }
+        ,
+        {
             "key": "type_cosmetic_ART-BUNNY",
             "type": "string",
             "value": "PET"
@@ -516,7 +532,32 @@
             "key": "type_cosmetic_ART-YETI",
             "type": "string",
             "value": "PET"
-        }
+        },
+        {
+            "key": "type_cosmetic_ART-LOVE_HELMET",
+            "type": "string",
+            "value": "HEAD"
+        },
+                {
+            "key": "type_cosmetic_ART-LOVE_SHIELD",
+            "type": "string",
+            "value": "RIGHT_WING"
+        },
+                {
+            "key": "type_cosmetic_ART-LOVE_MACE",
+            "type": "string",
+            "value": "LEFT_WING"
+        },
+                {
+            "key": "type_cosmetic_ART-LOVE_ARMOUR",
+            "type": "string",
+            "value": "TOP"
+        },
+                {
+            "key": "type_cosmetic_ART-LOVE_TAIL",
+            "type": "string",
+            "value": "TAIL"
+        },
     ],
     "fee": 700000,
     "feeAssetId": "WAVES",

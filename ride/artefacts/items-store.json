@@ -749,9 +749,143 @@
             "key": "direct_cosmetic_ART-MUTARIUM-G",
             "type": "integer",
             "value": 50000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-HUMPTY",
+            "type": "integer",
+            "value": 300000000
+        },
+        {
+            "key": "direct_cosmetic_ART-HUMPTY_max_sales",
+            "type": "integer",
+            "value": 200
+        },
+        {
+            "key": "direct_cosmetic_ART-HUMPTY_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-HUMPTY_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-HUMPTY_burn",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-LAMB",
+            "type": "integer",
+            "value": 500000000
+        },
+        {
+            "key": "direct_cosmetic_ART-LAMB_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "direct_cosmetic_ART-LAMB_max_sales",
+            "type": "integer",
+            "value": 200
+        },
+        {
+            "key": "direct_cosmetic_ART-LAMB_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-LAMB_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-MECHAEGG",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-MECHAEGG_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-MECHAEGG_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-MECHAEGG_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-EORB",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-EORB_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-EORB_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-EORB_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-GLAMB",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-GLAMB_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-GLAMB_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-GLAMB_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_MED_DOG_HOUSE",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_MED_DOG_HOUSE_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_MED_DOG_HOUSE_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_MED_DOG_HOUSE_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "ART-MECHAEGG_issue",
+            "type": "boolean",
+            "value": true
         }
     ],
     "fee": 600000,
     "feeAssetId": "WAVES"
 }
-
