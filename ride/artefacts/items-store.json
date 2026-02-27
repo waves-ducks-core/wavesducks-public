@@ -861,22 +861,22 @@
             "value": 0
         },
         {
-            "key": "direct_cosmetic_MED_DOG_HOUSE",
+            "key": "direct_cosmetic_ART-MD_C_HOUSE",
             "type": "integer",
             "value": 0
         },
         {
-            "key": "direct_cosmetic_MED_DOG_HOUSE_max_sales",
+            "key": "direct_cosmetic_ART-MD_C_HOUSE_max_sales",
             "type": "integer",
             "value": 0
         },
         {
-            "key": "direct_cosmetic_MED_DOG_HOUSE_sale",
+            "key": "direct_cosmetic_ART-MD_C_HOUSE_sale",
             "type": "boolean",
             "value": false
         },
         {
-            "key": "direct_cosmetic_MED_DOG_HOUSE_growing_percentage",
+            "key": "direct_cosmetic_ART-MD_C_HOUSE_growing_percentage",
             "type": "integer",
             "value": 0
         },

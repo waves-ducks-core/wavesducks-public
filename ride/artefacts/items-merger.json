@@ -663,42 +663,42 @@
             "value": "WAVES"
         },
         {
-            "key": "merge_MED_DOG_HOUSE_baseItem",
+            "key": "merge_ART-MD_C_HOUSE_baseItem",
             "type": "string",
             "value": "ART-MEDHOUSE"
         },
         {
-            "key": "merge_MED_DOG_HOUSE_amount",
+            "key": "merge_ART-MD_C_HOUSE_amount",
             "type": "integer",
             "value": 1
         },
         {
-            "key": "merge_MED_DOG_HOUSE_endItem",
+            "key": "merge_ART-MD_C_HOUSE_endItem",
             "type": "string",
-            "value": "MED_DOG_HOUSE"
+            "value": "ART-MD_C_HOUSE"
         },
         {
-            "key": "merge_MED_DOG_HOUSE_price",
+            "key": "merge_ART-MD_C_HOUSE_price",
             "type": "integer",
             "value": 500000000
         },
         {
-            "key": "merge_MED_DOG_HOUSE_secondaryItem",
+            "key": "merge_ART-MD_C_HOUSE_secondaryItem",
             "type": "string",
             "value": "ART-MECHAEGG"
         },
         {
-            "key": "merge_MED_DOG_HOUSE_secondaryItemAmount",
+            "key": "merge_ART-MD_C_HOUSE_secondaryItemAmount",
             "type": "integer",
             "value": 3
         },
         {
-            "key": "merge_MED_DOG_HOUSE_instant",
+            "key": "merge_ART-MD_C_HOUSE_instant",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "merge_MED_DOG_HOUSE_asset",
+            "key": "merge_ART-MD_C_HOUSE_asset",
             "type": "string",
             "value": "WAVES"
         },
