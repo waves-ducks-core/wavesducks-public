@@ -6,6 +6,36 @@
             "key": "static_bullAssetId",
             "type": "string",
             "value": "DDbgwqvbAyiWTahPXcPECiYwAyw7wHy5FaK5Dg4PbDjN"
+        },
+        {
+            "key": "static_bullIncubatorAddress",
+            "type": "string",
+            "value": "3N9osDS2cP1cT1NxJm7gb16Qusff5zHh5BF"
+        },
+        {
+            "key": "static_bullIncubationFee",
+            "type": "integer",
+            "value": 20000000
+        },
+                {
+            "key": "static_bullPerchFee",
+            "type": "integer",
+            "value": 20000000
+        },
+        {
+            "key": "static_bullRebirthAddress",
+            "type": "string",
+            "value": ""
+        },
+        {
+            "key": "static_bullFarmingAddress",
+            "type": "string",
+            "value": "3MqBeXvwb1ZEiMjG4edw6uRBBTqGbyrLsqN"
+        },
+        {
+            "key": "static_bullBreederAddress",
+            "type": "string",
+            "value": "3N92kXgNnFmC8zQ4dkui6xLn6xXym1P6htV"
         }
 
         
