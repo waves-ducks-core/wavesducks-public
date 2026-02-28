@@ -194,6 +194,11 @@
       "value": "ArkimalsPool1"
     },
     {
+      "key": "allowed_pool_3PFZCA9X3yWhuY4E96p21T6uQNbX41AwifR",
+      "type": "string",
+      "value": "TNPool1"
+    },
+    {
       "key": "allowed_pool_3PNztLWDmZJffafREjQbUj1tpWJCx9hWDfK",
       "type": "string",
       "value": "PesoLatinaPool1"
