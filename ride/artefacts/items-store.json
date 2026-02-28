@@ -751,27 +751,27 @@
             "value": 50000000000
         },
         {
-            "key": "direct_cosmetic_ART-HUMPTY",
+            "key": "direct_cosmetic_ART-ECAPE",
             "type": "integer",
             "value": 300000000
         },
         {
-            "key": "direct_cosmetic_ART-HUMPTY_max_sales",
+            "key": "direct_cosmetic_ART-ECAPE_max_sales",
             "type": "integer",
             "value": 200
         },
         {
-            "key": "direct_cosmetic_ART-HUMPTY_sale",
+            "key": "direct_cosmetic_ART-ECAPE_sale",
             "type": "boolean",
             "value": true
         },
         {
-            "key": "direct_cosmetic_ART-HUMPTY_growing_percentage",
+            "key": "direct_cosmetic_ART-ECAPE_growing_percentage",
             "type": "integer",
             "value": 0
         },
         {
-            "key": "direct_cosmetic_ART-HUMPTY_burn",
+            "key": "direct_cosmetic_ART-ECAPE_burn",
             "type": "boolean",
             "value": true
         },
