@@ -80,8 +80,7 @@ func getFarmingAddressByType(houseType: String) = Address(getConfigFarmingAddres
 
 func getRewardAssetByType(houseType: String) = {
   let rewardAsset = getConfigRewardAsset(houseType)
-  if rewardAsset == "WAVES" then unit
-  else if rewardAsset == "EGG" then getEggAssetId()
+  if rewardAsset == "" then unit
   else rewardAsset.fromBase58String()
 }
 

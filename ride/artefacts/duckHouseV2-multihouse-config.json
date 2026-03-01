@@ -40,7 +40,7 @@
     {
       "key": "config_ART-MEDHOUSE_reward_asset",
       "type": "string",
-      "value": "EGG"
+      "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
     },
     {
       "key": "config_ART-MD_C_HOUSE_boost",
@@ -80,7 +80,7 @@
     {
       "key": "config_ART-MD_C_HOUSE_reward_asset",
       "type": "string",
-      "value": "WAVES"
+      "value": ""
     }
   ],
   "fee": 1500000,
