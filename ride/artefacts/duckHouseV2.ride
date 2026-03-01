@@ -67,14 +67,14 @@ func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_ite
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
-func getConfigBoost(houseType: String) = tryGetInteger(keyConfigBoost(houseType))
-func getConfigMaxSlots(houseType: String) = tryGetInteger(keyConfigMaxSlots(houseType))
-func getConfigWithoutPerch(houseType: String) = tryGetBoolean(keyConfigWithoutPerch(houseType))
-func getConfigFarmingAddress(houseType: String) = tryGetString(keyConfigFarmingAddress(houseType))
-func getConfigStakeCall(houseType: String) = tryGetString(keyConfigStakeCall(houseType))
-func getConfigIncubator(houseType: String) = tryGetString(keyConfigIncubator(houseType))
-func getConfigBreeder(houseType: String) = tryGetString(keyConfigBreeder(houseType))
-func getConfigRewardAsset(houseType: String) = tryGetString(keyConfigRewardAsset(houseType))
+func getConfigBoost(houseType: String) = getIntegerValue(getOracle(), keyConfigBoost(houseType))
+func getConfigMaxSlots(houseType: String) = getIntegerValue(getOracle(), keyConfigMaxSlots(houseType))
+func getConfigWithoutPerch(houseType: String) = getBooleanValue(getOracle(), keyConfigWithoutPerch(houseType))
+func getConfigFarmingAddress(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigFarmingAddress(houseType)), "Missing farming address for " + houseType)
+func getConfigStakeCall(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigStakeCall(houseType)), "Missing stake call for " + houseType)
+func getConfigIncubator(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigIncubator(houseType)), "Missing incubator for " + houseType)
+func getConfigBreeder(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigBreeder(houseType)), "Missing breeder for " + houseType)
+func getConfigRewardAsset(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigRewardAsset(houseType)), "Missing reward asset for " + houseType)
 
 func getFarmingAddressByType(houseType: String) = Address(getConfigFarmingAddress(houseType).fromBase58String())
 
