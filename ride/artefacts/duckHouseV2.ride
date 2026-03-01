@@ -112,6 +112,16 @@ func validateOwnerAndGetHouse(asset: String, i: Invocation)={
     if owner != address then throw("Don't try to steal someone duck!") else duckHouseId
 }
 
+func resolveHouseType(houseId: String) = {
+    let storedType = tryGetString(keyHouseType(houseId))
+    let houseType = if storedType != "" then storedType else invoke(getItemsAddress(),"checkArtefactDetails",[houseId],[]).exactAs[String]
+    if !validateHouseConfig(houseType) then throw("Invalid house configuration") else houseType
+}
+
+func backfillHouseTypeEntry(houseId: String, houseType: String) = {
+    if tryGetString(keyHouseType(houseId)) == "" then [StringEntry(keyHouseType(houseId), houseType)] else []
+}
+
 func validateAnimalIssuer(houseType: String, assetId: ByteVector) = {
     let issuer = assetInfo(assetId).value().issuer
     let incubator = addressFromStringValue(getConfigIncubator(houseType))
@@ -163,8 +173,7 @@ func stakeDuck(duckHouseId: String, JColor: String)={
     let duckHouseOwner = tryGetString(keyOwner(duckHouseId))
     if duckHouseOwner == "" then throw("This duckhouse is not staked!") else
     if duckHouseOwner != address then throw("This duckhouse is not yours!") else
-    let houseType = tryGetString(keyHouseType(duckHouseId))
-    if !validateHouseConfig(houseType) then throw("Invalid house configuration") else
+    let houseType = resolveHouseType(duckHouseId)
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
     if filledSpots == getConfigMaxSlots(houseType) then throw("No space in duck house left!") else
     let duckPayment = i.payments[1].value()
@@ -178,7 +187,7 @@ func stakeDuck(duckHouseId: String, JColor: String)={
       [JColor,true,getConfigWithoutPerch(houseType)],
       i.payments
     )
-    [
+    backfillHouseTypeEntry(duckHouseId, houseType) ++ [
         IntegerEntry(occupiedSpotsDucksHouse(duckHouseId),filledSpots+1),
         StringEntry(keyDuckHouse(assetId.toBase58String()),duckHouseId)
     ]
@@ -187,13 +196,12 @@ func stakeDuck(duckHouseId: String, JColor: String)={
 @Callable(i)
 func unstakeDuck(asset: String)={
     strict duckHouseId = validateOwnerAndGetHouse(asset,i)
-    let houseType = tryGetString(keyHouseType(duckHouseId))
-    if !validateHouseConfig(houseType) then throw("Invalid house configuration") else
+    let houseType = resolveHouseType(duckHouseId)
     strict unstakeDuckReward = invoke(getFarmingAddressByType(houseType),"unstakeNFT",[asset],i.payments).exactAs[Int]
     let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
     if filledSpots == 0 then throw("You aren't staking any ducks!") else
     strict unboostDuck = invoke(getItemsAddress(),"manipulateBoost",[-getConfigBoost(houseType),asset],[])
-    [
+    backfillHouseTypeEntry(duckHouseId, houseType) ++ [
         ScriptTransfer(i.caller, unstakeDuckReward, getRewardAssetByType(houseType)),
         ScriptTransfer(i.caller, 1, asset.fromBase58String()),
         DeleteEntry(keyDuckHouse(asset)),
@@ -204,10 +212,9 @@ func unstakeDuck(asset: String)={
 @Callable(i)
 func claimDuckRewards(asset: String)={
     strict duckHouseId = validateOwnerAndGetHouse(asset,i)
-    let houseType = tryGetString(keyHouseType(duckHouseId))
-    if !validateHouseConfig(houseType) then throw("Invalid house configuration") else
+    let houseType = resolveHouseType(duckHouseId)
     strict claimRewards = invoke(getFarmingAddressByType(houseType),"claimReward",[asset],i.payments).exactAs[Int]
-    [
+    backfillHouseTypeEntry(duckHouseId, houseType) ++ [
         ScriptTransfer(i.caller, claimRewards, getRewardAssetByType(houseType))
     ]
 }

@@ -3,6 +3,46 @@
   "version": 1,
   "data": [
     {
+      "key": "config_ART-HOUSE_boost",
+      "type": "integer",
+      "value": 30
+    },
+    {
+      "key": "config_ART-HOUSE_max_slots",
+      "type": "integer",
+      "value": 4
+    },
+    {
+      "key": "config_ART-HOUSE_without_perch",
+      "type": "boolean",
+      "value": false
+    },
+    {
+      "key": "config_ART-HOUSE_farming_address",
+      "type": "string",
+      "value": "3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD"
+    },
+    {
+      "key": "config_ART-HOUSE_stake_call",
+      "type": "string",
+      "value": "stakeNFT"
+    },
+    {
+      "key": "config_ART-HOUSE_incubator",
+      "type": "string",
+      "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+    },
+    {
+      "key": "config_ART-HOUSE_breeder",
+      "type": "string",
+      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
+    },
+    {
+      "key": "config_ART-HOUSE_reward_asset",
+      "type": "string",
+      "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
+    },
+    {
       "key": "config_ART-MEDHOUSE_boost",
       "type": "integer",
       "value": 15
@@ -83,6 +123,6 @@
       "value": "WAVES"
     }
   ],
-  "fee": 1500000,
+  "fee": 2300000,
   "feeAssetId": "WAVES"
 }
