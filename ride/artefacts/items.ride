@@ -34,6 +34,7 @@ func key_unstakeHeight(artefactName: String, artefactId: String) = artefactName+
 func key_externalBoostDuck(duckId: String) = duckId+"_duck_external_boost"
 
 func key_externalBoostAddress(address: String) = address+"_user_external_boost"
+func key_externalBoostAddressEagle(address: String) = address+"_user_external_boost_eagle"
 func key_priceCosmetic(item:String)= "direct_cosmetic_"+item
 func key_maxSalesCosmetic(item:String)= "direct_cosmetic_"+item+"_max_sales"
 func key_saleCosmetic(item:String)= "direct_cosmetic_"+item+"_sale"
@@ -52,6 +53,7 @@ func last_height_key_receiver(receiver: String) = "last_height_processed_" + rec
 #TODO: CONVERT THIS TO STORE 
 let allArtefact = [
   "ART-LAKE",
+  "ART-ENEST",
   "ART-HOUSE",
   "ART-MEDHOUSE",
   "ART-BIGHOUSE",
@@ -506,6 +508,21 @@ func manipulateBoostAccount(boost: Int, address: String)= {
 }
 
 @Callable(i)
+func manipulateBoostAccountEagle(boost: Int, address: String)= {
+  let allowedContracts = getTrustedContracts()
+  let allowedContractsList = allowedContracts.split(";")
+  let dappToCall = i.caller.toString()
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("IMBAE: This smart contract can't manipulate the eagle boost!") else
+  let key = key_externalBoostAddressEagle(address)
+  let activeBoost = tryGetInteger(key)
+  let newBoost = activeBoost+boost
+  if newBoost <0 then throw("IMBAE: Something went wrong with eagle boost, please contact the admins!") else
+  [
+    IntegerEntry(key,newBoost)
+  ]
+}
+
+@Callable(i)
 func checkArtefactDetails(assetId: String) = {
   let asset = assetInfo(assetId.fromBase58String()).value()
   let assetName = asset.name.value()
@@ -536,6 +553,16 @@ func calculateFarmingPowerBoost(duckId: String, address: String)={
     [
     ],
     totalBoost
+  )
+}
+
+@Callable(i)
+func calculateFarmingPowerBoostEagle(address: String)={
+  let externalBoostAddress = tryGetInteger(key_externalBoostAddressEagle(address))
+  (
+    [
+    ],
+    externalBoostAddress
   )
 }
 
