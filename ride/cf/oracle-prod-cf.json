@@ -81,12 +81,6 @@
       "value": "BDH"
     },
     {
-      "key": "allowed_contract_3PGL5WbCp5D3eFN9VVxNf6CFhNi6bpNWSAJ",
-      "type": "string",
-      "value": "MDH"
-    },
-
-    {
       "key": "allowed_contract_3PAehH4ZP62QEj4swakf6FU9CLaVvY3qddh",
       "type": "string",
       "value": "XST"
@@ -304,6 +298,5 @@
     }
   ]
 }
-
 
 
