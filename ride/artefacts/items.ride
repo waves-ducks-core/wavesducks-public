@@ -566,6 +566,16 @@ func calculateFarmingPowerBoostEagle(address: String)={
   )
 }
 
+@Callable(i)
+func calculateFarmingPowerBoostNft(duckId: String)={
+  let externalBoostDuck = tryGetInteger(key_externalBoostDuck(duckId))
+  (
+    [
+    ],
+    externalBoostDuck
+  )
+}
+
 
 @Callable(i)
 func itemDuplicator()={
