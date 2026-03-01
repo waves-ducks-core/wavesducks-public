@@ -80,7 +80,7 @@
     {
       "key": "config_ART-MD_C_HOUSE_reward_asset",
       "type": "string",
-      "value": ""
+      "value": "WAVES"
     }
   ],
   "fee": 1500000,
