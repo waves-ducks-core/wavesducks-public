@@ -28,14 +28,14 @@
       "value": "stakeNFT"
     },
     {
-      "key": "config_ART-HOUSE_issuer_primary",
-      "type": "string",
-      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
-    },
-    {
-      "key": "config_ART-HOUSE_issuer_secondary",
+      "key": "config_ART-HOUSE_incubator",
       "type": "string",
       "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+    },
+    {
+      "key": "config_ART-HOUSE_breeder",
+      "type": "string",
+      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
     },
     {
       "key": "config_ART-HOUSE_reward_asset",
@@ -68,14 +68,14 @@
       "value": "stakeNFT"
     },
     {
-      "key": "config_ART-BIGHOUSE_issuer_primary",
-      "type": "string",
-      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
-    },
-    {
-      "key": "config_ART-BIGHOUSE_issuer_secondary",
+      "key": "config_ART-BIGHOUSE_incubator",
       "type": "string",
       "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+    },
+    {
+      "key": "config_ART-BIGHOUSE_breeder",
+      "type": "string",
+      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
     },
     {
       "key": "config_ART-BIGHOUSE_reward_asset",
@@ -108,14 +108,14 @@
       "value": "stakeNFT"
     },
     {
-      "key": "config_ART-XMAS_STBLE_issuer_primary",
-      "type": "string",
-      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
-    },
-    {
-      "key": "config_ART-XMAS_STBLE_issuer_secondary",
+      "key": "config_ART-XMAS_STBLE_incubator",
       "type": "string",
       "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+    },
+    {
+      "key": "config_ART-XMAS_STBLE_breeder",
+      "type": "string",
+      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
     },
     {
       "key": "config_ART-XMAS_STBLE_reward_asset",
@@ -148,14 +148,14 @@
       "value": "stakeNFT"
     },
     {
-      "key": "config_ART-MEDHOUSE_issuer_primary",
-      "type": "string",
-      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
-    },
-    {
-      "key": "config_ART-MEDHOUSE_issuer_secondary",
+      "key": "config_ART-MEDHOUSE_incubator",
       "type": "string",
       "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+    },
+    {
+      "key": "config_ART-MEDHOUSE_breeder",
+      "type": "string",
+      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
     },
     {
       "key": "config_ART-MEDHOUSE_reward_asset",
@@ -188,14 +188,14 @@
       "value": "stakeNFTHouse"
     },
     {
-      "key": "config_ART-MD_C_HOUSE_issuer_primary",
-      "type": "string",
-      "value": "3PQdwhdjWHZ1hacy2dLPnRafi86cTvuJPNX"
-    },
-    {
-      "key": "config_ART-MD_C_HOUSE_issuer_secondary",
+      "key": "config_ART-MD_C_HOUSE_incubator",
       "type": "string",
       "value": "3PD6L4yr52Lac9qeqXNoi4mAiiak5ZBnx5D"
+    },
+    {
+      "key": "config_ART-MD_C_HOUSE_breeder",
+      "type": "string",
+      "value": "3PQdwhdjWHZ1hacy2dLPnRafi86cTvuJPNX"
     },
     {
       "key": "config_ART-MD_C_HOUSE_reward_asset",

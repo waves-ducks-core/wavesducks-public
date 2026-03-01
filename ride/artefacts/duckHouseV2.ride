@@ -22,8 +22,8 @@ func keyConfigMaxSlots(houseType: String) = "config_" + houseType + "_max_slots"
 func keyConfigWithoutPerch(houseType: String) = "config_" + houseType + "_without_perch"
 func keyConfigFarmingAddress(houseType: String) = "config_" + houseType + "_farming_address"
 func keyConfigStakeCall(houseType: String) = "config_" + houseType + "_stake_call"
-func keyConfigIssuerPrimary(houseType: String) = "config_" + houseType + "_issuer_primary"
-func keyConfigIssuerSecondary(houseType: String) = "config_" + houseType + "_issuer_secondary"
+func keyConfigIncubator(houseType: String) = "config_" + houseType + "_incubator"
+func keyConfigBreeder(houseType: String) = "config_" + houseType + "_breeder"
 func keyConfigRewardAsset(houseType: String) = "config_" + houseType + "_reward_asset"
 
 func tryGetBoolean(key: String) = {
@@ -72,8 +72,8 @@ func getConfigMaxSlots(houseType: String) = tryGetInteger(keyConfigMaxSlots(hous
 func getConfigWithoutPerch(houseType: String) = tryGetBoolean(keyConfigWithoutPerch(houseType))
 func getConfigFarmingAddress(houseType: String) = tryGetString(keyConfigFarmingAddress(houseType))
 func getConfigStakeCall(houseType: String) = tryGetString(keyConfigStakeCall(houseType))
-func getConfigIssuerPrimary(houseType: String) = tryGetString(keyConfigIssuerPrimary(houseType))
-func getConfigIssuerSecondary(houseType: String) = tryGetString(keyConfigIssuerSecondary(houseType))
+func getConfigIncubator(houseType: String) = tryGetString(keyConfigIncubator(houseType))
+func getConfigBreeder(houseType: String) = tryGetString(keyConfigBreeder(houseType))
 func getConfigRewardAsset(houseType: String) = tryGetString(keyConfigRewardAsset(houseType))
 
 func getFarmingAddressByType(houseType: String) = Address(getConfigFarmingAddress(houseType).fromBase58String())
@@ -88,12 +88,12 @@ func getRewardAssetByType(houseType: String) = {
 func validateHouseConfig(houseType: String) = {
   let stakeCall = getConfigStakeCall(houseType)
   let farmingAddress = getConfigFarmingAddress(houseType)
-  let issuerPrimary = getConfigIssuerPrimary(houseType)
-  let issuerSecondary = getConfigIssuerSecondary(houseType)
+  let incubator = getConfigIncubator(houseType)
+  let breeder = getConfigBreeder(houseType)
   if stakeCall == "" then throw("Unknown house type: missing stake call for " + houseType) else
   if farmingAddress == "" then throw("Unknown house type: missing farming address for " + houseType) else
-  if issuerPrimary == "" then throw("Unknown house type: missing primary issuer for " + houseType) else
-  if issuerSecondary == "" then throw("Unknown house type: missing secondary issuer for " + houseType) else
+  if incubator == "" then throw("Unknown house type: missing incubator for " + houseType) else
+  if breeder == "" then throw("Unknown house type: missing breeder for " + houseType) else
   if getConfigMaxSlots(houseType) == 0 then throw("Unknown house type: missing max slots for " + houseType) else
   if getConfigRewardAsset(houseType) == "" then throw("Unknown house type: missing reward asset for " + houseType) else
   true
@@ -115,9 +115,9 @@ func validateOwnerAndGetHouse(asset: String, i: Invocation)={
 
 func validateAnimalIssuer(houseType: String, assetId: ByteVector) = {
     let issuer = assetInfo(assetId).value().issuer
-    let primary = addressFromStringValue(getConfigIssuerPrimary(houseType))
-    let secondary = addressFromStringValue(getConfigIssuerSecondary(houseType))
-    if issuer != primary && issuer != secondary then throw("Wrong NFT type for house " + houseType) else true
+    let incubator = addressFromStringValue(getConfigIncubator(houseType))
+    let breeder = addressFromStringValue(getConfigBreeder(houseType))
+    if issuer != incubator && issuer != breeder then throw("Wrong NFT type for house " + houseType) else true
 }
 
 @Callable(i)
