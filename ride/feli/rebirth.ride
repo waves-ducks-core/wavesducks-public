@@ -151,7 +151,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     if (n<930 && "item!ART-FIXGENE" != blacklistCode) then { "item!ART-FIXGENE" } else   
     if (n<980 && "trtl_incubator" != blacklistCode) then { "trtl_incubator" } else
     { "item!ART-FEED500" }
-    let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50 && blacklistCode != "item!ART-MEDHOUSE")
+    let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50)
       then "item!ART-MEDHOUSE"
       else baseResult
     (n,result,jackpotRandom)

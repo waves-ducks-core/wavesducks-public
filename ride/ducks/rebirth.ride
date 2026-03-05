@@ -203,7 +203,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklist
       if (n < 960 && blacklistCode != "item!ART-CANCPN") then { "item!ART-CANCPN" } else
       if ( n < 980 && blacklistCode != "incubator_turtle") then { "incubator_turtle" } else
       { "incubator_canine" }
-  let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50 && blacklistCode != "item!ART-MEDHOUSE")
+  let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50)
     then "item!ART-MEDHOUSE"
     else baseResult
   (n,result,jackpotRandom)
