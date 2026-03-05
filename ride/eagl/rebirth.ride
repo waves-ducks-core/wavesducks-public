@@ -112,11 +112,11 @@ func getMedhouseIssuedAmount() = {
 }
 
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
-  let jackpotRandom = getRandomNumber(40, tx, finishHeight, 1)
+  let jackpotRandom = getRandomNumber(100, tx, finishHeight, 2)
   #if (jackpotRandom == 1 && wasUniqueBorn("EDIT MEEE") < 4) then { (jackpotRandom,"jackpot") } else 
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
-    let result = 
+    let baseResult = 
     if (n<100 && blacklistCode != "garage_A" ) then "garage_A" else
     if (n<200 && blacklistCode != "garage_B" ) then "garage_B" else
     if (n<300 && blacklistCode != "garage_C" ) then "garage_C" else
@@ -132,7 +132,10 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     if (n<994 && blacklistCode != "vperch_R") then "vperch_R" else
     if (n<996 && blacklistCode != "vperch_G") then "vperch_G" else
     "vperch_Y"
-    (n,result)
+    let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50 && blacklistCode != "item!ART-MEDHOUSE")
+      then "item!ART-MEDHOUSE"
+      else baseResult
+    (n,result,jackpotRandom)
 }
 func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   let n = getRandomNumber(2, tx, finishHeight, 1)
@@ -156,6 +159,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       let output = getRandomWin(initTx.fromBase58String(), finishBlock, blacklistCode)  
       let win = output._2
       let random = output._1
+      let jackpotRandom = output._3
 
       let txId = initTx
 
@@ -225,7 +229,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       #TODO; should work
       }else if (win.indexOf("item") !=unit) then {
         let itemName = win.split("!")[1]
-        strict call = if !double then 
+        strict call = if !double || itemName == "ART-MEDHOUSE" then 
                 strict first = invoke(getItemsAddress(), "issueArtefactIndex", [itemName, address,0], [])
                 [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
 
@@ -250,7 +254,6 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
-      let medhouseRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 2)
       let bonusOutput = if (random %10 ==0) then
         strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-ENEST",address,0],[])
         [
@@ -261,21 +264,12 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [
           IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
         ]
-      let medhouseOutput = if (medhouseRandom == 1 && getMedhouseIssuedAmount() < 50) then
-        strict medhouse = invoke(getItemsAddress(),"issueArtefactIndex",["ART-MEDHOUSE",address,0],[])
-        [
-          StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem2", medhouse.exactAs[String]),
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom2",medhouseRandom)
-        ]
-      else
-        [
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom2",medhouseRandom)
-        ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
-        IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment++returnPayload++bonusOutput++medhouseOutput
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
+      ]++validPayment++returnPayload++bonusOutput
     }
   }
 }
