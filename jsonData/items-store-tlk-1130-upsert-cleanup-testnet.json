@@ -1,0 +1,27 @@
+{
+  "type": 12,
+  "version": 2,
+  "data": [
+    { "key": "direct_cosmetic_ART-ECAPE", "type": "integer", "value": 300000000 },
+    { "key": "direct_cosmetic_ART-ECAPE_max_sales", "type": "integer", "value": 200 },
+    { "key": "direct_cosmetic_ART-ECAPE_sale", "type": "boolean", "value": true },
+    { "key": "direct_cosmetic_ART-ECAPE_growing_percentage", "type": "integer", "value": 0 },
+    { "key": "direct_cosmetic_ART-ECAPE_burn", "type": "boolean", "value": true },
+
+    { "key": "direct_cosmetic_ART-LAMB", "type": "integer", "value": 500000000 },
+    { "key": "direct_cosmetic_ART-LAMB_priceAsset", "type": "string", "value": "WAVES" },
+    { "key": "direct_cosmetic_ART-LAMB_max_sales", "type": "integer", "value": 200 },
+    { "key": "direct_cosmetic_ART-LAMB_sale", "type": "boolean", "value": true },
+    { "key": "direct_cosmetic_ART-LAMB_growing_percentage", "type": "integer", "value": 0 },
+
+    { "key": "direct_cosmetic_ART-ECAPE_sold", "value": null },
+    { "key": "direct_cosmetic_ART-ECAPE_last_price", "value": null },
+    { "key": "direct_cosmetic_ART-ECAPE_startTs", "value": null },
+    { "key": "direct_cosmetic_ART-ECAPE_endTs", "value": null },
+
+    { "key": "direct_cosmetic_ART-LAMB_sold", "value": null },
+    { "key": "direct_cosmetic_ART-LAMB_last_price", "value": null },
+    { "key": "direct_cosmetic_ART-LAMB_startTs", "value": null },
+    { "key": "direct_cosmetic_ART-LAMB_endTs", "value": null }
+  ]
+}
