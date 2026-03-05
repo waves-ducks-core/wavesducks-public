@@ -696,6 +696,9 @@ func issueArtefact(type: String, receiver: String) = {
     let address = Address(fromBase58String(receiver))
     let lastHeight = tryGetInteger(last_height_key())
     let lastHeightUser = tryGetInteger(last_height_key_receiver(receiver))
+    let medhouseCount = if type == "ART-MEDHOUSE" then
+      [IntegerEntry("stats_ART-MEDHOUSE_amount", tryGetInteger("stats_ART-MEDHOUSE_amount") + 1)]
+    else []
     if (lastHeight+3 > height || lastHeightUser+10 > height) && i.caller == getHuntDistroAddress() then throw("IA: Too early to issue artefact again "+lastHeight.toString() + " " + lastHeightUser.toString()+ " " + height.toString()) else
 
     let res = issueItem(type,0,address)
@@ -703,7 +706,7 @@ func issueArtefact(type: String, receiver: String) = {
     [
       IntegerEntry(last_height_key(), height),
       IntegerEntry(last_height_key_receiver(receiver), height)
-    ], res._2)
+    ]++medhouseCount, res._2)
   
 }
 
@@ -722,6 +725,9 @@ func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
   && i.callerPublicKey != getWarsPKey()) then throw("IIAI: admin only") else 
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let address = Address(fromBase58String(receiver))
+    let medhouseCount = if type == "ART-MEDHOUSE" then
+      [IntegerEntry("stats_ART-MEDHOUSE_amount", tryGetInteger("stats_ART-MEDHOUSE_amount") + 1)]
+    else []
 
     let res = issueItem(type,nonce,address)
     let lastHeight = tryGetInteger(last_height_key())
@@ -731,7 +737,7 @@ func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
     [
       IntegerEntry(last_height_key(), height),
       IntegerEntry(last_height_key_receiver(receiver), height)
-    ], res._2)
+    ]++medhouseCount, res._2)
   
 }
 

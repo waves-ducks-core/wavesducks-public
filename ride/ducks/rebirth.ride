@@ -132,6 +132,10 @@ func wasUniqueBorn(gen: String) = {
   tryGetIntegerExternal(getIncubatorAddress(),getCaniStatsKey(gen))
 }
 
+func getMedhouseIssuedAmount() = {
+  tryGetIntegerExternal(getItemsAddress(),"stats_ART-MEDHOUSE_amount")
+}
+
 func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklistCode: String) = {
   let n = getRandomNumber(1000, tx, finishHeight, 0)
 
@@ -369,6 +373,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         strict call = invoke(issuer, "increaseRarity", [assetId.toBase58String(), gen], [])
         [ScriptTransfer(address.addressFromStringValue(), 1,assetId)] 
       else []
+      let medhouseRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 2)
       let bonusOutput = if (random %20 ==0) then
         strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-MECHAEGG",address,0],[])
         [
@@ -379,13 +384,23 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [
           IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
         ]
+      let medhouseOutput = if (medhouseRandom == 1 && getMedhouseIssuedAmount() < 50) then
+        strict medhouse = invoke(getItemsAddress(),"issueArtefactIndex",["ART-MEDHOUSE",address,0],[])
+        [
+          StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem2", medhouse.exactAs[String]),
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom2",medhouseRandom)
+        ]
+      else
+        [
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom2",medhouseRandom)
+        ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
         
-      ]++validPayment++returnPayload++bonusOutput
+      ]++validPayment++returnPayload++bonusOutput++medhouseOutput
     }
   }
 }

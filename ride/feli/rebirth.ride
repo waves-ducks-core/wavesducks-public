@@ -70,6 +70,13 @@ func tryGetIntegerExternal(address: Address, key: String) = {
 
 }
 
+func tryGetIntegerExternalZero(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
 #TODO: PUT IN ORACLE!!!!!!!!!!!!!!!!!!!!!!!!!!
 let wavesAmount = tryGetIntegerExternal(getOracle(),staticKey_canineWavesRebirthPrice()) #2_0000_0000
 
@@ -113,6 +120,10 @@ func wasUniqueBorn(gen: String) = {
   "stats_" + genString + "_amount"
 }
   tryGetIntegerExternal(getCanineIncubatorAddress(),getEAGLStatsKey(gen))
+}
+
+func getMedhouseIssuedAmount() = {
+  tryGetIntegerExternalZero(getItemsAddress(),"stats_ART-MEDHOUSE_amount")
 }
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   let jackpotRandom = getRandomNumber(50, tx, finishHeight, 1)
@@ -247,6 +258,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
+      let medhouseRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 2)
       let bonusOutput = if (random %20 ==0) then
         strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-MECHAEGG",address,0],[])
         [
@@ -257,11 +269,21 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [
           IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
         ]
+      let medhouseOutput = if (medhouseRandom == 1 && getMedhouseIssuedAmount() < 50) then
+        strict medhouse = invoke(getItemsAddress(),"issueArtefactIndex",["ART-MEDHOUSE",address,0],[])
+        [
+          StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem2", medhouse.exactAs[String]),
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom2",medhouseRandom)
+        ]
+      else
+        [
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom2",medhouseRandom)
+        ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment++returnPayload++bonusOutput
+      ]++validPayment++returnPayload++bonusOutput++medhouseOutput
     }
   }
 }
