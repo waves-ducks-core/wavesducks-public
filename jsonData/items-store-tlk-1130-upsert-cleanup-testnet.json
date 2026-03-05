@@ -22,6 +22,9 @@
     { "key": "direct_cosmetic_ART-LAMB_sold", "value": null },
     { "key": "direct_cosmetic_ART-LAMB_last_price", "value": null },
     { "key": "direct_cosmetic_ART-LAMB_startTs", "value": null },
-    { "key": "direct_cosmetic_ART-LAMB_endTs", "value": null }
+    { "key": "direct_cosmetic_ART-LAMB_endTs", "value": null },
+
+    { "key": "type_cosmetic_ART-GLAMB", "type": "string", "value": "PET" },
+    { "key": "type_cosmetic_ART-ECAPE", "type": "string", "value": "BACK" }
   ]
 }
