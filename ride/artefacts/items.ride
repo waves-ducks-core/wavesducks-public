@@ -668,20 +668,6 @@ func addArteFactToDuck()= {
 }
 
 @Callable(i)
-func preInit() = {
-  [
-    IntegerEntry("static_ART-LAKE_farmingSlots", 200),
-    IntegerEntry("static_ART-LAKE_farmingBoost", 2),
-    IntegerEntry("static_ART-HOUSE_farmingSlots", 4),
-    IntegerEntry("static_ART-HOUSE_farmingBoost", 30),
-    IntegerEntry("static_ART-MEDHOUSE_farmingSlots", 6),
-    IntegerEntry("static_ART-MEDHOUSE_farmingBoost", 15),
-    IntegerEntry("static_ART-BIGHOUSE_farmingSlots", 10),
-    IntegerEntry("static_ART-BIGHOUSE_farmingBoost", 15)
-  ]
-}
-
-@Callable(i)
 func issueArtefact(type: String, receiver: String) = {
   if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
