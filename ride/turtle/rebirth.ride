@@ -74,6 +74,14 @@ func tryGetIntegerExternal(address: Address, key: String) = {
 
 }
 
+func tryGetIntegerExternalOrNull(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+
+}
+
 func checkReal(assetId: ByteVector) = {
   if (assetInfo(assetId).value().issuer == getTurtleBreederAddress() || assetInfo(assetId).value().issuer ==getTurtleIncubatorAddress()) then {
    assetInfo(assetId).value().issuer
@@ -114,7 +122,7 @@ func wasUniqueBorn(gen: String) = {
   func getStatsKey(genString: String) = {
   "stats_" + genString + "_amount"
 }
-  tryGetIntegerExternal(getTurtleIncubatorAddress(),getStatsKey(gen))
+  tryGetIntegerExternalOrNull(getTurtleIncubatorAddress(),getStatsKey(gen))
 }
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
