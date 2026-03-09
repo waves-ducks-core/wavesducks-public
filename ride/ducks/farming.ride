@@ -21,31 +21,19 @@ func tryGetString(key: String) = {
 }
 
 func staticKey_oracleAddress() = "static_oracleAddress"
-func staticKey_eggAssetId() = "static_eggAssetId"
-func staticKey_incubatorAddress() = "static_incubatorAddress"
-func staticKey_breederAddress() = "static_breederAddress"
-func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_metaRaceAddress() = "static_metaRaceAddress"
-func staticKey_accBoosterAddress() = "static_accBoosterAddress"
 func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
 func staticKey_maintenance() = "static_maintenance"
 #TODO add last 4 also here
-func staticKey_cfMasterAddress() = "static_cfMasterAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 
 func staticKey_farmingNew() = "static_farmingAddressNew"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
-func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
-func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getMetaraceAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_metaRaceAddress()).fromBase58String())
-func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
 func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakingContracts())
 func getMaintenance() =  tryGetStringExternal(getOracle(),staticKey_maintenance())
-func getCfMasterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_cfMasterAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
 func getNewFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_farmingNew()).fromBase58String())
@@ -82,57 +70,6 @@ func tryGetBoolean(key: String) = {
     }
 }
 
-func tryGetBooleanExternal(address:Address, key: String) = {
-    match getBoolean(address, key) {
-        case b:Boolean => b
-        case _ => false
-    }
-}
-
-
-func getAssetOrigin(generation: String) = {
-  if (generation == "G") then {getIncubatorAddress()} else {getBreederAddress()}
-}
-
-#TODO: count in items in calculating staking power
-func getAssetRarity(genotype: String, generation: String) = {
-  let quantity = valueOrErrorMessage(getInteger(getAssetOrigin(generation), "stats_"+genotype+"_quantity"),"stats_"+genotype+"_quantity not found")
-  let power = pow(10000 / quantity, 4, 5, 1, 2, FLOOR)
-  if (power > 0) then {power} else {2}
-}
-
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("FAS: wrong type, expected: String")
-}
-
-func asBoolean(value: Any) = match value {
-  case boolean: Boolean => boolean
-  case _ => throw("FAB: wrong type, expected: Boolean")
-}
-
-func getAssetFarmingPower(assetId: ByteVector, address: String) = {
-  if (assetInfo(assetId).value().issuer == getBreederAddress() || assetInfo(assetId).value().issuer == getIncubatorAddress()) then {  
-    strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId.toBase58String(),address],[]).exactAs[Int]
-    let assetName = assetInfo(assetId).value().name
-    let isJackpot = assetName.value().takeRight(1) == "U"
-
-    strict farmGen = if isJackpot then "" else invoke(getBreederAddress(),"getGenFromName",[assetName],[]).exactAs[String]
-    let rarity = if isJackpot then 100 else{
-      
-      let generation = assetName.takeRight(2).take(1)
-    
-      getAssetRarity(farmGen, generation)
-    }
-
-
-    let totalFarmingPower = rarity + fraction(rarity,farmBoost,100)
-    (farmGen, totalFarmingPower )
-  } else {
-    throw("not valid NFT")
-  }
-}
-
 func getLastKnownAssetFarmingPower(address: String, assetId: String) = {
   tryGetInteger("address_"+address+"_asset_"+assetId+"_farmingPower")
 }
@@ -160,25 +97,6 @@ func calcAssetRewardDelta(address: String, assetId: String, assetFarmingPower: I
   assetFarmingPower * (currentInterest - lastCheckAssetInterest)
 }
 
-
-func addAssetIdToGenEntry(assetId: String, assetGen: String) = {
-  let currentValue = tryGetString("assets_"+assetGen+"_locked")
-  if (currentValue == "") then {assetId} else {currentValue+","+assetId}
-}
-
-
-func getStakeResult(address: String, assetId: ByteVector, assetFarmingPower: Int, unstaker: String) = {
-  let asset = assetId.toBase58String()
-  [
-    IntegerEntry("total_farmingPower", tryGetInteger("total_farmingPower") + assetFarmingPower),
-    IntegerEntry("total_lastCheckInterest", getCurrentInterest()),
-    IntegerEntry("total_lastCheckInterestHeight", height),
-    StringEntry("asset_"+asset+"_owner", address),
-    IntegerEntry("address_"+address+"_asset_"+asset+"_farmingPower", assetFarmingPower),
-    IntegerEntry("address_"+address+"_asset_"+asset+"_lastCheckInterest", getCurrentInterest()),
-    StringEntry("address_"+address+"_asset_"+asset+"_unstaker",unstaker)
-  ]
-}
 
 func getUnstakeResult(address: String, assetId: ByteVector, color: String, caller: Address, realCaller: String, claimEggs: Boolean) = {
   strict locked = isLocked()
@@ -216,16 +134,6 @@ func getUnstakeResult(address: String, assetId: ByteVector, color: String, calle
     ]++appendPerches ++ [
             ScriptTransfer(caller, 1, assetId)
           ], 0)
-}
-
-func calculatePerchPrice(address: String)= {
-  let hasArtefactStaked = tryGetStringExternal(getAccBoosterAddress(),"ART-XMISTL_" + address + "_owner")
-  if hasArtefactStaked == ""
-  then
-    perchPrice
-  else
-    perchPrice/10*9
-
 }
 
 func isProxyStakingSc(address: String)={
@@ -270,17 +178,6 @@ func unstakeJackpotInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
         result
     
   
-}
-
-func getBool(key: String) = {
-  match getBoolean(this, key) {
-      case b:Boolean => b
-      case _ => false
-  }
-}
-
-func isTestEnv()={
-  getBool("TESTENV")
 }
 
 @Callable(i)
@@ -344,7 +241,6 @@ func unstakeJackpotWithoutClaimEgg(asset: String) = {
 
   
 }
-
 
 @Verifier(tx)
 func verify() = {

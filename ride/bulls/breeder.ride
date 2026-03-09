@@ -1,6 +1,16 @@
-{-# STDLIB_VERSION 6 #-}
+{-# STDLIB_VERSION 5 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
 
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
@@ -17,24 +27,24 @@ func tryGetString(key: String) = {
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
-func staticKey_felineIncubator()= "static_felineIncubatorAddress"
-func staticKey_felineIncubationFee()= "static_felineIncubationFee"
+func staticKey_bullIncubator()= "static_bullIncubatorAddress"
+func staticKey_bullIncubationFee()= "static_bullIncubationFee"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
-func staticKey_canineRebirthAddress() = "static_felineRebirthAddress"
+func staticKey_bullRebirthAddress() = "static_bullRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
-func getCanineIncubator() = Address(tryGetStringExternal(getOracle(),staticKey_felineIncubator()).fromBase58String())
-func getCanineIncubationFee() = getIntegerValue(getOracle(),staticKey_felineIncubationFee())
+func getBullIncubator() = Address(tryGetStringExternal(getOracle(),staticKey_bullIncubator()).fromBase58String())
+func getBullIncubationFee() = getIntegerValue(getOracle(),staticKey_bullIncubationFee())
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
-func getFeliRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
+func getBullRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullRebirthAddress()).fromBase58String())
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -63,16 +73,6 @@ func getProcessStatusKey(address: String, txId: ByteVector) = {
   # if false = not claimed
   # if true = claimed and nft id will be in the key of getDuckIdKey
   address + "_" + txId.toBase58String() +  "_status"
-}
-
-func getBool(key: String) = {
-  match getBoolean(this, key) {
-      case b:Boolean => b
-      case _ => false
-  }
-}
-func isTestEnv()={
-  getBool("TESTENV")
 }
 
 func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
@@ -122,13 +122,14 @@ specifiqueGene: String, specifiqueGenePosition: Int) = {
   let gen = if (randomNum == 0) then gen1 else gen2
   gen
 }
+
 func generate(txId: ByteVector, hatchingFinishHeight: Int,
 parentFixedGene: Int,positionFixedGene: Int,
 specifiqueGene: String, specifiqueGenePosition: Int) = {
   let colorRandom = getRandomNumber(4, txId, hatchingFinishHeight, 11)
   let color = if (colorRandom == 0) then "A"
     else if (colorRandom == 1) then "B" 
-    else if (colorRandom == 2) then "C"
+    else if (colorRandom == 2) then "C" 
     else "D"
 
   let parent1Id = tryGetString(getParentKey(txId, 1)).fromBase58String()
@@ -137,7 +138,7 @@ specifiqueGene: String, specifiqueGenePosition: Int) = {
   let parent1Gen = assetInfo(parent1Id).value().name.split("")
   let parent2Gen = assetInfo(parent2Id).value().name.split("")
 
-  let gen = "FELI-" 
+  let gen = "BULL-" 
             + getRandomGen(parent1Gen[5], parent2Gen[5], 0, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + getRandomGen(parent1Gen[6], parent2Gen[6], 1, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + getRandomGen(parent1Gen[7], parent2Gen[7], 2, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
@@ -147,11 +148,11 @@ specifiqueGene: String, specifiqueGenePosition: Int) = {
             + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + "-" + determineGeneration(parent1Gen[14], parent2Gen[14]) + color
-    (gen, colorRandom)
+    gen
 }
 
 func checkAssetInIncubator(assetId: String) = {
-  let result = match getString(getCanineIncubator(), assetId) {
+  let result = match getString(getBullIncubator(), assetId) {
     case b:String => true
     case _ => false
   }
@@ -176,10 +177,13 @@ func canBeBreeded(asset1Id: ByteVector, asset2Id: ByteVector) = {
     }
   }
 }
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("wrong type, expected: String")
+
+func getRandomOldGenes(txId: ByteVector, h: Int) = {
+  let freeGenes = ["A","B","C","D"]
+  let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
+  freeGenes[randomNumber]
 }
+
 func isSymbolA(accumulated: Int, sym: String) = { if (sym == "A") then {accumulated+1} else {accumulated+0} }
 func isSymbolB(accumulated: Int, sym: String) = { if (sym == "B") then {accumulated+1} else {accumulated+0} }
 func isSymbolC(accumulated: Int, sym: String) = { if (sym == "C") then {accumulated+1} else {accumulated+0} }
@@ -193,27 +197,6 @@ func getAmountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
 }
 
-func getGen(assetName: String) = {
-  # getGen("-ABCDDCBA-GY") -> 2A2B2C2D-G
-  let genotype = assetName.drop(5).dropRight(3).split("")
-  let generation = assetName.split("")[14]
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolD)) + "D") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolE)) + "E")+  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolF)) + "F") +
-  getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolG)) + "G") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolH)) + "H")+"-" + generation
-}
-
-func composeGenericData(Gen: String, IdKey: String, assetId: ByteVector, asset: Issue)= {
-  strict farmGen = invoke(this,"getGenFromName",[Gen],[]).exactAs[String]
-  let amount = tryGetInteger(getStatsKey(Gen))
-  let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
-  [
-    StringEntry(IdKey, assetId.toBase58String()),
-    StringEntry(assetId.toBase58String(), IdKey),
-    IntegerEntry(getStatsKey(Gen), amount + 1),
-    IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
-    asset
-    ]
-}
 
 func finishHatchingInternal(txIdStr: String, i: Invocation,
       parentFixedGene: Int,positionFixedGene: Int,
@@ -228,53 +211,56 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
   
   if (processTxStatus == HatchingFinished) then {
     let Id = getStringValue(this, getIdKey(i.caller.toString(), txId))
-    throw("The feline was breeded and claimed already, here is the folowing: " + Id)
+    throw("The bull was breeded and claimed already, here is the folowing: " + Id)
   } else 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
-      let outcome = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
-      let Gen = outcome._1
-      let random = outcome._2
-      let farmGen = getGen(Gen)
+      let Gen = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
+      let farmGen = invoke(this,"getGenFromName",[Gen],[]).exactAs[String]
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
+      let amount = tryGetInteger(getStatsKey(Gen)) + 1
+      let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
-      let bonusOutput = if (random %2 ==0) then
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTR",i.caller.toString(),0],[])
-        [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)]
-      else
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTW",i.caller.toString(),0],[])
-        [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)]
-      strict recordAction = invoke(getCouponsAddress(),"recordAction",["BREEDFELINE"],[])
-      composeGenericData(Gen,IdKey,assetId,asset)++
+
       [
         StringEntry(processStatusKey, HatchingFinished),
+        StringEntry(IdKey, assetId.toBase58String()),
+        StringEntry(assetId.toBase58String(), IdKey),
+        IntegerEntry(getStatsKey(Gen), amount),
+        IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
+        asset,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ]#++bonusOutput
+      ]
     }
 }
 
-func getRandomOldGenes(txId: ByteVector, h: Int) = {
-  let freeGenes = ["A","B","C","D"]
-  let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
-  freeGenes[randomNumber]
+@Callable(i)
+func reduceRarity(assetId: String, farmGen: String) = {
+  let asset = assetId.fromBase58String()
+  if (i.caller != getBullRebirthAddress() && i.caller != this) then {
+    throw("admin, items or rebirth only")
+  } else {
+    let duckGen = assetInfo(asset).value().name
+    [
+      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) - 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
+    ]
+  }
 }
-
 
 @Callable(i)
 func increaseRarity(assetId: String, farmGen: String) = {
   let asset = assetId.fromBase58String()
-  if (i.caller != getFeliRebirthAddress() && i.caller != this) then {
+  if (i.caller != getBullRebirthAddress() && i.caller != this) then {
     throw("admin, items or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
@@ -297,60 +283,7 @@ func getGenFromName(assetName: String) = {
     gen
     )
   }
-
-@Callable(i)
-func createSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
-  if (i.caller != this) then throw("FBCSG: admin only") else
-  let txId = i.transactionId
-  let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
-  let asset = Issue(duckGen, description, 1, 0, false)
-  let assetId = asset.calculateAssetId()
-  let duckIdKey = getIdKey(i.caller.toString(), txId)
-
-  #TODO: work around for known issue dapp to dapp
-  strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).exactAs[String]
-  composeGenericData(duckGen,duckIdKey,assetId,asset)++
-  [
-    IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
-    ScriptTransfer(Address(address), 1, assetId)
-  ]
-  
- }
-
-@Callable(i)
-func validateAndGetChildren(assetId: String) = {
-  if (!checkAssetInIncubator(assetId)) then throw("You need to attach a valid NFT-feline. "+assetId+" is invalid!") else
-  let children = tryGetInteger("asset_" + assetId + "_children")
-  (
-    []
-    ,
-    children
-  )
-
-}
-
-@Callable(i)
-func copyNFT()= {
-  let firstPayment = i.payments[0].value()
-  let secondPayment = i.payments[1].value()
-  let validPayment = checkAdditionalPayment(i.payments[2])
-  let firstAssetId = firstPayment.assetId.value().toBase58String()
-  strict children = invoke(this,"validateAndGetChildren",[firstAssetId],[]).exactAs[Int]
-  if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
-  strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[secondPayment.assetId.value().toBase58String()],[]).exactAs[String]
-  if artefact != "ART-MIRROR" then  throw("You need to attach a ART-MIRROR artefact") else
-  let nftInfo = assetInfo(firstPayment.assetId.value()).value()
-  let asset1Gen = nftInfo.name.split("")        
-  if (asset1Gen[14] == "G" || asset1Gen[14] == "J" || asset1Gen[14] == "O" ) then  throw("You can't mirror this NFT") else
-    let duckGen = nftInfo.name
-    strict call = invoke(this, "createSpecialGenes", [i.caller.bytes, duckGen,children], [])
-    [
-      ScriptTransfer(i.caller, 1, firstPayment.assetId),
-      Burn(secondPayment.assetId.value(),1)
-    ]++validPayment
-
-}
-
+#TODO: send profits to staking smart contract
 @Callable(i)
 func startBreeding(refererAddress: String) = {
   #TODO: add validation that feeValidate payment is added!
@@ -359,13 +292,14 @@ func startBreeding(refererAddress: String) = {
   let firstPayment = i.payments[1].value()
   let secondPayment = i.payments[2].value()
   
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getCanineIncubationFee()],[]).exactAs[Int]
-  let leftToPay = getCanineIncubationFee()-amountPaidByCoupons
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getBullIncubationFee()],[]).exactAs[Int]
+  let leftToPay = getBullIncubationFee()-amountPaidByCoupons
   if leftToPay == 0 && size(i.payments) == 4 then throw("You need to attach 3 payments") else
   strict payment = if leftToPay!=0 then {
+    
     let thirdPayment = i.payments[3].value()
     if (thirdPayment.assetId != getEggAssetId()) then throw("TB: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-    if (thirdPayment.amount != leftToPay) then throw("TB: To breed a Feline you following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+    if (thirdPayment.amount != leftToPay) then throw("TB: To breed a BULL you following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
     let refererRewardForbeach = fraction(leftToPay, 5, 100)
     strict refCall = invoke(getRefContractAddress(), "refPayment",
         [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForbeach)]).asBoolean()
@@ -376,23 +310,21 @@ func startBreeding(refererAddress: String) = {
         
     leftToPay
     }else 0
-
-
-
+        
 
   let firstAssetId = firstPayment.assetId.value().toBase58String()
   let secondAssetId = secondPayment.assetId.value().toBase58String()
 
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
   if (!(checkAssetInIncubator(firstAssetId) && checkAssetInIncubator(secondAssetId))) then {
-    throw("You need to attach 2 valid NFT-felines.")
+    throw("You need to attach 2 valid NFT-bulls.")
   } else {
     if (tryGetInteger("asset_" + firstAssetId + "_children") > 0 || tryGetInteger("asset_" + secondAssetId + "_children") > 0) then {
-      throw("One feline can be used for breeding only once in its lifetime.")
+      throw("One BULL can be used for breeding only once in its lifetime.")
     } else {
       let breededStatus = canBeBreeded(firstAssetId.fromBase58String(), secondAssetId.fromBase58String())
       if (breededStatus != "true") then {
-        throw("These felines cannot be breeded: " + breededStatus)
+        throw("These bulls cannot be breeded: " + breededStatus)
       } else {
         [
           StringEntry(getParentKey(i.transactionId, 1), firstAssetId),
@@ -405,6 +337,13 @@ func startBreeding(refererAddress: String) = {
   }
 }
 
+
+@Callable(i)
+func finishHatching(txIdStr: String) = {
+  if size(i.payments) != 1 then throw("Wrong amount of payments!") else
+  strict feeValidate = checkAdditionalPayment(i.payments[0])
+    finishHatchingInternal(txIdStr,i,0,0,"",0)++feeValidate
+}
 
 @Callable(i)
 func fixedGene(txIdStr: String, parentFixedGene: Int, positionFixedGene: Int) = {
@@ -442,33 +381,12 @@ func freeGene(txIdStr: String) = {
 }
 
 @Callable(i)
-func finishHatching(txIdStr: String) = {
-  if size(i.payments) != 1 then throw("Wrong amount of payments!") else
-  strict feeValidate = checkAdditionalPayment(i.payments[0])
-  finishHatchingInternal(txIdStr,i,0,0,"",0)++feeValidate
-}
-
-@Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("ICU: admin only") else 
   [
     StringEntry("static_oracleAddress",oracle)
   ]
 
-}
-
-@Callable(i)
-func reduceRarity(assetId: String, farmGen: String) = {
-  let asset = assetId.fromBase58String()
-  if (i.caller != getFeliRebirthAddress() && i.caller != this) then {
-    throw("admin, items or rebirth only")
-  } else {
-    let duckGen = assetInfo(asset).value().name
-    [
-      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) - 1),
-      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
-    ]
-  }
 }
 
 @Verifier(tx)

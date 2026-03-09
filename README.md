@@ -16,7 +16,7 @@
 {
 "key": "static_oracleAddress",
 "type": "string",
-"value":"3P4vXL8gU27PhQv8sMT9jmoQY3oFqJNRWT9"
+"value":"3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9"
 }
 ],
 "fee": 600000,

@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 func getBool(key: String) = {
@@ -14,6 +14,7 @@ func isTestEnv()={
 
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_ammAddress() = "static_ammAddress"
+func staticKey_ammPzlUID() = "static_ammPZLUI"
 
 func getOracle() = Address(getStringValue(this,staticKey_oracleAddress()).fromBase58String())
 
@@ -34,7 +35,10 @@ func addAssetBytesToList(accum: List[ByteVector], item: String) = { accum ++ [it
 func convertStringIntoAmm(amm: String) ={
   let amms = getStringValue(getOracle(),staticKey_ammAddress())
   let list = amms.split(",")
-  if  containsElement(list, amm) then addressFromString(amm).value() else throw("BCO: AMM not found")
+  let pzlAmmm = getStringValue(getOracle(),staticKey_ammPzlUID())
+  let pzlAmmList = pzlAmmm.split(",")
+  let totalList = list ++ pzlAmmList
+  if  containsElement(totalList, amm) then addressFromString(amm).value() else throw("BCO: AMM not found")
 }
 @Callable(i)
 func generateAndStakeIndex(amm: String) = {
@@ -99,7 +103,7 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 } 
 

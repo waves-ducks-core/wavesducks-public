@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 5 #-}
+{-# STDLIB_VERSION 7 #-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -23,7 +23,10 @@ func staticKey_canineFarmingAddress() = "static_canineStakingAddress"
 func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_felineBreederAddress() = "static_felineBreederAddress"
 func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
-func staticKey_eagleFarmingAddress() = "static_eagleFarmingAddress"
+func staticKey_eagleFarmingAddress() = "static_eagleStakingAddress"
+func staticKey_bullBreederAddress() = "static_bullBreederAddress"
+func staticKey_bullFarmingAddress() = "static_bullFarmingAddress"
+
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
         case b:Boolean => b
@@ -78,10 +81,13 @@ func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),static
 func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
 func getEagleFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleFarmingAddress()).fromBase58String())
 func getEagleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String())
+func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
+func getBullFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullFarmingAddress()).fromBase58String())
 
 func getTrustedAddress() = [getBreederAddress(),getBabyDuckAddress(),getFarmingAddress(),
                             getHuntAddress(),getRebirthAddress(),getTurtleBreederAddress(),getTurtleIncubatorAddress(),getTurtleStakingAddress(),
                             getTurtleRebirthAddress(),getCapacityAddress(),getVeggFarmingAddress(), 
+                            getBullFarmingAddress(), getBullBreederAddress(),
                             getMutantFarmingAddress(), 
                             getFelineFarmingAddress(), 
                             getCanineFarmingAddress(), getCanineBreederAddress(), getFelineBreederAddress(),
@@ -130,13 +136,16 @@ func refPayment(refererKey: String) = {
   let dao = if isTestEnv() then "3Mx9X6Dpj3thXL2So77C4DG9AmBM4WX8Mvw" else "3PEwRcYNAUtoFvKpBhKoiwajnZfdoDR6h4h"
   #let sendFundsBack = ([ScriptTransfer(i.caller, i.payments[0].amount, i.payments[0].assetId)],false)
   let alreadySend = tryGetInteger("dao_refund")
+  let referalAddress = i.originCaller.toString()
+
   let sendFundsToDao = (
     [
       ScriptTransfer(dao.addressFromStringValue(), i.payments[0].amount, i.payments[0].assetId),
-      IntegerEntry("dao_refund",alreadySend+i.payments[0].amount)
+      IntegerEntry("dao_refund",alreadySend+i.payments[0].amount),
+      DeleteEntry("address_" + referalAddress + "_referedBy") 
+
       ], true
   )
-  let referalAddress = i.originCaller.toString()
   if (getTrustedAddress().indexOf(i.caller) == unit) then throw("RC: This method can be called only by farming and incubator dApps") else 
   if ((refererKey == "") && (tryGetString("address_" + referalAddress + "_referedBy") == "")) then sendFundsToDao else 
   if (masterTryGetBoolean("farm_"+referalAddress)) then sendFundsToDao else 

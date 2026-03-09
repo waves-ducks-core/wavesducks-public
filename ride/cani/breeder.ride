@@ -148,7 +148,7 @@ specifiqueGene: String, specifiqueGenePosition: Int) = {
             + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + "-" + determineGeneration(parent1Gen[14], parent2Gen[14]) + color
-    gen
+    (gen, colorRandom)
 }
 
 func checkAssetInIncubator(assetId: String) = {
@@ -179,7 +179,7 @@ func canBeBreeded(asset1Id: ByteVector, asset2Id: ByteVector) = {
 }
 
 func getRandomOldGenes(txId: ByteVector, h: Int) = {
-  let freeGenes = ["A","B"]
+  let freeGenes = ["A","B", "C"]
   let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
   freeGenes[randomNumber]
 }
@@ -239,7 +239,9 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
   } else 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
-      let Gen = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
+      let outcome = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
+      let Gen = outcome._1
+      let random = outcome._2      
       let farmGen = getGen(Gen)
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
@@ -251,6 +253,14 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
       strict recordAction = invoke(getCouponsAddress(),"recordAction",["BREEDCANINE"],[])
+      let bonusOutput = if (random %2 ==0) then
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTR",i.caller.toString(),0],[])
+        [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)]
+      else
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTW",i.caller.toString(),0],[])
+        [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)]
       composeGenericData(Gen,IdKey,assetId,asset)++[
         StringEntry(processStatusKey, HatchingFinished),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
@@ -259,7 +269,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
  
-      ]
+      ]#++bonusOutput
     }
 }
 

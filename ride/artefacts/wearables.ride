@@ -66,6 +66,8 @@ func getMutantBreederAddress()=  Address(tryGetStringExternal(getOracle(),"stati
 func getEagleIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleIncubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getEagleBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_eagleBreederAddress").fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(), static_couponsAddress()).fromBase58String())
+func getBullIncubatorAddress()=  Address(tryGetStringExternal(getOracle(),"static_bullIncubatorAddress").fromBase58String())
+func getBullBreederAddress()=  Address(tryGetStringExternal(getOracle(),"static_bullBreederAddress").fromBase58String())
 
 func checkAdditionalPayment(payment: AttachedPayment, amountOverride: Int)= {
   if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
@@ -92,7 +94,7 @@ func validateIfItemCanBeWorn(allTypes:Boolean,type:String,artefactName:String)={
     "ART-XHAT", "ART-POMP", "ART-BLUESHIRT", "ART-BUILTBODY", "ART-FREDYSWEATER",
     "ART-GUARDSUIT", "ART-LEATHERJCKET", "ART-PEPESHIRT", "ART-ROYALCOAT",
     "ART-TANKTOP", "ART-TRENCHCOAT", "ART-TUXEDO", "ART-WASSERMANVST",
-    "ART-ICECREAM", "ART-ORB", "ART-TOMMYGUN", "ART-UMBRELLA", "ART-KATANA",
+    "ART-ICECREAM", "ART-TOMMYGUN", "ART-UMBRELLA", "ART-KATANA",
     "ART-SCEPTER", "ART-SHOPBAG", "ART-SABER-PUR", "ART-SABER-BLU",
     "ART-SABER-YEL", "ART-SABER-RED", "ART-SABER-GRN", "ART-XSCARF"
   ]
@@ -122,10 +124,14 @@ func wearItem(assetIdWearAble: String, duckId: String, allTypes: Boolean, isDuck
         let amountParts = tryGetInteger(amountPartsSpecial(duckId,specialSetStarter))
         [IntegerEntry(amountPartsSpecial(duckId,specialSetStarter), amountParts+1)]
       else []
+      strict count2 =if artefactName.contains(secondSpecialSetStarter) then
+        let amountParts = tryGetInteger(amountPartsSpecial(duckId,secondSpecialSetStarter))
+        [IntegerEntry(amountPartsSpecial(duckId,secondSpecialSetStarter), amountParts+1)] 
+      else []
       [
         StringEntry(keyArtefactDuck(duckId,artefactName), assetIdWearAble)
         
-      ]++typeResult++counter
+      ]++typeResult++counter++count2
 }
 
 func tryGetBooleanExternal(address: Address, key: String) = {
@@ -153,6 +159,8 @@ func getIfAllTypesAllowed(assetId: ByteVector) = {
   if (issuer == getMutantBreederAddress()) then false else
   #Eagles
   if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then false else
+  #BUlls
+  if (issuer == getBullIncubatorAddress() || issuer == getBullBreederAddress()) then false else
   throw("MAG: Asset is not supported")
     
 
@@ -238,7 +246,8 @@ func calculateWearblesBoost(duckId: String)= {
   }
   let totalBoost = FOLD<8>(assetIdArray, 0, countTotalBoost)
   let specialBoost = tryGetInteger(keyArtefactDuck(duckId,specialSetStarter))
-  let combinedBoost = if specialBoost == 5 then totalBoost + 1000 else totalBoost
+  let specialBoost2 = tryGetInteger(keyArtefactDuck(duckId,secondSpecialSetStarter))
+  let combinedBoost = if specialBoost == 5 || specialBoost2 == 5 then totalBoost + 1000 else totalBoost
   ([
   ],combinedBoost)
 

@@ -440,7 +440,7 @@
         {
             "key": "TASK_WEARITEM_1_TEXT_WEEKLY_EN",
             "type": "string",
-            "value": "Wear 5 items 7 days in a row and receive {{reward}} $SPICE"
+            "value": "Wear 1 item 7 days in a row and receive {{reward}} $SPICE"
         },
         {
             "key": "TASK_VEGG10000000_1_TEXT_DAILY_RU",
@@ -471,7 +471,102 @@
             "key": "TASK_VEGG10000000_1_TEXT_WEEKLY_EN",
             "type": "string",
             "value": "Earn 0.1 $vEGG for 7 days in a row and receive {{reward}} $SPICE"
-        }
+        },
+        {
+            "key": "TASK_WEARITEM_5_TEXT_WEEKLY_EN",
+            "type": "string",
+            "value": "Wear 5 items 7 days in a row and receive {{reward}} $SPICE"
+        },
+
+
+
+
+
+                {
+            "key": "TASK_BREEDTURTLE_1",
+            "type": "boolean",
+            "value": true
+        },
+                {
+            "key": "TASK_BREEDTURTLE_1_ASSET",
+            "type": "string",
+            "value": "VEGG"
+        },
+                {
+            "key": "TASK_BREEDTURTLE_1_REWARD_DAILY",
+            "type": "integer",
+            "value": 25000000
+        },
+                {
+            "key": "TASK_BREEDTURTLE_1_REWARD_WEEKLY",
+            "type": "integer",
+            "value": 100000000
+        },
+{
+    "key": "TASK_BREEDTURTLE_1_TEXT_DAILY_EN",
+    "type": "string",
+    "value": "Breed a turtle daily and get {{rewards}} $vEGG"
+},
+{
+    "key": "TASK_BREEDTURTLE_1_TEXT_WEEKLY_EN",
+    "type": "string",
+    "value": "Breed a turtle daily for 7 days in a row and get {{rewards}} $vEGG"
+},
+{
+    "key": "TASK_BREEDTURTLE_1_TEXT_DAILY_ES",
+    "type": "string",
+    "value": "Cría una tortuga a diario y obtén {{rewards}} $vEGG"
+},
+{
+    "key": "TASK_BREEDTURTLE_1_TEXT_WEEKLY_ES",
+    "type": "string",
+    "value": "Cría una tortuga a diario durante 7 días seguidos y obtén {{rewards}} $vEGG"
+},
+{
+    "key": "TASK_BREEDTURTLE_1_TEXT_DAILY_RU",
+    "type": "string",
+    "value": "Разводите черепаху ежедневно и получайте {{rewards}} $vEGG"
+},
+{
+    "key": "TASK_BREEDTURTLE_1_TEXT_WEEKLY_RU",
+    "type": "string",
+    "value": "Разводите черепаху ежедневно в течение 7 дней подряд и получайте {{rewards}} $vEGG"
+},
+
+
+
+{
+"key": "TASK_REBIRTHTURTLE_1_TEXT_DAILY_ES",
+"type": "string",
+"value": "Cría una tortuga a diario y obtén {{reward}} $vEGG"
+},
+{
+"key": "TASK_REBIRTHTURTLE_1_TEXT_WEEKLY_ES",
+"type": "string",
+"value": "Cría una tortuga a diario durante 7 días seguidos y obtén {{reward}} $vEGG"
+},
+{
+"key": "TASK_REBIRTHTURTLE_1_TEXT_DAILY_EN",
+"type": "string",
+"value": "Breed a turtle daily and get {{reward}} $vEGG"
+},
+{
+"key": "TASK_REBIRTHTURTLE_1_TEXT_WEEKLY_EN",
+"type": "string",
+"value": "Breed a turtle daily for 7 days in a row and get {{reward}} $vEGG"
+},
+{
+"key": "TASK_REBIRTHTURTLE_1_TEXT_DAILY_RU",
+"type": "string",
+"value": "Разводите черепаху ежедневно и получайте {{reward}} $vEGG"
+},
+{
+"key": "TASK_REBIRTHTURTLE_1_TEXT_WEEKLY_RU",
+"type": "string",
+"value": "Разводите черепаху ежедневно в течение 7 дней подряд и получайте {{reward}} $vEGG"
+}
+
+        
     ],
     "fee": 600000,
     "feeAssetId": "WAVES"
