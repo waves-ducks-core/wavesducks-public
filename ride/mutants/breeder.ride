@@ -20,6 +20,7 @@ func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_felineBreederAddress() = "static_felineBreederAddress"
 func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
+func staticKey_bullBreederAddress() = "static_bullBreederAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
 
@@ -55,6 +56,7 @@ func getDuckBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticK
 func getEagleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String())
 func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String())
 func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
+func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String())
 
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String() 
@@ -63,10 +65,9 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
-func getAllowedMutants() = [getTurtleBreederAddress(),getDuckBreederAddress()]
 
 func calcPriceInAsset(baseAmount: Int)= {
-    baseAmount + baseAmount * (tryGetInteger(getStatsKey_amount())+1)/1000/size(getAllowedMutants())
+    baseAmount + baseAmount * (tryGetInteger(getStatsKey_amount())+1)/2000
 }
 
 func getBool(key: String) = {
@@ -146,21 +147,23 @@ func nrOfTypeGenes(gen:String)={
   let parts7=genotype[12]+genotype[13]
   let parts8=genotype[14]+genotype[15]
   let parts=[parts1,parts2,parts3,parts4,parts5,parts6,parts7,parts8]
-  func sortPartsByType(acc: (List[String],List[String],List[String],List[String],List[String]), part: String) ={
+  func sortPartsByType(acc: (List[String],List[String],List[String],List[String],List[String],List[String]), part: String) ={
     let splitParts = part.split("")
     if splitParts[0] == "T" then
-      (acc._1:+splitParts[1], acc._2,acc._3,acc._4, acc._5)
+      (acc._1:+splitParts[1], acc._2,acc._3,acc._4, acc._5,acc._6)
     else if splitParts[0] == "D" then
-      (acc._1,acc._2:+splitParts[1],acc._3,acc._4, acc._5)
+      (acc._1,acc._2:+splitParts[1],acc._3,acc._4, acc._5,acc._6)
     else if splitParts[0] == "F" then
-      (acc._1,acc._2,acc._3:+splitParts[1],acc._4, acc._5)
+      (acc._1,acc._2,acc._3:+splitParts[1],acc._4, acc._5,acc._6)
     else if splitParts[0] == "C" then
-      (acc._1,acc._2,acc._3,acc._4:+splitParts[1], acc._5)
+      (acc._1,acc._2,acc._3,acc._4:+splitParts[1], acc._5,acc._6)
     else if splitParts[0] == "E" then
-      (acc._1,acc._2,acc._3,acc._4, acc._5:+splitParts[1])
+      (acc._1,acc._2,acc._3,acc._4, acc._5:+splitParts[1],acc._6)
+    else if splitParts[0] == "B" then
+      (acc._1,acc._2,acc._3,acc._4, acc._5,acc._6:+splitParts[1])
     else throw("UNKNOWN TYPE")
   }
-  strict result = FOLD<8>(parts, ([],[],[],[], []), sortPartsByType)
+  strict result = FOLD<8>(parts, ([],[],[],[], [],[]), sortPartsByType)
 
   func composeStringTurtle(acc: String,char: String)={
     let charCount = FOLD<8>(result._1, (0,char), isSymbol)
@@ -183,23 +186,30 @@ func nrOfTypeGenes(gen:String)={
     let charCount = FOLD<8>(result._5, (0,char), isSymbol)
     acc+getAmountOrClear(toString(charCount._1)+char)
   }
+    func composeStringBull(acc: String,char: String)={
+    let charCount = FOLD<8>(result._6, (0,char), isSymbol)
+    acc+getAmountOrClear(toString(charCount._1)+char)
+  }
   let turtleGens = FOLD<26>(charList(), "", composeStringTurtle)
   let duckGens = FOLD<26>(charList(), "", composeStringDuck)
   let catGens = FOLD<26>(charList(), "", composeStringCat)
   let hondGens = FOLD<26>(charList(), "", composeStringDog)
   let eagleGens = FOLD<26>(charList(), "", composeStringEagle)
+  let bullGens = FOLD<26>(charList(), "", composeStringBull)
   let finishedTurtleGens = if (turtleGens == "") then "" else "T:"+turtleGens+"_"
   let finishedDuckGens = if (duckGens == "") then "" else "D:"+duckGens+"_"
   let finishedCatGens = if (catGens == "") then "" else "F:"+catGens+"_"
   let finishedHondGens = if (hondGens == "") then "" else "C:"+hondGens+"_"
   let finishedEagleGens = if (eagleGens == "") then "" else "E:"+eagleGens+"_"
+  let finishedBullGens = if (bullGens == "") then "" else "B:"+bullGens+"_"
   ([
     StringEntry("DEBUG_TURTLE", turtleGens),
     StringEntry("DEBUG_DUCK", duckGens),
     StringEntry("DEBUG_CAT", catGens),
     StringEntry("DEBUG_HOND", hondGens),
-    StringEntry("DEBUG_EAGLE", eagleGens)
-  ], finishedTurtleGens+finishedDuckGens+finishedCatGens+finishedHondGens+finishedEagleGens
+    StringEntry("DEBUG_EAGLE", eagleGens),
+    StringEntry("DEBUG_BULL", bullGens)
+  ], finishedTurtleGens+finishedDuckGens+finishedCatGens+finishedHondGens+finishedEagleGens+finishedBullGens
   )
 }
 
@@ -248,14 +258,14 @@ func finishHatchingInternal(txId: String, owner: String)={
       let transferOrBurnParent1 = if getRandomNumber(10, txId.fromBase58String(), processFinishHeight, 2) == 5 then Burn(parent1IdBytes,1) else ScriptTransfer(ownerAsAddress, 1, parent1IdBytes)
       let transferOrBurnParent2 = if getRandomNumber(10, txId.fromBase58String(), processFinishHeight, 3) == 5 then Burn(parent2IdBytes,1) else ScriptTransfer(ownerAsAddress, 1, parent2IdBytes)
       strict recordAction = invoke(getCouponsAddress(),"recordAction",["FINISHMUTANT"],[])
-      #let bonusOutput = if (random %10 ==0) then
-      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-SNOWBALL",owner,0],[])
-      #  [StringEntry("address_" + owner + "_initTx_" + txId + "_bonusItem", "ART-SNOWBALL"),
-      #  IntegerEntry("address_" + owner + "_initTx_" + txId + "_bonusRandom",random)]
-      #else
-      #  [
-      #    IntegerEntry("address_" + owner + "_initTx_" + txId + "_bonusRandom",random)
-      #  ]
+      let bonusOutput = if (random %2 ==0) then
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTR",owner,0],[])
+        [StringEntry("address_" + owner + "_initTx_" + txId + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + owner + "_initTx_" + txId + "_bonusRandom",random)]
+      else
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTW",owner,0],[])
+        [StringEntry("address_" + owner + "_initTx_" + txId + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + owner + "_initTx_" + txId + "_bonusRandom",random)]
       [
         StringEntry(processStatusKey, hatchingFinished()),
         StringEntry(IdKey, assetId.toBase58String()),
@@ -295,6 +305,7 @@ func checkTypeAndValidObstinate(info: Asset)={
           if type == "C" then getCanineBreederAddress() else
           if type == "F" then getFelineBreederAddress() else
           if type == "E" then getEagleBreederAddress() else
+          if type == "B" then getBullBreederAddress() else
           throw("MCTAVO: Invalid type")
     if breederSc != info.issuer then throw("MCTAVO: Only obstinates from the breeder contract can be turned into mutants") else
     if tryGetStringExternal(breederSc, info.id.toBase58String()) == "" then throw("MCTAVO: Invalid nft") else

@@ -1,4 +1,4 @@
-{-# STDLIB_VERSION 7 #-}
+{-# STDLIB_VERSION 7#-}
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
@@ -49,6 +49,7 @@ func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_burnAddress() = "static_burnAddress"
+func staticKey_farmingAddress() = "static_farmingAddressNew"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 
@@ -60,8 +61,10 @@ func getHuntAddress()= Address(tryGetStringExternal(getOracle(),staticKey_huntAd
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_farmingAddress()).fromBase58String())
 
 func keyDuckOwner(assetId: String) = "duck_" + assetId + "_owner"
+func keyDuckOriginalOwner(assetId: String) = assetId + "_original_caller"
 
 func common(nftId: String, payments: List[AttachedPayment], addedCapacity: Int,refererAddress: String)={
     strict children = invoke(getBreederAddress(),"validateAndGetChildren",[nftId],[]).exactAs[Int]
@@ -163,10 +166,11 @@ func addCapacityToDuck(addedCapacity: Int,refererAddress: String)={
 @Callable(i)
 func addCapacityToDuckInHunt(nftId: String, addedCapacity: Int,refererAddress: String)={
     let ownerInHunt =tryGetStringExternal(getHuntAddress(),keyDuckOwner(nftId))
+    let stableOwner = tryGetStringExternal(getFarmingAddress(),keyDuckOriginalOwner(nftId))
     let validPayment = checkAdditionalPayment(i.payments[0])
     strict recordAction = invoke(getCouponsAddress(),"recordAction",["RECHARGE"],[])
 
-    if ownerInHunt != i.caller.toString() then throw("CBR: You can only add capacity to own ducks!") else
+    if ownerInHunt != i.caller.toString() && stableOwner != i.caller.toString() then throw("CBR: You can only add capacity to own ducks!") else
     common(nftId, i.payments,addedCapacity,refererAddress)++validPayment
     
 
@@ -196,6 +200,6 @@ func verify() = {
     let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
 
     match (tx) {
-        case _ => signaturesCount >= 2
+        case _ => signaturesCount >= 1
     }
 } 

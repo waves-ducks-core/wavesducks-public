@@ -133,7 +133,7 @@
     {
         "key": "merge_ART-LOVE3_amount",
         "type": "integer",
-        "value": 7
+        "value": 3
     },
     {
         "key": "merge_ART-LOVE3_endItem",
@@ -148,7 +148,7 @@
     {
         "key": "merge_ART-LOVE3_secondaryItemAmount",
         "type": "integer",
-        "value": 3
+        "value": 7
     },
     {
         "key": "merge_ART-LOVE3_instant",
@@ -162,47 +162,6 @@
     },
     {
         "key": "merge_ART-LOVE3_price",
-        "type": "integer",
-        "value": 0
-    },
-
-    {
-        "key": "merge_ART-LOVE4_baseItem",
-        "type": "string",
-        "value": "ART-GFTR"
-    },
-    {
-        "key": "merge_ART-LOVE4_amount",
-        "type": "integer",
-        "value": 6
-    },
-    {
-        "key": "merge_ART-LOVE4_endItem",
-        "type": "string",
-        "value": "ART-LOVE_HELMET"
-    },
-    {
-        "key": "merge_ART-LOVE4_secondaryItem",
-        "type": "string",
-        "value": "ART-GFTW"
-    },
-    {
-        "key": "merge_ART-LOVE4_secondaryItemAmount",
-        "type": "integer",
-        "value": 4
-    },
-    {
-        "key": "merge_ART-LOVE4_instant",
-        "type": "boolean",
-        "value": true
-    },
-    {
-        "key": "merge_ART-LOVE4_asset",
-        "type": "string",
-        "value": "WAVES"
-    },
-    {
-        "key": "merge_ART-LOVE4_price",
         "type": "integer",
         "value": 0
     },
@@ -256,7 +215,7 @@
     {
         "key": "merge_ART-LOVE6_amount",
         "type": "integer",
-        "value": 4
+        "value": 6
     },
     {
         "key": "merge_ART-LOVE6_endItem",
@@ -271,7 +230,7 @@
     {
         "key": "merge_ART-LOVE6_secondaryItemAmount",
         "type": "integer",
-        "value": 6
+        "value": 4
     },
     {
         "key": "merge_ART-LOVE6_instant",
@@ -297,7 +256,7 @@
     {
         "key": "merge_ART-LOVE7_amount",
         "type": "integer",
-        "value": 3
+        "value": 7
     },
     {
         "key": "merge_ART-LOVE7_endItem",
@@ -312,7 +271,7 @@
     {
         "key": "merge_ART-LOVE7_secondaryItemAmount",
         "type": "integer",
-        "value": 7
+        "value": 3
     },
     {
         "key": "merge_ART-LOVE7_instant",
@@ -338,12 +297,12 @@
     {
         "key": "merge_ART-LOVE8_amount",
         "type": "integer",
-        "value": 2
+        "value": 8
     },
     {
         "key": "merge_ART-LOVE8_endItem",
         "type": "string",
-        "value": "ART-LOVE_BOW"
+        "value": "ART-LOVE_MACE"
     },
     {
         "key": "merge_ART-LOVE8_secondaryItem",
@@ -353,7 +312,7 @@
     {
         "key": "merge_ART-LOVE8_secondaryItemAmount",
         "type": "integer",
-        "value": 8
+        "value": 2
     },
     {
         "key": "merge_ART-LOVE8_instant",

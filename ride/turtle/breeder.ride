@@ -150,7 +150,7 @@ specifiqueGene: String, specifiqueGenePosition: Int) = {
             + getRandomGen(parent1Gen[11], parent2Gen[11], 6, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + getRandomGen(parent1Gen[12], parent2Gen[12], 7, txId, hatchingFinishHeight, parentFixedGene, positionFixedGene, specifiqueGene, specifiqueGenePosition)
             + "-" + determineGeneration(parent1Gen[14], parent2Gen[14]) + color
-    gen
+    (gen,colorRandom)
 }
 
 func checkAssetInIncubator(assetId: String) = {
@@ -224,23 +224,33 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
   } else 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
-      let TRTLGen = generateTRTL(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
-      strict farmGen = invoke(this,"getGenFromName",[TRTLGen],[]).exactAs[String]
-      let description = "{\"genotype\": \"" + TRTLGen + "\", \"crossbreeding\": true}"
+      let outcome = generateTRTL(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
+      let Gen = outcome._1
+      let random = outcome._2    
+      strict farmGen = invoke(this,"getGenFromName",[Gen],[]).exactAs[String]
+      let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
-      let asset = Issue(TRTLGen, description, 1, 0, false, unit, processFinishHeight)
+      let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
-      let amount = tryGetInteger(getStatsKey(TRTLGen)) + 1
+      let amount = tryGetInteger(getStatsKey(Gen)) + 1
       let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let parent1Id = tryGetString(getTRTLParentKey(txId, 1))
       let parent2Id = tryGetString(getTRTLParentKey(txId, 2))
       strict recordAction = invoke(getCouponsAddress(),"recordAction",["BREEDTURTLE"],[])
+      let bonusOutput = if (random %2 ==0) then
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTR",i.caller.toString(),0],[])
+        [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)]
+      else
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTW",i.caller.toString(),0],[])
+        [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)]
       [
         StringEntry(processStatusKey, HatchingFinished),
         StringEntry(TRTLIdKey, assetId.toBase58String()),
         StringEntry(assetId.toBase58String(), TRTLIdKey),
-        IntegerEntry(getStatsKey(TRTLGen), amount),
+        IntegerEntry(getStatsKey(Gen), amount),
         IntegerEntry("stats_"+farmGen+"_quantity", quantity+1),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1),
@@ -248,7 +258,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ]
+      ]#++bonusOutput
     }
 }
 

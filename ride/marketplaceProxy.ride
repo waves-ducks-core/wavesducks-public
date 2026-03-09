@@ -74,6 +74,10 @@ func getAuctionAddr() = {
   tryGetStringExternal(getCfMasterAddress(), kAuctionDapp)
 }
 
+func addressIsCf(address: String) = {
+  tryGetBooleanExternal(getCfMasterAddress(), "farm_"+address)
+}
+
 func amountOrClear(amount: String) = {
   if (amount.contains("0")) then {""} else {amount}
 }
@@ -103,7 +107,7 @@ func getAssetFarmingPower(assetId: ByteVector) = {
   if (assetInfo(assetId).value().issuer == Address(breederAddress) || assetInfo(assetId).value().issuer == Address(incubatorAddress)) then {
     let assetName = assetInfo(assetId).value().name
     let generation = assetName.takeRight(2).take(1)
-    strict farmGen = invoke(Address(breederAddress),"getGenFromName",[assetName],[]).asString()
+    strict farmGen = invoke(Address(breederAddress),"getGenFromName",[assetName],[]).exactAs[String]
     getAssetRarity(farmGen, generation)
   } else {
     throw("MGAFP: _20")
@@ -254,8 +258,8 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
     let maxPrice =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen)
                         else duckMarketPrice + fraction(duckMarketPrice, 15, 100)+fixedPriceDiff
-
-    if (bidAmount > maxPrice) then throw("Price is too high, calc price: " + duckMarketPrice.toString() + ", max. price after item check: " + (maxPrice).toString() + ", your buy price: " + bidAmount.toString()) else
+    let auctionOwner = tryGetStringExternal(auctionDappAddress, "auction_" + auctionId + "_owner")
+    if (bidAmount > maxPrice && !addressIsCf(auctionOwner)) then throw("Price is too high, calc price: " + duckMarketPrice.toString() + ", max. price after item check: " + (maxPrice).toString() + ", your buy price: " + bidAmount.toString()) else
     if (i.payments.size() != 1) then throw("_103") else{
       strict instantBuy = invoke(auctionDappAddress, "instantBuy", [auctionId], [AttachedPayment(value(i.payments[0]).assetId, bidAmount)])
       [

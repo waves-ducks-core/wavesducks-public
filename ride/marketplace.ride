@@ -34,6 +34,8 @@ func getFelineBreederAddress()=  tryGetAddressExternal(getOracle(),"static_felin
 func getMutantBreederAddress()=  tryGetAddressExternal(getOracle(),"static_mutantIncubatorAddress")
 func getEagleIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_eagleIncubatorAddress")
 func getEagleBreederAddress()=  tryGetAddressExternal(getOracle(),"static_eagleBreederAddress")
+func getBullIncubatorAddress()=  tryGetAddressExternal(getOracle(),"static_bullIncubatorAddress")
+func getBullBreederAddress()=  tryGetAddressExternal(getOracle(),"static_bullBreederAddress")
 
 func getItemsAddress() =  tryGetAddressExternal(getOracle(),"static_itemsAddress")
 func getFeeAggregatorAddress() =  tryGetAddressExternal(getOracle(),"static_feeAggregator")
@@ -84,8 +86,10 @@ func getAssetGenotype(assetId: ByteVector) = {
   if (issuer == getCanineIncubatorAddress() || issuer == getCanineBreederAddress()) then name else
   #Felines
   if (issuer == getFelineIncubatorAddress() || issuer == getFelineBreederAddress()) then name else
-    #Eagles
+  #Eagles
   if (issuer == getEagleIncubatorAddress() || issuer == getEagleBreederAddress()) then name else
+  #Bulls
+  if (issuer == getBullIncubatorAddress() || issuer == getBullBreederAddress()) then name else
   #Mutants
   if (issuer == getMutantBreederAddress()) then description else
   #Mantles

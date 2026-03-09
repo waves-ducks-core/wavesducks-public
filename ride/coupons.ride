@@ -55,14 +55,17 @@ func staticKey_wearablesAddress() = "static_wearablesAddress"
 func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
 func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_mutantBreedingAddress() = "static_mutantIncubatorAddress"
-
+func staticKey_eggAssetId() = "static_eggAssetId"
+func burnAddressKey() = "static_burnAddress"
+func staticKey_feeAggregator() = "static_feeAggregator"
+func staticKey_bullBreederAddress() = "static_bullBreederAddress"
+func staticKey_bullFarmingAddress() = "static_bullFarmingAddress"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),"static_farmingAddressNew").fromBase58String())
 func getGameDappAddress() = Address(tryGetStringExternal(getOracle(),"static_gameDappAddress").fromBase58String())
 func getCapacityAddress() = Address(tryGetStringExternal(getOracle(),staticKey_capacityAddress()).fromBase58String()) 
-func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getBabyduckAddress() = Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String())
 func getBreedingAddress() = Address(tryGetStringExternal(getOracle(),"static_breederAddress").fromBase58String())
 func getMasterAddress() = Address(tryGetStringExternal(getOracle(),"static_cfMasterAddress").fromBase58String())
@@ -78,6 +81,7 @@ func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getCanineFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_canineStakingAddress").fromBase58String())
 func getFelineFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_felineStakingAddress").fromBase58String())
 func getEagleFarmingAddress() = Address(tryGetStringExternal(getOracle(),"static_eagleStakingAddress").fromBase58String())
+func getBullFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullFarmingAddress()).fromBase58String())
 func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineBreederAddress()).fromBase58String())
 func getFelineBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineBreederAddress()).fromBase58String())
 func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
@@ -87,6 +91,10 @@ func getWearablesAddress() = Address(tryGetStringExternal(getOracle(),staticKey_
 func getFelineRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String())
 func getCanineRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 func getMutantBreedingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_mutantBreedingAddress()).fromBase58String())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(), burnAddressKey()).fromBase58String())
+func getFeeAggregatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(), staticKey_eggAssetId()).fromBase58String()  
+func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
@@ -97,6 +105,8 @@ let scCanUseCoupons = [ getRebirthAddress(),getIncubatorAddress(),getFarmingAddr
                         ,getFelineFarmingAddress(),getEagleBreederAddress(),getCanineBreederAddress()
                         ,getFelineBreederAddress(),getTurtleBreederAddress(),getEagleFarmingAddress(),
                         getEagleRebirthAddress(),getWearablesAddress(),getFelineRebirthAddress(),getCanineRebirthAddress(),
+                        getBullBreederAddress(),getBullFarmingAddress(),
+
                         getMutantBreedingAddress()
                         ,this]
 
@@ -193,6 +203,45 @@ func recordActionInternal(actionName:String, addressCaller: Address, address:Add
         [
             IntegerEntry(actionKey,totalActions)
         ]++payAction(actionName,address,totalActions, day)
+}
+
+
+@Callable(i)
+func burnEggs()= {
+    let burnActiveKey = "burn_eggs_active"
+    let burnTotalKey = "burn_eggs_total"
+    func burnUserKey(address:String) = {
+        address+"_burn_eggs"
+        }
+    let burnActive = tryGetBoolean(burnActiveKey)
+    if burnActive then
+        if isTestEnv() then 
+            let invoker = i.caller.toString()
+            let key = burnUserKey(invoker)
+            let userBurned = tryGetInteger(key)
+            if i.payments.size() != 1 || i.payments[0].assetId != getEggAssetId() then throw("CBE: send eggs only to burn eggs") else
+            let burnAmount = i.payments[0].amount
+            let newUserBurned = userBurned+burnAmount
+            let totalBurned = tryGetInteger(burnTotalKey)
+            let newTotalBurned = totalBurned+burnAmount
+            let amountToBurn = burnAmount/100*98
+            strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),amountToBurn)])
+            let totalAmount = if newUserBurned >200_0000_0000 then burnAmount*2
+                            else if newUserBurned >100_0000_0000 then burnAmount*3/2
+                            else if newUserBurned >50_0000_0000 then burnAmount*4/3
+                            else if newUserBurned >20_0000_0000 then burnAmount*5/4
+                            else burnAmount*21/20
+            addCouponsInternal(invoker,totalAmount)++
+            [
+                IntegerEntry(key,newUserBurned),
+                IntegerEntry(burnTotalKey,newTotalBurned),
+                ScriptTransfer(getFeeAggregatorAddress(),i.payments[0].amount - amountToBurn,i.payments[0].assetId)
+
+            ]
+        else
+            throw("Not allowed in production")
+    else
+        throw("CBE: burn eggs not active")
 }
 
 @Callable(i)
@@ -349,7 +398,7 @@ func questThree()={
 func useCoupons(amountTryingToPay:Int)= {
     let invokingSc = i.caller
     if amountTryingToPay < 0  then throw("CUC: Only positive amount of money can be paid!") else
-    if !containsElement(scCanUseCoupons, invokingSc) then throw("CUC: Only certain smart contracts can use this coupon module!") else #prevents outsider to implement our coupons
+    if !containsElement(scCanUseCoupons, invokingSc) then throw("CUC: Only certain smart contracts can use this coupon module! "+invokingSc.toString()) else #prevents outsider to implement our coupons
     let user = i.originCaller.toString()
     let keyActive = couponsUserActive(user)
     let availableCoupons = tryGetInteger(keyActive)

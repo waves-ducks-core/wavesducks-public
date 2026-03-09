@@ -1,0 +1,90 @@
+{-# STDLIB_VERSION 7 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+func tryGetString(key: String) = {
+        match getString(this, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+let stakeId = tryGetString("last_stake_id")
+
+func getNodeAccount()={
+    addressFromStringValue("3PGZMJGVbWM8taptaK8sbxE2Ja7k54HKUJS")
+}
+func getDaoAddress()={
+    addressFromStringValue("3PEwRcYNAUtoFvKpBhKoiwajnZfdoDR6h4h")
+}
+
+func stakeUnstake(stake:Boolean, amount:Int)={
+  if amount > 0 then
+    let leasingAmount = valueOrElse(getInteger(this, "leasing_amount"), 0)
+    let newLeaseAmount = if (stake)
+            then (leasingAmount + amount)
+            else (leasingAmount - amount)
+    let newLease = Lease(getNodeAccount(), newLeaseAmount)
+    let newLeaseId = newLease.calculateLeaseId()
+    let data = [
+      newLease,
+      StringEntry("last_stake_id", newLeaseId.toBase58String()),
+      IntegerEntry("leasing_amount",newLeaseAmount)
+    ]
+    if stakeId != "" then
+    [LeaseCancel(stakeId.fromBase58String())]++data 
+    else 
+    data
+
+  else
+    []
+}
+
+
+@Callable(i)
+func stakeAll()={
+  stakeUnstake(true, wavesBalance(this).available-1_0000_0000)
+}
+
+@Callable(i)
+func claimAll()={
+  strict res = invoke(getDaoAddress(), "Claim", [], [])
+  []
+}
+
+
+@Verifier(tx)
+func verify() = {
+  match (tx) {
+    case ss: DataTransaction| LeaseTransaction | LeaseCancelTransaction => 
+        sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+    
+    case other => {
+      let firstUser = base58'B3gmvuPw3598JXcjzyo9qC3eqn5XCELMuU8uHYWZANPk'
+      let secondUser = base58'53TLiKfhLWr2tN9DLgEHs8sf42hbUj3JpE6uxsDPZtnM'
+      let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+      let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+          else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+          else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+          else 0
+      let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+          else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+          else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+          else 0
+      let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+          else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+          else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+          else 0
+      let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+      signaturesCount >= 2
+    }
+  }
+} 

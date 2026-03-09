@@ -1,10 +1,12 @@
 require('dotenv').config();
-const senderSeed = process.env.SENDER;
+const { TOP_UP_SEED } = require('../../seeds.json');
+
+const senderSeed = TOP_UP_SEED.seed;
 
 async function transferFundsToWallets(dappSeed, dappKey) {
     try {
         const transferTx = transfer({
-            amount: 5_000_0000,
+            amount: 10_000_0000,
             assetId: null,
             recipient: address(dappSeed),
         }, senderSeed);
