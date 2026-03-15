@@ -52,8 +52,6 @@ func last_height_key_receiver(receiver: String) = "last_height_processed_" + rec
 
 #TODO: CONVERT THIS TO STORE 
 let allArtefact = [
-  "ART-LAKE",
-  "ART-ENEST",
   "ART-HOUSE",
   "ART-MEDHOUSE",
   "ART-BIGHOUSE",

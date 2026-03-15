@@ -7,6 +7,21 @@
   "version": 2,
   "data": [
     {
+      "key": "allowed_contract_3PK5WcMpfQweLcxuuQ6F3w56PbeRTVn3Jjt",
+      "type": "string",
+      "value": "BULL_INCU"
+    },
+      {
+        "key": "allowed_contract_3PDAZRdArHH6kRtZxFQSL67KwoF23hSFHA8",
+        "type": "string",
+        "value": "BULL_BREED"
+      },
+      {
+        "key": "allowed_contract_3P35tujiDL3YHDxQaJPNGTohGbpqm6NWK9C",
+        "type": "string",
+        "value": "BULL_FARMING"
+      },
+    {
       "key": "allowed_contract_3P3Gtbq2raMqBkks8tr6sTZH9uHCoVTBfQ8",
       "type": "string",
       "value": "HUNT"

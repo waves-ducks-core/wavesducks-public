@@ -50,6 +50,7 @@ func staticKey_itemsAddress() = "static_itemsAddress"
 func totalStakedKey() = "total_staked"
 func staticKey_wearablesAddress() = "static_wearablesAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_burnAddress() = "static_burnAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
@@ -62,6 +63,7 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -255,17 +257,16 @@ func buyPerch(colorI: String, refererAddress: String) = {
 
         if (firstPayment.assetId != getEggAssetId()) then throw("FBP: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
         if (firstPayment.amount != leftToPay) then throw("FBP: To buy a perch you currently need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+        strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),leftToPay)])
         leftToPay
       }else 0
       
 
       let perchAmountKey = "address_" + i.caller.toString() + "_perchesAvailable_" + color
       let perchAmount = tryGetInteger(perchAmountKey)
-
+      
       [
-        IntegerEntry(perchAmountKey, perchAmount + 1),
-        Burn(getEggAssetId(), leftToPay),
-        IntegerEntry("burned", tryGetInteger("burned") + leftToPay)
+        IntegerEntry(perchAmountKey, perchAmount + 1)
       ]++validPayment
       
     }

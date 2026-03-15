@@ -13,12 +13,14 @@ func isTestEnv()={
 func makePayment() = {
   let eggAssetId = base58'59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84'
   let spiceAssetId = base58'6jsmMsMfpJWqxSGyxrkTvH5zZyaQd2P6VEY9fBz2T8FB'
+  let tnAssetId = base58'bPWkA3MNyEr1TuDchWgdpqJZhGhfPXj7dJdr3qiW2kD'
   let farmingContractAddress = base58'3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD'
   let nodeDappAddress = base58'3PGZMJGVbWM8taptaK8sbxE2Ja7k54HKUJS'
   let puzzleDappAddress = base58'3PGrthrFFZVfvZeCyrZmEXJ1P29ViPbcy5g'
   let felineDappAddress = base58'3P6KR6QtXmPH8onFKMe276bVKUNVRzmNGSR'
   let veggFarmingDappAddress = base58'3P7s9drVRL4Kw3edKv5RhNd5Qrwxu1cU3d3'
   let turtleFarmingDappAddress = base58'3PG1QrkrsZaEpo8Bhe34geNNA1d9M8REGrv'
+  let bullsFarmingDappAddress = base58'3P35tujiDL3YHDxQaJPNGTohGbpqm6NWK9C'
   let klastRefillHeight = "lastRefillHeight"
 
   let lastRefillHeight = match getInteger(klastRefillHeight) {
@@ -28,6 +30,7 @@ func makePayment() = {
   let amount = 1_6700_0000
   let veggAmount = 833_3333
   let spiceAmount = 1_0000_0000
+  let tnAmount = 117_0000_0000
   let timeFrame = 60
   
   if (height - lastRefillHeight < timeFrame) then throw("Cannot refill yet, needs " + (timeFrame - (height - lastRefillHeight)).toString() + " blocks")
@@ -38,6 +41,7 @@ func makePayment() = {
     strict felineCall = invoke(Address(felineDappAddress), "claimRewardPete", [],[])
     strict veggFarmingCall = invoke(Address(veggFarmingDappAddress), "topUpReward", [veggAmount],[])
     strict turtleFarmingCall = invoke(Address(turtleFarmingDappAddress), "topUpReward", [],[AttachedPayment(spiceAssetId,spiceAmount)])
+    strict bullsFarmingCall = invoke(Address(bullsFarmingDappAddress), "topUpReward", [],[AttachedPayment(tnAssetId,tnAmount)])
     [
       IntegerEntry(klastRefillHeight, height),
       ScriptTransfer(i.caller, 1_000_000, eggAssetId)
