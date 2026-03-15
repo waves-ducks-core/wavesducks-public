@@ -94,6 +94,11 @@
             "value": 1
         },
         {
+            "key": "boost_ART-EORB",
+            "type": "integer",
+            "value": 20
+        },
+        {
             "key": "boost_ART-TOMMYGUN",
             "type": "integer",
             "value": 1
@@ -483,6 +488,16 @@
             "value": 40
         },
         {
+            "key": "boost_ART-GLAMB",
+            "type": "integer",
+            "value": 100
+        },
+        {
+            "key": "boost_ART-ECAPE",
+            "type": "integer",
+            "value": 100
+        },
+        {
             "key": "boost_ART-BUNNY",
             "type": "integer",
             "value": 40
@@ -531,7 +546,43 @@
             "key": "boost_ART-GHOSTY",
             "type": "integer",
             "value": 80
-        }
+        },
+        {
+            "key": "boost_ART-YETI",
+            "type": "integer",
+            "value": 35
+        },
+        {
+            "key": "boost_ART-GNOME",
+            "type": "integer",
+            "value": 100
+        },
+    {
+        "key": "boost_ART-LOVE_ARMOUR",
+        "type": "integer",
+        "value": 20
+    },
+    {
+        "key": "boost_ART-LOVE_HELMET",
+        "type": "integer",
+        "value": 20
+    },
+    {
+        "key": "boost_ART-LOVE_SHIELD",
+        "type": "integer",
+        "value": 10
+    },
+    {
+        "key": "boost_ART-LOVE_MACE",
+        "type": "integer",
+        "value": 100
+    },
+    {
+        "key": "boost_ART-LOVE_TAIL",
+        "type": "integer",
+        "value": 10
+    }
+
     ],
     "fee": 700000,
     "feeAssetId": "WAVES"

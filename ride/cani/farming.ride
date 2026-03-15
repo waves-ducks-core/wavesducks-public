@@ -51,6 +51,8 @@ func totalStakedKey() = "total_staked"
 func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_wearablesAddress() = "static_wearablesAddress"
 func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
@@ -65,6 +67,8 @@ func getNodeAccount()=addressFromStringValue(valueOrErrorMessage(getString(getOr
 func getCanieRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getProxyStaking() =  tryGetStringExternal(getOracle(),staticKey_proxyStakingContracts())
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -93,6 +97,12 @@ func tryGetInteger(key: String) = {
 func asString(value: Any) = match value {
   case string: String => string
   case _ => throw("FAS: wrong type, expected: String")
+}
+
+func isProxyStakingSc(address: String)={
+  let allowedContracts = getProxyStaking()
+  let allowedContractsList = allowedContracts.split(";")
+  allowedContractsList.indexOf(address) !=unit
 }
 
 func tryGetBoolean(key: String) = {
@@ -252,7 +262,7 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
-  strict farmBoost = 0
+  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoostNft",[assetId],[]).exactAs[Int]
   #Recalculate bonusses every claim
   strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
   let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
@@ -354,6 +364,7 @@ func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolea
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower._1),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower._1),
       StringEntry(assetId.toBase58String()+"_owner",address),
+      BooleanEntry(assetId.toBase58String()+"_use_origin",usePerchOrigin),
       StringEntry(assetId.toBase58String()+"_original_caller",i.originCaller.toString()),
       IntegerEntry(assetFarmingPower(address,assetId.toBase58String()),farmingPower._1),
       IntegerEntry(assetId.toBase58String()+"_basePower",farmingPower._2)
@@ -387,12 +398,11 @@ func unstakeNFT(asset: String)={
     DeleteEntry("address_"+address+"_asset_"+asset+"_perchColor"),
     DeleteEntry(asset+"_original_caller"),
     DeleteEntry(asset+"_use_origin"),
-    DeleteEntry(asset+"_without_perch"),
-    ScriptTransfer(Address(address.fromBase58String()),1, asset.fromBase58String()),
-    IntegerEntry("address_"+address+"_perchesAvailable_"+color, tryGetInteger("address_"+address+"_perchesAvailable_"+color)+1)
+    ScriptTransfer(Address(address.fromBase58String()),1, asset.fromBase58String())
 
   ]
   ++validPayment
+  ++perches
   ++result._1, result._2)
   }
 

@@ -270,6 +270,11 @@
             "value": 200000000000
         },
         {
+            "key": "direct_cosmetic_ART-ENEST",
+            "type": "integer",
+            "value": 200000000000
+        },
+        {
             "key": "direct_cosmetic_ART-GNOME",
             "type": "integer",
             "value": 1000000000

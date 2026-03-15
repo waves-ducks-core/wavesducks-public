@@ -34,11 +34,13 @@ func key_unstakeHeight(artefactName: String, artefactId: String) = artefactName+
 func key_externalBoostDuck(duckId: String) = duckId+"_duck_external_boost"
 
 func key_externalBoostAddress(address: String) = address+"_user_external_boost"
+func key_externalBoostAddressEagle(address: String) = address+"_user_external_boost_eagle"
 func key_priceCosmetic(item:String)= "direct_cosmetic_"+item
 func key_maxSalesCosmetic(item:String)= "direct_cosmetic_"+item+"_max_sales"
 func key_saleCosmetic(item:String)= "direct_cosmetic_"+item+"_sale"
 func key_priceAssetCosmetic(item:String)= "direct_cosmetic_"+item+"_priceAsset"
 func key_growPercentageCosmetic(item:String)= "direct_cosmetic_"+item+"_growing_percentage"
+func key_burnCosmetic(item:String)= "direct_cosmetic_"+item+"_burn"
 func key_soldCosmetic(item:String)= "direct_cosmetic_"+item+"_sold"
 func key_lastPriceCosmetic(item:String)= "direct_cosmetic_"+item+"_last_price"
 func key_startTsCosmetic(item:String) = "direct_cosmetic_"+item+"_startTs"
@@ -50,8 +52,8 @@ func last_height_key_receiver(receiver: String) = "last_height_processed_" + rec
 
 #TODO: CONVERT THIS TO STORE 
 let allArtefact = [
-  "ART-LAKE",
   "ART-HOUSE",
+  "ART-MEDHOUSE",
   "ART-BIGHOUSE",
   "ART-FIXGENE",
   "ART-FREEGENE", 
@@ -80,8 +82,7 @@ let snow_boosters = [
   "ART-GNGR_BREAD",
   "ART-SNOWBALL",
   "ART-FELCPN",
-  "ART-CANCPN",
-  "ART-YETI"
+  "ART-CANCPN"
 ]
 
 #TODO: make this list as a string with split inside the sc to avoid the need of updating the sc
@@ -401,6 +402,11 @@ func directBuyItemMultiple(itemName:String, itemAmount: Int)={
   let amount = firstPayment.amount
   if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
   if amount != price then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
+
+  let shouldBurn = tryGetBoolean(key_burnCosmetic(itemName))
+  let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*95/100 else 0
+  let transferAmount = amount - burnAmount
+  strict burnCall = if burnAmount > 0 then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),burnAmount)]) else nil
   
   let txIdStr = i.transactionId.toBase58String()
   let address = i.originCaller
@@ -416,7 +422,7 @@ func directBuyItemMultiple(itemName:String, itemAmount: Int)={
   [
     IntegerEntry(key_lastPriceCosmetic(itemName), basePrice),
     IntegerEntry(key_soldCosmetic(itemName), soldValue+itemAmount),
-    ScriptTransfer(getFeeAggregator(),amount,assetId)
+    ScriptTransfer(getFeeAggregator(),transferAmount,assetId)
   ]++validPayment++issues
 
 
@@ -445,6 +451,11 @@ func directBuyItem(itemName:String)={
   let amount = firstPayment.amount
   if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
   if amount != price then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
+
+  let shouldBurn = tryGetBoolean(key_burnCosmetic(itemName))
+  let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*95/100 else 0
+  let transferAmount = amount - burnAmount
+  strict burnCall = if burnAmount > 0 then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),burnAmount)]) else nil
   
   let txIdStr = i.transactionId.toBase58String()
   let address = i.originCaller
@@ -458,7 +469,7 @@ func directBuyItem(itemName:String)={
     IntegerEntry(key_lastPriceCosmetic(itemName), price),
     IntegerEntry(key_soldCosmetic(itemName), soldValue+1),
     ScriptTransfer(address, 1, artefactId),
-    ScriptTransfer(getFeeAggregator(),amount,assetId)
+    ScriptTransfer(getFeeAggregator(),transferAmount,assetId)
   ]++validPayment,artefactId.toBase58String())
 
 
@@ -495,6 +506,21 @@ func manipulateBoostAccount(boost: Int, address: String)= {
 }
 
 @Callable(i)
+func manipulateBoostAccountEagle(boost: Int, address: String)= {
+  let allowedContracts = getTrustedContracts()
+  let allowedContractsList = allowedContracts.split(";")
+  let dappToCall = i.caller.toString()
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("IMBAE: This smart contract can't manipulate the eagle boost!") else
+  let key = key_externalBoostAddressEagle(address)
+  let activeBoost = tryGetInteger(key)
+  let newBoost = activeBoost+boost
+  if newBoost <0 then throw("IMBAE: Something went wrong with eagle boost, please contact the admins!") else
+  [
+    IntegerEntry(key,newBoost)
+  ]
+}
+
+@Callable(i)
 func checkArtefactDetails(assetId: String) = {
   let asset = assetInfo(assetId.fromBase58String()).value()
   let assetName = asset.name.value()
@@ -525,6 +551,26 @@ func calculateFarmingPowerBoost(duckId: String, address: String)={
     [
     ],
     totalBoost
+  )
+}
+
+@Callable(i)
+func calculateFarmingPowerBoostEagle(address: String)={
+  let externalBoostAddress = tryGetInteger(key_externalBoostAddressEagle(address))
+  (
+    [
+    ],
+    externalBoostAddress
+  )
+}
+
+@Callable(i)
+func calculateFarmingPowerBoostNft(duckId: String)={
+  let externalBoostDuck = tryGetInteger(key_externalBoostDuck(duckId))
+  (
+    [
+    ],
+    externalBoostDuck
   )
 }
 
@@ -620,18 +666,6 @@ func addArteFactToDuck()= {
 }
 
 @Callable(i)
-func preInit() = {
-  [
-    IntegerEntry("static_ART-LAKE_farmingSlots", 200),
-    IntegerEntry("static_ART-LAKE_farmingBoost", 2),
-    IntegerEntry("static_ART-HOUSE_farmingSlots", 4),
-    IntegerEntry("static_ART-HOUSE_farmingBoost", 30),
-    IntegerEntry("static_ART-BIGHOUSE_farmingSlots", 10),
-    IntegerEntry("static_ART-BIGHOUSE_farmingBoost", 15)
-  ]
-}
-
-@Callable(i)
 func issueArtefact(type: String, receiver: String) = {
   if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
@@ -646,14 +680,17 @@ func issueArtefact(type: String, receiver: String) = {
     let address = Address(fromBase58String(receiver))
     let lastHeight = tryGetInteger(last_height_key())
     let lastHeightUser = tryGetInteger(last_height_key_receiver(receiver))
-    if (lastHeight+3 > height || lastHeightUser+10 > height) && !isTestEnv() then throw("Too early to issue artefact again") else
+    let medhouseCount = if type == "ART-MEDHOUSE" then
+      [IntegerEntry("stats_ART-MEDHOUSE_amount", tryGetInteger("stats_ART-MEDHOUSE_amount") + 1)]
+    else []
+    if (lastHeight+3 > height || lastHeightUser+10 > height) && i.caller == getHuntDistroAddress() then throw("IA: Too early to issue artefact again "+lastHeight.toString() + " " + lastHeightUser.toString()+ " " + height.toString()) else
 
     let res = issueItem(type,0,address)
     (res._1++
     [
       IntegerEntry(last_height_key(), height),
       IntegerEntry(last_height_key_receiver(receiver), height)
-    ], res._2)
+    ]++medhouseCount, res._2)
   
 }
 
@@ -672,16 +709,19 @@ func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
   && i.callerPublicKey != getWarsPKey()) then throw("IIAI: admin only") else 
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let address = Address(fromBase58String(receiver))
+    let medhouseCount = if type == "ART-MEDHOUSE" then
+      [IntegerEntry("stats_ART-MEDHOUSE_amount", tryGetInteger("stats_ART-MEDHOUSE_amount") + 1)]
+    else []
 
     let res = issueItem(type,nonce,address)
     let lastHeight = tryGetInteger(last_height_key())
     let lastHeightUser = tryGetInteger(last_height_key_receiver(receiver))
-    if (lastHeight+3 > height || lastHeightUser+10 > height) && !isTestEnv() then throw("Too early to issue artefact again") else
+    if (lastHeight+3 > height || lastHeightUser+10 > height) && i.caller == getHuntDistroAddress() then throw("IAI: Too early to issue artefact again "+lastHeight.toString() + " " + lastHeightUser.toString()+ " " + height.toString()) else
     (res._1++
     [
       IntegerEntry(last_height_key(), height),
       IntegerEntry(last_height_key_receiver(receiver), height)
-    ], res._2)
+    ]++medhouseCount, res._2)
   
 }
 
@@ -711,6 +751,7 @@ if i.caller != addressFromStringValue(tryGetStringExternal(getOracle(),staticKey
 ]
 
 }
+
 
 @Verifier(tx)
 func verify() = {
@@ -746,5 +787,3 @@ func verify() = {
         case _ => signaturesCount >= 1
     }
 }   
-
-

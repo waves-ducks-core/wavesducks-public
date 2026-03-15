@@ -1,0 +1,39 @@
+{
+    "type": 12,
+    "version": 1,
+    "data": [
+        {
+            "key": "direct_cosmetic_ART-GFTW_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-GFTW",
+            "type": "integer",
+            "value": 500000000
+        },
+        {
+            "key": "direct_cosmetic_ART-GFTR_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        },
+                {
+            "key": "direct_cosmetic_ART-GFTR_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-GFTR",
+            "type": "integer",
+            "value": 1000000000
+        },
+        {
+            "key": "direct_cosmetic_ART-GFTR_priceAsset",
+            "type": "string",
+            "value": "WAVES"
+        }
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES",
+    "senderPublicKey": "6DknLGEJHLXmZB6ni3tGa8M3gccMMmc3uaaPhvCSuKvM"
+}

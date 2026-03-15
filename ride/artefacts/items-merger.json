@@ -661,10 +661,129 @@
             "key": "merge_ART-POTION1_asset",
             "type": "string",
             "value": "WAVES"
+        },
+        {
+            "key": "merge_ART-MD_C_HOUSE_baseItem",
+            "type": "string",
+            "value": "ART-MEDHOUSE"
+        },
+        {
+            "key": "merge_ART-MD_C_HOUSE_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-MD_C_HOUSE_endItem",
+            "type": "string",
+            "value": "ART-MD_C_HOUSE"
+        },
+        {
+            "key": "merge_ART-MD_C_HOUSE_price",
+            "type": "integer",
+            "value": 500000000
+        },
+        {
+            "key": "merge_ART-MD_C_HOUSE_secondaryItem",
+            "type": "string",
+            "value": "ART-MECHAEGG"
+        },
+        {
+            "key": "merge_ART-MD_C_HOUSE_secondaryItemAmount",
+            "type": "integer",
+            "value": 3
+        },
+        {
+            "key": "merge_ART-MD_C_HOUSE_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-MD_C_HOUSE_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "merge_ART-EORB_baseItem",
+            "type": "string",
+            "value": "ART-ORB"
+        },
+        {
+            "key": "merge_ART-EORB_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-EORB_endItem",
+            "type": "string",
+            "value": "ART-EORB"
+        },
+        {
+            "key": "merge_ART-EORB_price",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "merge_ART-EORB_secondaryItem",
+            "type": "string",
+            "value": "ART-MECHAEGG"
+        },
+        {
+            "key": "merge_ART-EORB_secondaryItemAmount",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "merge_ART-EORB_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-EORB_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "merge_ART-GLAMB_baseItem",
+            "type": "string",
+            "value": "ART-LAMB"
+        },
+        {
+            "key": "merge_ART-GLAMB_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-GLAMB_endItem",
+            "type": "string",
+            "value": "ART-GLAMB"
+        },
+        {
+            "key": "merge_ART-GLAMB_price",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "merge_ART-GLAMB_secondaryItem",
+            "type": "string",
+            "value": "ART-MECHAEGG"
+        },
+        {
+            "key": "merge_ART-GLAMB_secondaryItemAmount",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "merge_ART-GLAMB_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-GLAMB_asset",
+            "type": "string",
+            "value": "WAVES"
         }
     ],
     "fee": 600000,
     "feeAssetId": "WAVES",
     "senderPublicKey": "6DknLGEJHLXmZB6ni3tGa8M3gccMMmc3uaaPhvCSuKvM"
 }
-

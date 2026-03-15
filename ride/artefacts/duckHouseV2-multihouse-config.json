@@ -1,0 +1,128 @@
+{
+  "type": 12,
+  "version": 1,
+  "data": [
+    {
+      "key": "config_ART-HOUSE_boost",
+      "type": "integer",
+      "value": 30
+    },
+    {
+      "key": "config_ART-HOUSE_max_slots",
+      "type": "integer",
+      "value": 4
+    },
+    {
+      "key": "config_ART-HOUSE_without_perch",
+      "type": "boolean",
+      "value": false
+    },
+    {
+      "key": "config_ART-HOUSE_farming_address",
+      "type": "string",
+      "value": "3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD"
+    },
+    {
+      "key": "config_ART-HOUSE_stake_call",
+      "type": "string",
+      "value": "stakeNFT"
+    },
+    {
+      "key": "config_ART-HOUSE_incubator",
+      "type": "string",
+      "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+    },
+    {
+      "key": "config_ART-HOUSE_breeder",
+      "type": "string",
+      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
+    },
+    {
+      "key": "config_ART-HOUSE_reward_asset",
+      "type": "string",
+      "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
+    },
+    {
+      "key": "config_ART-MEDHOUSE_boost",
+      "type": "integer",
+      "value": 15
+    },
+    {
+      "key": "config_ART-MEDHOUSE_max_slots",
+      "type": "integer",
+      "value": 6
+    },
+    {
+      "key": "config_ART-MEDHOUSE_without_perch",
+      "type": "boolean",
+      "value": false
+    },
+    {
+      "key": "config_ART-MEDHOUSE_farming_address",
+      "type": "string",
+      "value": "3PEpQ4LaeZA6DVMyrgU3PTFBprAF4tRziBD"
+    },
+    {
+      "key": "config_ART-MEDHOUSE_stake_call",
+      "type": "string",
+      "value": "stakeNFT"
+    },
+    {
+      "key": "config_ART-MEDHOUSE_incubator",
+      "type": "string",
+      "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
+    },
+    {
+      "key": "config_ART-MEDHOUSE_breeder",
+      "type": "string",
+      "value": "3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb"
+    },
+    {
+      "key": "config_ART-MEDHOUSE_reward_asset",
+      "type": "string",
+      "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
+    },
+    {
+      "key": "config_ART-MD_C_HOUSE_boost",
+      "type": "integer",
+      "value": 15
+    },
+    {
+      "key": "config_ART-MD_C_HOUSE_max_slots",
+      "type": "integer",
+      "value": 6
+    },
+    {
+      "key": "config_ART-MD_C_HOUSE_without_perch",
+      "type": "boolean",
+      "value": false
+    },
+    {
+      "key": "config_ART-MD_C_HOUSE_farming_address",
+      "type": "string",
+      "value": "3PCBQJP8XEK5sgziA9pu3AHKnegmBxxojaY"
+    },
+    {
+      "key": "config_ART-MD_C_HOUSE_stake_call",
+      "type": "string",
+      "value": "stakeNFT"
+    },
+    {
+      "key": "config_ART-MD_C_HOUSE_incubator",
+      "type": "string",
+      "value": "3PD6L4yr52Lac9qeqXNoi4mAiiak5ZBnx5D"
+    },
+    {
+      "key": "config_ART-MD_C_HOUSE_breeder",
+      "type": "string",
+      "value": "3PQdwhdjWHZ1hacy2dLPnRafi86cTvuJPNX"
+    },
+    {
+      "key": "config_ART-MD_C_HOUSE_reward_asset",
+      "type": "string",
+      "value": "WAVES"
+    }
+  ],
+  "fee": 2300000,
+  "feeAssetId": "WAVES"
+}
