@@ -79,12 +79,20 @@ func getProcessFinishHeightKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_fh"
 }
 
+func getProcessIsNormalKey(address: String, txId: ByteVector) = {
+  address + "_" + txId.toBase58String() + "_isNormal"
+}
+
 func getParentKey(txId: ByteVector, parentNum: Int) = {
   "inittx_" + txId.toBase58String() + "_parent" + parentNum.toString()
 }
 
 func getIdKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_di"
+}
+
+func getAssetIsNormalKey(assetId: String) = {
+  "asset_" + assetId + "_isNormal"
 }
 
 func getStatsKey(genString: String) = {
@@ -97,6 +105,32 @@ func tryGetInteger(key: String) = {
         case _ => 0
     }
     val
+}
+
+func tryGetBoolean(key: String) = {
+    match getBoolean(this, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
+func tryGetBooleanExternal(address: Address, key: String) = {
+    match getBoolean(address, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
+func isNormalEagle(assetId: String) = {
+  let asset = assetId.fromBase58String()
+  let info = assetInfo(asset).value()
+  if (info.issuer == getEaglIncubator()) then {
+    tryGetBooleanExternal(getEaglIncubator(), getAssetIsNormalKey(assetId))
+  } else if (info.issuer == this) then {
+    tryGetBoolean(getAssetIsNormalKey(assetId))
+  } else {
+    false
+  }
 }
 
 func determineGeneration(g1: String, g2: String) = {
@@ -165,12 +199,16 @@ func checkAssetInIncubator(assetId: String) = {
 func canBeBreeded(asset1Id: ByteVector, asset2Id: ByteVector) = {
   let asset1Gen = assetInfo(asset1Id).value().name.split("")
   let asset2Gen = assetInfo(asset2Id).value().name.split("")
+  let asset1IsNormal = isNormalEagle(asset1Id.toBase58String())
+  let asset2IsNormal = isNormalEagle(asset2Id.toBase58String())
   
-  if (Generations.indexOf(asset1Gen[14]).value() >= MaxGeneration) then {
-    "you can only breed felines with generation " + Generations[MaxGeneration] + " and lower"
+  if (asset1IsNormal != asset2IsNormal) then {
+    "giant and normal eagles cannot be bred together"
+  } else if (Generations.indexOf(asset1Gen[14]).value() >= MaxGeneration) then {
+    "you can only breed eagles with generation " + Generations[MaxGeneration] + " and lower"
   } else {
     if (Generations.indexOf(asset2Gen[14]).value() >= MaxGeneration) then {
-      "you can only breed felines with generation " + Generations[MaxGeneration] + " and lower"
+      "you can only breed eagles with generation " + Generations[MaxGeneration] + " and lower"
     } else {
       "true"
     }
@@ -221,10 +259,12 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
   let txId = fromBase58String(txIdStr)
   let processStatusKey = getProcessStatusKey(i.caller.toString(), txId)
   let finishHeightKey = getProcessFinishHeightKey(i.caller.toString(), txId)
+  let processIsNormalKey = getProcessIsNormalKey(i.caller.toString(), txId)
   let IdKey = getIdKey(i.caller.toString(), txId)
 
   let processTxStatus = getStringValue(this, processStatusKey)
   let processFinishHeight = getIntegerValue(this, finishHeightKey)
+  let isNormal = tryGetBoolean(processIsNormalKey)
   
   if (processTxStatus == HatchingFinished) then {
     let Id = getStringValue(this, getIdKey(i.caller.toString(), txId))
@@ -238,6 +278,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
 
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
+      let normalEntries = if isNormal then [BooleanEntry(getAssetIsNormalKey(assetId.toBase58String()), true)] else []
 
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
@@ -250,6 +291,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
         [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
         IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)]
       composeGenericData(Gen,IdKey,assetId,asset)++
+      normalEntries++
       [
         StringEntry(processStatusKey, HatchingFinished),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
@@ -294,17 +336,19 @@ func getGenFromName(assetName: String) = {
   }
 
 @Callable(i)
-func createSpecialGenes(address: ByteVector, duckGen: String, children: Int)= {
+func createSpecialGenes(address: ByteVector, duckGen: String, children: Int, isNormal: Boolean)= {
   if (i.caller != this) then throw("EBCSG: admin only") else
   let txId = i.transactionId
   let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
   let asset = Issue(duckGen, description, 1, 0, false)
   let assetId = asset.calculateAssetId()
   let duckIdKey = getIdKey(i.caller.toString(), txId)
+  let normalEntries = if isNormal then [BooleanEntry(getAssetIsNormalKey(assetId.toBase58String()), true)] else []
 
   #TODO: work around for known issue dapp to dapp
   strict farmGen = invoke(this,"getGenFromName",[duckGen],[]).exactAs[String]
   composeGenericData(duckGen,duckIdKey,assetId,asset)++
+  normalEntries++
   [
     IntegerEntry("asset_" + assetId.toBase58String() + "_children", children),
     ScriptTransfer(Address(address), 1, assetId)
@@ -338,7 +382,8 @@ func copyNFT()= {
   let asset1Gen = nftInfo.name.split("")        
   if (asset1Gen[14] == "G" || asset1Gen[14] == "J" || asset1Gen[14] == "O" ) then  throw("You can't mirror this NFT") else
     let duckGen = nftInfo.name
-    strict call = invoke(this, "createSpecialGenes", [i.caller.bytes, duckGen,children], [])
+    let isNormal = isNormalEagle(firstAssetId)
+    strict call = invoke(this, "createSpecialGenes", [i.caller.bytes, duckGen,children,isNormal], [])
     [
       ScriptTransfer(i.caller, 1, firstPayment.assetId),
       Burn(secondPayment.assetId.value(),1)
@@ -347,20 +392,25 @@ func copyNFT()= {
 }
 
 @Callable(i)
-func startBreeding(refererAddress: String) = {
+func startBreeding(refererAddress: String, isNormal: Boolean) = {
   #TODO: add validation that feeValidate payment is added!
   if size(i.payments) != 4  && size(i.payments) != 3 then throw("Wrong amount of payments!") else
   strict feeValidate = checkAdditionalPayment(i.payments[0])
   let firstPayment = i.payments[1].value()
   let secondPayment = i.payments[2].value()
+  let firstAssetId = firstPayment.assetId.value().toBase58String()
+  let secondAssetId = secondPayment.assetId.value().toBase58String()
+  let firstIsNormal = isNormalEagle(firstAssetId)
+  let secondIsNormal = isNormalEagle(secondAssetId)
+  let breedingFee = if isNormal then getEaglIncubationFee() / 2 else getEaglIncubationFee()
   
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[getEaglIncubationFee()],[]).exactAs[Int]
-  let leftToPay = getEaglIncubationFee()-amountPaidByCoupons
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[breedingFee],[]).exactAs[Int]()
+  let leftToPay = breedingFee-amountPaidByCoupons
   if leftToPay == 0 && size(i.payments) == 4 then throw("You need to attach 3 payments") else
   strict payment = if leftToPay!=0 then {
     let thirdPayment = i.payments[3].value()
     if (thirdPayment.assetId != getEggAssetId()) then throw("TB: You can attach only EGG tokens with the following asset id: " + getEggAssetId().toBase58String()) else 
-    if (thirdPayment.amount != leftToPay) then throw("TB: To breed a Feline you following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
+    if (thirdPayment.amount != leftToPay) then throw("TB: To breed an Eagle you need the following amount of EGGlets: " + leftToPay.toString()+ " "+i.caller.toString()) else
     let refererRewardForbeach = fraction(leftToPay, 5, 100)
     strict refCall = invoke(getRefContractAddress(), "refPayment",
         [refererAddress], [AttachedPayment(getEggAssetId(), refererRewardForbeach)]).asBoolean()
@@ -372,27 +422,26 @@ func startBreeding(refererAddress: String) = {
     leftToPay
     }else 0
 
-
-
-
-  let firstAssetId = firstPayment.assetId.value().toBase58String()
-  let secondAssetId = secondPayment.assetId.value().toBase58String()
-
   if (firstPayment.amount != 1 || secondPayment.amount != 1) then throw("NFT is not attached") else
   if (!(checkAssetInIncubator(firstAssetId) && checkAssetInIncubator(secondAssetId))) then {
-    throw("You need to attach 2 valid NFT-felines.")
+    throw("You need to attach 2 valid NFT-Eagles.")
   } else {
-    if (tryGetInteger("asset_" + firstAssetId + "_children") > 0 || tryGetInteger("asset_" + secondAssetId + "_children") > 0) then {
-      throw("One feline can be used for breeding only once in its lifetime.")
+    if (firstIsNormal != secondIsNormal) then {
+      throw("You cannot breed giant and normal eagles together.")
+    } else if (firstIsNormal != isNormal) then {
+      throw("Breeding mode does not match parent eagle type.")
+    } else if (tryGetInteger("asset_" + firstAssetId + "_children") > 0 || tryGetInteger("asset_" + secondAssetId + "_children") > 0) then {
+      throw("One eagle can be used for breeding only once in its lifetime.")
     } else {
       let breededStatus = canBeBreeded(firstAssetId.fromBase58String(), secondAssetId.fromBase58String())
       if (breededStatus != "true") then {
-        throw("These felines cannot be breeded: " + breededStatus)
+        throw("These eagles cannot be bred: " + breededStatus)
       } else {
         [
           StringEntry(getParentKey(i.transactionId, 1), firstAssetId),
           StringEntry(getParentKey(i.transactionId, 2), secondAssetId),
           StringEntry(getProcessStatusKey(i.caller.toString(), i.transactionId), HatchingStarted),
+          BooleanEntry(getProcessIsNormalKey(i.caller.toString(), i.transactionId), isNormal),
           IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId), height + delayForHatching)
         ]++feeValidate
       }
