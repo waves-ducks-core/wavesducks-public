@@ -80,6 +80,14 @@ func getEAGLIdKey(address: String, txId: ByteVector) = {
   address + "_" + txId.toBase58String() +  "_di"
 }
 
+func getHatchingIsNormalKey(address: String, txId: ByteVector) = {
+  address + "_" + txId.toBase58String() + "_isNormal"
+}
+
+func getAssetIsNormalKey(assetId: String) = {
+  "asset_" + assetId + "_isNormal"
+}
+
 func getEAGLStatsKey(genString: String) = {
   "stats_" + genString + "_amount"
 }
@@ -90,6 +98,13 @@ func tryGetInteger(key: String) = {
         case _ => 0
     }
     val
+}
+
+func tryGetBoolean(key: String) = {
+    match getBoolean(this, key) {
+        case b:Boolean => b
+        case _ => false
+    }
 }
 
 ##
@@ -231,7 +246,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 }
 
 @Callable(i)
-func issueFree(address: String, txIdStr: String) = {
+func issueFree(address: String, txIdStr: String, isNormal: Boolean) = {
   if (i.caller != getEaglRebirthAddress() && i.caller != getDuckRebirthAddress()) then {
     throw("EIF: rebirth only")
   } else {
@@ -249,6 +264,7 @@ func issueFree(address: String, txIdStr: String) = {
     let assetId = asset.calculateAssetId()
 
     let amount = tryGetInteger(getEAGLStatsKey(EAGLGen)) + 1
+    let normalEntries = if isNormal then [BooleanEntry(getAssetIsNormalKey(assetId.toBase58String()), true)] else []
 
     let duckIdKey = getEAGLIdKey(address, txId)
     ([
@@ -256,10 +272,12 @@ func issueFree(address: String, txIdStr: String) = {
       IntegerEntry("eagl_amount", totalDucksAmount + 1),
       IntegerEntry("eagl_last_price", eggsNeeded / 1500000),
       StringEntry(hatchingStatusKey, HatchingFinished),
+      BooleanEntry(getHatchingIsNormalKey(address, txId), isNormal),
       StringEntry(duckIdKey, assetId.toBase58String()),
       StringEntry(assetId.toBase58String(), duckIdKey),
       IntegerEntry(getEAGLStatsKey(EAGLGen), amount),
-      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
+      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+    ] ++ normalEntries ++ [
       asset,
       ScriptTransfer(addressFromString(address).value(), 1, assetId)
     ], assetId.toBase58String())
@@ -276,28 +294,30 @@ func setDiscount(val: Int) = {
 }
 
 @Callable(i)
-func startHatching(refererAddress: String) = {
+func startHatching(refererAddress: String, isNormal: Boolean) = {
   strict feeValidate = checkAdditionalPayment(i.payments[0])
   #TODO: add validation that feeValidate payment is added!
   if (isLocked() > 0) then {
     throw("EGG operations are temporarily locked")
   } else {
     let totalCaniAmount = tryGetInteger("eagl_amount")
-    let eggsNeeded = countEggsNeededAmount(totalCaniAmount)
+    let giantEggsNeeded = countEggsNeededAmount(totalCaniAmount)
+    let eggsNeeded = if isNormal then giantEggsNeeded / 10 else giantEggsNeeded
 
 
     let results = [
         StringEntry(getHatchingStatusKey(i.originCaller.toString(), i.transactionId), HatchingStarted),
         IntegerEntry(getHatchingFinishHeightKey(i.originCaller.toString(), i.transactionId), height + delayForHatching),
+        BooleanEntry(getHatchingIsNormalKey(i.originCaller.toString(), i.transactionId), isNormal),
         IntegerEntry("eagl_amount", totalCaniAmount + 1),
-        IntegerEntry("eagl_last_price", eggsNeeded / 1500000)
+        IntegerEntry("eagl_last_price", giantEggsNeeded / 1500000)
       ]
 
     let firstPayment = i.payments[1].value()
     let leftToPay = 
     if size(i.payments) == 3 then {
           strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).exactAs[String]
-          if (boosterType == "ART-EAGLCPN") then  eggsNeeded/100* 80 else 100
+          if (boosterType == "ART-EAGLCPN") then eggsNeeded * 80 / 100 else eggsNeeded
 
           }else 
             eggsNeeded
@@ -321,9 +341,11 @@ func finishHatching(txIdStr: String) = {
   let hatchingStatusKey = getHatchingStatusKey(i.caller.toString(), txId)
   let finishHeightKey = getHatchingFinishHeightKey(i.caller.toString(), txId)
   let EAGLIdKey = getEAGLIdKey(i.caller.toString(), txId)
+  let isNormalKey = getHatchingIsNormalKey(i.caller.toString(), txId)
 
   let hatchingTxStatus = getStringValue(this, hatchingStatusKey)
   let hatchingFinishHeight = getIntegerValue(this, finishHeightKey)
+  let isNormal = tryGetBoolean(isNormalKey)
   
   if (hatchingTxStatus == HatchingFinished) then {
     let EAGLId = getStringValue(this, getEAGLIdKey(i.caller.toString(), txId))
@@ -336,6 +358,7 @@ func finishHatching(txIdStr: String) = {
 
       let asset = Issue(EAGLGen, description, 1, 0, false, unit, hatchingFinishHeight)
       let assetId = asset.calculateAssetId()
+      let normalEntries = if isNormal then [BooleanEntry(getAssetIsNormalKey(assetId.toBase58String()), true)] else []
 
       let amount = tryGetInteger(getEAGLStatsKey(EAGLGen)) + 1
 
@@ -344,7 +367,8 @@ func finishHatching(txIdStr: String) = {
         StringEntry(EAGLIdKey, assetId.toBase58String()),
         StringEntry(assetId.toBase58String(), EAGLIdKey),
         IntegerEntry(getEAGLStatsKey(EAGLGen), amount),
-        IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1),
+        IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+      ] ++ normalEntries ++ [
         asset,
         ScriptTransfer(i.caller, 1, assetId)
       ]++feeValidate
