@@ -137,6 +137,21 @@ func tryGetBooleanExternal(address:Address, key: String) = {
     }
 }
 
+func getAssetIsNormalKey(assetId: String) = {
+  "asset_" + assetId + "_isNormal"
+}
+
+func isNormalEagle(assetId: String) = {
+  let asset = assetId.fromBase58String()
+  let info = assetInfo(asset).value()
+  if (info.issuer == getIncubatorAddress()) then {
+    tryGetBooleanExternal(getIncubatorAddress(), getAssetIsNormalKey(assetId))
+  } else if (info.issuer == getBreederAddress()) then {
+    tryGetBooleanExternal(getBreederAddress(), getAssetIsNormalKey(assetId))
+  } else {
+    false
+  }
+}
 
 func getAssetOrigin(generation: String) = {
   if (generation == "G") then {getIncubatorAddress()} else {getBreederAddress()}
@@ -209,10 +224,11 @@ func calculatePerchPrice(address: String)= {
 @Callable(i)
 func calculateFarmPower(assetId:String, bonusAddress: String)={
   if !(assetInfo(assetId.fromBase58String()).value().issuer == getBreederAddress() 
-      ||assetInfo(assetId.fromBase58String()).value().issuer == getIncubatorAddress()) then throw("This does not seem like a valid Duck!") else
+      ||assetInfo(assetId.fromBase58String()).value().issuer == getIncubatorAddress()) then throw("This does not seem like a valid Eagle!") else
   let assetName = assetInfo(assetId.fromBase58String()).value().name
   let gen = assetName.takeRight(1)
   let isJackpot = assetName.takeRight(1) == "U"
+  let isNormal = isNormalEagle(assetId)
   #TODO: add bonusses to the rarity
   let rarity = getAssetRarityComplete(isJackpot,assetName)
 
@@ -235,8 +251,10 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   #Recalculate bonusses every claim
   strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
   let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
+  let resultPower = if isNormal then finalPowerRarityBoost / 10 else finalPowerRarityBoost
+  let resultBasePower = if isNormal then finalPower / 10 else finalPower
   ([
-  ],(finalPowerRarityBoost,finalPower))
+  ],(resultPower,resultBasePower))
 
 }
 
