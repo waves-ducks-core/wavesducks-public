@@ -49,6 +49,7 @@ let keyGlobalEarned =  "global_earnings"
 func staticKey_perchFee() = "static_caninePerchFee"
 func totalStakedKey() = "total_staked"
 func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
+func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
 func staticKey_wearablesAddress() = "static_wearablesAddress"
 func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
@@ -65,6 +66,7 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getNodeAccount()=addressFromStringValue(valueOrErrorMessage(getString(getOracle(),"static_nodeAddress"), "node_address not found!"))
 func getCanieRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
+func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
 func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
@@ -324,7 +326,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
 func addFreePerch(address: String, color: String, amount: Int) = {
   if (["A", "B", "C", "D"].indexOf(color).value() < 0) then {
     throw("you need to set color properly")
-  } else if (i.caller != this  && i.caller != getCanieRebirthAddress()  && i.caller != getCouponsAddress() ) then {
+  } else if (i.caller != this  && i.caller != getCanieRebirthAddress()  && i.caller != getEagleRebirthAddress() && i.caller != getCouponsAddress() ) then {
     throw("rebirth and admin only")
   } else {
     let perchAmountKey = "address_" + address + "_perchesAvailable_" + color
