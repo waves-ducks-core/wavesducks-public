@@ -274,7 +274,8 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
     else {
       let outcome = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
       let Gen = outcome._1
-      let random = outcome._2        let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
+      let random = outcome._2
+      let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
@@ -404,7 +405,7 @@ func startBreeding(refererAddress: String, isNormal: Boolean) = {
   let secondIsNormal = isNormalEagle(secondAssetId)
   let breedingFee = if isNormal then getEaglIncubationFee() / 2 else getEaglIncubationFee()
   
-  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[breedingFee],[]).exactAs[Int]()
+  strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[breedingFee],[]).exactAs[Int]
   let leftToPay = breedingFee-amountPaidByCoupons
   if leftToPay == 0 && size(i.payments) == 4 then throw("You need to attach 3 payments") else
   strict payment = if leftToPay!=0 then {
