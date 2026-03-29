@@ -55,7 +55,7 @@ func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
 func staticKey_canineIncubatorAddress() = "static_canineIncubatorAddress"
 func staticKey_canineStakingAddress() = "static_canineStakingAddress"
 func staticKey_bullIncubatorAddress() = "static_bullIncubatorAddress"
-func staticKey_bullStakingAddress() = "static_bullStakingAddress"
+func staticKey_bullFarmingAddress() = "static_bullFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = tryGetAddressExternal(getOracle(),staticKey_feeAggregator())
@@ -70,7 +70,7 @@ func getVeggFarmingAddress() = tryGetAddressExternal(getOracle(),staticKey_veggF
 func getCanineIncubatorAddress() = tryGetAddressExternal(getOracle(),staticKey_canineIncubatorAddress())
 func getCanineStakingAddress() = tryGetAddressExternal(getOracle(),staticKey_canineStakingAddress())
 func getBullIncubatorAddress() = tryGetAddressExternal(getOracle(),staticKey_bullIncubatorAddress())
-func getBullStakingAddress() = tryGetAddressExternal(getOracle(),staticKey_bullStakingAddress())
+func getBullFarmingAddress() = tryGetAddressExternal(getOracle(),staticKey_bullFarmingAddress())
 
 func getAssetIsNormalKey(assetId: String) = {
   "asset_" + assetId + "_isNormal"
@@ -319,10 +319,10 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       } else if (win.indexOf("bull_ranch_") != unit) then {
         let color = win.takeRight(1)
         strict call = if !double then 
-              strict first = invoke(getBullStakingAddress(), "addFreePerch", [address, color,1], [])
+              strict first = invoke(getBullFarmingAddress(), "addFreePerch", [address, color,1], [])
               [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
             else
-              strict first = invoke(getBullStakingAddress(), "addFreePerch", [address, color,2], [])
+              strict first = invoke(getBullFarmingAddress(), "addFreePerch", [address, color,2], [])
                 [
                   StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
                   StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.exactAs[String]),
