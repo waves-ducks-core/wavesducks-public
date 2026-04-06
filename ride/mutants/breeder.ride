@@ -27,6 +27,15 @@ func staticKey_couponsAddress() = "static_couponsAddress"
 func getStatsKey_amount() = "stats_amount"
 func getStatsKey(genString: String) = "stats_" + genString + "_amount"
 
+func getAssetIsNormalKey(assetId: String) = "asset_" + assetId + "_isNormal"
+
+func tryGetBooleanExternal(address: Address, key: String) = {
+    match getBoolean(address, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
 func getChildren(assetId: String) = "asset_"+assetId+"_children"
 func getParentKey(txId: ByteVector, parentNum: Int) = "inittx_" + txId.toBase58String() + "_parent" + parentNum.toString()
 func getProcessStatusKey(address: String, txId: String) = address + "_" + txId +  "_status"
@@ -309,6 +318,7 @@ func checkTypeAndValidObstinate(info: Asset)={
           throw("MCTAVO: Invalid type")
     if breederSc != info.issuer then throw("MCTAVO: Only obstinates from the breeder contract can be turned into mutants") else
     if tryGetStringExternal(breederSc, info.id.toBase58String()) == "" then throw("MCTAVO: Invalid nft") else
+    if type == "E" && tryGetBooleanExternal(breederSc, getAssetIsNormalKey(info.id.toBase58String())) then throw("MCTAVO: Only giant eagles can be turned into mutants") else
     if tryGetInteger(getChildren(info.id.toBase58String())) == 1  then throw("MCTAVO: NFT already used") else
 
     type

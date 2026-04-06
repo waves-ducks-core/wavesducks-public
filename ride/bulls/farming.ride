@@ -51,6 +51,7 @@ func totalStakedKey() = "total_staked"
 func staticKey_wearablesAddress() = "static_wearablesAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_burnAddress() = "static_burnAddress"
+func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
@@ -64,6 +65,7 @@ func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_ite
 func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
+func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -277,7 +279,7 @@ func buyPerch(colorI: String, refererAddress: String) = {
 func addFreePerch(address: String, color: String, amount: Int) = {
   if (["A", "B", "C", "D"].indexOf(color).value() < 0) then {
     throw("you need to set color properly")
-  } else if (i.caller != getRebirthAddress() &&i.caller != this && i.caller != getCouponsAddress() ) then {
+  } else if (i.caller != getRebirthAddress() && i.caller != getEagleRebirthAddress() && i.caller != this && i.caller != getCouponsAddress() ) then {
     throw("rebirth and admin only")
   } else {
     let perchAmountKey = "address_" + address + "_perchesAvailable_" + color

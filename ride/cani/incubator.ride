@@ -36,6 +36,7 @@ func staticKey_caniRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_caniFarmingAddress() = "static_canineStakingAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_rebirthAddress() = "static_rebirthAddress"
+func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -43,6 +44,7 @@ func getMintAssetId() = unit
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getCaniRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_caniRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getDuckRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getEagleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
 func getCaniFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_caniFarmingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
@@ -230,7 +232,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 
 @Callable(i)
 func issueFree(address: String, txIdStr: String) = {
-  if (i.caller != getCaniRebirthAddress()&& i.caller != getDuckRebirthAddress()) then {
+  if (i.caller != getCaniRebirthAddress()&& i.caller != getDuckRebirthAddress() && i.caller != getEagleRebirthAddress()) then {
     throw("CIF: rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)

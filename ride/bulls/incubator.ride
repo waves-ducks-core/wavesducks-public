@@ -31,6 +31,7 @@ func staticKey_farmingAddress() = "static_bullStakingAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_bullAssetId() = "static_bullAssetId"
 func staticKey_mutantAddress() = "static_mutantFarmingAddress"
+func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
@@ -43,6 +44,7 @@ func getRebirthAddress() = this #Address(tryGetStringExternal(getOracle(),static
 #func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_farmingAddress()).fromBase58String()) 
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getMutantFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_mutantAddress()).fromBase58String())
+func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -230,7 +232,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
 
 @Callable(i)
 func issueFree(address: String, txIdStr: String) = {
-  if (i.caller != getRebirthAddress()) then {
+  if (i.caller != getRebirthAddress() && i.caller != getEagleRebirthAddress()) then {
     throw("CIF: rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)

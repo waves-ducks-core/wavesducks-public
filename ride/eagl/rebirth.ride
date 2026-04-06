@@ -21,6 +21,13 @@ func tryGetString(key: String) = {
     tryGetStringExternal(this,key)
 }
 
+func tryGetBooleanExternal(address: Address, key: String) = {
+  match getBoolean(address, key) {
+    case b:Boolean => b
+    case _ => false
+  }
+}
+
 
 func getBool(key: String) = {
   match getBoolean(this, key) {
@@ -45,6 +52,10 @@ func staticKey_felineIncubatorAddress() = "static_felineIncubatorAddress"
 func staticKey_eagleRebirthPrice() = "static_eagleRebirthPrice"
 func staticKey_puzzleAssetId() = "static_puzzleAssetId"
 func staticKey_veggFarmingAddress() = "static_veggFarmingAddress"
+func staticKey_canineIncubatorAddress() = "static_canineIncubatorAddress"
+func staticKey_canineStakingAddress() = "static_canineStakingAddress"
+func staticKey_bullIncubatorAddress() = "static_bullIncubatorAddress"
+func staticKey_bullFarmingAddress() = "static_bullFarmingAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = tryGetAddressExternal(getOracle(),staticKey_feeAggregator())
@@ -56,6 +67,25 @@ func getFelineIncubatorAddress() =  tryGetAddressExternal(getOracle(),staticKey_
 func getItemsAddress() =  tryGetAddressExternal(getOracle(),staticKey_itemsAddress())
 func getPzlAssetId() = tryGetStringExternal(getOracle(),staticKey_puzzleAssetId()).fromBase58String()
 func getVeggFarmingAddress() = tryGetAddressExternal(getOracle(),staticKey_veggFarmingAddress())
+func getCanineIncubatorAddress() = tryGetAddressExternal(getOracle(),staticKey_canineIncubatorAddress())
+func getCanineStakingAddress() = tryGetAddressExternal(getOracle(),staticKey_canineStakingAddress())
+func getBullIncubatorAddress() = tryGetAddressExternal(getOracle(),staticKey_bullIncubatorAddress())
+func getBullFarmingAddress() = tryGetAddressExternal(getOracle(),staticKey_bullFarmingAddress())
+
+func getAssetIsNormalKey(assetId: String) = {
+  "asset_" + assetId + "_isNormal"
+}
+
+func isNormalEagle(assetId: ByteVector) = {
+  let info = assetInfo(assetId).value()
+  if (info.issuer == getEagleIncubatorAddress()) then {
+    tryGetBooleanExternal(getEagleIncubatorAddress(), getAssetIsNormalKey(assetId.toBase58String()))
+  } else if (info.issuer == getEagleBreederAddress()) then {
+    tryGetBooleanExternal(getEagleBreederAddress(), getAssetIsNormalKey(assetId.toBase58String()))
+  } else {
+    false
+  }
+}
 
 func tryGetIntegerExternal(address: Address, key: String) = {
     match getInteger(address, key) {
@@ -73,9 +103,6 @@ func tryGetIntegerExternalZero(address: Address, key: String) = {
 
 }
 
-#TODO: PUT IN ORACLE!!!!!!!!!!!!!!!!!!!!!!!!!!
-let pzlAmount = tryGetIntegerExternal(getOracle(),staticKey_eagleRebirthPrice()) #24_0000_0000
-
 let delayForHatching = 2
 
 func checkReal(assetId: ByteVector) = {
@@ -84,6 +111,11 @@ func checkReal(assetId: ByteVector) = {
   } else {
     throw("not valid NFT")
   }
+}
+
+func getRebirthPrice(assetId: ByteVector) = {
+  let giantPrice = tryGetIntegerExternal(getOracle(),staticKey_eagleRebirthPrice())
+  if isNormalEagle(assetId) then giantPrice else giantPrice / 2
 }
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -117,26 +149,38 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let baseResult = 
-    if (n<100 && blacklistCode != "garage_A" ) then "garage_A" else
-    if (n<200 && blacklistCode != "garage_B" ) then "garage_B" else
-    if (n<300 && blacklistCode != "garage_C" ) then "garage_C" else
-    if (n<400 && blacklistCode != "garage_D" ) then "garage_D" else
-    if (n<700 && blacklistCode != "incubator" ) then "incubator" else
-    if (n<800 && blacklistCode != "feli_incubator" ) then "feli_incubator" else    
+    if (n<40  && blacklistCode != "feli_incubator") then "feli_incubator" else
+    if (n<53  && blacklistCode != "cani_perch_A") then "cani_perch_A" else
+    if (n<65  && blacklistCode != "cani_perch_B") then "cani_perch_B" else
+    if (n<78  && blacklistCode != "cani_perch_C") then "cani_perch_C" else
+    if (n<90  && blacklistCode != "cani_perch_D") then "cani_perch_D" else
+    if (n<100 && blacklistCode != "cani_incubator" ) then "cani_incubator" else
+    if (n<120 && blacklistCode != "bull_incubator" ) then "bull_incubator" else
+    if (n<270 && blacklistCode != "giant_incubator" ) then "giant_incubator" else
+    if (n<420 && blacklistCode != "normal_incubator" ) then "normal_incubator" else
+    if (n<495 && blacklistCode != "garage_A" ) then "garage_A" else
+    if (n<570 && blacklistCode != "garage_B" ) then "garage_B" else
+    if (n<645 && blacklistCode != "garage_C" ) then "garage_C" else
+    if (n<720 && blacklistCode != "garage_D" ) then "garage_D" else
+    if (n<728 && blacklistCode != "bull_ranch_A") then "bull_ranch_A" else
+    if (n<735 && blacklistCode != "bull_ranch_B") then "bull_ranch_B" else
+    if (n<743 && blacklistCode != "bull_ranch_C") then "bull_ranch_C" else
+    if (n<750 && blacklistCode != "bull_ranch_D") then "bull_ranch_D" else
+    if (n<763 && blacklistCode != "vperch_B") then "vperch_B" else
+    if (n<775 && blacklistCode != "vperch_R") then "vperch_R" else
+    if (n<788 && blacklistCode != "vperch_G") then "vperch_G" else
+    if (n<800 && blacklistCode != "vperch_Y") then "vperch_Y" else
     if (n<850 && blacklistCode != "item!ART-MUTARIUM-G" ) then "item!ART-MUTARIUM-G" else
     if (n<900 && blacklistCode != "item!ART-MUTARIUM-D" ) then "item!ART-MUTARIUM-D" else
-    if (n<940 && blacklistCode != "item!ART-FREEGENE" ) then "item!ART-FREEGENE" else    
-    if (n<980 && blacklistCode != "item!ART-FIXGENE" ) then "item!ART-FIXGENE" else   
-    if (n<990 && blacklistCode != "item!ART-MIRROR" ) then "item!ART-MIRROR" else  
-    if (n<992 && blacklistCode != "vperch_B") then "vperch_B" else
-    if (n<994 && blacklistCode != "vperch_R") then "vperch_R" else
-    if (n<996 && blacklistCode != "vperch_G") then "vperch_G" else
-    "vperch_Y"
+    if (n<940 && blacklistCode != "item!ART-FREEGENE" ) then "item!ART-FREEGENE" else
+    if (n<980 && blacklistCode != "item!ART-FIXGENE" ) then "item!ART-FIXGENE" else
+    "item!ART-MIRROR"
     let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50)
       then "item!ART-MEDHOUSE"
       else baseResult
     (n,result,jackpotRandom)
 }
+
 func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   let n = getRandomNumber(2, tx, finishHeight, 1)
   if n == 1 then true else false
@@ -171,7 +215,6 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
               [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
             else
               strict first = invoke(getEagleStakingAddress(), "addFreePerch", [address, color,2], [])
-                            #TODO; use a batch method 
                 [
                   StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
                   StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.exactAs[String]),
@@ -186,7 +229,6 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
               [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
             else
               strict first = invoke(getVeggFarmingAddress(), "addFreePerch", [address, color,2], [])
-                            #TODO; use a batch method 
                 [
                   StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
                   StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.exactAs[String]),
@@ -194,39 +236,99 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                 ]
         call
 
-      #} else if (win == "jackpot") then {
-      #  strict call = invoke(getEagleIncubatorAddress(), "issueJackpot", [address, txId, "WWESANTA"], []) 
-      #  [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])]
-      #TODO: turn into issueFreeCanine, on double, issue free turtle aswell
-      } else if (win == "incubator") then {
+      } else if (win == "giant_incubator") then {
         strict call = if !double then 
-            strict first =invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
+            strict first =invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, false], [])
             [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
           else 
-            strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
-            strict second = invoke(getFelineIncubatorAddress(), "issueFree", [address, txId], [])
+            strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, false], [])
+            strict second = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, true], [])
             [
               StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
               StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
-              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "incubator")
+              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "giant_incubator")
             ]
-
         call
-      #TODO: turn into issueFreeTurtle, on double, issue free canine aswell
+
+      } else if (win == "normal_incubator") then {
+        strict call = if !double then 
+            strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, true], [])
+            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
+          else 
+            strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, true], [])
+            strict second = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, false], [])
+            [
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "normal_incubator")
+            ]
+        call
+
       } else if (win == "feli_incubator") then {
         strict call = if !double then 
             strict first = invoke(getFelineIncubatorAddress(), "issueFree", [address, txId], [])
             [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
           else 
             strict first = invoke(getFelineIncubatorAddress(), "issueFree", [address, txId], [])
-            strict second = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
+            strict second = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, true], [])
             [
               StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
               StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
               StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "feli_incubator")
             ]
         call
-      #TODO; should work
+      } else if (win == "cani_incubator") then {
+        strict call = if !double then 
+            strict first =invoke(getCanineIncubatorAddress(), "issueFree", [address, txId], [])
+            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
+          else 
+            strict first = invoke(getCanineIncubatorAddress(), "issueFree", [address, txId], [])
+            strict second = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, false], [])
+            [
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "cani_incubator")
+            ]
+        call
+      } else if (win == "bull_incubator") then {
+        strict call = if !double then 
+            strict first =invoke(getBullIncubatorAddress(), "issueFree", [address, txId], [])
+            [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
+          else 
+            strict first = invoke(getBullIncubatorAddress(), "issueFree", [address, txId], [])
+            strict second = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, false], [])
+            [
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
+              StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "bull_incubator")
+            ]
+        call
+      } else if (win.indexOf("cani_perch_") != unit) then {
+        let color = win.takeRight(1)
+        strict call = if !double then 
+              strict first = invoke(getCanineStakingAddress(), "addFreePerch", [address, color,1], [])
+              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
+            else
+              strict first = invoke(getCanineStakingAddress(), "addFreePerch", [address, color,2], [])
+                [
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.exactAs[String]),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+                ]
+        call
+      } else if (win.indexOf("bull_ranch_") != unit) then {
+        let color = win.takeRight(1)
+        strict call = if !double then 
+              strict first = invoke(getBullFarmingAddress(), "addFreePerch", [address, color,1], [])
+              [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
+            else
+              strict first = invoke(getBullFarmingAddress(), "addFreePerch", [address, color,2], [])
+                [
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.exactAs[String]),
+                  StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+                ]
+        call
       }else if (win.indexOf("item") !=unit) then {
         let itemName = win.split("!")[1]
         strict call = if !double || itemName == "ART-MEDHOUSE" then 
@@ -294,6 +396,7 @@ func initRebirth() = {
   strict extra = checkAdditionalPayment(i.payments[2])
 
   let assetId = pmtEagle.assetId.value()
+  let pzlAmount = getRebirthPrice(assetId)
   let initTx = i.transactionId.toBase58String()
   let address = i.caller.toString()
   if (pmtEagle.amount != 1) then throw("NFT is not attached") else
