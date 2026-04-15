@@ -392,7 +392,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
         
-      ]++validPayment++returnPayload++bonusOutput
+      ]++validPayment++returnPayload#++bonusOutput
     }
   }
 }

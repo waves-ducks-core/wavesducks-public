@@ -130,7 +130,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     #Every % means 10 numbers
     let n = getRandomNumber(1000, tx, finishHeight, 0)
     let result = 
-    if (jackpotRandom == 1 && wasUniqueBorn("TRTL-WWNINJTU-JU") < 2) then { "jackpot_turtle" } else
+    #if (jackpotRandom == 1 && wasUniqueBorn("TRTL-WWNINJTU-JU") < 2) then { "jackpot_turtle" } else
     if (n<40 && "item!ART-FIRE_SHIELD" != blacklistCode) then { "item!ART-FIRE_SHIELD" } else
     if (n<80 && "item!ART-FIRE_TAIL" != blacklistCode) then { "item!ART-FIRE_TAIL" } else    
     if (n<100 && "item!ART-FREEGENE" != blacklistCode) then { "item!ART-FREEGENE" } else                
@@ -289,7 +289,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment++returnPayload++bonusOutput
+      ]++validPayment++returnPayload#++bonusOutput
     }
   }
 }

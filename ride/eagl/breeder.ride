@@ -393,7 +393,7 @@ func copyNFT()= {
 }
 
 @Callable(i)
-func startBreeding(refererAddress: String, isNormal: Boolean) = {
+func startBreeding(refererAddress: String) = {
   #TODO: add validation that feeValidate payment is added!
   if size(i.payments) != 4  && size(i.payments) != 3 then throw("Wrong amount of payments!") else
   strict feeValidate = checkAdditionalPayment(i.payments[0])
@@ -403,7 +403,7 @@ func startBreeding(refererAddress: String, isNormal: Boolean) = {
   let secondAssetId = secondPayment.assetId.value().toBase58String()
   let firstIsNormal = isNormalEagle(firstAssetId)
   let secondIsNormal = isNormalEagle(secondAssetId)
-  let breedingFee = if isNormal then getEaglIncubationFee() / 2 else getEaglIncubationFee()
+  let breedingFee = if firstIsNormal then getEaglIncubationFee() / 2 else getEaglIncubationFee()
   
   strict amountPaidByCoupons = invoke(getCouponsAddress(),"useCoupons",[breedingFee],[]).exactAs[Int]
   let leftToPay = breedingFee-amountPaidByCoupons
@@ -429,8 +429,6 @@ func startBreeding(refererAddress: String, isNormal: Boolean) = {
   } else {
     if (firstIsNormal != secondIsNormal) then {
       throw("You cannot breed giant and normal eagles together.")
-    } else if (firstIsNormal != isNormal) then {
-      throw("Breeding mode does not match parent eagle type.")
     } else if (tryGetInteger("asset_" + firstAssetId + "_children") > 0 || tryGetInteger("asset_" + secondAssetId + "_children") > 0) then {
       throw("One eagle can be used for breeding only once in its lifetime.")
     } else {
@@ -442,7 +440,7 @@ func startBreeding(refererAddress: String, isNormal: Boolean) = {
           StringEntry(getParentKey(i.transactionId, 1), firstAssetId),
           StringEntry(getParentKey(i.transactionId, 2), secondAssetId),
           StringEntry(getProcessStatusKey(i.caller.toString(), i.transactionId), HatchingStarted),
-          BooleanEntry(getProcessIsNormalKey(i.caller.toString(), i.transactionId), isNormal),
+          BooleanEntry(getProcessIsNormalKey(i.caller.toString(), i.transactionId), firstIsNormal),
           IntegerEntry(getProcessFinishHeightKey(i.caller.toString(), i.transactionId), height + delayForHatching)
         ]++feeValidate
       }
