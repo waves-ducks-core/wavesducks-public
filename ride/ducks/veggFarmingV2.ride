@@ -42,6 +42,8 @@ func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_incubatorAddress() = "static_incubatorAddress"
 func staticKey_breederAddress() = "static_breederAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_wearablesAddress() = "static_wearablesAddress"
 func staticKey_accBoosterAddress() = "static_accBoosterAddress"
 func staticKey_duckWrapper() = "static_duckWrapper"
 func staticKey_couponsAddress() = "static_couponsAddress"
@@ -59,6 +61,8 @@ func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58Str
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()  
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_incubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBreederAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String()) #base58'3PDVuU45H7Eh5dmtNbnRNRStGwULA7NY6Hb'
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String())
 func getAccBoosterAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_accBoosterAddress()).fromBase58String())
 func getDuckWrapperSc() =  Address(tryGetStringExternal(getOracle(),staticKey_duckWrapper()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
@@ -222,13 +226,19 @@ func calculateFarmPower(assetId:String)={
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
+  let owner = tryGetString(assetId+"_owner")
+  let bonusAddress = if owner != "" then owner else i.originCaller.toString()
+  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).exactAs[Int]
+  strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
+  let powerWithBoosts = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   let mantle = tryGetString(assetId+"_mantleId")
   let mantleLevel = if mantle != "" then tryGetIntegerExternal(getGameDappAddress(),"artefactId_" + mantle + "_level") else 0
-  let powerWithMantle = if mantleLevel > 0 then finalPowerRarity + (finalPowerRarity *mantleLevel / 100) else finalPowerRarity
+  let powerWithMantle = if mantleLevel > 0 then powerWithBoosts + (powerWithBoosts * mantleLevel / 100) else powerWithBoosts
   ([
     IntegerEntry("DEBUG_"+assetName, finalPower),
     IntegerEntry("DEBUG_RARITY"+assetName, rarity),
     IntegerEntry("DEBUG_FPRARITY_"+assetName, finalPowerRarity),
+    IntegerEntry("DEBUG_FPBOOST_"+assetName, powerWithBoosts),
     IntegerEntry("DEBUG_BASEPOWER_"+assetName, basePower),
     IntegerEntry("DEBUG_COEFFICIENT_"+assetName, multiplier)
   ],(powerWithMantle,finalPower))
