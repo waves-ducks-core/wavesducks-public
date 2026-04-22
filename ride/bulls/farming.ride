@@ -45,7 +45,7 @@ func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 let keyGlobalEarned = "global_earnings"
 func staticKey_perchFee() = "static_bullPerchFee"
-func staticKey_rebirthAddress() = "static_rebirthAddress"
+func staticKey_rebirthAddress() = "static_bullIncubatorAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func totalStakedKey() = "total_staked"
 func staticKey_wearablesAddress() = "static_wearablesAddress"
@@ -417,4 +417,4 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 1
     }
-} 
+}

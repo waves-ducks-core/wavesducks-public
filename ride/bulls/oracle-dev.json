@@ -17,15 +17,15 @@
             "type": "integer",
             "value": 20000000
         },
+        {
+            "key": "static_bullRebirthPrice",
+            "type": "integer",
+            "value": 99900000000
+        },
                 {
             "key": "static_bullPerchFee",
             "type": "integer",
             "value": 20000000
-        },
-        {
-            "key": "static_bullRebirthAddress",
-            "type": "string",
-            "value": ""
         },
         {
             "key": "static_bullFarmingAddress",
@@ -47,4 +47,3 @@
     "sender":"3MxZNnLG9EBcb4yExxNwcFq9vcyMb7DcGT9",
     "senderPublicKey":"H3uYiohWLstHgnUqG1XQaByKhHeNewGoeH16WNFFGFR4"
 }
-

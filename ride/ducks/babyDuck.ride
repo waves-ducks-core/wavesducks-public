@@ -50,6 +50,7 @@ func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
+func staticKey_bullIncubatorAddress() = "static_bullIncubatorAddress"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getDucklingPrice() = tryGetIntegerExternal(getOracle(),staticKey_ducklingPrice())
@@ -65,6 +66,7 @@ func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getCanineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getFelineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getBullIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_bullIncubatorAddress()).fromBase58String())
 
 let backendPubKey = getStringValue(getOracle(),staticKey_backendPubKey()).fromBase58String()
 
@@ -229,7 +231,7 @@ func buyDuckling(refererAddress: String)={
 func issueFreeDuckling(address: String, txIdStr: String, percentage: Int) = {
   if i.caller != this && i.caller != getRebirthAddress() &&
    i.caller != getCanineRebirthAddress() && i.caller != getFelineRebirthAddress() &&
-   i.caller != getCouponsAddress() then throw("BIFD: You can't issue free duckling") else
+   i.caller != getBullIncubatorAddress() && i.caller != getCouponsAddress() then throw("BIFD: You can't issue free duckling") else
   let asset = Issue("BABY-11111111-GZ", "", 1, 0, false, unit, height)
     let assetId = asset.calculateAssetId()
     ([
@@ -389,4 +391,4 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 1
     }
-} 
+}
