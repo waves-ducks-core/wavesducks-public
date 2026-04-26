@@ -215,7 +215,6 @@ func burnEggs()= {
         }
     let burnActive = tryGetBoolean(burnActiveKey)
     if burnActive then
-        if isTestEnv() then 
             let invoker = i.caller.toString()
             let key = burnUserKey(invoker)
             let userBurned = tryGetInteger(key)
@@ -238,8 +237,6 @@ func burnEggs()= {
                 ScriptTransfer(getFeeAggregatorAddress(),i.payments[0].amount - amountToBurn,i.payments[0].assetId)
 
             ]
-        else
-            throw("Not allowed in production")
     else
         throw("CBE: burn eggs not active")
 }

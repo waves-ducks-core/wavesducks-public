@@ -257,7 +257,7 @@ func callMarketplaceProxy(function: String, int1: Int, int2: Int, str1: String, 
     let bidAmount = i.payments[0].value().amount.value()
     let duckMarketPrice = checkDataGetPrice( ach.toString(), breed.toString(), gen, price, rarity.toString(), ts, signature, duckAssetId)
     let maxPrice =  if tryGetBooleanExternal(getItemsAddress(),"direct_cosmetic_"+gen+"_sale") then tryGetIntegerExternal(getItemsAddress(),"direct_cosmetic_"+gen)
-                        else duckMarketPrice + fraction(duckMarketPrice, 15, 100)+fixedPriceDiff
+                        else duckMarketPrice + fraction(duckMarketPrice, getMaxDiff(), 100)+fixedPriceDiff
     let auctionOwner = tryGetStringExternal(auctionDappAddress, "auction_" + auctionId + "_owner")
     if (bidAmount > maxPrice && !addressIsCf(auctionOwner)) then throw("Price is too high, calc price: " + duckMarketPrice.toString() + ", max. price after item check: " + (maxPrice).toString() + ", your buy price: " + bidAmount.toString()) else
     if (i.payments.size() != 1) then throw("_103") else{

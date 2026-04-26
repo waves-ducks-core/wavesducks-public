@@ -151,6 +151,155 @@ func asBoolean(value: Any) = match value {
   case _ => throw("TI: wrong type, expected: Boolean")
 }
 
+func getIncubatorFarmGen(assetName: String) = {
+  let generation = assetName.takeRight(2).take(1)
+  if generation == "J" then "8W-J" else {
+    let letter = assetName.take(6).takeRight(1)
+    "8"+letter+"-G"
+  }
+}
+
+func getRebirthStatusKey(address: String, initTx: String) = {
+  "address_" + address + "_initTx_" + initTx + "_status"
+}
+
+func getRebirthFinishBlockKey(address: String, initTx: String) = {
+  "address_" + address + "_initTx_" + initTx + "_finishBlock"
+}
+
+func getRebirthAssetKey(address: String, initTx: String) = {
+  "address_" + address + "_initTx_" + initTx + "_assetId"
+}
+
+func checkRealBull(assetId: ByteVector) = {
+  let issuer = assetInfo(assetId).value().issuer
+  if (issuer == this || issuer == getBullBreederAddress()) then issuer else throw("BRB: invalid bull NFT")
+}
+
+func getRandomRebirthWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
+  let n = getRandomNumber(1000, tx, finishHeight, 0)
+  let result =
+  if (n < 100 && blacklistCode != "item!ART-FEED5") then "item!ART-FEED5" else
+  if (n < 235 && blacklistCode != "item!ART-FEED10") then "item!ART-FEED10" else
+  if (n < 340 && blacklistCode != "item!ART-FEED15") then "item!ART-FEED15" else
+  if (n < 420 && blacklistCode != "item!ART-FEED20") then "item!ART-FEED20" else
+  if (n < 480 && blacklistCode != "item!ART-FEED25") then "item!ART-FEED25" else
+  if (n < 530 && blacklistCode != "bull_ranch_A") then "bull_ranch_A" else
+  if (n < 580 && blacklistCode != "bull_ranch_B") then "bull_ranch_B" else
+  if (n < 630 && blacklistCode != "bull_ranch_C") then "bull_ranch_C" else
+  if (n < 680 && blacklistCode != "bull_ranch_D") then "bull_ranch_D" else
+  if (n < 735 && blacklistCode != "duckling_10") then "duckling_10" else
+  if (n < 770 && blacklistCode != "duckling_20") then "duckling_20" else
+  if (n < 790 && blacklistCode != "duckling_40") then "duckling_40" else
+  if (n < 820 && blacklistCode != "item!ART-KATANA") then "item!ART-KATANA" else
+  if (n < 850 && blacklistCode != "item!ART-BUILTBODY") then "item!ART-BUILTBODY" else
+  if (n < 900 && blacklistCode != "item!ART-CANCPN") then "item!ART-CANCPN" else
+  if (n < 910 && blacklistCode != "item!ART-TOPHAT") then "item!ART-TOPHAT" else
+  if (n < 920 && blacklistCode != "item!ART-ICECREAM") then "item!ART-ICECREAM" else
+  if (n < 930 && blacklistCode != "item!ART-ORB") then "item!ART-ORB" else
+  if (n < 940 && blacklistCode != "item!ART-SCEPTER") then "item!ART-SCEPTER" else
+  if (n < 950 && blacklistCode != "item!ART-SHOPBAG") then "item!ART-SHOPBAG" else
+  if (n < 957 && blacklistCode != "item!ART-FEED50") then "item!ART-FEED50" else
+  if (n < 960 && blacklistCode != "item!ART-FEED100") then "item!ART-FEED100" else
+  if (n < 964 && blacklistCode != "item!ART-POTION") then "item!ART-POTION" else
+  if (n < 968 && blacklistCode != "item!ART-ENEST") then "item!ART-ENEST" else
+  if (n < 973 && blacklistCode != "item!ART-ROBODUCK") then "item!ART-ROBODUCK" else
+  if (n < 980 && blacklistCode != "bull_genesis") then "bull_genesis" else
+  if (n < 992 && blacklistCode != "item!ART-FIXGENE") then "item!ART-FIXGENE" else
+  if (blacklistCode != "item!ART-FREEGENE") then "item!ART-FREEGENE" else
+  "item!ART-FEED5"
+  (n, result)
+}
+
+func getRandomRebirthReturn(tx: ByteVector, finishHeight: Int) = {
+  let n = getRandomNumber(2, tx, finishHeight, 1)
+  if n == 1 then true else false
+}
+
+func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean, blacklistCode: String, rescue: Boolean, finishTx: String) = {
+  strict feeValidate = checkAdditionalPayment(additionalPayment)
+  let finishBlock = tryGetInteger(getRebirthFinishBlockKey(address, initTx))
+  let status = tryGetString(getRebirthStatusKey(address, initTx))
+
+  if (status != RebirthStarted) then throw("BRF: rebirth is finished or not open") else
+  if (height < finishBlock) then throw("BRF: you cannot finish rebirth yet") else {
+    let output = getRandomRebirthWin(initTx.fromBase58String(), finishBlock, blacklistCode)
+    let random = output._1
+    let win = output._2
+    let txId = initTx
+    let reward = if (win.indexOf("item!") != unit) then {
+      let item = win.drop(5)
+      if !double then {
+        strict first = invoke(getItemsAddress(), "issueArtefactIndex", [item, address, 0], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
+      } else {
+        strict first = invoke(getItemsAddress(), "issueArtefactIndex", [item, address, 0], [])
+        strict second = invoke(getItemsAddress(), "issueArtefactIndex", [item, address, 1], [])
+        [
+          StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+          StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
+          StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+        ]
+      }
+    } else if (win.indexOf("bull_ranch_") != unit) then {
+      let color = win.takeRight(1)
+      let amount = if double then 2 else 1
+      strict first = invoke(getFarmingAddress(), "addFreePerch", [address, color, amount], [])
+      if !double then {
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
+      } else {
+        [
+          StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+          StringEntry("address_" + address + "_initTx_" + initTx + "_result1", first.exactAs[String]),
+          StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+        ]
+      }
+    } else if (win.indexOf("duckling_") != unit) then {
+      let level = if win == "duckling_10" then 10 else if win == "duckling_20" then 20 else 40
+      let levelFinal = if double then 2 * level else level
+      strict first = invoke(getBabyDuckAddress(), "issueFreeDuckling", [address, txId, levelFinal], [])
+      [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
+    } else if (win == "bull_genesis") then {
+      if !double then {
+        strict first = invoke(this, "issueFree", [address, txId], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])]
+      } else {
+        strict first = invoke(this, "issueFree", [address, txId], [])
+        strict second = invoke(this, "issueFree", [address, finishTx], [])
+        [
+          StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
+          StringEntry("address_" + address + "_initTx_" + initTx + "_result1", second.exactAs[String]),
+          StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
+        ]
+      }
+    } else {
+      throw("BRF: invalid reward")
+    }
+    let returnToSender = if rescue then getRandomRebirthReturn(initTx.fromBase58String(), finishBlock) else false
+    let returnPayload = if returnToSender then {
+      let assetId = tryGetString(getRebirthAssetKey(address, initTx)).fromBase58String()
+      let issuer = checkRealBull(assetId)
+      let assetName = assetInfo(assetId).value().name
+      let localIncrease = if issuer == this then {
+        let farmGen = getIncubatorFarmGen(assetName)
+        [
+          IntegerEntry(getStatsKey(assetName), tryGetInteger(getStatsKey(assetName)) + 1),
+          IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
+        ]
+      } else []
+      strict breederIncrease = if issuer == getBullBreederAddress() then {
+        strict gen = invoke(getBullBreederAddress(),"getGenFromName",[assetName],[]).exactAs[String]
+        invoke(getBullBreederAddress(), "increaseRarity", [assetId.toBase58String(), gen], [])
+      } else nil
+      localIncrease ++ [ScriptTransfer(address.addressFromStringValue(), 1, assetId)]
+    } else []
+    reward ++ [
+      StringEntry(getRebirthStatusKey(address, initTx), RebirthFinished),
+      StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
+      IntegerEntry("address_" + address + "_initTx_" + initTx + "_random", random)
+    ] ++ feeValidate ++ returnPayload
+  }
+}
 @Callable(i)
 func reduceRarity(assetId: String, fGen: String) = {
   let asset = assetId.fromBase58String()
@@ -388,5 +537,3 @@ func verify() = {
         case _ => signaturesCount >= 1
     }
 }
-
-        
