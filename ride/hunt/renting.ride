@@ -176,6 +176,7 @@ func rentDuckFromUser(duckId: String, game: String)={
 ## ['address:amount:duckid','address:amount:duckid']
 @Callable(i)
 func topUpRewards(duckIdAndAmountsList: List[String], assetId: String)={
+  if true then throw("RTUR: admin only") else
   #Loop (fold) through 10 items
     func handleTopUp(acc: List[ScriptTransfer|IntegerEntry], userAndAmount: String) = {
       #split amounts based on :

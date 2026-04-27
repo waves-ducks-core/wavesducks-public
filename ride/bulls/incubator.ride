@@ -28,6 +28,8 @@ func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_rebirthAddress() = "static_bullRebirthAddress"
 func staticKey_farmingAddress() = "static_bullStakingAddress"
+func staticKey_breederAddress() = "static_bullBreederAddress"
+func staticKey_babyDuckAddress() = "static_babyDuckAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_bullAssetId() = "static_bullAssetId"
 func staticKey_mutantAddress() = "static_mutantFarmingAddress"
@@ -42,6 +44,9 @@ func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticK
 func getRebirthAddress() = this #Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
 #TODO: ADAPT THIS
 #func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_farmingAddress()).fromBase58String()) 
+func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_farmingAddress()).fromBase58String())
+func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String())
+func getBabyDuckAddress() = Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String())
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getMutantFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_mutantAddress()).fromBase58String())
 func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
@@ -59,6 +64,8 @@ let delayForHatching = 2
 
 let HatchingStarted = "HATCHING_STARTED"
 let HatchingFinished = "HATCHING_FINISHED"
+let RebirthStarted = "REBIRTH_STARTED"
+let RebirthFinished = "REBIRTH_FINISHED"
 
 func isLocked() = {
   let masterAddress = Address(base58'3PEPftf2kWZDmAaWBjs6BUJa9957kiA2PkU')
@@ -446,7 +453,7 @@ func startHatching(refererAddress: String) = {
     let leftToPay = 
     if size(i.payments) == 3 then {
           strict boosterType = invoke(getItemsAddress(),"checkArtefactDetails",[i.payments[2].value().assetId.value().toBase58String()],[]).exactAs[String]
-          if (boosterType == "ART-BULLCPN") then  eggsNeeded/100* 80 else 100
+          if (boosterType == "ART-BULLCPN") then  eggsNeeded/100* 80 else eggsNeeded
 
           }else 
             eggsNeeded

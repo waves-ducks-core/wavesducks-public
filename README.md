@@ -1,5 +1,10 @@
 # wavesducks-public
 
+## Smart contract security
+
+Before pushing or deploying smart-contract changes, follow
+[SC_SECURITY_WORKFLOW.md](SC_SECURITY_WORKFLOW.md).
+
 ## How to make a sc as test
 
 {
