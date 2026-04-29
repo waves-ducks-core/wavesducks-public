@@ -18,6 +18,11 @@
             "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
         },
         {
+            "key": "static_bullIncubatorAddress",
+            "type": "string",
+            "value": "3PK5WcMpfQweLcxuuQ6F3w56PbeRTVn3Jjt"
+        },
+        {
             "key": "static_rebirthAddress",
             "type": "string",
             "value": "3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ"
@@ -278,4 +283,3 @@
     "senderPublicKey": "Ga8WEBTPXbHuoXRD355mQ6ms8PsM2RFYKeA1mEP32CFe"
 
 }
-

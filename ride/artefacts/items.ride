@@ -18,6 +18,7 @@ func staticKey_duplicatorFee() = "static_duplicatorFee"
 func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
 func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
+func staticKey_bullIncubatorAddress() = "static_bullIncubatorAddress"
 func staticKey_babyDuckAddress() = "static_babyDuckAddress"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_mutantIncubatorAddress() = "static_mutantIncubatorAddress"
@@ -158,6 +159,7 @@ func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getCanineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineRebirthAddress()).fromBase58String())
 func getEagleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
 func getFelineeRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String())
+func getBullIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_bullIncubatorAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getHuntDistroAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_huntDistroAddress()).fromBase58String())
 func getWarsPKey() =  tryGetStringExternal(getOracle(),staticKey_warsPKey()).fromBase58String()
@@ -705,7 +707,7 @@ func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
   && i.caller != getTurtleBreederAddress()
   && i.caller != getCanineBreederAddress()
   && i.caller != getFelineBreederAddress() 
-  && i.caller != getCanineRebirthAddress() && i.caller != getFelineeRebirthAddress() && i.caller != getHuntDistroAddress()
+  && i.caller != getCanineRebirthAddress() && i.caller != getFelineeRebirthAddress() && i.caller != getBullIncubatorAddress() && i.caller != getHuntDistroAddress()
   && i.callerPublicKey != getWarsPKey()) then throw("IIAI: admin only") else 
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let address = Address(fromBase58String(receiver))

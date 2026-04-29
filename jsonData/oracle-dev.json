@@ -18,6 +18,11 @@
             "value": "3N6oB7VbceD3NoguGkfGnBMF4hcHZVbK8io"
         },
         {
+            "key": "static_bullIncubatorAddress",
+            "type": "string",
+            "value": "3N9osDS2cP1cT1NxJm7gb16Qusff5zHh5BF"
+        },
+        {
             "key": "static_rebirthAddress",
             "type": "string",
             "value": "3N6PvAL6whpaLE48xjeZbmU7vRWQmuz8AA5"

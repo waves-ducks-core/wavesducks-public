@@ -26,30 +26,28 @@ func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_refContractAddress() = "static_refContractAddress"
-func staticKey_rebirthAddress() = "static_bullRebirthAddress"
-func staticKey_farmingAddress() = "static_bullStakingAddress"
-func staticKey_breederAddress() = "static_bullBreederAddress"
-func staticKey_babyDuckAddress() = "static_babyDuckAddress"
+func staticKey_farmingAddress() = "static_bullFarmingAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_bullAssetId() = "static_bullAssetId"
 func staticKey_mutantAddress() = "static_mutantFarmingAddress"
 func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
+func staticKey_bullBreederAddress() = "static_bullBreederAddress"
+func staticKey_babyDuckAddress() = "static_babyDuckAddress"
+func staticKey_bullRebirthPrice() = "static_bullRebirthPrice"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getMintAssetId() = tryGetStringExternal(getOracle(), staticKey_bullAssetId()).fromBase58String()
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String())
-#TODO: ADAPT THIS
-func getRebirthAddress() = this #Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String())
-#TODO: ADAPT THIS
-#func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_farmingAddress()).fromBase58String()) 
+func getRebirthAddress() = this
 func getFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_farmingAddress()).fromBase58String())
-func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String())
-func getBabyDuckAddress() = Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String())
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getMutantFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_mutantAddress()).fromBase58String())
 func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
+func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
+func getBabyDuckAddress() = Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String())
+func getBullRebirthPrice() = getIntegerValue(getOracle(),staticKey_bullRebirthPrice())
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -303,10 +301,12 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
     reward ++ [
       StringEntry(getRebirthStatusKey(address, initTx), RebirthFinished),
       StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
+      StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win),
       IntegerEntry("address_" + address + "_initTx_" + initTx + "_random", random)
     ] ++ feeValidate ++ returnPayload
   }
 }
+
 @Callable(i)
 func reduceRarity(assetId: String, fGen: String) = {
   let asset = assetId.fromBase58String()
@@ -314,8 +314,7 @@ func reduceRarity(assetId: String, fGen: String) = {
     throw("IRR: admin or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
-    let letter = duckGen.take(6).takeRight(1)
-    let farmGen = "8"+letter+"-G"
+    let farmGen = getIncubatorFarmGen(duckGen)
     [
       IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) - 1),
       IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
@@ -330,8 +329,7 @@ func increaseRarity(assetId: String, fGen: String) = {
     throw("IRR: admin or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
-    let letter = duckGen.take(6).takeRight(1)
-    let farmGen = "8"+letter+"-G"
+    let farmGen = getIncubatorFarmGen(duckGen)
     [
       IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) + 1),
       IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
@@ -514,6 +512,86 @@ func finishHatching(txIdStr: String) = {
         ScriptTransfer(i.caller, 1, assetId)
       ]++feeValidate
     }
+}
+
+@Callable(i)
+func initRebirth() = {
+  if (size(i.payments) != 3) then throw("BRI: wrong amount of payments") else
+  let bullPayment = i.payments[0]
+  let tnPayment = i.payments[1]
+  strict feeValidate = checkAdditionalPayment(i.payments[2])
+  let assetId = bullPayment.assetId.value()
+  let issuer = checkRealBull(assetId)
+  let address = i.caller.toString()
+  let initTx = i.transactionId.toBase58String()
+
+  if (bullPayment.amount != 1) then throw("BRI: NFT is not attached") else
+  if (tnPayment.amount != getBullRebirthPrice() || tnPayment.assetId != getMintAssetId()) then throw("BRI: attach exactly 999 TN") else
+    let assetName = assetInfo(assetId).value().name
+    let localReduce = if issuer == this then {
+      let farmGen = getIncubatorFarmGen(assetName)
+      [
+        IntegerEntry(getStatsKey(assetName), tryGetInteger(getStatsKey(assetName)) - 1),
+        IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
+      ]
+    } else []
+    strict breederReduce = if issuer == getBullBreederAddress() then {
+      strict gen = invoke(getBullBreederAddress(),"getGenFromName",[assetName],[]).exactAs[String]
+      invoke(getBullBreederAddress(), "reduceRarity", [assetId.toBase58String(), gen], [])
+    } else nil
+    let burn = tnPayment.amount / 10 * 9
+    let mutants = tnPayment.amount / 100
+    let fee = tnPayment.amount - burn - mutants
+    strict topup = invoke(getMutantFarmingAddress(), "topUpReward", ["TN",0], [AttachedPayment(getMintAssetId(), mutants)])
+    [
+      IntegerEntry(getRebirthFinishBlockKey(address, initTx), height + delayForHatching),
+      StringEntry(getRebirthStatusKey(address, initTx), RebirthStarted),
+      StringEntry(getRebirthAssetKey(address, initTx), assetId.toBase58String()),
+      Burn(getMintAssetId(), burn),
+      ScriptTransfer(getFeeAggregator(), fee, getMintAssetId()),
+      IntegerEntry("rebirth_burned", tryGetInteger("rebirth_burned") + burn)
+    ] ++ localReduce ++ feeValidate
+}
+
+@Callable(i)
+func finishRebirth(initTx: String) = {
+  if (size(i.payments) != 1) then throw("BRF: wrong amount of payments") else
+  finishRebirthInternal(initTx, i.caller.toString(), i.payments[0], false, "", false, i.transactionId.toBase58String())
+}
+
+@Callable(i)
+func finishRebirthDouble(initTx: String) = {
+  if !(size(i.payments) == 2 && i.payments[0].amount == 1) then throw("BRD: Invalid payment") else
+  let assetId = i.payments[0].assetId.value()
+  strict boosterType = invoke(getItemsAddress(), "checkArtefactDetails", [assetId.toBase58String()], []).exactAs[String]
+  if boosterType == "ART-GIFT_DOUBL" then {
+    [Burn(assetId, 1)] ++
+    finishRebirthInternal(initTx, i.caller.toString(), i.payments[1], true, "", false, i.transactionId.toBase58String())
+  } else {
+    throw("BRD: Wrong item attached to double rewards")
+  }
+}
+
+@Callable(i)
+func finishRebirthItem(initTx: String, itemCode: String) = {
+  if (size(i.payments) == 2 && i.payments[0].amount == 1) then
+    let assetId = i.payments[0].assetId.value()
+    strict boosterType = invoke(getItemsAddress(), "checkArtefactDetails", [assetId.toBase58String()], []).exactAs[String]
+    if boosterType == "ART-HWERASE" then {
+      [Burn(assetId, 1)] ++
+      finishRebirthInternal(initTx, i.caller.toString(), i.payments[1], false, itemCode, false, i.transactionId.toBase58String())
+    } else if boosterType == "ART-HWRESCUE" then {
+      [Burn(assetId, 1)] ++
+      finishRebirthInternal(initTx, i.caller.toString(), i.payments[1], false, "", true, i.transactionId.toBase58String())
+    } else if boosterType == "ART-GIFT_DOUBL" then {
+      [Burn(assetId, 1)] ++
+      finishRebirthInternal(initTx, i.caller.toString(), i.payments[1], true, "", false, i.transactionId.toBase58String())
+    } else {
+      throw("BRI: Wrong item attached")
+    }
+  else if (size(i.payments) == 1) then
+    finishRebirthInternal(initTx, i.caller.toString(), i.payments[0], false, "", false, i.transactionId.toBase58String())
+  else throw("BRI: Invalid payments")
 }
 
 
