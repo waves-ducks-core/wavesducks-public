@@ -301,7 +301,6 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
     reward ++ [
       StringEntry(getRebirthStatusKey(address, initTx), RebirthFinished),
       StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
-      StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win),
       IntegerEntry("address_" + address + "_initTx_" + initTx + "_random", random)
     ] ++ feeValidate ++ returnPayload
   }
