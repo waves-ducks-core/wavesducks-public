@@ -234,13 +234,6 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
 
-      strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).exactAs[String] else duckGenesString
-      
-      let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
-
-      let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
-      let assetId = asset.calculateAssetId()
-
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
       let parentsLocked = tryGetBoolean("parentslocked_"+txIdStr)
@@ -249,22 +242,44 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
         ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
         ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
       ] else []
-      let random = getRandomNumber(100, txId, processFinishHeight, 20)
-      let bonusOutput = if (random %2 ==0) then
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTR",owner,0],[])
-        [StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)]
+      let summerDuckGen = "DUCK-WWSUMMER-JU"
+      let summerJackpotRandom = getRandomNumber(1000, txId, processFinishHeight, 21)
+      if duckGenesString == "" && summerJackpotRandom == 1 && tryGetIntegerExternal(getIncubatorAddress(), getDuckStatsKey(summerDuckGen)) < 4 then
+        strict jackpotAsset = invoke(getIncubatorAddress(), "issueJackpot", [owner, txIdStr, "WWSUMMER"], []).exactAs[String]
+        [
+          StringEntry(processStatusKey, HatchingFinished),
+          StringEntry(duckIdKey, jackpotAsset),
+          StringEntry(jackpotAsset, duckIdKey),
+          StringEntry("address_" + owner + "_initTx_" + txIdStr + "_win", "summer_duck"),
+          IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_summerJackpotRandom", summerJackpotRandom),
+          IntegerEntry("asset_" + parent1Id + "_children", 1),
+          IntegerEntry("asset_" + parent2Id + "_children", 1)
+        ]++parentsSend
       else
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTW",owner,0],[])
-        [StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)]
-      composeGenericData(duckGen,duckIdKey,assetId,asset)++
-      [
-        StringEntry(processStatusKey, HatchingFinished),
-        ScriptTransfer(addressFromStringValue(owner), 1, assetId),
-        IntegerEntry("asset_" + parent1Id + "_children", 1),
-        IntegerEntry("asset_" + parent2Id + "_children", 1)
-      ]++parentsSend#++bonusOutput
+        strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).exactAs[String] else duckGenesString
+
+        let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+
+        let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
+        let assetId = asset.calculateAssetId()
+
+        let random = getRandomNumber(100, txId, processFinishHeight, 20)
+        let bonusOutput = if (random %2 ==0) then
+          strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTR",owner,0],[])
+          [StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+          IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)]
+        else
+          strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTW",owner,0],[])
+          [StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+          IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)]
+        composeGenericData(duckGen,duckIdKey,assetId,asset)++
+        [
+          StringEntry(processStatusKey, HatchingFinished),
+          IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_summerJackpotRandom", summerJackpotRandom),
+          ScriptTransfer(addressFromStringValue(owner), 1, assetId),
+          IntegerEntry("asset_" + parent1Id + "_children", 1),
+          IntegerEntry("asset_" + parent2Id + "_children", 1)
+        ]++parentsSend#++bonusOutput
     }
 }
 
@@ -643,4 +658,4 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 1
     }
-} 
+}

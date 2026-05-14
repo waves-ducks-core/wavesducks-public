@@ -181,12 +181,20 @@ func stakeDuck(duckHouseId: String, JColor: String)={
     if duckPayment.amount != 1 then throw("NFT is not attached") else
     if !validateAnimalIssuer(houseType, assetId) then throw("Wrong NFT type") else
     strict boostDuck = invoke(getItemsAddress(),"manipulateBoost",[getConfigBoost(houseType),assetId.toBase58String()],[])
-    strict stakeDuck = invoke(
-      getFarmingAddressByType(houseType),
-      getConfigStakeCall(houseType),
-      [JColor,true,getConfigWithoutPerch(houseType)],
-      i.payments
-    )
+    strict stakeDuck = if houseType == "ART-BHOUSE" then
+      invoke(
+        getFarmingAddressByType(houseType),
+        getConfigStakeCall(houseType),
+        [JColor],
+        i.payments
+      )
+    else
+      invoke(
+        getFarmingAddressByType(houseType),
+        getConfigStakeCall(houseType),
+        [JColor,true,getConfigWithoutPerch(houseType)],
+        i.payments
+      )
     backfillHouseTypeEntry(duckHouseId, houseType) ++ [
         IntegerEntry(occupiedSpotsDucksHouse(duckHouseId),filledSpots+1),
         StringEntry(keyDuckHouse(assetId.toBase58String()),duckHouseId)

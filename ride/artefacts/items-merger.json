@@ -781,6 +781,296 @@
             "key": "merge_ART-GLAMB_asset",
             "type": "string",
             "value": "WAVES"
+        },
+        {
+            "key": "merge_ART-EAGLCPN_baseItem",
+            "type": "string",
+            "value": "ART-EAGLCPN"
+        },
+        {
+            "key": "merge_ART-EAGLCPN_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-EAGLCPN_endItem",
+            "type": "string",
+            "value": "ART-BBALL"
+        },
+        {
+            "key": "merge_ART-EAGLCPN_price",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "merge_ART-EAGLCPN_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-EAGLCPN_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "merge_ART-EAGLCPN_outputAmount",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "merge_ART-CANCPN_baseItem",
+            "type": "string",
+            "value": "ART-CANCPN"
+        },
+        {
+            "key": "merge_ART-CANCPN_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-CANCPN_endItem",
+            "type": "string",
+            "value": "ART-BBALL"
+        },
+        {
+            "key": "merge_ART-CANCPN_price",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "merge_ART-CANCPN_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-CANCPN_asset",
+            "type": "string",
+            "value": "WAVES"
+        },
+        {
+            "key": "merge_ART-CANCPN_outputAmount",
+            "type": "integer",
+            "value": 2
+        },
+        {
+            "key": "merge_ART-BBALL-MECH_baseItem",
+            "type": "string",
+            "value": "ART-MECHAEGG"
+        },
+        {
+            "key": "merge_ART-BBALL-MECH_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-BBALL-MECH_endItem",
+            "type": "string",
+            "value": "ART-BBALL"
+        },
+        {
+            "key": "merge_ART-BBALL-MECH_price",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "merge_ART-BBALL-MECH_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-BBALL-MECH_asset",
+            "type": "string",
+            "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
+        },
+        {
+            "key": "merge_ART-BBALL-GFTR_baseItem",
+            "type": "string",
+            "value": "ART-GFTR"
+        },
+        {
+            "key": "merge_ART-BBALL-GFTR_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-BBALL-GFTR_endItem",
+            "type": "string",
+            "value": "ART-BBALL"
+        },
+        {
+            "key": "merge_ART-BBALL-GFTR_price",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "merge_ART-BBALL-GFTR_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-BBALL-GFTR_asset",
+            "type": "string",
+            "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
+        },
+        {
+            "key": "merge_ART-BBALL-GFTW_baseItem",
+            "type": "string",
+            "value": "ART-GFTW"
+        },
+        {
+            "key": "merge_ART-BBALL-GFTW_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-BBALL-GFTW_endItem",
+            "type": "string",
+            "value": "ART-BBALL"
+        },
+        {
+            "key": "merge_ART-BBALL-GFTW_price",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "merge_ART-BBALL-GFTW_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-BBALL-GFTW_asset",
+            "type": "string",
+            "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
+        },
+        {
+            "key": "merge_ART-BBALL-MUTG_baseItem",
+            "type": "string",
+            "value": "ART-MUTARIUM-G"
+        },
+        {
+            "key": "merge_ART-BBALL-MUTG_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-BBALL-MUTG_endItem",
+            "type": "string",
+            "value": "ART-BBALL"
+        },
+        {
+            "key": "merge_ART-BBALL-MUTG_price",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "merge_ART-BBALL-MUTG_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-BBALL-MUTG_asset",
+            "type": "string",
+            "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
+        },
+        {
+            "key": "merge_ART-BBALL-MUTD_baseItem",
+            "type": "string",
+            "value": "ART-MUTARIUM-D"
+        },
+        {
+            "key": "merge_ART-BBALL-MUTD_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-BBALL-MUTD_endItem",
+            "type": "string",
+            "value": "ART-BBALL"
+        },
+        {
+            "key": "merge_ART-BBALL-MUTD_price",
+            "type": "integer",
+            "value": 50000000
+        },
+        {
+            "key": "merge_ART-BBALL-MUTD_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-BBALL-MUTD_asset",
+            "type": "string",
+            "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
+        },
+        {
+            "key": "merge_ART-SUMBRL_baseItem",
+            "type": "string",
+            "value": "ART-UMBRELLA"
+        },
+        {
+            "key": "merge_ART-SUMBRL_amount",
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "key": "merge_ART-SUMBRL_secondaryItem",
+            "type": "string",
+            "value": "ART-BBALL"
+        },
+        {
+            "key": "merge_ART-SUMBRL_secondaryItemAmount",
+            "type": "integer",
+            "value": 4
+        },
+        {
+            "key": "merge_ART-SUMBRL_endItem",
+            "type": "string",
+            "value": "ART-SUMBRL"
+        },
+        {
+            "key": "merge_ART-SUMBRL_price",
+            "type": "integer",
+            "value": 200000000
+        },
+        {
+            "key": "merge_ART-SUMBRL_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-SUMBRL_asset",
+            "type": "string",
+            "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
+        },
+        {
+            "key": "merge_ART-FTCAST_baseItem",
+            "type": "string",
+            "value": "ART-BBALL"
+        },
+        {
+            "key": "merge_ART-FTCAST_amount",
+            "type": "integer",
+            "value": 9
+        },
+        {
+            "key": "merge_ART-FTCAST_endItem",
+            "type": "string",
+            "value": "ART-FTCAST"
+        },
+        {
+            "key": "merge_ART-FTCAST_price",
+            "type": "integer",
+            "value": 500000000
+        },
+        {
+            "key": "merge_ART-FTCAST_instant",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "merge_ART-FTCAST_asset",
+            "type": "string",
+            "value": "59muEkmqg3qLUkrwSD7L7ZYhVuoDuqkeono4FvDFHv84"
         }
     ],
     "fee": 600000,

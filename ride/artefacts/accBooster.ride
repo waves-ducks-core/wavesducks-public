@@ -26,6 +26,7 @@ func keyFeedLimit(owner: String) = "limit_"+owner
 let stakeable = [
   "ART-LAKE",
   "ART-ENEST",
+  "ART-FTCAST",
   "ART-XTREE",
   "ART-XSOCK",
   "ART-XMISTL",
@@ -105,6 +106,7 @@ func stakeItem() = {
             if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[1,invoker],[]) else
             if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[2,invoker],[]) else
             if artefactName == "ART-ENEST" then  invoke(getItemsAddress(),"manipulateBoostAccountEagle",[2,invoker],[]) else
+            if artefactName == "ART-FTCAST" then invoke(getItemsAddress(),"manipulateBoostAccountTurtle",[2,invoker],[]) else
             if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[3,invoker],[]) else nil
             [
               StringEntry(keyArtefactOwner(artefactName,invoker), assetId.toBase58String())
@@ -123,6 +125,7 @@ func unstakeItem(artefactName: String) = {
         if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-1,invoker],[]) else
         if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],[]) else
         if artefactName == "ART-ENEST" then  invoke(getItemsAddress(),"manipulateBoostAccountEagle",[-2,invoker],[]) else
+        if artefactName == "ART-FTCAST" then invoke(getItemsAddress(),"manipulateBoostAccountTurtle",[-2,invoker],[]) else
         if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[-3,invoker],[]) else nil
         [
           IntegerEntry(keyUnstakeHeight(artefactName,artefactId),height),

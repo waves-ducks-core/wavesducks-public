@@ -121,7 +121,8 @@ func select(color: String)={
     let oldGenes = []
     let newGenes = [
       ("BULL-AAAAAAAA-G" + color, "8A-G"),("BULL-BBBBBBBB-G" + color, "8B-G"),
-      ("BULL-CCCCCCCC-G" + color, "8C-G"),("BULL-DDDDDDDD-G" + color, "8D-G")
+      ("BULL-CCCCCCCC-G" + color, "8C-G"),("BULL-DDDDDDDD-G" + color, "8D-G"),
+      ("BULL-EEEEEEEE-G" + color, "8E-G")
       ]
     (oldGenes++newGenes, newGenes)
 }
@@ -348,7 +349,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func issueJackpot(address: String, txIdStr: String, gen: String) = {
-  if (i.caller != getRebirthAddress() && i.caller != this) then {
+  if (i.caller != getRebirthAddress() && i.caller != getBullBreederAddress() && i.caller != this) then {
     throw("ISJ: admin or rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)
@@ -369,8 +370,8 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
     if valueDuckIdKeyExits != "" then throw("ISJ: You will override following duckId :"+duckIdKey+" make sure that your txId is unique!") else
     ([
       IntegerEntry(getHatchingFinishHeightKey(address, txId), height),
-      IntegerEntry("bull", totalDucksAmount + 1),
-      IntegerEntry("bull", eggsNeeded / multiplier),
+      IntegerEntry("bull_amount", totalDucksAmount + 1),
+      IntegerEntry("bull_last_price", eggsNeeded / multiplier),
     
       StringEntry(hatchingStatusKey, HatchingFinished),
       StringEntry(duckIdKey, assetId.toBase58String()),

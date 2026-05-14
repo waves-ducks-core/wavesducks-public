@@ -108,6 +108,11 @@
             "value": "LEFT_WING"
         },
         {
+            "key": "type_cosmetic_ART-SUMBRL",
+            "type": "string",
+            "value": "LEFT_WING"
+        },
+        {
             "key": "type_cosmetic_ART-FIRE_SHIELD",
             "type": "string",
             "value": "LEFT_WING"

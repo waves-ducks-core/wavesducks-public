@@ -50,6 +50,7 @@ func staticKey_refContractAddress() = "static_refContractAddress"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
 func staticKey_wearablesAddress() = "static_wearablesAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
 
 func rewardClaimedKey(address: Address) = address.toString() + "_claimed"
 func totalStakedKey() = "total_staked"
@@ -69,6 +70,7 @@ func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_wearablesAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -128,7 +130,7 @@ func unstakeNFTInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
     let color = if colorFromName == "U" then "G" else colorFromName
     let appendPerches = [IntegerEntry("address_"+address+"_beachesAvailable_"+color, tryGetInteger("address_"+address+"_beachesAvailable_"+color) + 1)]
     if getStringValue(assetId.toBase58String()+"_owner") != address then throw("This is not your turtle to claim!!") else
-    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).exactAs[Int]
+    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPowerForAddress",[assetId.toBase58String(), address],[]).exactAs[Int]
 
     #TODO: send turtle to the user, 
     #TODO: lower fp
@@ -144,17 +146,7 @@ func unstakeNFTInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
     (appendPerches++claimStakingResult(i.caller)++diff,farmingPower)
 }
 
-@Callable(i)
-func configureOracle(oracle: String) = {
-  if i.caller != this then throw("ICU: admin only") else 
-  [
-    StringEntry("static_oracleAddress",oracle)
-  ]
-
-}
-
-@Callable(i)
-func calculateFarmPower(assetId:String)={
+func calculateFarmPowerForAddressInternal(assetId:String, bonusAddress: String)={
   if !(assetInfo(assetId.fromBase58String()).value().issuer == getTurtleBreederAddress() 
       ||assetInfo(assetId.fromBase58String()).value().issuer == getTurtleIncubatorAddress()) then throw("This does not seem like a valid Turtle!")else
   let assetName = assetInfo(assetId.fromBase58String()).value().name
@@ -164,7 +156,7 @@ func calculateFarmPower(assetId:String)={
   let uniqueList = FOLD<8>(genotype, [], uniqueArrayFilter)
   let totalGenes = size(uniqueList)
   let power = pow(15,1,totalGenes,0,2,DOWN)
-  strict farmBoost = 0
+  strict farmBoost = if bonusAddress == "" then 0 else invoke(getItemsAddress(),"calculateFarmingPowerBoostTurtle",[bonusAddress],[]).exactAs[Int]
   #Recalculate bonusses every claim
   strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
   let finalPowerRarityBoost = power+power*farmBoost/100+power*wearabledBoost/1000
@@ -174,6 +166,25 @@ func calculateFarmPower(assetId:String)={
     IntegerEntry("DEBUG_FINAL_POWER"+assetName, finalPowerRarityBoost)
   ],finalPowerRarityBoost)
 
+}
+
+@Callable(i)
+func configureOracle(oracle: String) = {
+  if i.caller != this then throw("ICU: admin only") else
+  [
+    StringEntry("static_oracleAddress",oracle)
+  ]
+
+}
+
+@Callable(i)
+func calculateFarmPower(assetId:String)={
+  calculateFarmPowerForAddressInternal(assetId, "")
+}
+
+@Callable(i)
+func calculateFarmPowerForAddress(assetId:String, bonusAddress: String)={
+  calculateFarmPowerForAddressInternal(assetId, bonusAddress)
 }
 
 
@@ -269,7 +280,7 @@ func stakeNFT() = {
 
   if (pmt.amount != 1) then throw("NFT is not attached") else
   if (availablePerches <= 0) then throw("no beach available for the type " + color) else 
-    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPower",[assetId.toBase58String()],[]).exactAs[Int]
+    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPowerForAddress",[assetId.toBase58String(), address],[]).exactAs[Int]
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower),
@@ -342,4 +353,4 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 1
     }
-} 
+}

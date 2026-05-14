@@ -144,6 +144,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklist
     else 250 - ((200 * (assetRarity - 50)) / 50)
   let phoenixRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
   let jackpotRandom = getRandomNumber(100, tx, finishHeight, 2)
+  let summerJackpotRandom = getRandomNumber(1000, tx, finishHeight, 3)
   let baseResult = if (phoenixRandom == 1) then { "phoenix" } else 
 
   #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
@@ -203,10 +204,12 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklist
       if (n < 960 && blacklistCode != "item!ART-CANCPN") then { "item!ART-CANCPN" } else
       if ( n < 980 && blacklistCode != "incubator_turtle") then { "incubator_turtle" } else
       { "incubator_canine" }
-  let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50)
+  let result = if (summerJackpotRandom == 1 && wasUniqueBorn("DUCK-WWSUMMER-JU") < 4) then
+    "jackpot_summer_duck"
+  else if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50)
     then "item!ART-MEDHOUSE"
     else baseResult
-  (n,result,jackpotRandom)
+  (n,result,jackpotRandom,summerJackpotRandom)
 }
 func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   let n = getRandomNumber(2, tx, finishHeight, 1)
@@ -254,6 +257,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       let win = output._2
       let random = output._1
       let jackpotRandom = output._3
+      let summerJackpotRandom = output._4
 
 
       let txId = initTx
@@ -340,6 +344,12 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
 			#StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])
 		#]
 
+      } else if (win == "jackpot_summer_duck") then {
+        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWSUMMER"], [])
+        [
+          StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])
+        ]
+
       } else if (win.indexOf("duckling") !=unit) then {
         let level = parseIntValue(win.split("_")[1])
         let levelFinal = if double then 2* level else level
@@ -390,7 +400,8 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
-        IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_summerJackpotRandom",summerJackpotRandom)
         
       ]++validPayment++returnPayload#++bonusOutput
     }

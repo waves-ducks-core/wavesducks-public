@@ -880,6 +880,91 @@
             "type": "integer",
             "value": 0
         },
+        {
+            "key": "direct_cosmetic_ART-BBALL",
+            "type": "integer",
+            "value": 100000000
+        },
+        {
+            "key": "direct_cosmetic_ART-BBALL_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-BBALL_sale",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-BBALL_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-BBALL_burn",
+            "type": "boolean",
+            "value": true
+        },
+        {
+            "key": "direct_cosmetic_ART-SUMBRL",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SUMBRL_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-SUMBRL_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-SUMBRL_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-FTCAST",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-FTCAST_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-FTCAST_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-FTCAST_growing_percentage",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-BHOUSE",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-BHOUSE_max_sales",
+            "type": "integer",
+            "value": 0
+        },
+        {
+            "key": "direct_cosmetic_ART-BHOUSE_sale",
+            "type": "boolean",
+            "value": false
+        },
+        {
+            "key": "direct_cosmetic_ART-BHOUSE_growing_percentage",
+            "type": "integer",
+            "value": 0
+        }
     ],
     "fee": 600000,
     "feeAssetId": "WAVES"

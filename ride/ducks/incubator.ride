@@ -15,11 +15,13 @@ func tryGetString(key: String) = {
 }
 
 func staticKey_turtleRebirthAddress() = "static_turtleRebirthAddress"
+func staticKey_breederAddress() = "static_breederAddress"
 
 
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()  
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
+func getBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_breederAddress()).fromBase58String())
 func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),"static_babyDuckAddress").fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),"static_refContractAddress").fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String()) 
@@ -343,7 +345,7 @@ func issueFreeDuckDefinedGenes(address: String, txIdStr: String, genes:String) =
 
 @Callable(i)
 func issueJackpot(address: String, txIdStr: String, gen: String) = {
-  if (i.caller != getRebirthAddress() && i.caller != this) then {
+  if (i.caller != getRebirthAddress() && i.caller != getBreederAddress() && i.caller != this) then {
     throw("ISJ: admin or rebirth only")
   } else {
     let txId = fromBase58String(txIdStr)

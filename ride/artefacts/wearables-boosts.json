@@ -109,6 +109,11 @@
             "value": 1
         },
         {
+            "key": "boost_ART-SUMBRL",
+            "type": "integer",
+            "value": 50
+        },
+        {
             "key": "boost_ART-FIRE_SHIELD",
             "type": "integer",
             "value": 30

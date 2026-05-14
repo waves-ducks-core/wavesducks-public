@@ -114,12 +114,91 @@ func couponsUserSpend(user:String) = user+"_spend"
 func couponsUserActive(user:String) = user+"_active"
 func couponsUserActiveOld(user:String) = couponsUserActive(user)+"_old"
 func couponsSpendOnSc(sc:String) = sc+"_spend_by_using"
+func burnUserKey(address:String) = address+"_burn_eggs"
 func actionPerAddressPerUserPerDay(user:String,action:String,dappAddress:String, day:String) = dappAddress+"_"+action+"_"+user+"_"+day+"_actions"
 func actionPerAddressPerUserLastCheckDay(user:String,action:String) = action+"_"+user+"_actions_check_day"
 func actionPerAddressPerUserAmountInARow(user:String,action:String) = action+"_"+user+"_actions_amount_in_row"
 func userExperience(user:String) = user+"_experience"
 func counter() = "GLOBAL_TASK_REWARD_COUNTER"
 func rewardKey(address: String, period: String, taskId: String, assetId: String, counter: String) = "TASK_REWARD_" + address + "_" + period + "_" + taskId + "_" + assetId + "_" + counter
+
+func summerBeachBallType() = "ART-BBALL"
+func summerBullHouseType() = "ART-BHOUSE"
+func summerMediumHouseType() = "ART-MEDHOUSE"
+func summerGlobalContributedKey() = "summer_bballs_total"
+func summerFirst50UsedKey() = "summer_bballs_first50_used"
+func summerUnlockedKey() = "summer_unlocked"
+func summerFinalizedKey() = "summer_finalized"
+func summerOrderKey() = "summer_event_order"
+func summerUserContributedKey(user:String) = "summer_"+user+"_bballs"
+func summerUserScoreKey(user:String) = "summer_"+user+"_score"
+func summerUserScoreOrderKey(user:String) = "summer_"+user+"_score_order"
+func summerUserBullHouseClaimedKey(user:String) = "summer_"+user+"_bull_house_claimed"
+func summerUserTop3ClaimedKey(user:String) = "summer_"+user+"_top3_claimed"
+func summerRankUserKey(rank:Int) = "summer_rank_"+rank.toString()+"_user"
+func summerRankScoreKey(rank:Int) = "summer_rank_"+rank.toString()+"_score"
+func summerRankOrderKey(rank:Int) = "summer_rank_"+rank.toString()+"_order"
+
+func isSummerEligible(user:String) = {
+    tryGetInteger(burnUserKey(user)) >= 5_0000_0000 && tryGetInteger(summerUserContributedKey(user)) >= 5
+}
+
+func summerRankEntries(rank:Int, user:String, score:Int, order:Int) = [
+    StringEntry(summerRankUserKey(rank), user),
+    IntegerEntry(summerRankScoreKey(rank), score),
+    IntegerEntry(summerRankOrderKey(rank), order)
+]
+
+func isBetterSummerRank(score:Int, order:Int, rankedUser:String, rankedScore:Int, rankedOrder:Int) = {
+    rankedUser == "" || score > rankedScore || (score == rankedScore && order < rankedOrder)
+}
+
+func updateSummerLeaderboard(user:String, score:Int, order:Int) = {
+    let r1uRaw = tryGetString(summerRankUserKey(1))
+    let r1sRaw = tryGetInteger(summerRankScoreKey(1))
+    let r1oRaw = tryGetInteger(summerRankOrderKey(1))
+    let r2uRaw = tryGetString(summerRankUserKey(2))
+    let r2sRaw = tryGetInteger(summerRankScoreKey(2))
+    let r2oRaw = tryGetInteger(summerRankOrderKey(2))
+    let r3uRaw = tryGetString(summerRankUserKey(3))
+    let r3sRaw = tryGetInteger(summerRankScoreKey(3))
+    let r3oRaw = tryGetInteger(summerRankOrderKey(3))
+
+    let r1u = if r1uRaw == user then r2uRaw else r1uRaw
+    let r1s = if r1uRaw == user then r2sRaw else r1sRaw
+    let r1o = if r1uRaw == user then r2oRaw else r1oRaw
+
+    let r2u = if r1uRaw == user then r3uRaw else if r2uRaw == user then r3uRaw else r2uRaw
+    let r2s = if r1uRaw == user then r3sRaw else if r2uRaw == user then r3sRaw else r2sRaw
+    let r2o = if r1uRaw == user then r3oRaw else if r2uRaw == user then r3oRaw else r2oRaw
+
+    let r3u = if r1uRaw == user || r2uRaw == user || r3uRaw == user then "" else r3uRaw
+    let r3s = if r1uRaw == user || r2uRaw == user || r3uRaw == user then 0 else r3sRaw
+    let r3o = if r1uRaw == user || r2uRaw == user || r3uRaw == user then 0 else r3oRaw
+
+    if isBetterSummerRank(score, order, r1u, r1s, r1o) then
+        summerRankEntries(1,user,score,order)++
+        summerRankEntries(2,r1u,r1s,r1o)++
+        summerRankEntries(3,r2u,r2s,r2o)
+    else if isBetterSummerRank(score, order, r2u, r2s, r2o) then
+        summerRankEntries(1,r1u,r1s,r1o)++
+        summerRankEntries(2,user,score,order)++
+        summerRankEntries(3,r2u,r2s,r2o)
+    else if isBetterSummerRank(score, order, r3u, r3s, r3o) then
+        summerRankEntries(1,r1u,r1s,r1o)++
+        summerRankEntries(2,r2u,r2s,r2o)++
+        summerRankEntries(3,user,score,order)
+    else
+        summerRankEntries(1,r1u,r1s,r1o)++
+        summerRankEntries(2,r2u,r2s,r2o)++
+        summerRankEntries(3,r3u,r3s,r3o)
+}
+
+func isSummerTop3(user:String) = {
+    tryGetString(summerRankUserKey(1)) == user ||
+    tryGetString(summerRankUserKey(2)) == user ||
+    tryGetString(summerRankUserKey(3)) == user
+}
 
 func addCouponsInternal(user:String,amount:Int)={
     let keyOld = couponsUserActiveOld(user)
@@ -210,9 +289,6 @@ func recordActionInternal(actionName:String, addressCaller: Address, address:Add
 func burnEggs()= {
     let burnActiveKey = "burn_eggs_active"
     let burnTotalKey = "burn_eggs_total"
-    func burnUserKey(address:String) = {
-        address+"_burn_eggs"
-        }
     let burnActive = tryGetBoolean(burnActiveKey)
     if burnActive then
             let invoker = i.caller.toString()
@@ -239,6 +315,82 @@ func burnEggs()= {
             ]
     else
         throw("CBE: burn eggs not active")
+}
+
+@Callable(i)
+func contributeSummerBeachBalls() = {
+    let amount = size(i.payments)
+    if amount == 0 || amount > 10 then throw("CSBB: attach between 1 and 10 Beach Balls") else
+    if tryGetBoolean(summerFinalizedKey()) then throw("CSBB: summer event is finalized") else
+        func burnBeachBall(acc: List[Burn], payment: AttachedPayment) = {
+            if payment.amount != 1 || payment.assetId == unit then throw("CSBB: attach Beach Ball NFTs only") else
+                let assetId = payment.assetId.value()
+                strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).exactAs[String]
+                if artefact != summerBeachBallType() then throw("CSBB: attached NFT is not a Beach Ball") else
+                    acc++[Burn(assetId,1)]
+        }
+        let burns = FOLD<10>(i.payments, [], burnBeachBall)
+        let user = i.caller.toString()
+        let oldGlobal = tryGetInteger(summerGlobalContributedKey())
+        let oldFirst50 = tryGetInteger(summerFirst50UsedKey())
+        let first50Left = max([0, 50 - oldFirst50])
+        let doubled = min([amount, first50Left])
+        let weighted = amount + doubled
+        let newGlobal = oldGlobal + amount
+        let newFirst50 = oldFirst50 + doubled
+        let oldUserContributed = tryGetInteger(summerUserContributedKey(user))
+        let oldUserScore = tryGetInteger(summerUserScoreKey(user))
+        let newUserContributed = oldUserContributed + amount
+        let newUserScore = oldUserScore + weighted
+        let order = tryGetInteger(summerOrderKey()) + 1
+        let unlockedNow = newGlobal >= 500
+
+        burns++
+        [
+            IntegerEntry(summerGlobalContributedKey(), newGlobal),
+            IntegerEntry(summerFirst50UsedKey(), newFirst50),
+            IntegerEntry(summerUserContributedKey(user), newUserContributed),
+            IntegerEntry(summerUserScoreKey(user), newUserScore),
+            IntegerEntry(summerUserScoreOrderKey(user), order),
+            IntegerEntry(summerOrderKey(), order),
+            BooleanEntry(summerUnlockedKey(), unlockedNow)
+        ]++updateSummerLeaderboard(user, newUserScore, order)
+}
+
+@Callable(i)
+func finalizeSummerEvent() = {
+    if i.caller != this && i.callerPublicKey != wAccPKey then throw("FSE: admin only") else
+    if !tryGetBoolean(summerUnlockedKey()) then throw("FSE: summer event is not unlocked") else
+        [BooleanEntry(summerFinalizedKey(), true)]
+}
+
+@Callable(i)
+func claimSummerBullHouse() = {
+    let user = i.caller.toString()
+    if !tryGetBoolean(summerUnlockedKey()) then throw("CSBH: summer event is not unlocked") else
+    if !tryGetBoolean(summerFinalizedKey()) then throw("CSBH: summer event is not finalized") else
+    if !isSummerEligible(user) then throw("CSBH: at least 5 Beach Balls and 5 lifetime burned EGG are required") else
+    if tryGetBoolean(summerUserBullHouseClaimedKey(user)) then throw("CSBH: Bull House already claimed") else
+        strict prize = invoke(getItemsAddress(),"issueArtefactIndex",[summerBullHouseType(),user,0],[])
+        [
+            BooleanEntry(summerUserBullHouseClaimedKey(user), true),
+            StringEntry("summer_"+user+"_bull_house_asset", prize.exactAs[String])
+        ]
+}
+
+@Callable(i)
+func claimSummerTop3MediumHouse() = {
+    let user = i.caller.toString()
+    if !tryGetBoolean(summerUnlockedKey()) then throw("CST3: summer event is not unlocked") else
+    if !tryGetBoolean(summerFinalizedKey()) then throw("CST3: summer event is not finalized") else
+    if !isSummerEligible(user) then throw("CST3: at least 5 Beach Balls and 5 lifetime burned EGG are required") else
+    if !isSummerTop3(user) then throw("CST3: caller is not in the summer Top 3") else
+    if tryGetBoolean(summerUserTop3ClaimedKey(user)) then throw("CST3: Top 3 prize already claimed") else
+        strict prize = invoke(getItemsAddress(),"issueArtefactIndex",[summerMediumHouseType(),user,0],[])
+        [
+            BooleanEntry(summerUserTop3ClaimedKey(user), true),
+            StringEntry("summer_"+user+"_top3_asset", prize.exactAs[String])
+        ]
 }
 
 @Callable(i)

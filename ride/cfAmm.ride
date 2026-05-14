@@ -93,6 +93,11 @@ let PoolTokenScale = pow(10, 0, PoolTokenDecimals, 0, 0, HALFUP)
 
 let earnedAssets = assetIds
 
+func getPoolFeePart(feeAmount: Int) = feeAmount / 4
+func getExternalFeePart(feeAmount: Int) = feeAmount / 2
+func getExternalFeeFirstPart(feeAmount: Int) = getExternalFeePart(feeAmount) / 2
+func getExternalFeeSecondPart(feeAmount: Int) = getExternalFeePart(feeAmount) - getExternalFeeFirstPart(feeAmount)
+
 func burnFees()={
   if tryGetString( "static_oracle") != "" then
     match getBoolean(getOracleAddress(), "amm_burn_"+this.toString()) {
@@ -251,9 +256,9 @@ func calculateOutAmount(AmountIn: Int, assetIn: ByteVector|Unit, assetOut: ByteV
     fraction( BalanceOut, 
               Scale8 * Scale8 - 
 
-              pow(fraction(BalanceIn.toBigInt(), (Scale8 * Scale8).toBigInt(), (BalanceIn + AmountIn).toBigInt(), HALFUP), 
+              pow(fraction(BalanceIn.toBigInt(), (Scale8 * Scale8).toBigInt(), (BalanceIn + AmountIn).toBigInt(), CEILING),
                     16, 
-                    fraction(AssetsWeights[IndexIn], 1_0000, AssetsWeights[IndexOut]).toBigInt(),
+                    fraction(AssetsWeights[IndexIn], 1_0000, AssetsWeights[IndexOut], DOWN).toBigInt(),
                     4,
                     16,
                     CEILING).toInt()    
@@ -269,7 +274,7 @@ func calculateMinToGet(asset1: String, asset2: String, amountToSwap: Int)={
     let B_asset_balance = getIntegerValue(this, kBalanceB)
 
     let toGet = calculateOutAmount(amountToSwap, asset1.getAssetBytes(), asset2.getAssetBytes(), A_asset_balance, B_asset_balance)
-    strict feeAmount = fraction(toGet, Fee, FeeScale)
+    strict feeAmount = fraction(toGet, Fee, FeeScale, CEILING)
     strict cleanAmountOut = toGet - feeAmount   
 
     cleanAmountOut
@@ -290,7 +295,7 @@ func calculateCurrentAssetInterest(assetId: ByteVector|Unit, assetIdStr: String,
   let currentTokenEarnings = if (currentBalanceDelta > tokenBalanceLastCheck) then {currentBalanceDelta} else {tokenBalanceLastCheck}
 
   let newEarnings = currentTokenEarnings - tokenBalanceLastCheck
-  let newInterest = if (totalStaked == 0) then {0} else {fraction(newEarnings, Scale8, totalStaked)}
+  let newInterest = if (totalStaked == 0) then {0} else {fraction(newEarnings, Scale8, totalStaked, DOWN)}
   let lastCheckInterest = tryGetInteger("global_lastCheck_" + assetIdStr + "_interest")
   lastCheckInterest + newInterest
 }
@@ -307,7 +312,7 @@ func claimResult(address: Address) = {
     let currentTokenInterest = calculateCurrentAssetInterest(assetId, assetIdStr, aBalance, tokenEarningsLastCheck)
     let currentTokenEarnings = max([tokenEarningsLastCheck, getTokenBalance(assetId) - aBalance])
 
-    let rewardAmount = fraction(shareAmount, (currentTokenInterest- tryGetInteger(addressStr + "_lastCheck_" + assetIdStr + "_interest")), Scale8)
+    let rewardAmount = fraction(shareAmount, (currentTokenInterest- tryGetInteger(addressStr + "_lastCheck_" + assetIdStr + "_interest")), Scale8, DOWN)
     
     let transfer = if (rewardAmount == 0) then {[]} else {[ScriptTransfer(address, rewardAmount, assetId)]}
     let claimed =  tryGetInteger(addressStr + "_lastCheck_" + assetIdStr + "_claimed")
@@ -543,19 +548,26 @@ func swap(assetOut: String, minimum: Int) ={
   strict feeAmount = invokeSwap._2
 
   strict feesManagement = if burnFees() && assetOut!= "WAVES" then
-    [
-      Burn(assetOut.getAssetBytes().value(), fraction(feeAmount,2,4)),
-      IntegerEntry("global_"+assetOut+"_burned", tryGetInteger("global_"+assetOut+"_burned")+fraction(feeAmount,2,4))
-    ]
+    let externalFeePart = getExternalFeePart(feeAmount)
+    if (externalFeePart > 0) then {
+      [
+        Burn(assetOut.getAssetBytes().value(), externalFeePart),
+        IntegerEntry("global_"+assetOut+"_burned", tryGetInteger("global_"+assetOut+"_burned")+externalFeePart)
+      ]
+    } else {[]}
    else if (assetOut == getPeteAssetId()) then 
-    strict topup2 = invoke(getFelineFarmingAccount(), "topUpReward", nil, [AttachedPayment(fromBase58String(getPeteAssetId()), fraction(feeAmount, 1, 4))])
-    [ScriptTransfer(getFeesAccount(), fraction(feeAmount, 1, 4), getAssetBytes(assetOut))]
+    let externalFeeFirstPart = getExternalFeeFirstPart(feeAmount)
+    let externalFeeSecondPart = getExternalFeeSecondPart(feeAmount)
+    strict topup2 = if (externalFeeFirstPart > 0) then {invoke(getFelineFarmingAccount(), "topUpReward", nil, [AttachedPayment(fromBase58String(getPeteAssetId()), externalFeeFirstPart)])} else {unit}
+    if (externalFeeSecondPart > 0) then {[ScriptTransfer(getFeesAccount(), externalFeeSecondPart, getAssetBytes(assetOut))]} else {[]}
    else if (assetOut == getEggAssetId()) then 
-    strict topup2 = invoke(getMutantFarmingAccount(), "topUpReward", ["EGG",fraction(feeAmount, 1, 4)], [AttachedPayment(fromBase58String(getEggAssetId()), fraction(feeAmount, 1, 4))])
-    [ScriptTransfer(getFeesAccount(), fraction(feeAmount, 1, 4), getAssetBytes(assetOut))]
+    let externalFeeFirstPart = getExternalFeeFirstPart(feeAmount)
+    let externalFeeSecondPart = getExternalFeeSecondPart(feeAmount)
+    strict topup2 = if (externalFeeFirstPart > 0) then {invoke(getMutantFarmingAccount(), "topUpReward", ["EGG",externalFeeFirstPart], [AttachedPayment(fromBase58String(getEggAssetId()), externalFeeFirstPart)])} else {unit}
+    if (externalFeeSecondPart > 0) then {[ScriptTransfer(getFeesAccount(), externalFeeSecondPart, getAssetBytes(assetOut))]} else {[]}
   else
-                                            
-    [ScriptTransfer(getFeesAccount(),fraction(feeAmount,2,4),assetOut.getAssetBytes())]
+    let externalFeePart = getExternalFeePart(feeAmount)
+    if (externalFeePart > 0) then {[ScriptTransfer(getFeesAccount(),externalFeePart,assetOut.getAssetBytes())]} else {[]}
 
   (feesManagement,cleanAmountOut)
 }
@@ -585,7 +597,7 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
   strict AssetOutBalance = tryGetInteger("global_"+assetOut+"_balance")
 
   strict AmountOut = calculateOutAmount(AmountIn, AssetIn.getAssetBytes(), AssetOut, AssetInBalance, AssetOutBalance)
-  strict feeAmount = fraction(AmountOut, Fee, FeeScale)
+  strict feeAmount = fraction(AmountOut, Fee, FeeScale, CEILING)
   strict cleanAmountOut = AmountOut - feeAmount
 
   if (cleanAmountOut < minimum) then {
@@ -603,10 +615,10 @@ func swapInternal(assetOut: String, minimum: Int,AmountIn:Int, AssetIn: String, 
     strict newBalanceIn = AssetInBalance + AmountIn
     strict stake = reentrantInvoke(this,"internal",[true, AmountIn, AssetIn],[])
     strict newBalanceOut = AssetOutBalance - AmountOut
-    strict unstake = reentrantInvoke(this,"internal",[false, cleanAmountOut+fraction(feeAmount,3,4), assetOut],[])
+    strict unstake = reentrantInvoke(this,"internal",[false, cleanAmountOut + feeAmount - getPoolFeePart(feeAmount), assetOut],[])
       (
         [
-          IntegerEntry("global_"+assetOut+"_balance", newBalanceOut+fraction(feeAmount,1,4)),
+          IntegerEntry("global_"+assetOut+"_balance", newBalanceOut + getPoolFeePart(feeAmount)),
           ScriptTransfer(addressFromStringValue(caller), cleanAmountOut, AssetOut),
           IntegerEntry("global_"+AssetIn+"_balance", newBalanceIn),
           IntegerEntry("days_since_apy", day),
@@ -646,4 +658,4 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 1
     }
-}   
+}
