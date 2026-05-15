@@ -130,7 +130,7 @@ func unstakeNFTInternal(asset: String, i: Invocation, claimEgg: Boolean) = {
     let color = if colorFromName == "U" then "G" else colorFromName
     let appendPerches = [IntegerEntry("address_"+address+"_beachesAvailable_"+color, tryGetInteger("address_"+address+"_beachesAvailable_"+color) + 1)]
     if getStringValue(assetId.toBase58String()+"_owner") != address then throw("This is not your turtle to claim!!") else
-    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPowerForAddress",[assetId.toBase58String(), address],[]).exactAs[Int]
+    strict farmingPower = tryGetInteger(assetId.toBase58String()+"_power")
 
     #TODO: send turtle to the user, 
     #TODO: lower fp
