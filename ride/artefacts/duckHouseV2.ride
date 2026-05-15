@@ -26,13 +26,6 @@ func keyConfigIncubator(houseType: String) = "config_" + houseType + "_incubator
 func keyConfigBreeder(houseType: String) = "config_" + houseType + "_breeder"
 func keyConfigRewardAsset(houseType: String) = "config_" + houseType + "_reward_asset"
 
-func tryGetBoolean(key: String) = {
-    match getBoolean(key) {
-        case b:Boolean => b
-        case _ => false
-    }
-}
-
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
         case a:String => a
@@ -51,20 +44,13 @@ func tryGetInteger(key: String) = {
     }
 }
 
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("wrong type, expected: String")
-}
-
 func staticKey_oracleAddress() = "static_oracleAddress"
 func staticKey_itemsAddress() = "static_itemsAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
-func staticKey_eggAssetId() = "static_eggAssetId"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
-func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 
 func getConfigBoost(houseType: String) = getIntegerValue(getOracle(), keyConfigBoost(houseType))
@@ -181,20 +167,12 @@ func stakeDuck(duckHouseId: String, JColor: String)={
     if duckPayment.amount != 1 then throw("NFT is not attached") else
     if !validateAnimalIssuer(houseType, assetId) then throw("Wrong NFT type") else
     strict boostDuck = invoke(getItemsAddress(),"manipulateBoost",[getConfigBoost(houseType),assetId.toBase58String()],[])
-    strict stakeDuck = if houseType == "ART-BHOUSE" then
-      invoke(
-        getFarmingAddressByType(houseType),
-        getConfigStakeCall(houseType),
-        [JColor],
-        i.payments
-      )
-    else
-      invoke(
-        getFarmingAddressByType(houseType),
-        getConfigStakeCall(houseType),
-        [JColor,true,getConfigWithoutPerch(houseType)],
-        i.payments
-      )
+    strict stakeDuck = invoke(
+      getFarmingAddressByType(houseType),
+      getConfigStakeCall(houseType),
+      [JColor,true,getConfigWithoutPerch(houseType)],
+      i.payments
+    )
     backfillHouseTypeEntry(duckHouseId, houseType) ++ [
         IntegerEntry(occupiedSpotsDucksHouse(duckHouseId),filledSpots+1),
         StringEntry(keyDuckHouse(assetId.toBase58String()),duckHouseId)

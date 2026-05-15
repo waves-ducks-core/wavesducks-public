@@ -28,10 +28,6 @@ func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
 func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 func staticKey_duckBreederAddress() = "static_breederAddress"
 
-
-#TODO: make sure to allow coupons contract when we release new items
-func key_artefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
-func key_unstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"
 func key_externalBoostDuck(duckId: String) = duckId+"_duck_external_boost"
 
 func key_externalBoostAddress(address: String) = address+"_user_external_boost"
@@ -47,7 +43,6 @@ func key_soldCosmetic(item:String)= "direct_cosmetic_"+item+"_sold"
 func key_lastPriceCosmetic(item:String)= "direct_cosmetic_"+item+"_last_price"
 func key_startTsCosmetic(item:String) = "direct_cosmetic_"+item+"_startTs"
 func key_endTsCosmetic(item:String) = "direct_cosmetic_"+item+"_endTs"
-func key_processFinishHeight(address: String, txId: ByteVector) = address + "_" + txId.toBase58String() +  "_fh"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func last_height_key() = "last_height_processed"
 func last_height_key_receiver(receiver: String) = "last_height_processed_" + receiver
@@ -190,21 +185,8 @@ func tryGetCosmeticItemPrice(item:String)= {
     }
 }
 
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("wrong type, expected: String")
-}
-
 func manipulateName(assetName: String, position: Int, char: String) = {
   assetName.take(position-1)+char+assetName.takeRight(16-position)
-}
-
-func itemIsInCoolDown(artefactName: String, artefactId: String)={
-  let unstakeHeightLast = tryGetInteger(key_unstakeHeight(artefactName,artefactId))
-  let cooldownPeriod = 240
-  if unstakeHeightLast+cooldownPeriod < height
-  then false
-  else true
 }
 
 func isTestEnv()={
@@ -430,9 +412,7 @@ func directBuyItemMultiple(itemName:String, itemAmount: Int)={
   if amount != price then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
 
   let shouldBurn = tryGetBoolean(key_burnCosmetic(itemName))
-  let burnAmount = if shouldBurn && assetId == getEggAssetId() then
-    if itemName == "ART-BBALL" then amount else amount*95/100
-  else 0
+  let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*95/100 else 0
   let transferAmount = amount - burnAmount
   strict burnCall = if burnAmount > 0 then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),burnAmount)]) else nil
   let transfer = if transferAmount > 0 then [ScriptTransfer(getFeeAggregator(),transferAmount,assetId)] else []
@@ -481,9 +461,7 @@ func directBuyItem(itemName:String)={
   if amount != price then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
 
   let shouldBurn = tryGetBoolean(key_burnCosmetic(itemName))
-  let burnAmount = if shouldBurn && assetId == getEggAssetId() then
-    if itemName == "ART-BBALL" then amount else amount*95/100
-  else 0
+  let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*95/100 else 0
   let transferAmount = amount - burnAmount
   strict burnCall = if burnAmount > 0 then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),burnAmount)]) else nil
   let transfer = if transferAmount > 0 then [ScriptTransfer(getFeeAggregator(),transferAmount,assetId)] else []

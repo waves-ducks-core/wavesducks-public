@@ -34,6 +34,13 @@ func tryGetInteger(key: String) = {
     }
 }
 
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 #SC THAT CAN USE COUPONS
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
@@ -115,6 +122,7 @@ func couponsUserActive(user:String) = user+"_active"
 func couponsUserActiveOld(user:String) = couponsUserActive(user)+"_old"
 func couponsSpendOnSc(sc:String) = sc+"_spend_by_using"
 func burnUserKey(address:String) = address+"_burn_eggs"
+func burnUserGlobalKey(address:String) = "BURN_"+address+"_AMOUNT_NEW"
 func actionPerAddressPerUserPerDay(user:String,action:String,dappAddress:String, day:String) = dappAddress+"_"+action+"_"+user+"_"+day+"_actions"
 func actionPerAddressPerUserLastCheckDay(user:String,action:String) = action+"_"+user+"_actions_check_day"
 func actionPerAddressPerUserAmountInARow(user:String,action:String) = action+"_"+user+"_actions_amount_in_row"
@@ -139,8 +147,10 @@ func summerRankUserKey(rank:Int) = "summer_rank_"+rank.toString()+"_user"
 func summerRankScoreKey(rank:Int) = "summer_rank_"+rank.toString()+"_score"
 func summerRankOrderKey(rank:Int) = "summer_rank_"+rank.toString()+"_order"
 
+func getSummerLifetimeBurned(user:String) = tryGetIntegerExternal(getBurnAddress(), burnUserGlobalKey(user))
+func hasSummerBurnEligibility(user:String) = getSummerLifetimeBurned(user) >= 5_0000_0000
 func isSummerEligible(user:String) = {
-    tryGetInteger(burnUserKey(user)) >= 5_0000_0000 && tryGetInteger(summerUserContributedKey(user)) >= 5
+    hasSummerBurnEligibility(user) && tryGetInteger(summerUserContributedKey(user)) >= 5
 }
 
 func summerRankEntries(rank:Int, user:String, score:Int, order:Int) = [
@@ -320,8 +330,10 @@ func burnEggs()= {
 @Callable(i)
 func contributeSummerBeachBalls() = {
     let amount = size(i.payments)
+    let user = i.caller.toString()
     if amount == 0 || amount > 10 then throw("CSBB: attach between 1 and 10 Beach Balls") else
     if tryGetBoolean(summerFinalizedKey()) then throw("CSBB: summer event is finalized") else
+    if !hasSummerBurnEligibility(user) then throw("CSBB: at least 5 lifetime burned EGG required") else
         func burnBeachBall(acc: List[Burn], payment: AttachedPayment) = {
             if payment.amount != 1 || payment.assetId == unit then throw("CSBB: attach Beach Ball NFTs only") else
                 let assetId = payment.assetId.value()
@@ -330,7 +342,6 @@ func contributeSummerBeachBalls() = {
                     acc++[Burn(assetId,1)]
         }
         let burns = FOLD<10>(i.payments, [], burnBeachBall)
-        let user = i.caller.toString()
         let oldGlobal = tryGetInteger(summerGlobalContributedKey())
         let oldFirst50 = tryGetInteger(summerFirst50UsedKey())
         let first50Left = max([0, 50 - oldFirst50])

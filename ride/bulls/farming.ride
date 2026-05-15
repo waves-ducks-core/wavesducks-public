@@ -52,6 +52,7 @@ func staticKey_wearablesAddress() = "static_wearablesAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_burnAddress() = "static_burnAddress"
 func staticKey_eagleRebirthAddress() = "static_eagleRebirthAddress"
+func staticKey_proxyStakingContracts() = "static_proxyStakingContracts"
 
 func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
@@ -66,6 +67,7 @@ func getWearablesAddress() =  Address(tryGetStringExternal(getOracle(),staticKey
 func getEggAssetId() = tryGetStringExternal(getOracle(),staticKey_eggAssetId()).fromBase58String()
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleRebirthAddress()).fromBase58String())
+func getProxyStaking() = tryGetStringExternal(getOracle(),staticKey_proxyStakingContracts())
 
 func keyLastCheckInterest(address: String, asset: String) =  "address_"+address+"_asset_"+asset+"_lastCheckInterest"
 func assetFarmingPower(address: String, asset: String) = "address_"+address+"_asset_"+asset+"_farmingPower"
@@ -88,6 +90,12 @@ func tryGetInteger(key: String) = {
     }
 }
 
+func isProxyStakingSc(address: String)={
+  let allowedContracts = getProxyStaking()
+  let allowedContractsList = allowedContracts.split(";")
+  allowedContractsList.indexOf(address) !=unit
+}
+
 func handleStakingTopUp (amount: Int) = {
     func burnForDay(day: Int)= "TOPUP_"+day.toString()
     let day = calculateDaysSinceStart()
@@ -106,11 +114,6 @@ func handleStakingTopUp (amount: Int) = {
     ]
 }
 
-
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("FAS: wrong type, expected: String")
-}
 
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
@@ -176,11 +179,6 @@ func claimStakingResult (address: String, asset: String, recalc: Boolean, wallet
         IntegerEntry(rewardClaimedKey(walletToReceive, asset), (tryGetInteger(rewardClaimedKey(walletToReceive,asset))) + reward)
       ]++fpUpdate, reward)
     }
-
-func asBoolean(value: Any) = match value {
-  case boolean: Boolean => boolean
-  case _ => throw("FAB: wrong type, expected: Boolean")
-}
 
 func calculatePerchPrice(address: String)= {
   let hasArtefactStaked = tryGetStringExternal(getAccBoosterAddress(),"ART-XMISTL_" + address + "_owner")
@@ -292,16 +290,19 @@ func addFreePerch(address: String, color: String, amount: Int) = {
 
 
 @Callable(i)
-func stakeNFT(jColor: String) = {
+func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolean) = {
+  if stakeWithoutPerch && !isProxyStakingSc(i.caller.toString()) then throw("You can't stake without a perch") else
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let pmt = i.payments[1].value()
   let assetId = pmt.assetId.value()
   let assetName = assetInfo(assetId).value().name.value()
   let isJackpot = assetName.takeRight(1) == "U"
   let address = i.caller.toString()
-  let perchAddress = address
+  let perchAddress = if usePerchOrigin then i.originCaller.toString() else address
 
   strict perches = 
+  if stakeWithoutPerch then []
+  else
     let color = if isJackpot then jColor else assetName.takeRight(1)
     let availablePerches = tryGetInteger("address_"+perchAddress+"_perchesAvailable_"+color)
     if (availablePerches <= 0) then throw("no perches available for the color " + color) else 
@@ -318,9 +319,11 @@ func stakeNFT(jColor: String) = {
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower._1),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower._1),
       StringEntry(assetId.toBase58String()+"_owner",address),
+      BooleanEntry(assetId.toBase58String()+"_use_origin",usePerchOrigin),
       StringEntry(assetId.toBase58String()+"_original_caller",i.originCaller.toString()),
       IntegerEntry(assetFarmingPower(address,assetId.toBase58String()),farmingPower._1),
-      IntegerEntry(assetId.toBase58String()+"_basePower",farmingPower._2)
+      IntegerEntry(assetId.toBase58String()+"_basePower",farmingPower._2),
+      BooleanEntry(assetId.toBase58String()+"_without_perch",stakeWithoutPerch)
 
     ]
     ++validPayment
@@ -339,7 +342,7 @@ func unstakeNFT(asset: String)={
   let withoutPerch = tryGetBoolean(asset+"_without_perch")
   strict perches = if withoutPerch then [] else 
     let usePerchOrigin = tryGetBoolean(asset+"_use_origin")
-    let perchOwner = if usePerchOrigin then i.originCaller.toString() else address
+    let perchOwner = if usePerchOrigin then tryGetString(asset+"_original_caller") else address
     [
       IntegerEntry("address_"+perchOwner+"_perchesAvailable_"+color, tryGetInteger("address_"+perchOwner+"_perchesAvailable_"+color)+1)
     ]
