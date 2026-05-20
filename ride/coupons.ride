@@ -135,6 +135,7 @@ func summerBullHouseType() = "ART-BHOUSE"
 func summerMediumHouseType() = "ART-MEDHOUSE"
 func summerGlobalContributedKey() = "summer_bballs_total"
 func summerFirst50UsedKey() = "summer_bballs_first50_used"
+func summerActiveKey() = "summer_active"
 func summerUnlockedKey() = "summer_unlocked"
 func summerFinalizedKey() = "summer_finalized"
 func summerOrderKey() = "summer_event_order"
@@ -332,6 +333,7 @@ func contributeSummerBeachBalls() = {
     let amount = size(i.payments)
     let user = i.caller.toString()
     if amount == 0 || amount > 10 then throw("CSBB: attach between 1 and 10 Beach Balls") else
+    if !tryGetBoolean(summerActiveKey()) then throw("CSBB: summer event is not active") else
     if tryGetBoolean(summerFinalizedKey()) then throw("CSBB: summer event is finalized") else
     if !hasSummerBurnEligibility(user) then throw("CSBB: at least 5 lifetime burned EGG required") else
         func burnBeachBall(acc: List[Burn], payment: AttachedPayment) = {
