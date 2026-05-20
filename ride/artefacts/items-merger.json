@@ -790,7 +790,7 @@
         {
             "key": "merge_ART-EAGLCPN_amount",
             "type": "integer",
-            "value": 1
+            "value": 2
         },
         {
             "key": "merge_ART-EAGLCPN_endItem",
@@ -815,7 +815,7 @@
         {
             "key": "merge_ART-EAGLCPN_outputAmount",
             "type": "integer",
-            "value": 2
+            "value": 1
         },
         {
             "key": "merge_ART-CANCPN_baseItem",
@@ -825,7 +825,7 @@
         {
             "key": "merge_ART-CANCPN_amount",
             "type": "integer",
-            "value": 1
+            "value": 2
         },
         {
             "key": "merge_ART-CANCPN_endItem",
@@ -850,7 +850,7 @@
         {
             "key": "merge_ART-CANCPN_outputAmount",
             "type": "integer",
-            "value": 2
+            "value": 1
         },
         {
             "key": "merge_ART-BBALL-MECH_baseItem",
