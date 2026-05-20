@@ -222,10 +222,10 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
     else {
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
-      let summerBullGen = "BULL-WWSUMMER-JU"
+      let summerBullGen = "BULL-WCABBULL-JU"
       let summerJackpotRandom = getRandomNumber(1000, txId, processFinishHeight, 9)
       if parentFixedGene == 0 && specifiqueGene == "" && summerJackpotRandom == 1 && tryGetIntegerExternal(getBullIncubator(), getStatsKey(summerBullGen)) < 4 then
-        strict jackpotAsset = invoke(getBullIncubator(), "issueJackpot", [i.caller.toString(), txIdStr, "WWSUMMER"], []).exactAs[String]
+        strict jackpotAsset = invoke(getBullIncubator(), "issueJackpot", [i.caller.toString(), txIdStr, "WCABBULL"], []).exactAs[String]
         [
           StringEntry(processStatusKey, HatchingFinished),
           StringEntry(IdKey, jackpotAsset),

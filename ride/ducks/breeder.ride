@@ -242,10 +242,10 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
         ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
         ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
       ] else []
-      let summerDuckGen = "DUCK-WWSUMMER-JU"
+      let summerDuckGen = "DUCK-WTRPDUCK-JU"
       let summerJackpotRandom = getRandomNumber(1000, txId, processFinishHeight, 21)
       if duckGenesString == "" && summerJackpotRandom == 1 && tryGetIntegerExternal(getIncubatorAddress(), getDuckStatsKey(summerDuckGen)) < 4 then
-        strict jackpotAsset = invoke(getIncubatorAddress(), "issueJackpot", [owner, txIdStr, "WWSUMMER"], []).exactAs[String]
+        strict jackpotAsset = invoke(getIncubatorAddress(), "issueJackpot", [owner, txIdStr, "WTRPDUCK"], []).exactAs[String]
         [
           StringEntry(processStatusKey, HatchingFinished),
           StringEntry(duckIdKey, jackpotAsset),
