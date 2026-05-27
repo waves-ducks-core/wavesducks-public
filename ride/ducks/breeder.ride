@@ -58,12 +58,6 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String()  
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
-func issueSummerBeachBall(address: String, initTx: String) = {
-  strict beachBall = invoke(getItemsAddress(), "issueArtefactIndex", ["ART-BBALL", address, 2], [])
-  [
-    StringEntry("address_" + address + "_initTx_" + initTx + "_summerBeachBall", beachBall.exactAs[String])
-  ]
-}
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BCAP: Please attach waves") else
   let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
@@ -248,44 +242,26 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
         ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
         ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
       ] else []
-      let summerDuckGen = "DUCK-WTRPDUCK-JU"
-      let summerJackpotRandom = getRandomNumber(1000, txId, processFinishHeight, 21)
-      if duckGenesString == "" && summerJackpotRandom == 1 && tryGetIntegerExternal(getIncubatorAddress(), getDuckStatsKey(summerDuckGen)) < 4 then
-        strict jackpotAsset = invoke(getIncubatorAddress(), "issueJackpot", [owner, txIdStr, "WTRPDUCK"], []).exactAs[String]
-        [
-          StringEntry(processStatusKey, HatchingFinished),
-          StringEntry(duckIdKey, jackpotAsset),
-          StringEntry(jackpotAsset, duckIdKey),
-          StringEntry("address_" + owner + "_initTx_" + txIdStr + "_win", "summer_duck"),
-          IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_summerJackpotRandom", summerJackpotRandom),
-          IntegerEntry("asset_" + parent1Id + "_children", 1),
-          IntegerEntry("asset_" + parent2Id + "_children", 1)
-        ]++parentsSend++issueSummerBeachBall(owner, txIdStr)
-      else
-        strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).exactAs[String] else duckGenesString
+      strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).exactAs[String] else duckGenesString
 
-        let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+      let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
-        let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
-        let assetId = asset.calculateAssetId()
+      let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
+      let assetId = asset.calculateAssetId()
 
-        let random = getRandomNumber(100, txId, processFinishHeight, 20)
-        let bonusOutput = if (random %2 ==0) then
-          strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTR",owner,0],[])
-          [StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)]
-        else
-          strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTW",owner,0],[])
-          [StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)]
-        composeGenericData(duckGen,duckIdKey,assetId,asset)++
-        [
-          StringEntry(processStatusKey, HatchingFinished),
-          IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_summerJackpotRandom", summerJackpotRandom),
-          ScriptTransfer(addressFromStringValue(owner), 1, assetId),
-          IntegerEntry("asset_" + parent1Id + "_children", 1),
-          IntegerEntry("asset_" + parent2Id + "_children", 1)
-        ]++parentsSend++issueSummerBeachBall(owner, txIdStr)#++bonusOutput
+      let random = getRandomNumber(100, txId, processFinishHeight, 20)
+      strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",owner,2],[])
+      let bonusOutput = [
+        StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)
+      ]
+      composeGenericData(duckGen,duckIdKey,assetId,asset)++
+      [
+        StringEntry(processStatusKey, HatchingFinished),
+        ScriptTransfer(addressFromStringValue(owner), 1, assetId),
+        IntegerEntry("asset_" + parent1Id + "_children", 1),
+        IntegerEntry("asset_" + parent2Id + "_children", 1)
+      ]++parentsSend++bonusOutput
     }
 }
 

@@ -17,6 +17,7 @@ func staticKey_mutantFarmingAddress() = "static_mutantFarmingAddress"
 func staticKey_extraFee() = "static_extraFee"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_scriptMasterAddress() = "static_scriptMasterAddress"
+func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
 
 
 func keyUnstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"
@@ -47,6 +48,13 @@ func tryGetInteger(key: String) = {
     }
 }
 
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case a:Int => a
+        case _ => 0
+    }
+}
+
 func tryGetStringExternal(address: Address, key: String) = {
     match getString(address, key) {
         case a:String => a
@@ -59,6 +67,7 @@ func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_ite
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getMutantFarmingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String())
 func getScriptMasterAddress() = Address(tryGetStringExternal(getOracle(),staticKey_scriptMasterAddress()).fromBase58String())
+func getTurtleStakingAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String())
 
 func asString(value: Any) = match value {
   case string: String => string
@@ -80,6 +89,10 @@ func itemIsInCoolDown(artefactName: String, artefactId: String)={
   if unstakeHeightLast+cooldownPeriod < height
   then false
   else true
+}
+
+func getTurtleStakedPower(address: String) = {
+  tryGetIntegerExternal(getTurtleStakingAddress(), "total_staked_" + address)
 }
 
 @Callable(i)
@@ -121,6 +134,7 @@ func unstakeItem(artefactName: String) = {
       let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
       if artefactName == "ART-XSOCK" then throw("You can not unstake ART-XSOCK anymore") else
       if artefactId == "" then throw("You didnt stake "+artefactName) else
+      if artefactName == "ART-FTCAST" && getTurtleStakedPower(invoker) > 0 then throw("Unstake turtles before unstaking ART-FTCAST") else
         strict boostDuck = 
         if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-1,invoker],[]) else
         if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],[]) else

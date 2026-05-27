@@ -27,6 +27,7 @@ func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
 func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 func staticKey_duckBreederAddress() = "static_breederAddress"
+func staticKey_bullBreederAddress() = "static_bullBreederAddress"
 
 func key_externalBoostDuck(duckId: String) = duckId+"_duck_external_boost"
 
@@ -176,6 +177,7 @@ func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),static
 func getEagleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String())
 func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
 func getDuckBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_duckBreederAddress()).fromBase58String())
+func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
 
 func tryGetCosmeticItemPrice(item:String)= {
   let key = key_priceCosmetic(item)
@@ -738,6 +740,7 @@ func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
   && i.caller != getTurtleBreederAddress()
   && i.caller != getCanineBreederAddress()
   && i.caller != getFelineBreederAddress() 
+  && i.caller != getBullBreederAddress()
   && i.caller != getCouponsAddress()
   && i.caller != getCanineRebirthAddress() && i.caller != getFelineeRebirthAddress() && i.caller != getBullIncubatorAddress() && i.caller != getHuntDistroAddress()
   && i.callerPublicKey != getWarsPKey()) then throw("IIAI: admin only") else 

@@ -36,13 +36,6 @@ func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_item
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 func getEaglRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eaglRebirthAddress()).fromBase58String())
 
-func issueSummerBeachBall(address: String, initTx: String) = {
-  strict beachBall = invoke(getItemsAddress(), "issueArtefactIndex", ["ART-BBALL", address, 2], [])
-  [
-    StringEntry("address_" + address + "_initTx_" + initTx + "_summerBeachBall", beachBall.exactAs[String])
-  ]
-}
-
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
   let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
@@ -290,14 +283,11 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
 
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
-      let bonusOutput = if (random %2 ==0) then
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTR",i.caller.toString(),0],[])
-        [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)]
-      else
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTW",i.caller.toString(),0],[])
-        [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)]
+      strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
+      let bonusOutput = [
+        StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
+      ]
       composeGenericData(Gen,IdKey,assetId,asset)++
       normalEntries++
       [
@@ -307,7 +297,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ]++issueSummerBeachBall(i.caller.toString(), txIdStr)#++bonusOutput
+      ]++bonusOutput
     }
 }
 
