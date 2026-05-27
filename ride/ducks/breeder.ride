@@ -234,6 +234,13 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
 
+      strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).exactAs[String] else duckGenesString
+
+      let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
+
+      let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
+      let assetId = asset.calculateAssetId()
+
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
       let parentsLocked = tryGetBoolean("parentslocked_"+txIdStr)
@@ -242,13 +249,6 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
         ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
         ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
       ] else []
-      strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).exactAs[String] else duckGenesString
-
-      let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
-
-      let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
-      let assetId = asset.calculateAssetId()
-
       let random = getRandomNumber(100, txId, processFinishHeight, 20)
       strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",owner,2],[])
       let bonusOutput = [
