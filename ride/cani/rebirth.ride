@@ -75,6 +75,12 @@ func getDuckIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getTurtleIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleIncubatorAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getBabyDuckAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String()) #base58'3P6s9C39Ak5FAQ3F5VapYJ3ULxgbsAReXlet babyDucksAddress = base58'3PKmLiGEfqLWMC1H9xhzqvAZKUXfFm8uoeg'
+func issueSummerBeachBall(address: String, initTx: String) = {
+  strict beachBall = invoke(getItemsAddress(), "issueArtefactIndex", ["ART-BBALL", address, 2], [])
+  [
+    StringEntry("address_" + address + "_initTx_" + initTx + "_summerBeachBall", beachBall.exactAs[String])
+  ]
+}
 
 func tryGetIntegerExternal(address: Address, key: String) = {
     match getInteger(address, key) {
@@ -283,7 +289,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random)
-      ]++validPayment++returnPayload#++bonusOutput
+      ]++validPayment++returnPayload++issueSummerBeachBall(address, initTx)#++bonusOutput
     }
   }
 }

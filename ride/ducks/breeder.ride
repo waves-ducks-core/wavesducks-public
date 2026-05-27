@@ -58,6 +58,12 @@ func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_fee
 func getSpiceAssetId() = tryGetStringExternal(getOracle(),staticKey_spiceAssetId()).fromBase58String()  
 func getTurtleStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_turtleStakingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
 func getMutantFarmingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_mutantFarmingAddress()).fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
+func issueSummerBeachBall(address: String, initTx: String) = {
+  strict beachBall = invoke(getItemsAddress(), "issueArtefactIndex", ["ART-BBALL", address, 2], [])
+  [
+    StringEntry("address_" + address + "_initTx_" + initTx + "_summerBeachBall", beachBall.exactAs[String])
+  ]
+}
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BCAP: Please attach waves") else
   let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
@@ -254,7 +260,7 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
           IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_summerJackpotRandom", summerJackpotRandom),
           IntegerEntry("asset_" + parent1Id + "_children", 1),
           IntegerEntry("asset_" + parent2Id + "_children", 1)
-        ]++parentsSend
+        ]++parentsSend++issueSummerBeachBall(owner, txIdStr)
       else
         strict duckGen = if duckGenesString=="" then invoke(this,"generateDuck",[txId, processFinishHeight,0,0,"",0],[]).exactAs[String] else duckGenesString
 
@@ -279,7 +285,7 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
           ScriptTransfer(addressFromStringValue(owner), 1, assetId),
           IntegerEntry("asset_" + parent1Id + "_children", 1),
           IntegerEntry("asset_" + parent2Id + "_children", 1)
-        ]++parentsSend#++bonusOutput
+        ]++parentsSend++issueSummerBeachBall(owner, txIdStr)#++bonusOutput
     }
 }
 

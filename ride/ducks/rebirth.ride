@@ -61,6 +61,12 @@ func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_co
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(),staticKey_burnAddress()).fromBase58String())
 func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_refContractAddress()).fromBase58String()) #base58'3P8ejTkfRpz9WqCwCuihesNXU5k3zmFFfVe'
 func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+func issueSummerBeachBall(address: String, initTx: String) = {
+  strict beachBall = invoke(getItemsAddress(), "issueArtefactIndex", ["ART-BBALL", address, 2], [])
+  [
+    StringEntry("address_" + address + "_initTx_" + initTx + "_summerBeachBall", beachBall.exactAs[String])
+  ]
+}
 let feeAmount = tryGetIntExternal(getOracle(),staticKey_duckRebirthAmount())
 
 func checkReal(assetId: ByteVector) = {
@@ -403,7 +409,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_summerJackpotRandom",summerJackpotRandom)
         
-      ]++validPayment++returnPayload#++bonusOutput
+      ]++validPayment++returnPayload++issueSummerBeachBall(address, initTx)#++bonusOutput
     }
   }
 }

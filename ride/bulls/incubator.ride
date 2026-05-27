@@ -47,6 +47,12 @@ func getEagleRebirthAddress() = Address(tryGetStringExternal(getOracle(),staticK
 func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
 func getBabyDuckAddress() = Address(tryGetStringExternal(getOracle(),staticKey_babyDuckAddress()).fromBase58String())
 func getBullRebirthPrice() = getIntegerValue(getOracle(),staticKey_bullRebirthPrice())
+func issueSummerBeachBall(address: String, initTx: String) = {
+  strict beachBall = invoke(getItemsAddress(), "issueArtefactIndex", ["ART-BBALL", address, 2], [])
+  [
+    StringEntry("address_" + address + "_initTx_" + initTx + "_summerBeachBall", beachBall.exactAs[String])
+  ]
+}
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -302,7 +308,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       StringEntry(getRebirthStatusKey(address, initTx), RebirthFinished),
       StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
       IntegerEntry("address_" + address + "_initTx_" + initTx + "_random", random)
-    ] ++ feeValidate ++ returnPayload
+    ] ++ feeValidate ++ returnPayload ++ issueSummerBeachBall(address, initTx)
   }
 }
 

@@ -51,6 +51,13 @@ func getRefContractAddress() =  Address(tryGetStringExternal(getOracle(),staticK
 func getItemsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
 func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),staticKey_couponsAddress()).fromBase58String()) 
 
+func issueSummerBeachBall(address: String, initTx: String) = {
+  strict beachBall = invoke(getItemsAddress(), "issueArtefactIndex", ["ART-BBALL", address, 2], [])
+  [
+    StringEntry("address_" + address + "_initTx_" + initTx + "_summerBeachBall", beachBall.exactAs[String])
+  ]
+}
+
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
   let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
@@ -236,7 +243,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
           IntegerEntry("asset_" + parent2Id + "_children", 1),
           ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
           ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-        ]
+        ]++issueSummerBeachBall(i.caller.toString(), txIdStr)
       else
         let Gen = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
         let farmGen = invoke(this,"getGenFromName",[Gen],[]).exactAs[String]
@@ -261,7 +268,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
           ScriptTransfer(i.caller, 1, assetId),
           ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
           ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-        ]
+        ]++issueSummerBeachBall(i.caller.toString(), txIdStr)
     }
 }
 

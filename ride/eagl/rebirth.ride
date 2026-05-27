@@ -71,6 +71,12 @@ func getCanineIncubatorAddress() = tryGetAddressExternal(getOracle(),staticKey_c
 func getCanineStakingAddress() = tryGetAddressExternal(getOracle(),staticKey_canineStakingAddress())
 func getBullIncubatorAddress() = tryGetAddressExternal(getOracle(),staticKey_bullIncubatorAddress())
 func getBullFarmingAddress() = tryGetAddressExternal(getOracle(),staticKey_bullFarmingAddress())
+func issueSummerBeachBall(address: String, initTx: String) = {
+  strict beachBall = invoke(getItemsAddress(), "issueArtefactIndex", ["ART-BBALL", address, 2], [])
+  [
+    StringEntry("address_" + address + "_initTx_" + initTx + "_summerBeachBall", beachBall.exactAs[String])
+  ]
+}
 
 func getAssetIsNormalKey(assetId: String) = {
   "asset_" + assetId + "_isNormal"
@@ -371,7 +377,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
-      ]++validPayment++returnPayload++bonusOutput
+      ]++validPayment++returnPayload++issueSummerBeachBall(address, initTx)++bonusOutput
     }
   }
 }
