@@ -785,7 +785,7 @@
         {
             "key": "merge_ART-EAGLCPN_baseItem",
             "type": "string",
-            "value": "ART-EAGLCPN"
+            "value": "ART-BBALL"
         },
         {
             "key": "merge_ART-EAGLCPN_amount",
@@ -795,7 +795,7 @@
         {
             "key": "merge_ART-EAGLCPN_endItem",
             "type": "string",
-            "value": "ART-BBALL"
+            "value": "ART-EAGLCPN"
         },
         {
             "key": "merge_ART-EAGLCPN_price",
@@ -820,7 +820,7 @@
         {
             "key": "merge_ART-CANCPN_baseItem",
             "type": "string",
-            "value": "ART-CANCPN"
+            "value": "ART-BBALL"
         },
         {
             "key": "merge_ART-CANCPN_amount",
@@ -830,7 +830,7 @@
         {
             "key": "merge_ART-CANCPN_endItem",
             "type": "string",
-            "value": "ART-BBALL"
+            "value": "ART-CANCPN"
         },
         {
             "key": "merge_ART-CANCPN_price",
