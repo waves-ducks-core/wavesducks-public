@@ -188,7 +188,7 @@ func checkRealBull(assetId: ByteVector) = {
 
 func getRandomRebirthWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   let n = getRandomNumber(1000, tx, finishHeight, 0)
-  let jackpotRandom = getRandomNumber(100, tx, finishHeight, 2)
+  let jackpotRandom = getRandomNumber(1000, tx, finishHeight, 2)
   let baseResult =
   if (n < 100 && blacklistCode != "item!ART-FEED5") then "item!ART-FEED5" else
   if (n < 235 && blacklistCode != "item!ART-FEED10") then "item!ART-FEED10" else

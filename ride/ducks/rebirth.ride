@@ -139,7 +139,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklist
     then 500 - ((250 * (assetRarity - 1)) / 49)
     else 250 - ((200 * (assetRarity - 50)) / 50)
   let phoenixRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
-  let jackpotRandom = getRandomNumber(100, tx, finishHeight, 2)
+  let jackpotRandom = getRandomNumber(1000, tx, finishHeight, 2)
   let baseResult = if (phoenixRandom == 1) then { "phoenix" } else 
 
   #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
