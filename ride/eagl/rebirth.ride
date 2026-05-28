@@ -138,10 +138,6 @@ func wasUniqueBorn(gen: String) = {
   tryGetIntegerExternalZero(getEagleIncubatorAddress(),getEAGLStatsKey(gen))
 }
 
-func getMedhouseIssuedAmount() = {
-  tryGetIntegerExternalZero(getItemsAddress(),"stats_ART-MEDHOUSE_amount")
-}
-
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   let jackpotRandom = getRandomNumber(100, tx, finishHeight, 2)
   #if (jackpotRandom == 1 && wasUniqueBorn("EDIT MEEE") < 4) then { (jackpotRandom,"jackpot") } else 
@@ -174,9 +170,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     if (n<940 && blacklistCode != "item!ART-FREEGENE" ) then "item!ART-FREEGENE" else
     if (n<980 && blacklistCode != "item!ART-FIXGENE" ) then "item!ART-FIXGENE" else
     "item!ART-MIRROR"
-    let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50)
-      then "item!ART-MEDHOUSE"
-      else baseResult
+    let result = baseResult
     (n,result,jackpotRandom)
 }
 

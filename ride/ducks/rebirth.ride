@@ -132,10 +132,6 @@ func wasUniqueBorn(gen: String) = {
   tryGetIntegerExternal(getIncubatorAddress(),getCaniStatsKey(gen))
 }
 
-func getMedhouseIssuedAmount() = {
-  tryGetIntegerExternal(getItemsAddress(),"stats_ART-MEDHOUSE_amount")
-}
-
 func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklistCode: String) = {
   let n = getRandomNumber(1000, tx, finishHeight, 0)
 
@@ -205,8 +201,6 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklist
       { "incubator_canine" }
   let result = if (jackpotRandom == 1 && wasUniqueBorn("DUCK-WTRPDUCK-JU") < 4) then
     "jackpot_summer_duck"
-  else if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50)
-    then "item!ART-MEDHOUSE"
     else baseResult
   (n,result,jackpotRandom)
 }
