@@ -101,6 +101,10 @@ func tryGetInteger(key: String) = {
     val
 }
 
+func wasUniqueBorn(gen: String) = {
+  tryGetInteger(getStatsKey(gen))
+}
+
 ##
 #[
 #  {
@@ -184,7 +188,8 @@ func checkRealBull(assetId: ByteVector) = {
 
 func getRandomRebirthWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   let n = getRandomNumber(1000, tx, finishHeight, 0)
-  let result =
+  let jackpotRandom = getRandomNumber(100, tx, finishHeight, 2)
+  let baseResult =
   if (n < 100 && blacklistCode != "item!ART-FEED5") then "item!ART-FEED5" else
   if (n < 235 && blacklistCode != "item!ART-FEED10") then "item!ART-FEED10" else
   if (n < 340 && blacklistCode != "item!ART-FEED15") then "item!ART-FEED15" else
@@ -214,7 +219,11 @@ func getRandomRebirthWin(tx: ByteVector, finishHeight: Int, blacklistCode: Strin
   if (n < 992 && blacklistCode != "item!ART-FIXGENE") then "item!ART-FIXGENE" else
   if (blacklistCode != "item!ART-FREEGENE") then "item!ART-FREEGENE" else
   "item!ART-FEED5"
-  (n, result)
+  let result = if (jackpotRandom == 1 && wasUniqueBorn("BULL-WCABBULL-JU") < 4) then
+    "jackpot"
+  else
+    baseResult
+  (n, result, jackpotRandom)
 }
 
 func getRandomRebirthReturn(tx: ByteVector, finishHeight: Int) = {
@@ -232,6 +241,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
     let output = getRandomRebirthWin(initTx.fromBase58String(), finishBlock, blacklistCode)
     let random = output._1
     let win = output._2
+    let jackpotRandom = output._3
     let txId = initTx
     let reward = if (win.indexOf("item!") != unit) then {
       let item = win.drop(5)
@@ -278,6 +288,9 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
           StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
         ]
       }
+    } else if (win == "jackpot") then {
+      strict call = invoke(this, "issueJackpot", [address, txId, "WCABBULL"], [])
+      [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])]
     } else {
       throw("BRF: invalid reward")
     }
@@ -307,7 +320,8 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
     reward ++ [
       StringEntry(getRebirthStatusKey(address, initTx), RebirthFinished),
       StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
-      IntegerEntry("address_" + address + "_initTx_" + initTx + "_random", random)
+      IntegerEntry("address_" + address + "_initTx_" + initTx + "_random", random),
+      IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom", jackpotRandom)
     ] ++ feeValidate ++ returnPayload ++ bonusOutput
   }
 }
