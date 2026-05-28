@@ -367,7 +367,7 @@ func contributeSummerBeachBalls() = {
             IntegerEntry(summerUserScoreOrderKey(user), order),
             IntegerEntry(summerOrderKey(), order),
             BooleanEntry(summerUnlockedKey(), unlockedNow)
-        ]++updateSummerLeaderboard(user, newUserScore, order)
+        ]++if newUserContributed >= 5 then updateSummerLeaderboard(user, newUserScore, order) else []
 }
 
 @Callable(i)
