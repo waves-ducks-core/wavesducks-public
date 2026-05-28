@@ -157,7 +157,8 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
         if !containsElement(accum,nextGen) then accum:+nextGen else accum
   let uniqueList = FOLD<8>(genotype, [], uniqueArrayFilter)
   let totalGenes = size(uniqueList)
-  let power = pow(15,1,totalGenes,0,2,DOWN)
+  let isJackpot = assetName.takeRight(1) == "U"
+  let power = if isJackpot then 2700 else pow(15,1,totalGenes,0,2,DOWN)
   strict farmBoost = if bonusAddress == "" then 0 else invoke(getItemsAddress(),"calculateFarmingPowerBoostTurtle",[bonusAddress],[]).exactAs[Int]
   #Recalculate bonusses every claim
   strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
@@ -271,7 +272,7 @@ func stakeNFT() = {
 
   if (pmt.amount != 1) then throw("NFT is not attached") else
   if (availablePerches <= 0) then throw("no beach available for the type " + color) else 
-    strict farmingPower = if colorFromName == "U" then 2700 else invoke(this,"calculateFarmPower",[assetId.toBase58String(), address],[]).exactAs[Int]
+    strict farmingPower = invoke(this,"calculateFarmPower",[assetId.toBase58String(), address],[]).exactAs[Int]
     [
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower),
