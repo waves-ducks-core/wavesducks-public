@@ -312,10 +312,15 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       } else nil
       localIncrease ++ [ScriptTransfer(address.addressFromStringValue(), 1, assetId)]
     } else []
-    strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",address,2],[])
-    let bonusOutput = [
-      StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
-      IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
+    let bonusRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 20)
+    let bonusOutput = if bonusRandom < 50 then {
+      strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",address,2],[])
+      [
+        StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+      ]
+    } else [
+      IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
     ]
     reward ++ [
       StringEntry(getRebirthStatusKey(address, initTx), RebirthFinished),

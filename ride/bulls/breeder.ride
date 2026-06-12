@@ -225,9 +225,13 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
       let amount = tryGetInteger(getStatsKey(Gen)) + 1
       let quantity = tryGetInteger("stats_"+farmGen+"_quantity")
       let random = getRandomNumber(100, txId, processFinishHeight, 20)
-      strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
-      let bonusOutput = [
-        StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+      let bonusOutput = if random < 50 then {
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
+        [
+          StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+          IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
+        ]
+      } else [
         IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
       ]
 

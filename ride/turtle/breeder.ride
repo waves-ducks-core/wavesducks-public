@@ -238,9 +238,13 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
       let parent1Id = tryGetString(getTRTLParentKey(txId, 1))
       let parent2Id = tryGetString(getTRTLParentKey(txId, 2))
       strict recordAction = invoke(getCouponsAddress(),"recordAction",["BREEDTURTLE"],[])
-      strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
-      let bonusOutput = [
-        StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+      let bonusOutput = if random < 50 then {
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
+        [
+          StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+          IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
+        ]
+      } else [
         IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
       ]
       [
