@@ -214,20 +214,10 @@ func issueItem(type: String, nonce: Int, address: Address)={
     ],artefactId.toBase58String())
 }
 
-func issueItems(type: String, amount: Int, address: Address)={
-  if amount == 1 then issueItem(type,0,address)
-  else if amount == 2 then
-    let first = issueItem(type,0,address)
-    let second = issueItem(type,1,address)
-    (first._1++second._1, first._2+";"+second._2)
-  else throw("III: Unsupported output amount")
-}
-
-
 func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments:List[AttachedPayment],
  feeAmount: Int, feeAssetId: ByteVector|Unit, recipient: Address, instantFinish: Boolean,
- txId: String, secondaryItem: String, amountSecondaryItem: Int, ducklingsPercent: Int, genValue: Int,
- outputAmount: Int)={
+ txId: String, secondaryItem: String, amountSecondaryItem: Int, ducklingsPercent: Int, genValue: Int
+)={
   if size(payments) < amountBaseItem+amountSecondaryItem then throw("IID: Please attach more payments!") else
 
   func isBaseItem(accumulated: (List[Burn],Int,Int, Int, Int), pay: AttachedPayment) = {
@@ -269,11 +259,8 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
     if feePayment.amount != feeAmount then throw("IID: You did not attach the correct fee amount!") else [ScriptTransfer(getFeeAggregator(), feeAmount, feePayment.assetId)]
     else []
 
-  let artefact = Issue(endItem, "NFT artefact of Waves Ducks game: "+endItem, 1, 0, false, unit, 0)
-  let artefactId = artefact.calculateAssetId()
-
   let instant = if instantFinish then 
-  issueItems(endItem,outputAmount,recipient)
+  issueItem(endItem,0,recipient)
   else ([],"")
   
   ([
@@ -296,10 +283,6 @@ func getDucklingsPercent(baseItem: String) = tryGetInteger("merge_"+baseItem+"_d
 func getEndItem(baseItem: String) = getStringValue("merge_"+baseItem+"_endItem")
 func getPrice(baseItem: String) = getIntegerValue("merge_"+baseItem+"_price")
 func getInstant(baseItem: String) = getBooleanValue("merge_"+baseItem+"_instant")
-func getOutputAmount(baseItem: String) = {
-  let amount = tryGetInteger("merge_"+baseItem+"_outputAmount")
-  if amount == 0 then 1 else amount
-}
 func getAsset(baseItem: String) = {
   let asset = getStringValue("merge_"+baseItem+"_asset")
   if asset == "WAVES" then unit else asset.fromBase58String()
@@ -366,7 +349,7 @@ func instanMergeItem(receiptName: String)={
   if receiptName == "ART-FTCAST" && !tryGetBooleanExternal(getCouponsAddress(), "summer_unlocked") then throw("IID: summer event recipe is locked") else
   let params = (getAmountBaseItem(receiptName),getEndItem(receiptName),getPrice(receiptName), getAsset(receiptName),
    getInstant(receiptName), getSecondaryItem(receiptName), getAmountSecondaryItem(receiptName),getDucklingsPercent(receiptName),
-    getBaseItem(receiptName), getGenValue(receiptName), getOutputAmount(receiptName))
+    getBaseItem(receiptName), getGenValue(receiptName))
   strict grantExp = invoke(getCouponsAddress(),"increaseExp",[i.caller.toString()],[])
   itemMerger(
   params._9,
@@ -381,8 +364,7 @@ func instanMergeItem(receiptName: String)={
   params._6,
   params._7,
   params._8,
-  params._10,
-  params._11
+  params._10
   )
 }
 

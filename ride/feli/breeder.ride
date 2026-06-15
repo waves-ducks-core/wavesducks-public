@@ -243,7 +243,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
 
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
-      let bonusOutput = if random < 50 then {
+      let bonusOutput = if random % 2 == 0 then {
         strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
         [
           StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),

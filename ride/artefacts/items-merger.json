@@ -813,11 +813,6 @@
             "value": "WAVES"
         },
         {
-            "key": "merge_ART-EAGLCPN_outputAmount",
-            "type": "integer",
-            "value": 1
-        },
-        {
             "key": "merge_ART-CANCPN_baseItem",
             "type": "string",
             "value": "ART-BBALL"
@@ -846,11 +841,6 @@
             "key": "merge_ART-CANCPN_asset",
             "type": "string",
             "value": "WAVES"
-        },
-        {
-            "key": "merge_ART-CANCPN_outputAmount",
-            "type": "integer",
-            "value": 1
         },
         {
             "key": "merge_ART-BBALL-MECH_baseItem",
