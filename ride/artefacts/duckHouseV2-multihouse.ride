@@ -1,0 +1,234 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+func getBool(key: String) = {
+  match getBoolean(this, key) {
+      case b:Boolean => b
+      case _ => false
+  }
+}
+
+func isTestEnv()={
+  getBool("TESTENV")
+}
+
+func keyOwner(houseId: String) = houseId+"_owner"
+func keyHouseType(houseId: String) = houseId+"_house_type"
+func keyDuckHouse(duckId: String) = duckId+"_duck_house"
+func occupiedSpotsDucksHouse(houseId: String) = houseId+"_filled_spots"
+
+func keyConfigBoost(houseType: String) = "config_" + houseType + "_boost"
+func keyConfigMaxSlots(houseType: String) = "config_" + houseType + "_max_slots"
+func keyConfigWithoutPerch(houseType: String) = "config_" + houseType + "_without_perch"
+func keyConfigFarmingAddress(houseType: String) = "config_" + houseType + "_farming_address"
+func keyConfigStakeCall(houseType: String) = "config_" + houseType + "_stake_call"
+func keyConfigIncubator(houseType: String) = "config_" + houseType + "_incubator"
+func keyConfigBreeder(houseType: String) = "config_" + houseType + "_breeder"
+func keyConfigRewardAsset(houseType: String) = "config_" + houseType + "_reward_asset"
+
+func tryGetStringExternal(address: Address, key: String) = {
+    match getString(address, key) {
+        case a:String => a
+        case _ => ""
+    }
+}
+
+func tryGetString(key: String) = {
+    tryGetStringExternal(this,key)
+}
+
+func tryGetInteger(key: String) = {
+    match getInteger(this, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func staticKey_oracleAddress() = "static_oracleAddress"
+func staticKey_itemsAddress() = "static_itemsAddress"
+func staticKey_extraFee() = "static_extraFee"
+func staticKey_feeAggregator() = "static_feeAggregator"
+
+func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58String())
+func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getFeeAggregator() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
+
+func getConfigBoost(houseType: String) = getIntegerValue(getOracle(), keyConfigBoost(houseType))
+func getConfigMaxSlots(houseType: String) = getIntegerValue(getOracle(), keyConfigMaxSlots(houseType))
+func getConfigWithoutPerch(houseType: String) = getBooleanValue(getOracle(), keyConfigWithoutPerch(houseType))
+func getConfigFarmingAddress(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigFarmingAddress(houseType)), "Missing farming address for " + houseType)
+func getConfigStakeCall(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigStakeCall(houseType)), "Missing stake call for " + houseType)
+func getConfigIncubator(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigIncubator(houseType)), "Missing incubator for " + houseType)
+func getConfigBreeder(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigBreeder(houseType)), "Missing breeder for " + houseType)
+func getConfigRewardAsset(houseType: String) = valueOrErrorMessage(getString(getOracle(), keyConfigRewardAsset(houseType)), "Missing reward asset for " + houseType)
+
+func getFarmingAddressByType(houseType: String) = Address(getConfigFarmingAddress(houseType).fromBase58String())
+
+func getRewardAssetByType(houseType: String) = {
+  let rewardAsset = getConfigRewardAsset(houseType)
+  if rewardAsset == "WAVES" then unit
+  else rewardAsset.fromBase58String()
+}
+
+func validateHouseConfig(houseType: String) = {
+  let stakeCall = getConfigStakeCall(houseType)
+  let farmingAddress = getConfigFarmingAddress(houseType)
+  let incubator = getConfigIncubator(houseType)
+  let breeder = getConfigBreeder(houseType)
+  if stakeCall == "" then throw("Unknown house type: missing stake call for " + houseType) else
+  if farmingAddress == "" then throw("Unknown house type: missing farming address for " + houseType) else
+  if incubator == "" then throw("Unknown house type: missing incubator for " + houseType) else
+  if breeder == "" then throw("Unknown house type: missing breeder for " + houseType) else
+  if getConfigMaxSlots(houseType) == 0 then throw("Unknown house type: missing max slots for " + houseType) else
+  if getConfigRewardAsset(houseType) == "" then throw("Unknown house type: missing reward asset for " + houseType) else
+  true
+}
+
+func checkAdditionalPayment(payment: AttachedPayment)= {
+  if isDefined(payment.assetId) then throw("WCAP: Please attach waves") else
+  let feeAmount = getIntegerValue(getOracle(),staticKey_extraFee())
+  if payment.amount != feeAmount then throw("WCAP: Please attach exactly "+feeAmount.toString()+" amount of wavelets") else
+  [ScriptTransfer(getFeeAggregator(), feeAmount, unit)]
+}
+
+func validateOwnerAndGetHouse(asset: String, i: Invocation)={
+    let duckHouseId = tryGetString(keyDuckHouse(asset))
+    let owner = tryGetString(keyOwner(duckHouseId))
+    let address = i.caller.toString()
+    if owner != address then throw("Don't try to steal someone duck!") else duckHouseId
+}
+
+func resolveHouseType(houseId: String) = {
+    let storedType = tryGetString(keyHouseType(houseId))
+    let houseType = if storedType != "" then storedType else invoke(getItemsAddress(),"checkArtefactDetails",[houseId],[]).exactAs[String]
+    if !validateHouseConfig(houseType) then throw("Invalid house configuration") else houseType
+}
+
+func backfillHouseTypeEntry(houseId: String, houseType: String) = {
+    if tryGetString(keyHouseType(houseId)) == "" then [StringEntry(keyHouseType(houseId), houseType)] else []
+}
+
+func validateAnimalIssuer(houseType: String, assetId: ByteVector) = {
+    let issuer = assetInfo(assetId).value().issuer
+    let incubator = addressFromStringValue(getConfigIncubator(houseType))
+    let breeder = addressFromStringValue(getConfigBreeder(houseType))
+    if issuer != incubator && issuer != breeder then throw("Wrong NFT type for house " + houseType) else true
+}
+
+@Callable(i)
+func configureOracle(oracle: String, type: String) = {
+  if i.caller != this then throw("admin only") else
+  [
+    StringEntry(staticKey_oracleAddress(),oracle)
+  ]
+}
+
+@Callable(i)
+func stakeDuckHouse()={
+  let owner = i.caller.toString()
+  let artefactPayment = i.payments[0].value()
+  let validPayment = checkAdditionalPayment(i.payments[1])
+  let artefactAssetId = artefactPayment.assetId.value().toBase58String()
+  if artefactPayment.amount != 1 then throw("NFT is not attached") else
+  strict artefactName = invoke(getItemsAddress(),"checkArtefactDetails",[artefactAssetId],[]).exactAs[String]
+  if !validateHouseConfig(artefactName) then throw("Invalid house configuration") else
+  [
+      StringEntry(keyOwner(artefactAssetId),owner),
+      StringEntry(keyHouseType(artefactAssetId),artefactName)
+  ]++validPayment
+}
+
+@Callable(i)
+func unstakeDuckHouse(duckHouseId: String)={
+    let caller = i.caller.toString()
+    let duckHouseOwner = tryGetString(keyOwner(duckHouseId))
+    let validPayment = checkAdditionalPayment(i.payments[0])
+    if duckHouseOwner == "" then throw("This duckhouse is not staked!") else
+    if duckHouseOwner != caller then throw("This duckhouse is not yours!") else
+    if tryGetInteger(occupiedSpotsDucksHouse(duckHouseId)) != 0 then throw("Please first remove your ducks from the duckhouse") else
+    [
+        ScriptTransfer(i.caller,1,duckHouseId.fromBase58String()),
+        DeleteEntry(keyOwner(duckHouseId)),
+        DeleteEntry(keyHouseType(duckHouseId))
+    ]++validPayment
+}
+
+@Callable(i)
+func stakeDuck(duckHouseId: String, JColor: String)={
+    let address = i.caller.toString()
+    let duckHouseOwner = tryGetString(keyOwner(duckHouseId))
+    if duckHouseOwner == "" then throw("This duckhouse is not staked!") else
+    if duckHouseOwner != address then throw("This duckhouse is not yours!") else
+    let houseType = resolveHouseType(duckHouseId)
+    let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
+    if filledSpots == getConfigMaxSlots(houseType) then throw("No space in duck house left!") else
+    let duckPayment = i.payments[1].value()
+    let assetId = duckPayment.assetId.value()
+    if duckPayment.amount != 1 then throw("NFT is not attached") else
+    if !validateAnimalIssuer(houseType, assetId) then throw("Wrong NFT type") else
+    strict boostDuck = invoke(getItemsAddress(),"manipulateBoost",[getConfigBoost(houseType),assetId.toBase58String()],[])
+    strict stakeDuck = invoke(
+      getFarmingAddressByType(houseType),
+      getConfigStakeCall(houseType),
+      [JColor,true,getConfigWithoutPerch(houseType)],
+      i.payments
+    )
+    backfillHouseTypeEntry(duckHouseId, houseType) ++ [
+        IntegerEntry(occupiedSpotsDucksHouse(duckHouseId),filledSpots+1),
+        StringEntry(keyDuckHouse(assetId.toBase58String()),duckHouseId)
+    ]
+}
+
+@Callable(i)
+func unstakeDuck(asset: String)={
+    strict duckHouseId = validateOwnerAndGetHouse(asset,i)
+    let houseType = resolveHouseType(duckHouseId)
+    strict unstakeDuckReward = invoke(getFarmingAddressByType(houseType),"unstakeNFT",[asset],i.payments).exactAs[Int]
+    let filledSpots = tryGetInteger(occupiedSpotsDucksHouse(duckHouseId))
+    if filledSpots == 0 then throw("You aren't staking any ducks!") else
+    strict unboostDuck = invoke(getItemsAddress(),"manipulateBoost",[-getConfigBoost(houseType),asset],[])
+    backfillHouseTypeEntry(duckHouseId, houseType) ++ [
+        ScriptTransfer(i.caller, unstakeDuckReward, getRewardAssetByType(houseType)),
+        ScriptTransfer(i.caller, 1, asset.fromBase58String()),
+        DeleteEntry(keyDuckHouse(asset)),
+        IntegerEntry(occupiedSpotsDucksHouse(duckHouseId),filledSpots-1)
+    ]
+}
+
+@Callable(i)
+func claimDuckRewards(asset: String)={
+    strict duckHouseId = validateOwnerAndGetHouse(asset,i)
+    let houseType = resolveHouseType(duckHouseId)
+    strict claimRewards = invoke(getFarmingAddressByType(houseType),"claimReward",[asset],i.payments).exactAs[Int]
+    backfillHouseTypeEntry(duckHouseId, houseType) ++ [
+        ScriptTransfer(i.caller, claimRewards, getRewardAssetByType(houseType))
+    ]
+}
+
+@Verifier(tx)
+func verify() = {
+  if isTestEnv() then 
+      sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+  else
+    let firstUser = base58'6TdaXEfhnjYquvPf3yV7MFxt2CbgFmaqsvGwkKfXtKi4'
+    let secondUser = base58'7DsP2WaMLocbHuUxux7pbXRjTrrZ1TFQPsi5QumS3gr8'
+    let thirdUser = base58'BpFWP3p3JgYrrP45xfrKzeMcWMEXoinj4FVPPkUiA8D3'
+
+    let firstUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], firstUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], firstUser)) then 1
+        else 0
+    let secondUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], secondUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], secondUser)) then 1
+        else 0
+    let thirdUserSigned = if (sigVerify(tx.bodyBytes, tx.proofs[0], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[1], thirdUser)) then 1
+        else if (sigVerify(tx.bodyBytes, tx.proofs[2], thirdUser)) then 1
+        else 0
+    let signaturesCount = firstUserSigned + secondUserSigned + thirdUserSigned
+
+    match (tx) {
+        case _ => signaturesCount >= 2
+    }
+}
