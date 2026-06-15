@@ -249,7 +249,7 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
         ScriptTransfer(addressFromStringValue(owner), 1, parent1Id.fromBase58String()),
         ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
       ] else []
-      let random = getRandomNumber(100, txId, processFinishHeight, 20)
+      let random = getRandomNumber(100, txId, processFinishHeight, 3)
       let bonusOutput = if random % 2 == 0 then {
         strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",owner,2],[])
         [
