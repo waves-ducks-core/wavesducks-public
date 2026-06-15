@@ -287,12 +287,12 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         result
       }else if (win == "incubator_eagle") then {
         strict result = if !double then 
-                            strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
+                            strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, false], [])
                             [
                               StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String])
                             ]
 			                  else
-                            strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId], [])
+                            strict first = invoke(getEagleIncubatorAddress(), "issueFree", [address, txId, false], [])
                             strict second = invoke(getIncubatorAddress(), "issueFreeDuck", [address, txId], [])
                             [
                               StringEntry("address_" + address + "_initTx_" + initTx + "_result", first.exactAs[String]),
