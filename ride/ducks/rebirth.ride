@@ -132,10 +132,6 @@ func wasUniqueBorn(gen: String) = {
   tryGetIntegerExternal(getIncubatorAddress(),getCaniStatsKey(gen))
 }
 
-func getMedhouseIssuedAmount() = {
-  tryGetIntegerExternal(getItemsAddress(),"stats_ART-MEDHOUSE_amount")
-}
-
 func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklistCode: String) = {
   let n = getRandomNumber(1000, tx, finishHeight, 0)
 
@@ -143,7 +139,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklist
     then 500 - ((250 * (assetRarity - 1)) / 49)
     else 250 - ((200 * (assetRarity - 50)) / 50)
   let phoenixRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
-  let jackpotRandom = getRandomNumber(100, tx, finishHeight, 2)
+  let jackpotRandom = getRandomNumber(1000, tx, finishHeight, 2)
   let baseResult = if (phoenixRandom == 1) then { "phoenix" } else 
 
   #let jackpotRandom = getRandomNumber(200, tx, finishHeight, 1)
@@ -203,8 +199,8 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklist
       if (n < 960 && blacklistCode != "item!ART-CANCPN") then { "item!ART-CANCPN" } else
       if ( n < 980 && blacklistCode != "incubator_turtle") then { "incubator_turtle" } else
       { "incubator_canine" }
-  let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50)
-    then "item!ART-MEDHOUSE"
+  let result = if (jackpotRandom == 1 && wasUniqueBorn("DUCK-WTRPDUCK-JU") < 4) then
+    "jackpot"
     else baseResult
   (n,result,jackpotRandom)
 }
@@ -340,6 +336,12 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
 			#StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])
 		#]
 
+      } else if (win == "jackpot") then {
+        strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WTRPDUCK"], [])
+        [
+          StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])
+        ]
+
       } else if (win.indexOf("duckling") !=unit) then {
         let level = parseIntValue(win.split("_")[1])
         let levelFinal = if double then 2* level else level
@@ -376,23 +378,23 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         strict call = invoke(issuer, "increaseRarity", [assetId.toBase58String(), gen], [])
         [ScriptTransfer(address.addressFromStringValue(), 1,assetId)] 
       else []
-      let bonusOutput = if (random %10 ==0) then
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-MECHAEGG",address,0],[])
+      let bonusRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 20)
+      let bonusOutput = if bonusRandom % 2 == 0 then {
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",address,2],[])
         [
           StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
         ]
-      else
-        [
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
-        ]
+      } else [
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+      ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
         
-      ]++validPayment++returnPayload#++bonusOutput
+      ]++validPayment++returnPayload++bonusOutput
     }
   }
 }

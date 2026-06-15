@@ -83,6 +83,16 @@
             "value": "3NA6gug1TT67nGzrAGa36rG5nzTzUGtFQG9"
         },
         {
+            "key": "static_bullBreederAddress",
+            "type": "string",
+            "value": "3N92kXgNnFmC8zQ4dkui6xLn6xXym1P6htV"
+        },
+        {
+            "key": "static_turtleStakingAddress",
+            "type": "string",
+            "value": "3MvqNgAQonu6nSGGh71ohTyBPhzdJxPK7QA"
+        },
+        {
             "key": "static_wearablesAddress",
             "type": "string",
             "value": "3N1oZwpYE3p4x63jWiKpszmfLU3Lk3KtSWe"

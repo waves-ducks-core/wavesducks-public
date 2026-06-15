@@ -107,11 +107,6 @@ func handleStakingTopUp (amount: Int) = {
 }
 
 
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("FAS: wrong type, expected: String")
-}
-
 func tryGetBoolean(key: String) = {
     match getBoolean(this, key) {
         case b:Boolean => b
@@ -177,11 +172,6 @@ func claimStakingResult (address: String, asset: String, recalc: Boolean, wallet
       ]++fpUpdate, reward)
     }
 
-func asBoolean(value: Any) = match value {
-  case boolean: Boolean => boolean
-  case _ => throw("FAB: wrong type, expected: Boolean")
-}
-
 func calculatePerchPrice(address: String)= {
   let hasArtefactStaked = tryGetStringExternal(getAccBoosterAddress(),"ART-XMISTL_" + address + "_owner")
   let perchPrice = getIntegerValue(getOracle(),staticKey_perchFee())
@@ -221,8 +211,7 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   let basePower = tryGetInteger(assetId+"_basePower")
   let finalPower = if basePower > 0  then basePower else power*multiplier/100
   let finalPowerRarity = finalPower*rarity/100
-  #strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).exactAs[Int]
-  strict farmBoost = 0
+  strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).exactAs[Int]
   strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
   #Recalculate bonusses every claim
   let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
@@ -292,14 +281,14 @@ func addFreePerch(address: String, color: String, amount: Int) = {
 
 
 @Callable(i)
-func stakeNFT(jColor: String) = {
+func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolean) = {
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let pmt = i.payments[1].value()
   let assetId = pmt.assetId.value()
   let assetName = assetInfo(assetId).value().name.value()
   let isJackpot = assetName.takeRight(1) == "U"
   let address = i.caller.toString()
-  let perchAddress = address
+  let perchAddress = if usePerchOrigin then i.originCaller.toString() else address
 
   strict perches = 
     let color = if isJackpot then jColor else assetName.takeRight(1)
@@ -318,6 +307,7 @@ func stakeNFT(jColor: String) = {
       IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())+farmingPower._1),
       IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))+farmingPower._1),
       StringEntry(assetId.toBase58String()+"_owner",address),
+      BooleanEntry(assetId.toBase58String()+"_use_origin",usePerchOrigin),
       StringEntry(assetId.toBase58String()+"_original_caller",i.originCaller.toString()),
       IntegerEntry(assetFarmingPower(address,assetId.toBase58String()),farmingPower._1),
       IntegerEntry(assetId.toBase58String()+"_basePower",farmingPower._2)
@@ -336,13 +326,11 @@ func unstakeNFT(asset: String)={
   strict result = claimStakingResult(address,asset,false,address, i.originCaller.toString())
   strict validPayment = checkAdditionalPayment(i.payments[0])
   let color = tryGetString("address_"+address+"_asset_"+asset+"_perchColor")
-  let withoutPerch = tryGetBoolean(asset+"_without_perch")
-  strict perches = if withoutPerch then [] else 
-    let usePerchOrigin = tryGetBoolean(asset+"_use_origin")
-    let perchOwner = if usePerchOrigin then i.originCaller.toString() else address
-    [
-      IntegerEntry("address_"+perchOwner+"_perchesAvailable_"+color, tryGetInteger("address_"+perchOwner+"_perchesAvailable_"+color)+1)
-    ]
+  let usePerchOrigin = tryGetBoolean(asset+"_use_origin")
+  let perchOwner = if usePerchOrigin then tryGetString(asset+"_original_caller") else address
+  strict perches = [
+    IntegerEntry("address_"+perchOwner+"_perchesAvailable_"+color, tryGetInteger("address_"+perchOwner+"_perchesAvailable_"+color)+1)
+  ]
   strict assetFP = tryGetInteger(assetFarmingPower(address,asset))
   ([
     IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())-assetFP),
@@ -352,7 +340,6 @@ func unstakeNFT(asset: String)={
     DeleteEntry("address_"+address+"_asset_"+asset+"_perchColor"),
     DeleteEntry(asset+"_original_caller"),
     DeleteEntry(asset+"_use_origin"),
-    DeleteEntry(asset+"_without_perch"),
     ScriptTransfer(Address(address.fromBase58String()),1, asset.fromBase58String())
   ]
   ++validPayment

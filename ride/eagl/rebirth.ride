@@ -71,7 +71,6 @@ func getCanineIncubatorAddress() = tryGetAddressExternal(getOracle(),staticKey_c
 func getCanineStakingAddress() = tryGetAddressExternal(getOracle(),staticKey_canineStakingAddress())
 func getBullIncubatorAddress() = tryGetAddressExternal(getOracle(),staticKey_bullIncubatorAddress())
 func getBullFarmingAddress() = tryGetAddressExternal(getOracle(),staticKey_bullFarmingAddress())
-
 func getAssetIsNormalKey(assetId: String) = {
   "asset_" + assetId + "_isNormal"
 }
@@ -139,10 +138,6 @@ func wasUniqueBorn(gen: String) = {
   tryGetIntegerExternalZero(getEagleIncubatorAddress(),getEAGLStatsKey(gen))
 }
 
-func getMedhouseIssuedAmount() = {
-  tryGetIntegerExternalZero(getItemsAddress(),"stats_ART-MEDHOUSE_amount")
-}
-
 func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
   let jackpotRandom = getRandomNumber(100, tx, finishHeight, 2)
   #if (jackpotRandom == 1 && wasUniqueBorn("EDIT MEEE") < 4) then { (jackpotRandom,"jackpot") } else 
@@ -175,9 +170,7 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
     if (n<940 && blacklistCode != "item!ART-FREEGENE" ) then "item!ART-FREEGENE" else
     if (n<980 && blacklistCode != "item!ART-FIXGENE" ) then "item!ART-FIXGENE" else
     "item!ART-MIRROR"
-    let result = if (jackpotRandom == 1 && getMedhouseIssuedAmount() < 50)
-      then "item!ART-MEDHOUSE"
-      else baseResult
+    let result = baseResult
     (n,result,jackpotRandom)
 }
 
@@ -356,16 +349,16 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
-      let bonusOutput = if (random %10 ==0) then
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-ENEST",address,0],[])
+      let bonusRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 20)
+      let bonusOutput = if bonusRandom % 2 == 0 then {
+        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",address,2],[])
         [
           StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
+          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
         ]
-      else
-        [
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",random)
-        ]
+      } else [
+        IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+      ]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),

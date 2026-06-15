@@ -121,6 +121,46 @@
       "key": "config_ART-MD_C_HOUSE_reward_asset",
       "type": "string",
       "value": "WAVES"
+    },
+    {
+      "key": "config_ART-BHOUSE_boost",
+      "type": "integer",
+      "value": 30
+    },
+    {
+      "key": "config_ART-BHOUSE_max_slots",
+      "type": "integer",
+      "value": 4
+    },
+    {
+      "key": "config_ART-BHOUSE_without_perch",
+      "type": "boolean",
+      "value": false
+    },
+    {
+      "key": "config_ART-BHOUSE_farming_address",
+      "type": "string",
+      "value": "3P35tujiDL3YHDxQaJPNGTohGbpqm6NWK9C"
+    },
+    {
+      "key": "config_ART-BHOUSE_stake_call",
+      "type": "string",
+      "value": "stakeNFT"
+    },
+    {
+      "key": "config_ART-BHOUSE_incubator",
+      "type": "string",
+      "value": "3PK5WcMpfQweLcxuuQ6F3w56PbeRTVn3Jjt"
+    },
+    {
+      "key": "config_ART-BHOUSE_breeder",
+      "type": "string",
+      "value": "3PDAZRdArHH6kRtZxFQSL67KwoF23hSFHA8"
+    },
+    {
+      "key": "config_ART-BHOUSE_reward_asset",
+      "type": "string",
+      "value": "bPWkA3MNyEr1TuDchWgdpqJZhGhfPXj7dJdr3qiW2kD"
     }
   ],
   "fee": 2300000,

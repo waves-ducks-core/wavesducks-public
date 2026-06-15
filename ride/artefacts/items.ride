@@ -27,15 +27,13 @@ func staticKey_canineBreederAddress() = "static_canineBreederAddress"
 func staticKey_eagleBreederAddress() = "static_eagleBreederAddress"
 func staticKey_turtleBreederAddress() = "static_turtleBreederAddress"
 func staticKey_duckBreederAddress() = "static_breederAddress"
+func staticKey_bullBreederAddress() = "static_bullBreederAddress"
 
-
-#TODO: make sure to allow coupons contract when we release new items
-func key_artefactOwner(artefactName: String, owner: String) = artefactName+"_" + owner + "_owner"
-func key_unstakeHeight(artefactName: String, artefactId: String) = artefactName+"_" + artefactId + "_unstake_height"
 func key_externalBoostDuck(duckId: String) = duckId+"_duck_external_boost"
 
 func key_externalBoostAddress(address: String) = address+"_user_external_boost"
 func key_externalBoostAddressEagle(address: String) = address+"_user_external_boost_eagle"
+func key_externalBoostAddressTurtle(address: String) = address+"_user_external_boost_turtle"
 func key_priceCosmetic(item:String)= "direct_cosmetic_"+item
 func key_maxSalesCosmetic(item:String)= "direct_cosmetic_"+item+"_max_sales"
 func key_saleCosmetic(item:String)= "direct_cosmetic_"+item+"_sale"
@@ -46,7 +44,6 @@ func key_soldCosmetic(item:String)= "direct_cosmetic_"+item+"_sold"
 func key_lastPriceCosmetic(item:String)= "direct_cosmetic_"+item+"_last_price"
 func key_startTsCosmetic(item:String) = "direct_cosmetic_"+item+"_startTs"
 func key_endTsCosmetic(item:String) = "direct_cosmetic_"+item+"_endTs"
-func key_processFinishHeight(address: String, txId: ByteVector) = address + "_" + txId.toBase58String() +  "_fh"
 func staticKey_couponsAddress() = "static_couponsAddress"
 func last_height_key() = "last_height_processed"
 func last_height_key_receiver(receiver: String) = "last_height_processed_" + receiver
@@ -134,6 +131,13 @@ func tryGetIntegerExternal(address: Address, key: String) = {
 
 }
 
+func tryGetBooleanExternal(address: Address, key: String) = {
+    match getBoolean(address, key) {
+        case b:Boolean => b
+        case _ => false
+    }
+}
+
 func getRandomNumber(variants: Int, txId: ByteVector, finishHeight: Int, offset: Int) = {
   let randomSeedBlock = blockInfoByHeight(finishHeight-1).value()
   let randomHash = sha256(base58'items' + txId + randomSeedBlock.vrf.value())
@@ -173,6 +177,7 @@ func getCanineBreederAddress() = Address(tryGetStringExternal(getOracle(),static
 func getEagleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_eagleBreederAddress()).fromBase58String())
 func getTurtleBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_turtleBreederAddress()).fromBase58String())
 func getDuckBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_duckBreederAddress()).fromBase58String())
+func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
 
 func tryGetCosmeticItemPrice(item:String)= {
   let key = key_priceCosmetic(item)
@@ -182,21 +187,8 @@ func tryGetCosmeticItemPrice(item:String)= {
     }
 }
 
-func asString(value: Any) = match value {
-  case string: String => string
-  case _ => throw("wrong type, expected: String")
-}
-
 func manipulateName(assetName: String, position: Int, char: String) = {
   assetName.take(position-1)+char+assetName.takeRight(16-position)
-}
-
-func itemIsInCoolDown(artefactName: String, artefactId: String)={
-  let unstakeHeightLast = tryGetInteger(key_unstakeHeight(artefactName,artefactId))
-  let cooldownPeriod = 240
-  if unstakeHeightLast+cooldownPeriod < height
-  then false
-  else true
 }
 
 func isTestEnv()={
@@ -222,10 +214,10 @@ func issueItem(type: String, nonce: Int, address: Address)={
     ],artefactId.toBase58String())
 }
 
-
 func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments:List[AttachedPayment],
  feeAmount: Int, feeAssetId: ByteVector|Unit, recipient: Address, instantFinish: Boolean,
- txId: String, secondaryItem: String, amountSecondaryItem: Int, ducklingsPercent: Int, genValue: Int)={
+ txId: String, secondaryItem: String, amountSecondaryItem: Int, ducklingsPercent: Int, genValue: Int
+)={
   if size(payments) < amountBaseItem+amountSecondaryItem then throw("IID: Please attach more payments!") else
 
   func isBaseItem(accumulated: (List[Burn],Int,Int, Int, Int), pay: AttachedPayment) = {
@@ -266,9 +258,6 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
     if feePayment.assetId != feeAssetId then throw("IID: You miss a payment with the fee!") else
     if feePayment.amount != feeAmount then throw("IID: You did not attach the correct fee amount!") else [ScriptTransfer(getFeeAggregator(), feeAmount, feePayment.assetId)]
     else []
-
-  let artefact = Issue(endItem, "NFT artefact of Waves Ducks game: "+endItem, 1, 0, false, unit, 0)
-  let artefactId = artefact.calculateAssetId()
 
   let instant = if instantFinish then 
   issueItem(endItem,0,recipient)
@@ -357,6 +346,7 @@ func finishShakeItBaby(initTx: String) = {
 @Callable(i)
 func instanMergeItem(receiptName: String)={
   if tryGetString("merge_"+receiptName+"_endItem") ==  "" then throw("IID: Only certain items can be merged!") else
+  if receiptName == "ART-FTCAST" && !tryGetBooleanExternal(getCouponsAddress(), "summer_unlocked") then throw("IID: summer event recipe is locked") else
   let params = (getAmountBaseItem(receiptName),getEndItem(receiptName),getPrice(receiptName), getAsset(receiptName),
    getInstant(receiptName), getSecondaryItem(receiptName), getAmountSecondaryItem(receiptName),getDucklingsPercent(receiptName),
     getBaseItem(receiptName), getGenValue(receiptName))
@@ -409,6 +399,7 @@ func directBuyItemMultiple(itemName:String, itemAmount: Int)={
   let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*95/100 else 0
   let transferAmount = amount - burnAmount
   strict burnCall = if burnAmount > 0 then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),burnAmount)]) else nil
+  let transfer = if transferAmount > 0 then [ScriptTransfer(getFeeAggregator(),transferAmount,assetId)] else []
   
   let txIdStr = i.transactionId.toBase58String()
   let address = i.originCaller
@@ -423,9 +414,8 @@ func directBuyItemMultiple(itemName:String, itemAmount: Int)={
   let issues = FOLD<30>(array, [], handleMint)
   [
     IntegerEntry(key_lastPriceCosmetic(itemName), basePrice),
-    IntegerEntry(key_soldCosmetic(itemName), soldValue+itemAmount),
-    ScriptTransfer(getFeeAggregator(),transferAmount,assetId)
-  ]++validPayment++issues
+    IntegerEntry(key_soldCosmetic(itemName), soldValue+itemAmount)
+  ]++validPayment++transfer++issues
 
 
 }
@@ -458,6 +448,7 @@ func directBuyItem(itemName:String)={
   let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*95/100 else 0
   let transferAmount = amount - burnAmount
   strict burnCall = if burnAmount > 0 then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),burnAmount)]) else nil
+  let transfer = if transferAmount > 0 then [ScriptTransfer(getFeeAggregator(),transferAmount,assetId)] else []
   
   let txIdStr = i.transactionId.toBase58String()
   let address = i.originCaller
@@ -470,9 +461,8 @@ func directBuyItem(itemName:String)={
     StringEntry("artefact_" + artefactId.toBase58String() + "_type", itemName),
     IntegerEntry(key_lastPriceCosmetic(itemName), price),
     IntegerEntry(key_soldCosmetic(itemName), soldValue+1),
-    ScriptTransfer(address, 1, artefactId),
-    ScriptTransfer(getFeeAggregator(),transferAmount,assetId)
-  ]++validPayment,artefactId.toBase58String())
+    ScriptTransfer(address, 1, artefactId)
+  ]++validPayment++transfer,artefactId.toBase58String())
 
 
 }
@@ -523,6 +513,21 @@ func manipulateBoostAccountEagle(boost: Int, address: String)= {
 }
 
 @Callable(i)
+func manipulateBoostAccountTurtle(boost: Int, address: String)= {
+  let allowedContracts = getTrustedContracts()
+  let allowedContractsList = allowedContracts.split(";")
+  let dappToCall = i.caller.toString()
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("IMBAT: This smart contract can't manipulate the turtle boost!") else
+  let key = key_externalBoostAddressTurtle(address)
+  let activeBoost = tryGetInteger(key)
+  let newBoost = activeBoost+boost
+  if newBoost <0 then throw("IMBAT: Something went wrong with turtle boost!") else
+  [
+    IntegerEntry(key,newBoost)
+  ]
+}
+
+@Callable(i)
 func checkArtefactDetails(assetId: String) = {
   let asset = assetInfo(assetId.fromBase58String()).value()
   let assetName = asset.name.value()
@@ -559,6 +564,16 @@ func calculateFarmingPowerBoost(duckId: String, address: String)={
 @Callable(i)
 func calculateFarmingPowerBoostEagle(address: String)={
   let externalBoostAddress = tryGetInteger(key_externalBoostAddressEagle(address))
+  (
+    [
+    ],
+    externalBoostAddress
+  )
+}
+
+@Callable(i)
+func calculateFarmingPowerBoostTurtle(address: String)={
+  let externalBoostAddress = tryGetInteger(key_externalBoostAddressTurtle(address))
   (
     [
     ],
@@ -671,9 +686,9 @@ func addArteFactToDuck()= {
 func issueArtefact(type: String, receiver: String) = {
   if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
-  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress() 
-  
-  && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey() &&  !isTestEnv()) then throw("IIA: admin only") else 
+  if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress()
+
+  && i.caller != getCouponsAddress() && i.caller != getHuntDistroAddress()&& i.callerPublicKey != getWarsPKey() &&  !isTestEnv()) then throw("IIA: admin only") else
     if ((i.caller == getHuntDistroAddress()
     #|| i.callerPublicKey == getWarsPKey()
     ) 
@@ -707,6 +722,8 @@ func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
   && i.caller != getTurtleBreederAddress()
   && i.caller != getCanineBreederAddress()
   && i.caller != getFelineBreederAddress() 
+  && i.caller != getBullBreederAddress()
+  && i.caller != getCouponsAddress()
   && i.caller != getCanineRebirthAddress() && i.caller != getFelineeRebirthAddress() && i.caller != getBullIncubatorAddress() && i.caller != getHuntDistroAddress()
   && i.callerPublicKey != getWarsPKey()) then throw("IIAI: admin only") else 
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
