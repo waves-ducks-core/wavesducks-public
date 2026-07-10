@@ -124,9 +124,10 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
 }
 
 func select(color: String)={
-    let oldGenes = []
-    let newGenes = [("EAGL-AAAAAAAA-G" + color, "8A-G"),("EAGL-BBBBBBBB-G" + color, "8B-G"),
-                    ("EAGL-CCCCCCCC-G" + color, "8C-G"),("EAGL-DDDDDDDD-G" + color, "8D-G")]
+    let oldGenes = [("EAGL-AAAAAAAA-G" + color, "8A-G")]
+    let newGenes = [("EAGL-BBBBBBBB-G" + color, "8B-G"),
+                    ("EAGL-CCCCCCCC-G" + color, "8C-G"),("EAGL-DDDDDDDD-G" + color, "8D-G"),
+                    ("EAGL-EEEEEEEE-G" + color, "8E-G")]
     (oldGenes++newGenes, newGenes)
 }
 
@@ -403,5 +404,3 @@ func verify() = {
         case _ => signaturesCount >= 1
     }
 }
-
-        
