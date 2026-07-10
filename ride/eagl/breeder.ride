@@ -306,7 +306,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
 }
 
 func getRandomOldGenes(txId: ByteVector, h: Int) = {
-  let freeGenes = ["A","B","C","D"]
+  let freeGenes = ["A"]
   let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
   freeGenes[randomNumber]
 }
