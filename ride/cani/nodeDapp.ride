@@ -15,6 +15,62 @@ func getOracle() = Address(tryGetString(staticKey_oracleAddress()).fromBase58Str
 func staticKey_canineStakingAddress()= "static_canineStakingAddress"
 func getFeeAggregatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_feeAggregator").fromBase58String())
 func getCanineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canineStakingAddress()).fromBase58String())
+func getEggPoolAddress() = Address(tryGetStringExternal(getOracle(),"static_eggPool").fromBase58String())
+func getBurnAddress() = Address(tryGetStringExternal(getOracle(),"static_burnAddress").fromBase58String())
+func getEggAssetId() = tryGetStringExternal(getOracle(),"static_eggAssetId").fromBase58String()
+
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case a:Int => a
+        case _ => 0
+    }
+}
+
+func getPoolLeasesAmount() = {
+  let poolWavesDucks = addressFromStringValue("3PAZsTidSJHjo1xxqY9t3Rvuk144u3EHQXQ")
+  let poolCf = addressFromStringValue("3P2A54fWwUktfGVDpNdGaDPdgGbfA3LR1aV")
+  let poolPete = addressFromStringValue("3P3zkxHhAzRzV9PBLB14JXG4ZEEPv4LtDyQ")
+  let poolArkimals = addressFromStringValue("3PGJ8DVtsPk3uJtMMuDAHEsCbWMnnL3pKWB")
+  let poolTnWaves = addressFromStringValue("3PFZCA9X3yWhuY4E96p21T6uQNbX41AwifR")
+  let poolEggW = addressFromStringValue("3PMmRaba5X3gXQ4ya9tsJFwpty49g2tvq2S")
+
+  tryGetIntegerExternal(poolWavesDucks, "leasing_amount") +
+  tryGetIntegerExternal(poolCf, "leasing_amount") +
+  tryGetIntegerExternal(poolPete, "leasing_amount") +
+  tryGetIntegerExternal(poolArkimals, "global_lastLeaseAmount") +
+  tryGetIntegerExternal(poolTnWaves, "global_lastLeaseAmount") +
+  tryGetIntegerExternal(poolEggW, "global_lastLeaseAmount")
+}
+
+func routeWavesRewards(balance: Int) = {
+  if balance <= 0 then [] else {
+    let generating = wavesBalance(this).generating
+    let poolLeases = getPoolLeasesAmount()
+    let rawPoolReward = if generating <= 0 then 0 else fraction(balance, poolLeases, generating)
+    let poolReward = if rawPoolReward > balance then balance else rawPoolReward
+
+    let nonPoolReward = balance - poolReward
+    let poolFee = poolReward / 2
+    let poolBuyback = poolReward - poolFee
+    let nonPoolTopup = nonPoolReward / 10 * 9
+    let totalFee = poolFee + nonPoolReward - nonPoolTopup
+
+    strict topUp = if nonPoolTopup > 0 then {
+      invoke(getCanineStakingAddress(), "topUpReward", [], [AttachedPayment(unit, nonPoolTopup)])
+    } else { unit }
+
+    strict buybackAndBurn = if poolBuyback > 0 then {
+      let eggAssetId = getEggAssetId()
+      strict swapToEgg = invoke(getEggPoolAddress(), "swap", [eggAssetId.toBase58String(), 0], [AttachedPayment(unit, poolBuyback)])
+      let eggAmount = assetBalance(this, eggAssetId)
+      if eggAmount > 0 then {
+        invoke(getBurnAddress(), "burnAttachedPayments", [], [AttachedPayment(eggAssetId, eggAmount)])
+      } else { unit }
+    } else { unit }
+
+    if totalFee > 0 then [ScriptTransfer(getFeeAggregatorAddress(), totalFee, unit)] else []
+  }
+}
 
 @Callable(i)
 func configureOracle(oracle: String) = {
@@ -29,10 +85,7 @@ func configureOracle(oracle: String) = {
 func transferRewardsToCanineStaking() = {
   #if i.caller != this then throw("ICU: admin only") else 
   let balance = wavesBalance(this).available-10_0000_0000
-  if balance <0 then ([]) else
-  strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance)])
-  ([
-  ],balance)
+  (routeWavesRewards(balance), balance)
 }
 
 
@@ -50,12 +103,7 @@ func claimAndLiquidateLPAndUnits() = {
   strict liquidateUnits = invoke(wxPool, "swap", [0,"WAVES",this.toString()],[AttachedPayment(units,assetBalance(this,units))])
 
   let balance = wavesBalance(this).available-10_0000_0000
-  let fee = balance/10
-  let topup = balance - fee
-  strict topUp = invoke(getCanineStakingAddress(), "topUpReward", [],[AttachedPayment(unit,balance/10*9)])
-  ([
-    ScriptTransfer(getFeeAggregatorAddress(), fee, unit)
-  ],balance)
+  (routeWavesRewards(balance), balance)
 }
 
 @Verifier(tx)
