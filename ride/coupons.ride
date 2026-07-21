@@ -41,6 +41,10 @@ func tryGetIntegerExternal(address: Address, key: String) = {
     }
 }
 
+func isNft(asset:Asset) = {
+    asset.decimals == 0 && asset.reissuable == false && asset.quantity == 1
+}
+
 func getOracle() = Address(tryGetString("static_oracleAddress").fromBase58String())
 #SC THAT CAN USE COUPONS
 func staticKey_turtleStakingAddress() = "static_turtleStakingAddress"
@@ -67,6 +71,8 @@ func burnAddressKey() = "static_burnAddress"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_bullBreederAddress() = "static_bullBreederAddress"
 func staticKey_bullFarmingAddress() = "static_bullFarmingAddress"
+func staticKey_bullIncubatorAddress() = "static_bullIncubatorAddress"
+func staticKey_backendPubKey() = "static_backendPubKey"
 
 func getRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_rebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getIncubatorAddress() =  Address(tryGetStringExternal(getOracle(),"static_incubatorAddress").fromBase58String()) #base58'3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv'
@@ -102,6 +108,8 @@ func getBurnAddress() = Address(tryGetStringExternal(getOracle(), burnAddressKey
 func getFeeAggregatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(), staticKey_eggAssetId()).fromBase58String()  
 func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
+func getBullIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullIncubatorAddress()).fromBase58String())
+func getBackendPubKey() = getStringValue(getOracle(),staticKey_backendPubKey()).fromBase58String()
 
 let wAccPKey = valueOrErrorMessage(getString(getOracle(),"static_warsPKey"),"static_warsPKey not defined").fromBase58String()
 
@@ -128,6 +136,12 @@ func gameDepositPurposeTotalKey(purpose:String) = "GAME_DEPOSIT_"+purpose+"_TOTA
 func gameDepositUserTotalKey(user:String) = "GAME_DEPOSIT_"+user+"_TOTAL"
 func gameDepositUserPurposeKey(user:String, purpose:String) = "GAME_DEPOSIT_"+user+"_"+purpose
 func gameDepositLastPurposeKey(user:String) = "GAME_DEPOSIT_"+user+"_LAST_PURPOSE"
+func gameNftDepositAssetKey(assetId:String, suffix:String) = "GAME_NFT_DEPOSIT_"+assetId+"_"+suffix
+func gameNftDepositTxKey(txId:String) = "GAME_NFT_DEPOSIT_TX_"+txId
+func gameNftDepositUserTotalKey(user:String) = "GAME_NFT_DEPOSIT_"+user+"_TOTAL"
+func gameSpiceWithdrawNonceKey(user:String) = "GAME_SPICE_WITHDRAW_"+user+"_NONCE"
+func gameSpiceWithdrawUserTotalKey(user:String) = "GAME_SPICE_WITHDRAW_"+user+"_TOTAL"
+func gameSpiceWithdrawTxKey(txId:String) = "GAME_SPICE_WITHDRAW_TX_"+txId
 func actionPerAddressPerUserPerDay(user:String,action:String,dappAddress:String, day:String) = dappAddress+"_"+action+"_"+user+"_"+day+"_actions"
 func actionPerAddressPerUserLastCheckDay(user:String,action:String) = action+"_"+user+"_actions_check_day"
 func actionPerAddressPerUserAmountInARow(user:String,action:String) = action+"_"+user+"_actions_amount_in_row"
@@ -151,6 +165,25 @@ func summerUserTop5ClaimedKey(user:String) = "summer_"+user+"_top5_claimed"
 func summerRankUserKey(rank:Int) = "summer_rank_"+rank.toString()+"_user"
 func summerRankScoreKey(rank:Int) = "summer_rank_"+rank.toString()+"_score"
 func summerRankOrderKey(rank:Int) = "summer_rank_"+rank.toString()+"_order"
+
+# Farm bull tiers are 1-based and follow the canonical breeding order.
+func getFarmBullTier(generation:String) = {
+    if generation == "G" then 1
+    else if generation == "H" then 2
+    else if generation == "I" then 3
+    else if generation == "K" then 4
+    else if generation == "L" then 5
+    else if generation == "M" then 6
+    else if generation == "N" then 7
+    else if generation == "O" then 8
+    else throw("CDNIG: unsupported bull generation")
+}
+
+# Domain separation prevents signatures for other backend-authorized methods
+# (for example feedDuckling) from being replayed as SPICE withdrawals.
+func getGameSpiceWithdrawProof(amount:Int, nonce:Int, expiresAt:Int, user:String) = {
+    makeString(["withdrawSpiceFromGame",this.toString(),amount.toString(),nonce.toString(),expiresAt.toString(),user], ";")
+}
 
 func getSummerLifetimeBurned(user:String) = tryGetIntegerExternal(getBurnAddress(), burnUserGlobalKey(user))
 func hasSummerBurnEligibility(user:String) = getSummerLifetimeBurned(user) >= 5_0000_0000
@@ -386,6 +419,62 @@ func depositIntoGame(purpose: String) = {
         IntegerEntry(gameDepositUserPurposeKey(user, purpose), tryGetInteger(gameDepositUserPurposeKey(user, purpose)) + amount),
         StringEntry(gameDepositLastPurposeKey(user), purpose)
     ]
+}
+
+@Callable(i)
+func depositNftIntoGame() = {
+    if i.caller != i.originCaller then throw("CDNIG: direct user call required") else
+    if i.payments.size() != 1 || i.payments[0].assetId == unit || i.payments[0].amount != 1 then throw("CDNIG: attach exactly one NFT") else
+    let assetId = i.payments[0].assetId.value()
+    let asset = assetInfo(assetId).value()
+    let assetIdStr = assetId.toBase58String()
+    let issuer = asset.issuer
+    if !isNft(asset) then throw("CDNIG: attached asset is not an NFT") else
+    if asset.name.take(5) != "BULL-" then throw("CDNIG: only bull NFTs are supported") else
+    if issuer != getBullIncubatorAddress() && issuer != getBullBreederAddress() then throw("CDNIG: unsupported bull issuer") else
+    if tryGetString(gameNftDepositAssetKey(assetIdStr,"CLASS")) != "" then throw("CDNIG: NFT already deposited") else
+        let user = i.caller.toString()
+        let txId = i.transactionId.toBase58String()
+        let generation = asset.name.takeRight(2).take(1)
+        let tier = getFarmBullTier(generation)
+        let farmGen = if issuer == getBullBreederAddress() then
+            invoke(getBullBreederAddress(),"getGenFromName",[asset.name],[]).exactAs[String]
+            else ""
+        strict rarityCall = invoke(issuer,"reduceRarity",[assetIdStr,farmGen],[])
+        [
+            StringEntry(gameNftDepositAssetKey(assetIdStr,"CLASS"),"BULL"),
+            IntegerEntry(gameNftDepositAssetKey(assetIdStr,"TIER"),tier),
+            StringEntry(gameNftDepositAssetKey(assetIdStr,"OWNER"),user),
+            StringEntry(gameNftDepositAssetKey(assetIdStr,"TX"),txId),
+            IntegerEntry(gameNftDepositAssetKey(assetIdStr,"TIMESTAMP"),lastBlock.timestamp),
+            StringEntry(gameNftDepositTxKey(txId),assetIdStr+";BULL;"+tier.toString()),
+            IntegerEntry(gameNftDepositUserTotalKey(user),tryGetInteger(gameNftDepositUserTotalKey(user))+1),
+            IntegerEntry("GAME_NFT_DEPOSIT_TOTAL",tryGetInteger("GAME_NFT_DEPOSIT_TOTAL")+1),
+            Burn(assetId,1)
+        ]
+}
+
+@Callable(i)
+func withdrawSpiceFromGame(backendSignature:String, amount:Int, userNonce:Int, expiresAt:Int) = {
+    if i.caller != i.originCaller then throw("CWSFG: direct user call required") else
+    if i.payments.size() != 0 then throw("CWSFG: payments are not accepted") else
+    if amount <= 0 then throw("CWSFG: amount must be positive") else
+        let user = i.caller.toString()
+        let nonceKey = gameSpiceWithdrawNonceKey(user)
+        let currentNonce = tryGetInteger(nonceKey)
+        let proof = getGameSpiceWithdrawProof(amount,userNonce,expiresAt,user)
+        if !sigVerify_8Kb(proof.toBytes(),backendSignature.fromBase58String(),getBackendPubKey()) then throw("CWSFG: invalid backend signature") else
+        if lastBlock.timestamp > expiresAt then throw("CWSFG: backend authorization expired") else
+        if userNonce != currentNonce+1 then throw("CWSFG: invalid user nonce") else
+        if assetBalance(this,getSpiceAssetId()) < amount then throw("CWSFG: insufficient SPICE balance") else
+            let txId = i.transactionId.toBase58String()
+            [
+                IntegerEntry(nonceKey,userNonce),
+                IntegerEntry(gameSpiceWithdrawUserTotalKey(user),tryGetInteger(gameSpiceWithdrawUserTotalKey(user))+amount),
+                IntegerEntry("GAME_SPICE_WITHDRAW_TOTAL",tryGetInteger("GAME_SPICE_WITHDRAW_TOTAL")+amount),
+                StringEntry(gameSpiceWithdrawTxKey(txId),user+";"+amount.toString()+";"+userNonce.toString()+";"+expiresAt.toString()),
+                ScriptTransfer(i.caller,amount,getSpiceAssetId())
+            ]
 }
 
 @Callable(i)
