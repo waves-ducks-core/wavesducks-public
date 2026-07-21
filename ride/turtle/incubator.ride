@@ -37,7 +37,6 @@ func getTurtleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getCanisRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_canisRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getFelineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felineRebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getDuckRebirthAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_rebirthAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
-func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String())
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
   if isDefined(payment.assetId) then throw("BDCAP: Please attach waves") else
@@ -145,36 +144,6 @@ func countEggsNeededAmount(totalTRTLsAmount: Int) = {
 func asBoolean(value: Any) = match value {
   case boolean: Boolean => boolean
   case _ => throw("TI: wrong type, expected: Boolean")
-}
-
-@Callable(i)
-func increaseRarity(assetId: String, farmGen: String) = {
-  let asset = assetId.fromBase58String()
-  if (i.caller != getTurtleRebirthAddress() && i.caller != this) then {
-    throw("admin, items or rebirth only")
-  } else {
-    let duckGen = assetInfo(asset).value().name
-    [
-      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) + 1),
-      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
-    ]
-  }
-}
-
-@Callable(i)
-func reduceRarity(assetId: String, fGen: String) = {
-  let asset = assetId.fromBase58String()
-  if (i.caller != getTurtleRebirthAddress() && i.caller != getCouponsAddress() && i.caller != this) then {
-    throw("admin, coupons or rebirth only")
-  } else {
-    let duckGen = assetInfo(asset).value().name
-    let letter = duckGen.take(6).takeRight(1)
-    let farmGen = "8"+letter+"-G"
-    [
-      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) - 1),
-      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
-    ]
-  }
 }
 
 @Callable(i)
@@ -377,6 +346,4 @@ func verify() = {
     match (tx) {
         case _ => signaturesCount >= 1
     }
-} 
-
-        
+}

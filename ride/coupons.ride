@@ -150,6 +150,7 @@ func gameNftDepositUserTotalKey(user:String) = "GAME_NFT_DEPOSIT_"+user+"_TOTAL"
 func gameSpiceWithdrawNonceKey(user:String) = "GAME_SPICE_WITHDRAW_"+user+"_NONCE"
 func gameSpiceWithdrawUserTotalKey(user:String) = "GAME_SPICE_WITHDRAW_"+user+"_TOTAL"
 func gameSpiceWithdrawTxKey(txId:String) = "GAME_SPICE_WITHDRAW_TX_"+txId
+func gameNftDepositFee() = 5000_0000 # 0.5 EGG
 func actionPerAddressPerUserPerDay(user:String,action:String,dappAddress:String, day:String) = dappAddress+"_"+action+"_"+user+"_"+day+"_actions"
 func actionPerAddressPerUserLastCheckDay(user:String,action:String) = action+"_"+user+"_actions_check_day"
 func actionPerAddressPerUserAmountInARow(user:String,action:String) = action+"_"+user+"_actions_amount_in_row"
@@ -451,22 +452,25 @@ func depositIntoGame(purpose: String) = {
 @Callable(i)
 func depositNftIntoGame() = {
     if i.caller != i.originCaller then throw("CDNIG: direct user call required") else
-    if i.payments.size() != 1 || i.payments[0].assetId == unit || i.payments[0].amount != 1 then throw("CDNIG: attach exactly one NFT") else
+    if i.payments.size() != 2 || i.payments[0].assetId == unit || i.payments[0].amount != 1 then throw("CDNIG: attach one NFT and the EGG fee") else
     let assetId = i.payments[0].assetId.value()
+    let feePayment = i.payments[1]
     let asset = assetInfo(assetId).value()
     let assetIdStr = assetId.toBase58String()
     let issuer = asset.issuer
     if !isNft(asset) then throw("CDNIG: attached asset is not an NFT") else
+    if feePayment.assetId != getEggAssetId() || feePayment.amount != gameNftDepositFee() then throw("CDNIG: attach exactly 0.5 EGG as fee") else
     if tryGetString(gameNftDepositAssetKey(assetIdStr,"CLASS")) != "" then throw("CDNIG: NFT already deposited") else
         let user = i.caller.toString()
         let txId = i.transactionId.toBase58String()
         let generation = asset.name.takeRight(2).take(1)
         let tier = getFarmNftTier(generation)
         let nftClass = getFarmNftClass(issuer)
-        let farmGen = if isFarmNftBreeder(issuer) then
+        let managesRarity = nftClass != "TURTLE"
+        let farmGen = if managesRarity && isFarmNftBreeder(issuer) then
             invoke(issuer,"getGenFromName",[asset.name],[]).exactAs[String]
             else ""
-        strict rarityCall = invoke(issuer,"reduceRarity",[assetIdStr,farmGen],[])
+        strict rarityCall = if managesRarity then invoke(issuer,"reduceRarity",[assetIdStr,farmGen],[]) else nil
         [
             StringEntry(gameNftDepositAssetKey(assetIdStr,"CLASS"),nftClass),
             IntegerEntry(gameNftDepositAssetKey(assetIdStr,"TIER"),tier),
@@ -476,7 +480,8 @@ func depositNftIntoGame() = {
             StringEntry(gameNftDepositTxKey(txId),assetIdStr+";"+nftClass+";"+tier.toString()),
             IntegerEntry(gameNftDepositUserTotalKey(user),tryGetInteger(gameNftDepositUserTotalKey(user))+1),
             IntegerEntry("GAME_NFT_DEPOSIT_TOTAL",tryGetInteger("GAME_NFT_DEPOSIT_TOTAL")+1),
-            Burn(assetId,1)
+            Burn(assetId,1),
+            Burn(getEggAssetId(),gameNftDepositFee())
         ]
 }
 

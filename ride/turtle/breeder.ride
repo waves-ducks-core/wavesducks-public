@@ -279,33 +279,6 @@ func getGenFromName(assetName: String) = {
 }
 
 @Callable(i)
-func increaseRarity(assetId: String, farmGen: String) = {
-  let asset = assetId.fromBase58String()
-  if (i.caller != getTurtleRebirthAddress() && i.caller != this) then {
-    throw("admin, items or rebirth only")
-  } else {
-    let duckGen = assetInfo(asset).value().name
-    [
-      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) + 1),
-      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") + 1)
-    ]
-  }
-}
-
-@Callable(i)
-func reduceRarity(assetId: String, farmGen: String) = {
-  let asset = assetId.fromBase58String()
-  if (i.caller != getTurtleRebirthAddress() && i.caller != getCouponsAddress() && i.caller != this) then {
-    throw("admin, coupons or rebirth only")
-  } else {
-    let duckGen = assetInfo(asset).value().name
-    [
-      IntegerEntry(getStatsKey(duckGen), tryGetInteger(getStatsKey(duckGen)) - 1),
-      IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)
-    ]
-  }
-}
-@Callable(i)
 func startTRTLBreeding(refererAddress: String) = {
   #TODO: add validation that feeValidate payment is added!
   if size(i.payments) != 4 then throw("Wrong amount of payments!") else
