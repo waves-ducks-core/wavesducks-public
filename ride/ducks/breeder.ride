@@ -600,8 +600,8 @@ func freeGene(txIdStr: String) = {
 @Callable(i)
 func reduceRarity(assetId: String, farmGen: String) = {
   let asset = assetId.fromBase58String()
-  if (i.caller != getItemsAddress() && i.caller != getRebirthAddress() && i.caller != this) then {
-    throw("admin, items or rebirth only")
+  if (i.caller != getItemsAddress() && i.caller != getRebirthAddress() && i.caller != getCouponsAddress() && i.caller != this) then {
+    throw("admin, coupons, items or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
     [

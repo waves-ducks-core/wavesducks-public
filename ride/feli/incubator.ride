@@ -45,6 +45,7 @@ func getFelineRebirthAddress() =  Address(tryGetStringExternal(getOracle(),stati
 func getEagleRebirthAddress() =  Address(tryGetStringExternal(getOracle(),"static_eagleRebirthAddress").fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getFelineStakingAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_felinesStakingAddress()).fromBase58String()) #base58'3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ'
 func getItemsAddress() =  Address(tryGetStringExternal(getOracle(),staticKey_itemsAddress()).fromBase58String())
+func getCouponsAddress() = Address(tryGetStringExternal(getOracle(),"static_couponsAddress").fromBase58String())
 
 
 func checkAdditionalPayment(payment: AttachedPayment)= {
@@ -182,8 +183,8 @@ func configureOracle(oracle: String) = {
 @Callable(i)
 func reduceRarity(assetId: String, fGen: String) = {
   let asset = assetId.fromBase58String()
-  if (i.caller != getFelineRebirthAddress() && i.caller != this) then {
-    throw("IRR: admin or rebirth only")
+  if (i.caller != getFelineRebirthAddress() && i.caller != getCouponsAddress() && i.caller != this) then {
+    throw("IRR: admin, coupons or rebirth only")
   } else {
     let duckGen = assetInfo(asset).value().name
     let letter = duckGen.take(6).takeRight(1)
