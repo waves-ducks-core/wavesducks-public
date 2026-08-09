@@ -57,11 +57,11 @@ jobs:
         run: exit 1
 
       - uses: actions/checkout@v3
-      - name: npm install waves/surfboard
-        run: npm install -g @waves/surfboard
+      - name: Install Waves Surfboard
+        run: npm install --no-save @waves/surfboard@2.3.1-beta.1 @waves/js-test-env@1.1.5-beta.1
 
       - name: deploy ${{ matrix.sc }}
-        run: surfboard run deploy-scripts/dapp.deploy.js --env=${{ inputs.environment }}
+        run: npx surfboard run deploy-scripts/dapp.deploy.js --env=${{ inputs.environment }}
         env:
           FILE: ${{ matrix.sc }}
           SEED: ${{ secrets[matrix.sc] }}
@@ -93,11 +93,11 @@ jobs:
         run: exit 1
 
       - uses: actions/checkout@v3
-      - name: npm install waves/surfboard
-        run: npm install -g @waves/surfboard
+      - name: Install Waves Surfboard
+        run: npm install --no-save @waves/surfboard@2.3.1-beta.1 @waves/js-test-env@1.1.5-beta.1
 
       - name: deploy ${{ matrix.sc }}
-        run: surfboard run deploy-scripts/dapp-sub.deploy.js --env=${{ inputs.environment }}
+        run: npx surfboard run deploy-scripts/dapp-sub.deploy.js --env=${{ inputs.environment }}
         env:
           FILE: ${{ matrix.sc }}
           SEED: ${{ secrets[matrix.sc] }}
@@ -115,10 +115,10 @@ jobs:
 
       - uses: actions/checkout@v3
       - name: Install Waves Surfboard
-        run: npm install -g @waves/surfboard
+        run: npm install --no-save @waves/surfboard@2.3.1-beta.1 @waves/js-test-env@1.1.5-beta.1
 
       - name: Deploy ${{ inputs.contract }} to ${{ inputs.environment }}
-        run: surfboard run deploy-scripts/dapp.deploy.js --env=${{ inputs.environment }}
+        run: npx surfboard run deploy-scripts/dapp.deploy.js --env=${{ inputs.environment }}
         env:
           FILE: ${{ inputs.contract }}
           SEED: ${{ secrets[inputs.contract] }}
