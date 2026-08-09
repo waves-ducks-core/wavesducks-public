@@ -5,10 +5,28 @@ name: Deploy dapps
 # or API.
 on:
   workflow_dispatch:
+    inputs:
+      contract:
+        description: Root contract to deploy, or all for the legacy matrix
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - coupons
+      environment:
+        description: Surfboard network environment
+        required: true
+        default: testnet
+        type: choice
+        options:
+          - testnet
+          - mainnet
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   deploy-root:
+    if: ${{ inputs.contract == 'all' }}
     strategy:
       fail-fast: false
       matrix:
@@ -43,12 +61,13 @@ jobs:
         run: npm install -g @waves/surfboard
 
       - name: deploy ${{ matrix.sc }}
-        run: surfboard run deploy-scripts/dapp.deploy.js
+        run: surfboard run deploy-scripts/dapp.deploy.js --env=${{ inputs.environment }}
         env:
           FILE: ${{ matrix.sc }}
           SEED: ${{ secrets[matrix.sc] }}
 
   deploy-subdir:
+    if: ${{ inputs.contract == 'all' }}
     strategy:
       fail-fast: false
       matrix:
@@ -78,7 +97,28 @@ jobs:
         run: npm install -g @waves/surfboard
 
       - name: deploy ${{ matrix.sc }}
-        run: surfboard run deploy-scripts/dapp-sub.deploy.js
+        run: surfboard run deploy-scripts/dapp-sub.deploy.js --env=${{ inputs.environment }}
         env:
           FILE: ${{ matrix.sc }}
           SEED: ${{ secrets[matrix.sc] }}
+
+  deploy-one-root:
+    if: ${{ inputs.contract != 'all' }}
+    runs-on: ubuntu-latest
+    name: ${{ inputs.contract }} (${{ inputs.environment }})
+    steps:
+      - name: Check deployment secret
+        env:
+          super_secret: ${{ secrets[inputs.contract] }}
+        if: ${{ env.super_secret == '' }}
+        run: exit 1
+
+      - uses: actions/checkout@v3
+      - name: Install Waves Surfboard
+        run: npm install -g @waves/surfboard
+
+      - name: Deploy ${{ inputs.contract }} to ${{ inputs.environment }}
+        run: surfboard run deploy-scripts/dapp.deploy.js --env=${{ inputs.environment }}
+        env:
+          FILE: ${{ inputs.contract }}
+          SEED: ${{ secrets[inputs.contract] }}
