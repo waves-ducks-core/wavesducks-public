@@ -68,10 +68,6 @@ func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_mutantBreedingAddress() = "static_mutantIncubatorAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
 func staticKey_tnAssetId() = "static_tnAssetId"
-func staticKey_farmPremiumStorageTnAmount() = "static_farmPremiumStorageTnAmount"
-func staticKey_farmPremiumStorageEggAmount() = "static_farmPremiumStorageEggAmount"
-func staticKey_farmPremiumStorageWavesAmount() = "static_farmPremiumStorageWavesAmount"
-func staticKey_farmPremiumStorageSpiceAmount() = "static_farmPremiumStorageSpiceAmount"
 func burnAddressKey() = "static_burnAddress"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_bullBreederAddress() = "static_bullBreederAddress"
@@ -151,14 +147,6 @@ func gameDepositUserTotalKey(user:String) = "GAME_DEPOSIT_"+user+"_TOTAL"
 func gameDepositUserPurposeKey(user:String, purpose:String) = "GAME_DEPOSIT_"+user+"_"+purpose
 func gameDepositLastPurposeKey(user:String) = "GAME_DEPOSIT_"+user+"_LAST_PURPOSE"
 func isPremiumStoragePurpose(purpose:String) = purpose.take(16) == "premium-storage-"
-func getPremiumStorageAmount(level:Int) = {
-    let band = (level - 1) / 5 + 1
-    let rotation = (level - 1) % 4
-    if rotation == 0 then tryGetIntegerExternal(getOracle(), staticKey_farmPremiumStorageTnAmount()) * band
-    else if rotation == 1 then tryGetIntegerExternal(getOracle(), staticKey_farmPremiumStorageEggAmount()) * band
-    else if rotation == 2 then tryGetIntegerExternal(getOracle(), staticKey_farmPremiumStorageWavesAmount()) * band
-    else tryGetIntegerExternal(getOracle(), staticKey_farmPremiumStorageSpiceAmount()) * band
-}
 func gameNftDepositAssetKey(assetId:String, suffix:String) = "GAME_NFT_DEPOSIT_"+assetId+"_"+suffix
 func gameNftDepositTxKey(txId:String) = "GAME_NFT_DEPOSIT_TX_"+txId
 func gameNftDepositUserTotalKey(user:String) = "GAME_NFT_DEPOSIT_"+user+"_TOTAL"
@@ -468,7 +456,7 @@ func depositIntoGame(purpose: String) = {
         else if premiumRotation == 2 then i.payments[0].assetId == unit
         else i.payments[0].assetId == getSpiceAssetId()
     let assetMatches = if premium then premiumAssetMatches else i.payments[0].assetId == getEggAssetId()
-    if !assetMatches || (premium && amount != getPremiumStorageAmount(premiumLevel)) then
+    if !assetMatches then
         throw("CDIG: payment does not match purpose")
     else
     strict burnCall = if i.payments[0].assetId == getEggAssetId() then

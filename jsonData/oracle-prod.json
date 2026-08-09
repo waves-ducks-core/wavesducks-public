@@ -18,26 +18,6 @@
             "value": "bPWkA3MNyEr1TuDchWgdpqJZhGhfPXj7dJdr3qiW2kD"
         },
         {
-            "key": "static_farmPremiumStorageTnAmount",
-            "type": "integer",
-            "value": 55000000000
-        },
-        {
-            "key": "static_farmPremiumStorageEggAmount",
-            "type": "integer",
-            "value": 75000000
-        },
-        {
-            "key": "static_farmPremiumStorageWavesAmount",
-            "type": "integer",
-            "value": 500000000
-        },
-        {
-            "key": "static_farmPremiumStorageSpiceAmount",
-            "type": "integer",
-            "value": 2800
-        },
-        {
             "key": "static_incubatorAddress",
             "type": "string",
             "value": "3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv"
