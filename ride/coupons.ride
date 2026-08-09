@@ -442,7 +442,7 @@ func depositIntoGame(purpose: String) = {
     let amount = i.payments[0].amount
     if amount <= 0 then throw("CDIG: amount must be positive") else
     let assetId = i.payments[0].assetId
-    if assetId != getEggAssetId() && assetId != getTnAssetId() && assetId != getSpiceAssetId() then
+    if assetId != getEggAssetId() && assetId != getTnAssetId() && assetId != getSpiceAssetId() && assetId != unit then
         throw("CDIG: unsupported payment asset")
     else
     strict burnCall = if assetId == getEggAssetId() then
