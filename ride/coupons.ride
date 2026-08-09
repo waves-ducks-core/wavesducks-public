@@ -67,6 +67,11 @@ func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
 func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_mutantBreedingAddress() = "static_mutantIncubatorAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_tnAssetId() = "static_tnAssetId"
+func staticKey_farmPremiumStorageTnAmount() = "static_farmPremiumStorageTnAmount"
+func staticKey_farmPremiumStorageEggAmount() = "static_farmPremiumStorageEggAmount"
+func staticKey_farmPremiumStorageWavesAmount() = "static_farmPremiumStorageWavesAmount"
+func staticKey_farmPremiumStorageSpiceAmount() = "static_farmPremiumStorageSpiceAmount"
 func burnAddressKey() = "static_burnAddress"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_bullBreederAddress() = "static_bullBreederAddress"
@@ -111,6 +116,7 @@ func getMutantBreedingAddress() = Address(tryGetStringExternal(getOracle(),stati
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(), burnAddressKey()).fromBase58String())
 func getFeeAggregatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(), staticKey_eggAssetId()).fromBase58String()  
+func getTnAssetId() = tryGetStringExternal(getOracle(), staticKey_tnAssetId()).fromBase58String()
 func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
 func getBullIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullIncubatorAddress()).fromBase58String())
 func getCanineIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineIncubatorAddress()).fromBase58String())
@@ -144,6 +150,15 @@ func gameDepositPurposeTotalKey(purpose:String) = "GAME_DEPOSIT_"+purpose+"_TOTA
 func gameDepositUserTotalKey(user:String) = "GAME_DEPOSIT_"+user+"_TOTAL"
 func gameDepositUserPurposeKey(user:String, purpose:String) = "GAME_DEPOSIT_"+user+"_"+purpose
 func gameDepositLastPurposeKey(user:String) = "GAME_DEPOSIT_"+user+"_LAST_PURPOSE"
+func isPremiumStoragePurpose(purpose:String) = purpose.take(16) == "premium-storage-"
+func getPremiumStorageAmount(level:Int) = {
+    let band = (level - 1) / 5 + 1
+    let rotation = (level - 1) % 4
+    if rotation == 0 then tryGetIntegerExternal(getOracle(), staticKey_farmPremiumStorageTnAmount()) * band
+    else if rotation == 1 then tryGetIntegerExternal(getOracle(), staticKey_farmPremiumStorageEggAmount()) * band
+    else if rotation == 2 then tryGetIntegerExternal(getOracle(), staticKey_farmPremiumStorageWavesAmount()) * band
+    else tryGetIntegerExternal(getOracle(), staticKey_farmPremiumStorageSpiceAmount()) * band
+}
 func gameNftDepositAssetKey(assetId:String, suffix:String) = "GAME_NFT_DEPOSIT_"+assetId+"_"+suffix
 func gameNftDepositTxKey(txId:String) = "GAME_NFT_DEPOSIT_TX_"+txId
 func gameNftDepositUserTotalKey(user:String) = "GAME_NFT_DEPOSIT_"+user+"_TOTAL"
@@ -435,18 +450,39 @@ func burnEggs()= {
 @Callable(i)
 func depositIntoGame(purpose: String) = {
     if purpose.size() == 0 || purpose.size() > 64 then throw("CDIG: invalid purpose") else
-    if i.payments.size() != 1 || i.payments[0].assetId != getEggAssetId() then throw("CDIG: send eggs only") else
+    if i.payments.size() != 1 then throw("CDIG: attach exactly one payment") else
     let user = i.caller.toString()
     let amount = i.payments[0].amount
     if amount <= 0 then throw("CDIG: amount must be positive") else
-    strict burnCall = invoke(getBurnAddress(), "burnAttachedPayments", [], [AttachedPayment(getEggAssetId(), amount)])
+    let premium = isPremiumStoragePurpose(purpose)
+    let purposeParts = purpose.split("-")
+    let premiumLevel = if premium && purposeParts.size() == 4 then parseIntValue(purposeParts[3]) else 0
+    let premiumGroup = if premium && purposeParts.size() == 4 then purposeParts[2] else ""
+    if premium && (purposeParts[0] != "premium" || purposeParts[1] != "storage" ||
+        (premiumGroup != "silo" && premiumGroup != "barn" && premiumGroup != "coop") ||
+        premiumLevel < 1 || premiumLevel > 50) then throw("CDIG: invalid premium storage purpose") else
+    let premiumRotation = (premiumLevel - 1) % 4
+    let premiumAssetMatches =
+        if premiumRotation == 0 then i.payments[0].assetId == getTnAssetId()
+        else if premiumRotation == 1 then i.payments[0].assetId == getEggAssetId()
+        else if premiumRotation == 2 then i.payments[0].assetId == unit
+        else i.payments[0].assetId == getSpiceAssetId()
+    let assetMatches = if premium then premiumAssetMatches else i.payments[0].assetId == getEggAssetId()
+    if !assetMatches || (premium && amount != getPremiumStorageAmount(premiumLevel)) then
+        throw("CDIG: payment does not match purpose")
+    else
+    strict burnCall = if i.payments[0].assetId == getEggAssetId() then
+        invoke(getBurnAddress(), "burnAttachedPayments", [], [AttachedPayment(getEggAssetId(), amount)])
+        else nil
+    let routedPayment = if i.payments[0].assetId == getEggAssetId() then [] else
+        [ScriptTransfer(getFeeAggregatorAddress(), amount, i.payments[0].assetId)]
     [
         IntegerEntry(gameDepositTotalKey(), tryGetInteger(gameDepositTotalKey()) + amount),
         IntegerEntry(gameDepositPurposeTotalKey(purpose), tryGetInteger(gameDepositPurposeTotalKey(purpose)) + amount),
         IntegerEntry(gameDepositUserTotalKey(user), tryGetInteger(gameDepositUserTotalKey(user)) + amount),
         IntegerEntry(gameDepositUserPurposeKey(user, purpose), tryGetInteger(gameDepositUserPurposeKey(user, purpose)) + amount),
         StringEntry(gameDepositLastPurposeKey(user), purpose)
-    ]
+    ] ++ routedPayment
 }
 
 @Callable(i)
