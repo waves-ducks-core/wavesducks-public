@@ -67,6 +67,7 @@ func staticKey_felineRebirthAddress() = "static_felineRebirthAddress"
 func staticKey_canineRebirthAddress() = "static_canineRebirthAddress"
 func staticKey_mutantBreedingAddress() = "static_mutantIncubatorAddress"
 func staticKey_eggAssetId() = "static_eggAssetId"
+func staticKey_tnAssetId() = "static_tnAssetId"
 func burnAddressKey() = "static_burnAddress"
 func staticKey_feeAggregator() = "static_feeAggregator"
 func staticKey_bullBreederAddress() = "static_bullBreederAddress"
@@ -111,6 +112,7 @@ func getMutantBreedingAddress() = Address(tryGetStringExternal(getOracle(),stati
 func getBurnAddress() = Address(tryGetStringExternal(getOracle(), burnAddressKey()).fromBase58String())
 func getFeeAggregatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_feeAggregator()).fromBase58String())
 func getEggAssetId() = tryGetStringExternal(getOracle(), staticKey_eggAssetId()).fromBase58String()  
+func getTnAssetId() = tryGetStringExternal(getOracle(), staticKey_tnAssetId()).fromBase58String()
 func getBullBreederAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullBreederAddress()).fromBase58String())
 func getBullIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_bullIncubatorAddress()).fromBase58String())
 func getCanineIncubatorAddress() = Address(tryGetStringExternal(getOracle(),staticKey_canineIncubatorAddress()).fromBase58String())
@@ -439,11 +441,15 @@ func depositIntoGame(purpose: String) = {
     let user = i.caller.toString()
     let amount = i.payments[0].amount
     if amount <= 0 then throw("CDIG: amount must be positive") else
-    strict burnCall = if i.payments[0].assetId == getEggAssetId() then
+    let assetId = i.payments[0].assetId
+    if assetId != getEggAssetId() && assetId != getTnAssetId() && assetId != getSpiceAssetId() then
+        throw("CDIG: unsupported payment asset")
+    else
+    strict burnCall = if assetId == getEggAssetId() then
         invoke(getBurnAddress(), "burnAttachedPayments", [], [AttachedPayment(getEggAssetId(), amount)])
         else nil
-    let routedPayment = if i.payments[0].assetId == getEggAssetId() then [] else
-        [ScriptTransfer(getFeeAggregatorAddress(), amount, i.payments[0].assetId)]
+    let routedPayment = if assetId == getEggAssetId() then [] else
+        [ScriptTransfer(getFeeAggregatorAddress(), amount, assetId)]
     [
         IntegerEntry(gameDepositTotalKey(), tryGetInteger(gameDepositTotalKey()) + amount),
         IntegerEntry(gameDepositPurposeTotalKey(purpose), tryGetInteger(gameDepositPurposeTotalKey(purpose)) + amount),

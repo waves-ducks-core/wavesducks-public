@@ -13,6 +13,11 @@
             "value": "Ag7HEcF5ewbQ84uczdJ2DBG2LA2riks2DtchM2A222vM"
         },
         {
+            "key": "static_tnAssetId",
+            "type": "string",
+            "value": "DDbgwqvbAyiWTahPXcPECiYwAyw7wHy5FaK5Dg4PbDjN"
+        },
+        {
             "key": "static_incubatorAddress",
             "type": "string",
             "value": "3N6oB7VbceD3NoguGkfGnBMF4hcHZVbK8io"
