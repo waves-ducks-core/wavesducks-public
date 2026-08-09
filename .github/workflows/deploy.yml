@@ -109,7 +109,7 @@ jobs:
     steps:
       - name: Check deployment secret
         env:
-          super_secret: ${{ secrets[inputs.contract] }}
+          super_secret: ${{ inputs.environment == 'testnet' && secrets.COUPONS_ACCEPTANCE || secrets[inputs.contract] }}
         if: ${{ env.super_secret == '' }}
         run: exit 1
 
@@ -121,4 +121,4 @@ jobs:
         run: npx surfboard run deploy-scripts/dapp.deploy.js --env=${{ inputs.environment }}
         env:
           FILE: ${{ inputs.contract }}
-          SEED: ${{ secrets[inputs.contract] }}
+          SEED: ${{ inputs.environment == 'testnet' && secrets.COUPONS_ACCEPTANCE || secrets[inputs.contract] }}
