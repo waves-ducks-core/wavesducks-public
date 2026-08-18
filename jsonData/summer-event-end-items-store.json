@@ -1,0 +1,13 @@
+{
+    "type": 12,
+    "version": 2,
+    "data": [
+        {
+            "key": "direct_cosmetic_ART-BBALL_sale",
+            "type": "boolean",
+            "value": false
+        }
+    ],
+    "fee": 100000,
+    "feeAssetId": "WAVES"
+}

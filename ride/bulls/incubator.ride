@@ -221,10 +221,10 @@ func getRandomRebirthWin(tx: ByteVector, finishHeight: Int, blacklistCode: Strin
   if (n < 992 && blacklistCode != "item!ART-FIXGENE") then "item!ART-FIXGENE" else
   if (blacklistCode != "item!ART-FREEGENE") then "item!ART-FREEGENE" else
   "item!ART-FEED5"
-  let result = if (jackpotRandom == 1 && wasUniqueBorn("BULL-WCABBULL-JU") < 4) then
-    "jackpot"
-  else
-    baseResult
+  #let result = if (jackpotRandom == 1 && wasUniqueBorn("BULL-WCABBULL-JU") < 4) then
+  #  "jackpot"
+  #else
+  let result = baseResult
   (n, result, jackpotRandom)
 }
 
@@ -290,9 +290,9 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
           StringEntry("address_" + address + "_initTx_" + initTx + "_win1", win)
         ]
       }
-    } else if (win == "jackpot") then {
-      strict call = invoke(this, "issueJackpot", [address, txId, "WCABBULL"], [])
-      [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])]
+    #} else if (win == "jackpot") then {
+    #  strict call = invoke(this, "issueJackpot", [address, txId, "WCABBULL"], [])
+    #  [StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])]
     } else {
       throw("BRF: invalid reward")
     }
@@ -314,22 +314,22 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       } else nil
       localIncrease ++ [ScriptTransfer(address.addressFromStringValue(), 1, assetId)]
     } else []
-    let bonusRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 3)
-    let bonusOutput = if bonusRandom % 2 == 0 then {
-      strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",address,2],[])
-      [
-        StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
-      ]
-    } else [
-      IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
-    ]
+    #let bonusRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 3)
+    #let bonusOutput = if bonusRandom % 2 == 0 then {
+    #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",address,2],[])
+    #  [
+    #    StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
+    #    IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+    #  ]
+    #} else [
+    #  IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+    #]
     reward ++ [
       StringEntry(getRebirthStatusKey(address, initTx), RebirthFinished),
       StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
       IntegerEntry("address_" + address + "_initTx_" + initTx + "_random", random),
       IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom", jackpotRandom)
-    ] ++ feeValidate ++ returnPayload ++ bonusOutput
+    ] ++ feeValidate ++ returnPayload #++ bonusOutput
   }
 }
 

@@ -255,22 +255,22 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         [ScriptTransfer(address.addressFromStringValue(), 1, 
         assetId)] 
       else []
-      let bonusRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 3)
-      let bonusOutput = if bonusRandom % 2 == 0 then {
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",address,2],[])
-        [
-          StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
-        ]
-      } else [
-        IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
-      ]
+      #let bonusRandom = getRandomNumber(100, initTx.fromBase58String(), finishBlock, 3)
+      #let bonusOutput = if bonusRandom % 2 == 0 then {
+      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",address,2],[])
+      #  [
+      #    StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", bonus.exactAs[String]),
+      #    IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+      #  ]
+      #} else [
+      #  IntegerEntry("address_" + address + "_initTx_" + initTx + "_bonusRandom",bonusRandom)
+      #]
       result ++ [
         StringEntry("address_" + address + "_initTx_" + initTx + "_win", win),
         StringEntry("address_" + address + "_initTx_" + initTx + "_status", "finish"),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
-      ]++validPayment++returnPayload++bonusOutput
+      ]++validPayment++returnPayload#++bonusOutput
     }
   }
 }
