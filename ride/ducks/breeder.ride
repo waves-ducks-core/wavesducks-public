@@ -250,22 +250,22 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
         ScriptTransfer(addressFromStringValue(owner), 1, parent2Id.fromBase58String())
       ] else []
       let random = getRandomNumber(100, txId, processFinishHeight, 3)
-      let bonusOutput = if random % 2 == 0 then {
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",owner,2],[])
-        [
-          StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)
-        ]
-      } else [
-        IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)
-      ]
+      #let bonusOutput = if random % 2 == 0 then {
+      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",owner,2],[])
+      #  [
+      #    StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+      #    IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)
+      #  ]
+      #} else [
+      #  IntegerEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusRandom",random)
+      #]
       composeGenericData(duckGen,duckIdKey,assetId,asset)++
       [
         StringEntry(processStatusKey, HatchingFinished),
         ScriptTransfer(addressFromStringValue(owner), 1, assetId),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1)
-      ]++parentsSend++bonusOutput
+      ]++parentsSend#++bonusOutput
     }
 }
 

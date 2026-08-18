@@ -283,15 +283,15 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
 
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
-      let bonusOutput = if random % 2 == 0 then {
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
-        [
-          StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
-        ]
-      } else [
-        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
-      ]
+      #let bonusOutput = if random % 2 == 0 then {
+      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
+      #  [
+      #    StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+      #    IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
+      #  ]
+      #} else [
+      #  IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
+      #]
       composeGenericData(Gen,IdKey,assetId,asset)++
       normalEntries++
       [
@@ -301,12 +301,12 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ]++bonusOutput
+      ]#++bonusOutput
     }
 }
 
 func getRandomOldGenes(txId: ByteVector, h: Int) = {
-  let freeGenes = ["A","B","C","D"]
+  let freeGenes = ["A"]
   let randomNumber = getRandomNumber(freeGenes.size(), txId, h, 2)
   freeGenes[randomNumber]
 }

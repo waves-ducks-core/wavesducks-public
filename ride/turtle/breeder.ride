@@ -238,15 +238,15 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
       let parent1Id = tryGetString(getTRTLParentKey(txId, 1))
       let parent2Id = tryGetString(getTRTLParentKey(txId, 2))
       strict recordAction = invoke(getCouponsAddress(),"recordAction",["BREEDTURTLE"],[])
-      let bonusOutput = if random % 2 == 0 then {
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
-        [
-          StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-          IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
-        ]
-      } else [
-        IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
-      ]
+      #let bonusOutput = if random % 2 == 0 then {
+      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
+      #  [
+      #    StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
+      #    IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
+      #  ]
+      #} else [
+      #  IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
+      #]
       [
         StringEntry(processStatusKey, HatchingFinished),
         StringEntry(TRTLIdKey, assetId.toBase58String()),
@@ -259,7 +259,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ]++bonusOutput
+      ]#++bonusOutput
     }
 }
 
