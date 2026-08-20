@@ -91,6 +91,36 @@ func tryGetInteger(key: String) = {
     }
 }
 
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func pendingPeteTokenReward() = {
+  let peteDappAddress = getPeteDappAddress()
+  let address = this.toString()
+  let currentInterest = tryGetIntegerExternal(peteDappAddress, "interest")
+  let userInterest = tryGetIntegerExternal(peteDappAddress, address + "_userInterest")
+  let stakedAmount = tryGetIntegerExternal(peteDappAddress, address + "_userTokenStaked")
+  let availableClaim = tryGetIntegerExternal(peteDappAddress, address + "_userAvailableClaim")
+  if currentInterest <= userInterest || stakedAmount == 0 then availableClaim
+  else availableClaim + fraction(stakedAmount, currentInterest - userInterest, Scale)
+}
+
+func pendingPeteUsdtReward() = {
+  let peteDappAddress = getPeteDappAddress()
+  let address = this.toString()
+  let currentInterest = tryGetIntegerExternal(peteDappAddress, "interestUSDT")
+  let userInterest = tryGetIntegerExternal(peteDappAddress, address + "_userInterestUSDT")
+  let stakedAmount = tryGetIntegerExternal(peteDappAddress, address + "_userTokenStaked")
+  let availableClaim = tryGetIntegerExternal(peteDappAddress, address + "_userAvailableClaimUSDT")
+  if currentInterest <= userInterest || stakedAmount == 0 then availableClaim
+  else availableClaim + fraction(stakedAmount, currentInterest - userInterest, 10000000000)
+}
+
+
 func handleStakingTopUp (totalAmount: Int) = {
     func burnForDay(day: Int)= "TOPUP_"+day.toString()
     let day = calculateDaysSinceStart()
@@ -103,16 +133,16 @@ func handleStakingTopUp (totalAmount: Int) = {
     let interestDelta = if (totalStakedAmount > 0)
         then fraction(payoutAmount, Scale, totalStakedAmount)
         else 0
-    strict invokeRes = invoke(getPeteDappAddress(), "stake", [],[AttachedPayment(getPeteAssetId(),compoundAmount)])
+    strict invokeRes = if compoundAmount == 0 then nil else invoke(getPeteDappAddress(), "stake", [],[AttachedPayment(getPeteAssetId(),compoundAmount)])
+    let teamTransfer = if team > 0 then [ScriptTransfer(getFeeAggregator(), team, getPeteAssetId())] else []
     [
       IntegerEntry("days_since_apy", day),
       IntegerEntry(burnForDay(day), tryGetInteger(burnForDay(day))+payoutAmount),
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + payoutAmount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta)),
-      IntegerEntry("global_PETE_balance",tryGetInteger("global_PETE_balance")+compoundAmount),
-      ScriptTransfer(getFeeAggregator(), team, getPeteAssetId())
+      IntegerEntry("global_PETE_balance",tryGetInteger("global_PETE_balance")+compoundAmount)
       
-    ]
+    ] ++ teamTransfer
       
 }
 
@@ -417,12 +447,14 @@ func topUpRewardSpecial () = {
 @Callable(i)
 func claimRewardPete () = {
   strict peteBalanceBefore = assetBalance(this, getPeteAssetId())
-  strict invokeRes = invoke(getPeteDappAddress(), "claim", [],[])
+  strict invokeRes = if pendingPeteTokenReward() == 0 || pendingPeteUsdtReward() == 0 then nil else invoke(getPeteDappAddress(), "claim", [],[])
   strict peteBalanceAfter = assetBalance(this, getPeteAssetId())
   let diff = peteBalanceAfter-peteBalanceBefore
   let amountForMutants = diff/20
-    strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
-        ["PETE",0], [AttachedPayment(getPeteAssetId(), amountForMutants)])  
+  strict topup2 = if amountForMutants > 0 then
+      invoke(getMutantFarmingAddress(), "topUpReward",
+        ["PETE",0], [AttachedPayment(getPeteAssetId(), amountForMutants)])
+    else unit
   let resHandleStaking = handleStakingTopUp(peteBalanceAfter-peteBalanceBefore)
     (
       resHandleStaking, 

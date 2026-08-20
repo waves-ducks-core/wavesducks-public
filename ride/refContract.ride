@@ -132,23 +132,12 @@ func whitelistAddress(refererAddress:String)={
 
 @Callable(i)
 func refPayment(refererKey: String) = {
-  #TODO MAKE DYNAMICALLY
-  let dao = if isTestEnv() then "3Mx9X6Dpj3thXL2So77C4DG9AmBM4WX8Mvw" else "3PEwRcYNAUtoFvKpBhKoiwajnZfdoDR6h4h"
-  #let sendFundsBack = ([ScriptTransfer(i.caller, i.payments[0].amount, i.payments[0].assetId)],false)
-  let alreadySend = tryGetInteger("dao_refund")
+  let sendFundsBack = ([ScriptTransfer(i.caller, i.payments[0].amount, i.payments[0].assetId)], false)
   let referalAddress = i.originCaller.toString()
 
-  let sendFundsToDao = (
-    [
-      ScriptTransfer(dao.addressFromStringValue(), i.payments[0].amount, i.payments[0].assetId),
-      IntegerEntry("dao_refund",alreadySend+i.payments[0].amount),
-      DeleteEntry("address_" + referalAddress + "_referedBy") 
-
-      ], true
-  )
   if (getTrustedAddress().indexOf(i.caller) == unit) then throw("RC: This method can be called only by farming and incubator dApps") else 
-  if ((refererKey == "") && (tryGetString("address_" + referalAddress + "_referedBy") == "")) then sendFundsToDao else 
-  if (masterTryGetBoolean("farm_"+referalAddress)) then sendFundsToDao else 
+  if ((refererKey == "") && (tryGetString("address_" + referalAddress + "_referedBy") == "")) then sendFundsBack else
+  if (masterTryGetBoolean("farm_"+referalAddress)) then sendFundsBack else
 
     let givenReferer = match getString(this, "key_" + refererKey + "_refererAddress") {
       case x: String => x  # if key was a real key
@@ -162,8 +151,8 @@ func refPayment(refererKey: String) = {
 
     let refAmount = i.payments[0].amount
     if (i.payments[0].assetId != getEggAssetId()) then throw("Don't try to cheat the system!") else
-    if (tryGetBoolean(refererAddress+"_whitelisted")== false) then sendFundsToDao else
-    if (refererAddress.addressFromString() == unit) then sendFundsToDao else 
+    if (tryGetBoolean(refererAddress+"_whitelisted")== false) then sendFundsBack else
+    if (refererAddress.addressFromString() == unit) then sendFundsBack else
       let refererAddressValue = refererAddress.addressFromStringValue() 
       let referalAddressValue = referalAddress.addressFromStringValue()
       let paymentForReferer = refAmount
@@ -171,7 +160,7 @@ func refPayment(refererKey: String) = {
       let refererEarnedReward = "address_" + refererAddress + "_earnedReward"
       let referalDeliveredReward = "referer_" + refererAddress + "_referal_" + referalAddress + "_deliveredReward"
 
-      if (refererAddress == referalAddress) then sendFundsToDao else 
+      if (refererAddress == referalAddress) then sendFundsBack else
         ([
           StringEntry("address_" + referalAddress + "_referedBy", refererAddress), 
           IntegerEntry(refererEarnedReward, tryGetInteger(refererEarnedReward) + paymentForReferer),
