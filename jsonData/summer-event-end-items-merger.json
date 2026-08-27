@@ -1,0 +1,72 @@
+{
+    "type": 12,
+    "version": 2,
+    "data": [
+        { "key": "merge_ART-EAGLCPN_baseItem", "value": null },
+        { "key": "merge_ART-EAGLCPN_amount", "value": null },
+        { "key": "merge_ART-EAGLCPN_endItem", "value": null },
+        { "key": "merge_ART-EAGLCPN_price", "value": null },
+        { "key": "merge_ART-EAGLCPN_instant", "value": null },
+        { "key": "merge_ART-EAGLCPN_asset", "value": null },
+
+        { "key": "merge_ART-CANCPN_baseItem", "value": null },
+        { "key": "merge_ART-CANCPN_amount", "value": null },
+        { "key": "merge_ART-CANCPN_endItem", "value": null },
+        { "key": "merge_ART-CANCPN_price", "value": null },
+        { "key": "merge_ART-CANCPN_instant", "value": null },
+        { "key": "merge_ART-CANCPN_asset", "value": null },
+
+        { "key": "merge_ART-BBALL-MECH_baseItem", "value": null },
+        { "key": "merge_ART-BBALL-MECH_amount", "value": null },
+        { "key": "merge_ART-BBALL-MECH_endItem", "value": null },
+        { "key": "merge_ART-BBALL-MECH_price", "value": null },
+        { "key": "merge_ART-BBALL-MECH_instant", "value": null },
+        { "key": "merge_ART-BBALL-MECH_asset", "value": null },
+
+        { "key": "merge_ART-BBALL-GFTR_baseItem", "value": null },
+        { "key": "merge_ART-BBALL-GFTR_amount", "value": null },
+        { "key": "merge_ART-BBALL-GFTR_endItem", "value": null },
+        { "key": "merge_ART-BBALL-GFTR_price", "value": null },
+        { "key": "merge_ART-BBALL-GFTR_instant", "value": null },
+        { "key": "merge_ART-BBALL-GFTR_asset", "value": null },
+
+        { "key": "merge_ART-BBALL-GFTW_baseItem", "value": null },
+        { "key": "merge_ART-BBALL-GFTW_amount", "value": null },
+        { "key": "merge_ART-BBALL-GFTW_endItem", "value": null },
+        { "key": "merge_ART-BBALL-GFTW_price", "value": null },
+        { "key": "merge_ART-BBALL-GFTW_instant", "value": null },
+        { "key": "merge_ART-BBALL-GFTW_asset", "value": null },
+
+        { "key": "merge_ART-BBALL-MUTG_baseItem", "value": null },
+        { "key": "merge_ART-BBALL-MUTG_amount", "value": null },
+        { "key": "merge_ART-BBALL-MUTG_endItem", "value": null },
+        { "key": "merge_ART-BBALL-MUTG_price", "value": null },
+        { "key": "merge_ART-BBALL-MUTG_instant", "value": null },
+        { "key": "merge_ART-BBALL-MUTG_asset", "value": null },
+
+        { "key": "merge_ART-BBALL-MUTD_baseItem", "value": null },
+        { "key": "merge_ART-BBALL-MUTD_amount", "value": null },
+        { "key": "merge_ART-BBALL-MUTD_endItem", "value": null },
+        { "key": "merge_ART-BBALL-MUTD_price", "value": null },
+        { "key": "merge_ART-BBALL-MUTD_instant", "value": null },
+        { "key": "merge_ART-BBALL-MUTD_asset", "value": null },
+
+        { "key": "merge_ART-SUMBRL_baseItem", "value": null },
+        { "key": "merge_ART-SUMBRL_amount", "value": null },
+        { "key": "merge_ART-SUMBRL_secondaryItem", "value": null },
+        { "key": "merge_ART-SUMBRL_secondaryItemAmount", "value": null },
+        { "key": "merge_ART-SUMBRL_endItem", "value": null },
+        { "key": "merge_ART-SUMBRL_price", "value": null },
+        { "key": "merge_ART-SUMBRL_instant", "value": null },
+        { "key": "merge_ART-SUMBRL_asset", "value": null },
+
+        { "key": "merge_ART-FTCAST_baseItem", "value": null },
+        { "key": "merge_ART-FTCAST_amount", "value": null },
+        { "key": "merge_ART-FTCAST_endItem", "value": null },
+        { "key": "merge_ART-FTCAST_price", "value": null },
+        { "key": "merge_ART-FTCAST_instant", "value": null },
+        { "key": "merge_ART-FTCAST_asset", "value": null }
+    ],
+    "fee": 600000,
+    "feeAssetId": "WAVES"
+}

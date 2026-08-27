@@ -893,7 +893,7 @@
         {
             "key": "direct_cosmetic_ART-BBALL_sale",
             "type": "boolean",
-            "value": true
+            "value": false
         },
         {
             "key": "direct_cosmetic_ART-BBALL_growing_percentage",

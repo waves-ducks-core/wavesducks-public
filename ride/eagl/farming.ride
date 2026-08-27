@@ -92,6 +92,25 @@ func tryGetInteger(key: String) = {
         case _ => 0
     }
 }
+
+func tryGetIntegerExternal(address: Address, key: String) = {
+    match getInteger(address, key) {
+        case b:Int => b
+        case _ => 0
+    }
+}
+
+func pendingPzlReward() = {
+  let pzlDappAddress = getPzlDappAddress()
+  let pzlAssetIdStr = getPzlAssetId().toBase58String()
+  let address = this.toString()
+  let currentInterest = tryGetIntegerExternal(pzlDappAddress, "global_lastCheck_" + pzlAssetIdStr + "_interest")
+  let lastCheckInterest = tryGetIntegerExternal(pzlDappAddress, address + "_lastCheck_" + pzlAssetIdStr + "_interest")
+  let stakedAmount = tryGetIntegerExternal(pzlDappAddress, address + "_staked")
+  if currentInterest <= lastCheckInterest || stakedAmount == 0 then 0
+  else fraction(currentInterest - lastCheckInterest, stakedAmount, Scale)
+}
+
 func handleStakingTopUp (totalAmount: Int) = {
     func burnForDay(day: Int)= "TOPUP_"+day.toString()
     let day = calculateDaysSinceStart()
@@ -104,16 +123,16 @@ func handleStakingTopUp (totalAmount: Int) = {
     let interestDelta = if (totalStakedAmount > 0)
         then fraction(payoutAmount, Scale, totalStakedAmount)
         else 0
-    strict invokeRes = if isTestEnv() then nil else invoke(getPzlDappAddress(), "stake", [],[AttachedPayment(getPzlAssetId(),compoundAmount)])
+    strict invokeRes = if isTestEnv() || compoundAmount == 0 then nil else invoke(getPzlDappAddress(), "stake", [],[AttachedPayment(getPzlAssetId(),compoundAmount)])
+    let teamTransfer = if team > 0 then [ScriptTransfer(getFeeAggregator(), team, getPzlAssetId())] else []
     [
       IntegerEntry("days_since_apy", day),
       IntegerEntry(burnForDay(day), tryGetInteger(burnForDay(day))+payoutAmount),
       IntegerEntry(keyGlobalEarned, (tryGetInteger(keyGlobalEarned) + payoutAmount)), 
       IntegerEntry(keyGlobalLastInterest, (currentInterest + interestDelta)),
-      IntegerEntry("global_PZL_balance",tryGetInteger("global_PZL_balance")+compoundAmount),
-      ScriptTransfer(getFeeAggregator(), team, getPzlAssetId())
+      IntegerEntry("global_PZL_balance",tryGetInteger("global_PZL_balance")+compoundAmount)
       
-    ]
+    ] ++ teamTransfer
       
 }
 
@@ -406,12 +425,14 @@ func topUpReward () = {
 @Callable(i)
 func claimRewardPuzzle () = {
   strict peteBalanceBefore = assetBalance(this, getPzlAssetId())
-  strict invokeRes = if isTestEnv() then nil else invoke(getPzlDappAddress(), "claimReward", [],[])
+  strict invokeRes = if isTestEnv() || pendingPzlReward() == 0 then nil else invoke(getPzlDappAddress(), "claimReward", [],[])
   strict peteBalanceAfter = assetBalance(this, getPzlAssetId())
   let diff = peteBalanceAfter-peteBalanceBefore
   let amountForMutants = diff/20
-  strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
-        ["PUZZLE",0], [AttachedPayment(getPzlAssetId(), amountForMutants)])  
+  strict topup2 = if amountForMutants > 0 then
+      invoke(getMutantFarmingAddress(), "topUpReward",
+        ["PUZZLE",0], [AttachedPayment(getPzlAssetId(), amountForMutants)])
+    else unit
   let resHandleStaking = handleStakingTopUp(diff-amountForMutants)
     (
       resHandleStaking, 

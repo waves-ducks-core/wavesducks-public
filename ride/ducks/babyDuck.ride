@@ -181,6 +181,10 @@ func getBackendProof(maxFeedAmount: Int, userNonce: Int, address: String) = {
   makeString([maxFeedAmount.toString(), userNonce.toString(), address], ";")
 }
 
+func getBackendProofV2(maxFeedAmount: Int, userNonce: Int, address: String, ducklingId: String, targetLevel: Int) = {
+  makeString([maxFeedAmount.toString(), userNonce.toString(), address, ducklingId, targetLevel.toString()], ";")
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("BCO: admin only") else 
@@ -300,6 +304,65 @@ func feedDuckling(ducklingId: String, backendSignature: String, maxFeedAmount: I
         Burn(getSpiceAssetId(), currentPayment/2- currentPayment/10)
       ]++feeValidate
   
+}
+
+# targetLevel uses two decimal places: 14733 means level 147.33.
+# The backend proof binds the authorization to this duckling and target.
+@Callable(i)
+func feedDucklingV2(ducklingId: String, backendSignature: String, maxFeedAmount: Int, userNonce: Int, targetLevel: Int) = {
+  strict feeValidate = checkAdditionalPayment(i.payments[1])
+  let addressString = i.caller.toString()
+  let backendProof = getBackendProofV2(maxFeedAmount, userNonce, addressString, ducklingId, targetLevel)
+  let kAddressNonce = keyAddressNonce(addressString)
+  let currentNonce = tryGetInteger(kAddressNonce)
+
+  let realDucklingId = if (!sigVerify_8Kb(backendProof.toBytes(), backendSignature.fromBase58String(), backendPubKey)) then throw("BFD2: Invalid proof from backend") else
+    if (i.payments.size() != 2 || i.payments[0].value().assetId != getSpiceAssetId()) then throw("BFD2: Bad payment attached (asset[s] or amount)") else
+    if (getBool(keyDucklingGrown(ducklingId))) then throw("BFD2: Duckling is already grown") else
+    if (userNonce != currentNonce + 1) then throw("BFD2: User Nonce should be " + currentNonce.toString() + " + 1, while received " + userNonce.toString()) else
+      let blackListed = tryGetBoolean(keyBlacklisted(ducklingId))
+      if blackListed then throw("BFD2: Can not feed blacklisted duckling!") else
+      if (ducklingId == "") then throw("BFD2: Please buy a duckling first!") else
+      if (targetLevel <= 0) then throw("BFD2: Invalid target level") else
+        let ducklingIdCheck = assetInfo(ducklingId.fromBase58String()).value()
+        if (assetBalance(i.caller, ducklingIdCheck.id) != 1) then throw("BFD2: You're not the owner of the duckling") else
+        if (ducklingIdCheck.issuer != this) then throw("BFD2: Cant find duckling with such id") else
+          ducklingIdCheck.id.toBase58String()
+
+  let currentPayment = i.payments[0].value().amount
+  let kNewLevel = keyDucklingLevel(realDucklingId)
+  let kTotalFeed = keyTotalFeed(realDucklingId)
+  let kTotalFeedUser = keyTotalFeedUser(addressString)
+  let totalFeed = tryGetInteger(kTotalFeed)
+  let totalFeedUser = tryGetInteger(kTotalFeedUser)
+  let kFeedTxStats = "duckling_" + realDucklingId + "_stat_" + lastBlock.timestamp.toString()
+
+  if (maxFeedAmount < currentPayment) then throw("BFD2: Cannot feed duckling for such amount, max feed amount is: " + maxFeedAmount.toString()) else
+    let calculateResults = calculateNewDucklingLevel(realDucklingId, currentPayment)
+    let normalizedTargetLevel = fraction(targetLevel, oneSpicePrecsion, 100).toBigInt()
+    let newLevel = calculateResults._1.parseBigIntValue()
+    if (newLevel > normalizedTargetLevel) then throw("BFD2: Feeding would exceed target level " + targetLevel.toString()) else
+    let ducklingOwner = tryGetString(keyOwner(realDucklingId))
+    strict topup = invoke(getTurtleStakingAddress(), "topUpReward",
+        [], [AttachedPayment(getSpiceAssetId(), currentPayment/2)])
+    strict topup2 = invoke(getMutantFarmingAddress(), "topUpReward",
+        ["SPICE",0], [AttachedPayment(getSpiceAssetId(), currentPayment/10)])
+    strict recordAction = if currentPayment >= 10_0000_0000 then invoke(getCouponsAddress(),"recordAction",["FEEDDUCKLING10"],[]) else nil
+
+    if ducklingOwner != i.caller.toString() && !isTestEnv() then
+      [
+        BooleanEntry(keyBlacklisted(realDucklingId), true)
+      ]++feeValidate
+      else
+      [
+        IntegerEntry(kAddressNonce, currentNonce + 1),
+        IntegerEntry(kTotalFeed, totalFeed + currentPayment),
+        IntegerEntry(kTotalFeedUser, totalFeedUser + currentPayment),
+        IntegerEntry(kFeedTxStats, currentPayment),
+        StringEntry(kNewLevel, calculateResults._1),
+        StringEntry(kFeedTxStats + "_debug", calculateResults._2.makeString(";")),
+        Burn(getSpiceAssetId(), currentPayment/2- currentPayment/10)
+      ]++feeValidate
 }
 
 @Callable(i)

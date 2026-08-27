@@ -145,6 +145,8 @@ func gameDepositTotalKey() = "GAME_DEPOSIT_TOTAL"
 func gameDepositPurposeTotalKey(purpose:String) = "GAME_DEPOSIT_"+purpose+"_TOTAL"
 func gameDepositUserTotalKey(user:String) = "GAME_DEPOSIT_"+user+"_TOTAL"
 func gameDepositUserPurposeKey(user:String, purpose:String) = "GAME_DEPOSIT_"+user+"_"+purpose
+func gameDepositAssetTotalKey(assetId:String) = "GAME_DEPOSIT_ASSET_"+assetId+"_TOTAL"
+func gameDepositAssetPurposeTotalKey(assetId:String, purpose:String) = "GAME_DEPOSIT_ASSET_"+assetId+"_"+purpose+"_TOTAL"
 func gameDepositLastPurposeKey(user:String) = "GAME_DEPOSIT_"+user+"_LAST_PURPOSE"
 func gameNftDepositAssetKey(assetId:String, suffix:String) = "GAME_NFT_DEPOSIT_"+assetId+"_"+suffix
 func gameNftDepositTxKey(txId:String) = "GAME_NFT_DEPOSIT_TX_"+txId
@@ -159,23 +161,6 @@ func actionPerAddressPerUserAmountInARow(user:String,action:String) = action+"_"
 func userExperience(user:String) = user+"_experience"
 func counter() = "GLOBAL_TASK_REWARD_COUNTER"
 func rewardKey(address: String, period: String, taskId: String, assetId: String, counter: String) = "TASK_REWARD_" + address + "_" + period + "_" + taskId + "_" + assetId + "_" + counter
-
-func summerBeachBallType() = "ART-BBALL"
-func summerBullHouseType() = "ART-BHOUSE"
-func summerMediumHouseType() = "ART-MEDHOUSE"
-func summerGlobalContributedKey() = "summer_bballs_total"
-func summerFirst50UsedKey() = "summer_bballs_first50_used"
-func summerActiveKey() = "summer_active"
-func summerUnlockedKey() = "summer_unlocked"
-func summerOrderKey() = "summer_event_order"
-func summerUserContributedKey(user:String) = "summer_"+user+"_bballs"
-func summerUserScoreKey(user:String) = "summer_"+user+"_score"
-func summerUserScoreOrderKey(user:String) = "summer_"+user+"_score_order"
-func summerUserBullHouseClaimedKey(user:String) = "summer_"+user+"_bull_house_claimed"
-func summerUserTop5ClaimedKey(user:String) = "summer_"+user+"_top5_claimed"
-func summerRankUserKey(rank:Int) = "summer_rank_"+rank.toString()+"_user"
-func summerRankScoreKey(rank:Int) = "summer_rank_"+rank.toString()+"_score"
-func summerRankOrderKey(rank:Int) = "summer_rank_"+rank.toString()+"_order"
 
 # Farm NFT tiers are 1-based and follow the canonical breeding order.
 func getFarmNftTier(generation:String) = {
@@ -213,108 +198,6 @@ func isFarmNftBreeder(issuer:Address) = {
 # (for example feedDuckling) from being replayed as SPICE withdrawals.
 func getGameSpiceWithdrawProof(amount:Int, nonce:Int, expiresAt:Int, user:String) = {
     makeString(["withdrawSpiceFromGame",this.toString(),amount.toString(),nonce.toString(),expiresAt.toString(),user], ";")
-}
-
-func getSummerLifetimeBurned(user:String) = tryGetIntegerExternal(getBurnAddress(), burnUserGlobalKey(user))
-func hasSummerBurnEligibility(user:String) = getSummerLifetimeBurned(user) >= 5_0000_0000
-func summerTargetAmount() = 1000
-func isSummerComplete() = tryGetInteger(summerGlobalContributedKey()) >= summerTargetAmount()
-func isSummerEligible(user:String) = {
-    hasSummerBurnEligibility(user) && tryGetInteger(summerUserContributedKey(user)) >= 5
-}
-
-func summerRankEntries(rank:Int, user:String, score:Int, order:Int) = [
-    StringEntry(summerRankUserKey(rank), user),
-    IntegerEntry(summerRankScoreKey(rank), score),
-    IntegerEntry(summerRankOrderKey(rank), order)
-]
-
-func isBetterSummerRank(score:Int, order:Int, rankedUser:String, rankedScore:Int, rankedOrder:Int) = {
-    rankedUser == "" || score > rankedScore || (score == rankedScore && order < rankedOrder)
-}
-
-func updateSummerLeaderboard(user:String, score:Int, order:Int) = {
-    let r1uRaw = tryGetString(summerRankUserKey(1))
-    let r1sRaw = tryGetInteger(summerRankScoreKey(1))
-    let r1oRaw = tryGetInteger(summerRankOrderKey(1))
-    let r2uRaw = tryGetString(summerRankUserKey(2))
-    let r2sRaw = tryGetInteger(summerRankScoreKey(2))
-    let r2oRaw = tryGetInteger(summerRankOrderKey(2))
-    let r3uRaw = tryGetString(summerRankUserKey(3))
-    let r3sRaw = tryGetInteger(summerRankScoreKey(3))
-    let r3oRaw = tryGetInteger(summerRankOrderKey(3))
-    let r4uRaw = tryGetString(summerRankUserKey(4))
-    let r4sRaw = tryGetInteger(summerRankScoreKey(4))
-    let r4oRaw = tryGetInteger(summerRankOrderKey(4))
-    let r5uRaw = tryGetString(summerRankUserKey(5))
-    let r5sRaw = tryGetInteger(summerRankScoreKey(5))
-    let r5oRaw = tryGetInteger(summerRankOrderKey(5))
-
-    let r1u = if r1uRaw == user then r2uRaw else r1uRaw
-    let r1s = if r1uRaw == user then r2sRaw else r1sRaw
-    let r1o = if r1uRaw == user then r2oRaw else r1oRaw
-
-    let r2u = if r1uRaw == user then r3uRaw else if r2uRaw == user then r3uRaw else r2uRaw
-    let r2s = if r1uRaw == user then r3sRaw else if r2uRaw == user then r3sRaw else r2sRaw
-    let r2o = if r1uRaw == user then r3oRaw else if r2uRaw == user then r3oRaw else r2oRaw
-
-    let r3u = if r1uRaw == user then r4uRaw else if r2uRaw == user then r4uRaw else if r3uRaw == user then r4uRaw else r3uRaw
-    let r3s = if r1uRaw == user then r4sRaw else if r2uRaw == user then r4sRaw else if r3uRaw == user then r4sRaw else r3sRaw
-    let r3o = if r1uRaw == user then r4oRaw else if r2uRaw == user then r4oRaw else if r3uRaw == user then r4oRaw else r3oRaw
-
-    let r4u = if r1uRaw == user then r5uRaw else if r2uRaw == user then r5uRaw else if r3uRaw == user then r5uRaw else if r4uRaw == user then r5uRaw else r4uRaw
-    let r4s = if r1uRaw == user then r5sRaw else if r2uRaw == user then r5sRaw else if r3uRaw == user then r5sRaw else if r4uRaw == user then r5sRaw else r4sRaw
-    let r4o = if r1uRaw == user then r5oRaw else if r2uRaw == user then r5oRaw else if r3uRaw == user then r5oRaw else if r4uRaw == user then r5oRaw else r4oRaw
-
-    let userAlreadyRanked = r1uRaw == user || r2uRaw == user || r3uRaw == user || r4uRaw == user || r5uRaw == user
-    let r5u = if userAlreadyRanked then "" else r5uRaw
-    let r5s = if userAlreadyRanked then 0 else r5sRaw
-    let r5o = if userAlreadyRanked then 0 else r5oRaw
-
-    if isBetterSummerRank(score, order, r1u, r1s, r1o) then
-        summerRankEntries(1,user,score,order)++
-        summerRankEntries(2,r1u,r1s,r1o)++
-        summerRankEntries(3,r2u,r2s,r2o)++
-        summerRankEntries(4,r3u,r3s,r3o)++
-        summerRankEntries(5,r4u,r4s,r4o)
-    else if isBetterSummerRank(score, order, r2u, r2s, r2o) then
-        summerRankEntries(1,r1u,r1s,r1o)++
-        summerRankEntries(2,user,score,order)++
-        summerRankEntries(3,r2u,r2s,r2o)++
-        summerRankEntries(4,r3u,r3s,r3o)++
-        summerRankEntries(5,r4u,r4s,r4o)
-    else if isBetterSummerRank(score, order, r3u, r3s, r3o) then
-        summerRankEntries(1,r1u,r1s,r1o)++
-        summerRankEntries(2,r2u,r2s,r2o)++
-        summerRankEntries(3,user,score,order)++
-        summerRankEntries(4,r3u,r3s,r3o)++
-        summerRankEntries(5,r4u,r4s,r4o)
-    else if isBetterSummerRank(score, order, r4u, r4s, r4o) then
-        summerRankEntries(1,r1u,r1s,r1o)++
-        summerRankEntries(2,r2u,r2s,r2o)++
-        summerRankEntries(3,r3u,r3s,r3o)++
-        summerRankEntries(4,user,score,order)++
-        summerRankEntries(5,r4u,r4s,r4o)
-    else if isBetterSummerRank(score, order, r5u, r5s, r5o) then
-        summerRankEntries(1,r1u,r1s,r1o)++
-        summerRankEntries(2,r2u,r2s,r2o)++
-        summerRankEntries(3,r3u,r3s,r3o)++
-        summerRankEntries(4,r4u,r4s,r4o)++
-        summerRankEntries(5,user,score,order)
-    else
-        summerRankEntries(1,r1u,r1s,r1o)++
-        summerRankEntries(2,r2u,r2s,r2o)++
-        summerRankEntries(3,r3u,r3s,r3o)++
-        summerRankEntries(4,r4u,r4s,r4o)++
-        summerRankEntries(5,r5u,r5s,r5o)
-}
-
-func isSummerTop5(user:String) = {
-    tryGetString(summerRankUserKey(1)) == user ||
-    tryGetString(summerRankUserKey(2)) == user ||
-    tryGetString(summerRankUserKey(3)) == user ||
-    tryGetString(summerRankUserKey(4)) == user ||
-    tryGetString(summerRankUserKey(5)) == user
 }
 
 func addCouponsInternal(user:String,amount:Int)={
@@ -448,13 +331,18 @@ func depositIntoGame(purpose: String) = {
     strict burnCall = if assetId == getEggAssetId() then
         invoke(getBurnAddress(), "burnAttachedPayments", [], [AttachedPayment(getEggAssetId(), amount)])
         else nil
+    let assetIdString = if assetId == unit then "WAVES" else assetId.value().toBase58String()
     let routedPayment = if assetId == getEggAssetId() then [] else
         [ScriptTransfer(getFeeAggregatorAddress(), amount, assetId)]
-    [
+    let legacyCounterEntries = if assetId == getEggAssetId() then [
         IntegerEntry(gameDepositTotalKey(), tryGetInteger(gameDepositTotalKey()) + amount),
         IntegerEntry(gameDepositPurposeTotalKey(purpose), tryGetInteger(gameDepositPurposeTotalKey(purpose)) + amount),
         IntegerEntry(gameDepositUserTotalKey(user), tryGetInteger(gameDepositUserTotalKey(user)) + amount),
-        IntegerEntry(gameDepositUserPurposeKey(user, purpose), tryGetInteger(gameDepositUserPurposeKey(user, purpose)) + amount),
+        IntegerEntry(gameDepositUserPurposeKey(user, purpose), tryGetInteger(gameDepositUserPurposeKey(user, purpose)) + amount)
+    ] else []
+    legacyCounterEntries ++ [
+        IntegerEntry(gameDepositAssetTotalKey(assetIdString), tryGetInteger(gameDepositAssetTotalKey(assetIdString)) + amount),
+        IntegerEntry(gameDepositAssetPurposeTotalKey(assetIdString, purpose), tryGetInteger(gameDepositAssetPurposeTotalKey(assetIdString, purpose)) + amount),
         StringEntry(gameDepositLastPurposeKey(user), purpose)
     ] ++ routedPayment
 }
@@ -490,6 +378,13 @@ func depositNftIntoGame() = {
             StringEntry(gameNftDepositTxKey(txId),assetIdStr+";"+nftClass+";"+tier.toString()),
             IntegerEntry(gameNftDepositUserTotalKey(user),tryGetInteger(gameNftDepositUserTotalKey(user))+1),
             IntegerEntry("GAME_NFT_DEPOSIT_TOTAL",tryGetInteger("GAME_NFT_DEPOSIT_TOTAL")+1),
+            IntegerEntry(gameDepositTotalKey(),tryGetInteger(gameDepositTotalKey())+gameNftDepositFee()),
+            IntegerEntry(gameDepositPurposeTotalKey("depositNftIntoGame"),tryGetInteger(gameDepositPurposeTotalKey("depositNftIntoGame"))+gameNftDepositFee()),
+            IntegerEntry(gameDepositUserTotalKey(user),tryGetInteger(gameDepositUserTotalKey(user))+gameNftDepositFee()),
+            IntegerEntry(gameDepositUserPurposeKey(user,"depositNftIntoGame"),tryGetInteger(gameDepositUserPurposeKey(user,"depositNftIntoGame"))+gameNftDepositFee()),
+            IntegerEntry(gameDepositAssetTotalKey(getEggAssetId().toBase58String()),tryGetInteger(gameDepositAssetTotalKey(getEggAssetId().toBase58String()))+gameNftDepositFee()),
+            IntegerEntry(gameDepositAssetPurposeTotalKey(getEggAssetId().toBase58String(),"depositNftIntoGame"),tryGetInteger(gameDepositAssetPurposeTotalKey(getEggAssetId().toBase58String(),"depositNftIntoGame"))+gameNftDepositFee()),
+            StringEntry(gameDepositLastPurposeKey(user),"depositNftIntoGame"),
             Burn(assetId,1),
             Burn(getEggAssetId(),gameNftDepositFee())
         ]
@@ -516,76 +411,6 @@ func withdrawSpiceFromGame(backendSignature:String, amount:Int, userNonce:Int, e
                 StringEntry(gameSpiceWithdrawTxKey(txId),user+";"+amount.toString()+";"+userNonce.toString()+";"+expiresAt.toString()),
                 ScriptTransfer(i.caller,amount,getSpiceAssetId())
             ]
-}
-
-@Callable(i)
-func contributeSummerBeachBalls() = {
-    let amount = size(i.payments)
-    let user = i.caller.toString()
-    if amount == 0 || amount > 10 then throw("CSBB: attach between 1 and 10 Beach Balls") else
-    if !tryGetBoolean(summerActiveKey()) then throw("CSBB: summer event is not active") else
-    if isSummerComplete() then throw("CSBB: summer event is complete") else
-    if !hasSummerBurnEligibility(user) then throw("CSBB: at least 5 lifetime burned EGG required") else
-        func burnBeachBall(acc: List[Burn], payment: AttachedPayment) = {
-            if payment.amount != 1 || payment.assetId == unit then throw("CSBB: attach Beach Ball NFTs only") else
-                let assetId = payment.assetId.value()
-                strict artefact = invoke(getItemsAddress(),"checkArtefactDetails",[assetId.toBase58String()],[]).exactAs[String]
-                if artefact != summerBeachBallType() then throw("CSBB: attached NFT is not a Beach Ball") else
-                    acc++[Burn(assetId,1)]
-        }
-        let burns = FOLD<10>(i.payments, [], burnBeachBall)
-        let oldGlobal = tryGetInteger(summerGlobalContributedKey())
-        let newGlobal = oldGlobal + amount
-        if newGlobal > summerTargetAmount() then throw("CSBB: contribution exceeds summer target") else
-        let oldFirst50 = tryGetInteger(summerFirst50UsedKey())
-        let first50Left = max([0, 50 - oldFirst50])
-        let doubled = min([amount, first50Left])
-        let weighted = amount + doubled
-        let newFirst50 = oldFirst50 + doubled
-        let oldUserContributed = tryGetInteger(summerUserContributedKey(user))
-        let oldUserScore = tryGetInteger(summerUserScoreKey(user))
-        let newUserContributed = oldUserContributed + amount
-        let newUserScore = oldUserScore + weighted
-        let order = tryGetInteger(summerOrderKey()) + 1
-        let unlockedNow = newGlobal >= summerTargetAmount()
-
-        burns++
-        [
-            IntegerEntry(summerGlobalContributedKey(), newGlobal),
-            IntegerEntry(summerFirst50UsedKey(), newFirst50),
-            IntegerEntry(summerUserContributedKey(user), newUserContributed),
-            IntegerEntry(summerUserScoreKey(user), newUserScore),
-            IntegerEntry(summerUserScoreOrderKey(user), order),
-            IntegerEntry(summerOrderKey(), order),
-            BooleanEntry(summerUnlockedKey(), unlockedNow)
-        ]++if newUserContributed >= 5 then updateSummerLeaderboard(user, newUserScore, order) else []
-}
-
-@Callable(i)
-func claimSummerBullHouse() = {
-    let user = i.caller.toString()
-    if !isSummerComplete() then throw("CSBH: summer event is not complete") else
-    if !isSummerEligible(user) then throw("CSBH: at least 5 Beach Balls and 5 lifetime burned EGG are required") else
-    if tryGetBoolean(summerUserBullHouseClaimedKey(user)) then throw("CSBH: Bull House already claimed") else
-        strict prize = invoke(getItemsAddress(),"issueArtefactIndex",[summerBullHouseType(),user,0],[])
-        [
-            BooleanEntry(summerUserBullHouseClaimedKey(user), true),
-            StringEntry("summer_"+user+"_bull_house_asset", prize.exactAs[String])
-        ]
-}
-
-@Callable(i)
-func claimSummerTop5MediumHouse() = {
-    let user = i.caller.toString()
-    if !isSummerComplete() then throw("CST5: summer event is not complete") else
-    if !isSummerEligible(user) then throw("CST5: at least 5 Beach Balls and 5 lifetime burned EGG are required") else
-    if !isSummerTop5(user) then throw("CST5: caller is not in the summer Top 5") else
-    if tryGetBoolean(summerUserTop5ClaimedKey(user)) then throw("CST5: Top 5 prize already claimed") else
-        strict prize = invoke(getItemsAddress(),"issueArtefactIndex",[summerMediumHouseType(),user,0],[])
-        [
-            BooleanEntry(summerUserTop5ClaimedKey(user), true),
-            StringEntry("summer_"+user+"_top5_asset", prize.exactAs[String])
-        ]
 }
 
 @Callable(i)
