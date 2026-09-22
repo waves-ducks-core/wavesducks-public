@@ -87,8 +87,7 @@ pre-activation gates; see the interface document for deployment/rollback order.
 1. Existing source has legacy generic authority/configuration methods and test flags.
    Their historical behavior is not redesigned here; new campaign outputs are explicitly
    blocked from those generic methods. Production oracle custody is trusted.
-2. Launch timestamp, fixed campaign signer/address, verified candy/gift names,
-   art/metadata/wearable effects, and the historical turtle-rate choice need a reviewed
+2. Launch timestamp, fixed campaign signer/address, art/metadata/wearable effects, and the historical turtle-rate choice need a reviewed
    launch manifest. Do not activate placeholders.
 3. Day30 settlement below1200 is a documented proposed fallback, not an already-confirmed
    product decision. It awards final top10 feed and leaves only reached milestones active.

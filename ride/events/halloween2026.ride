@@ -30,20 +30,18 @@ func unlockPersistent(oracleKey: String) = invoke(addressFromStringValue(getStri
 func top() = if s("h26_top") == "" then [] else s("h26_top").split(";")
 
 @Callable(i)
-func configure(oracleAddress: String, start: Int, candy: String, whiteGift: String, redGift: String) = {
+func configure(oracleAddress: String, start: Int) = {
   strict payments = noPayments(i.payments)
   if i.caller != this || b("h26_initialized") then throw("H26: self-only one-time configuration") else
   if start < lastBlock.timestamp || start > lastBlock.timestamp + 366*86400000 then throw("H26: invalid start") else
   let o = addressFromStringValue(oracleAddress)
   let egg = assetInfo(getStringValue(o, "static_eggAssetId").fromBase58String()).value()
   if egg.decimals != 8 then throw("H26: EGG must use eight decimals") else
-  # The three legacy names must be checked against deployed item metadata before activation.
-  if candy == "" || whiteGift == "" || redGift == "" || candy == whiteGift || candy == redGift || whiteGift == redGift then throw("H26: distinct conversion names required") else
   [StringEntry("static_oracleAddress", o.toString()), BooleanEntry("h26_initialized", true),
    StringEntry("h26_campaign", "halloween-2026"), IntegerEntry("h26_version", 1),
    IntegerEntry("h26_start", start), IntegerEntry("h26_end", start + 30*86400000),
    BooleanEntry("h26_enabled", false), BooleanEntry("h26_recipes", true), BooleanEntry("h26_settled", false),
-   StringEntry("h26_conversions", "ART-BONE;ART-SKELHEAD;ART-BBALL;ART-SNOWBALL;" + candy + ";" + whiteGift + ";" + redGift)]
+   StringEntry("h26_conversions", "ART-BONE;ART-SKELHEAD;ART-BBALL;ART-SNOWBALL;ART-CNDY;ART-GFTW;ART-GFTR")]
 }
 
 @Callable(i)

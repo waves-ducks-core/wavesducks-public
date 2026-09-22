@@ -107,7 +107,7 @@ test('EGG purchase burns exactly100000000 with no fee skim',async()=>{
   for(const payment of [[],[['abc',99999999]],[['abc',100000001]],[['dEf',100000000]],[[null,100000000]]]) await rejects('buySoul()',{payments:payment},'H26:');
 });
 test('seven canonical conversions only, one item burned',async()=>{
-  const names=['ART-BONE','ART-SKELHEAD','ART-BBALL','ART-SNOWBALL','CANDY','WHITE','RED'];
+  const names=['ART-BONE','ART-SKELHEAD','ART-BBALL','ART-SNOWBALL','ART-CNDY','ART-GFTW','ART-GFTR'];
   for(const kind of names){const result=await evaluate('convertSoul()',{payments:souls(1),assets:[kind],data:{h26_conversions:names.join(';')}});assert.ok(result.result?.includes('Burn('),JSON.stringify(result));}
   await rejects('convertSoul()',{payments:souls(1),assets:['ART-CAT'],data:{h26_conversions:names.join(';')}},'unsupported');
 });
@@ -155,14 +155,14 @@ test('ordered interleaved wallets preserve accounting and deterministic top10',a
     assert.equal(state.h26_top,expected.join(';'));
   }
 });
-test('configuration is self-only once, fixes30 days, starts disabled and rejects ambiguous mappings',async()=>{
-  const call=`configure("${issuer}",600,"CANDY","WHITE","RED")`;
+test('configuration is self-only once, fixes30 days, starts disabled and pins canonical mappings',async()=>{
+  const call=`configure("${issuer}",600)`;
   const opts={caller:'dEf',decimals:8,data:{h26_initialized:false}};
   const result=await evaluate(call,opts);value(result,'h26_end',600+30*86400000);value(result,'h26_enabled',false);value(result,'h26_version',1);
   await rejects(call,{...opts,caller:'abc'},'self-only');
   await rejects(call,{...opts,data:{h26_initialized:true}},'self-only');
-  await rejects(`configure("${issuer}",499,"CANDY","WHITE","RED")`,opts,'invalid start');
-  await rejects(`configure("${issuer}",600,"CANDY","CANDY","RED")`,opts,'distinct');
+  await rejects(`configure("${issuer}",499)`,opts,'invalid start');
+  value(result,'h26_conversions','ART-BONE;ART-SKELHEAD;ART-BBALL;ART-SNOWBALL;ART-CNDY;ART-GFTW;ART-GFTR');
   await rejects(call,{...opts,decimals:6},'eight decimals');
 });
 test('actual completion rolls39 and40 enforce exact40% boundary without rerolling',async()=>{

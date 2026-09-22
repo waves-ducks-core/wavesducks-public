@@ -84,7 +84,7 @@ All no-payment methods reject unexpected attached payments.
 
 | Callable | Arguments | Attached payments / authority |
 | --- | --- | --- |
-| configure | oracleAddress:string, start:int, candy:string, whiteGift:string, redGift:string | Self-only, once, no payments; start in future; verifies EGG has 8 decimals |
+| configure | oracleAddress:string, start:int | Self-only, once, no payments; start in future; verifies EGG has 8 decimals |
 | setEnabled | enabled:boolean | Self-only; cannot re-enable after end or change calendar |
 | setRecipesEnabled | enabled:boolean | Self-only; independent of acquisition/settlement |
 | buySoul | none | Exactly one payment: configured EGG, amount 100000000; 100% Burn |
@@ -97,10 +97,10 @@ All no-payment methods reject unexpected attached payments.
 | completion | receiver:string, initialTx:string, finishHeight:int | Only configured supported completion dApps; no payments; internal gameplay hook |
 
 Sword unlocks at400, Cat at600. Canonical conversion types fixed in code are ART-BONE,
-ART-SKELHEAD, ART-BBALL, ART-SNOWBALL. Candy, White Gift and Red Gift names are one-time
-configuration inputs because their deployed canonical names were not established by
-this repository's item JSON. Resolve and verify them against real item metadata before
-configuration. Do not guess replacements or use arbitrary NFT names.
+ART-SKELHEAD, ART-BBALL, ART-SNOWBALL, ART-CNDY (Candy), ART-GFTW (White Gift),
+and ART-GFTR (Red Gift). The final three names are confirmed by the portal's
+`shared/enums/items.ts` and `shared/constants/items.ts`. The complete list is fixed
+in source, not a caller-selectable conversion mapping.
 
 Typical contribution InvokeScript call:
 
@@ -198,7 +198,7 @@ Admin-managed oracle addresses remain a trust boundary inherited from the game.
 
 ## Deployment/rehearsal gates and order
 
-1. Review exact launch timestamp, canonical candy/gift mappings, art/wearables metadata,
+1. Review exact launch timestamp, art/wearables metadata,
    historical turtle rate, and the day30 fallback. Produce one explicit testnet mapping;
    preserve tracked production IDs. Establish the new campaign's approved fixed testnet
    signer/address and matching `seeds.json` entry using the repository policy.
