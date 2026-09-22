@@ -161,6 +161,13 @@ func getRandomReturn(tx: ByteVector, finishHeight: Int)={
   if n == 1 then true else false
 }
 
+
+func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
+  let eventAddress = getString(getOracle(), "static_halloweenAddress").valueOrElse("")
+  if eventAddress == "" then "" else
+    invoke(addressFromStringValue(eventAddress), "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+}
+
 func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean, blacklistCode: String, rescue: Boolean) = {
   let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
   let status = tryGetString("address_" + address + "_initTx_" + initTx + "_status")
@@ -174,6 +181,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       throw("you cannot finish rebirth, yet")
     } else {
 
+      strict halloweenDrop = halloweenCompletion(address, initTx, finishBlock)
       let output = getRandomWin(initTx.fromBase58String(), finishBlock, blacklistCode)  
       let win = output._2
       let random = output._1

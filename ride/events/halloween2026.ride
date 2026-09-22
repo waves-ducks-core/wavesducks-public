@@ -1,0 +1,178 @@
+{-# STDLIB_VERSION 7 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+# Fixed campaign; redeploy a new dApp for a different campaign. Never reset these keys.
+func n(k: String) = getInteger(this, k).valueOrElse(0)
+func b(k: String) = getBoolean(this, k).valueOrElse(false)
+func s(k: String) = getString(this, k).valueOrElse("")
+func user(a: String) = "h26_user_" + a
+func milestone(t: Int) = b("h26_milestone_" + t.toString())
+func oracle() = addressFromStringValue(s("static_oracleAddress"))
+func items() = addressFromStringValue(getStringValue(oracle(), "static_itemsAddress"))
+func active() = b("h26_enabled") && lastBlock.timestamp >= n("h26_start") && lastBlock.timestamp < n("h26_end")
+func noPayments(p: List[AttachedPayment]) = if size(p) != 0 then throw("H26: no payments allowed") else true
+func canonical(p: AttachedPayment) = {
+  if p.amount != 1 || !isDefined(p.assetId) then throw("H26: attach individual item NFTs") else
+  let a = assetInfo(p.assetId.value()).value()
+  if a.issuer != items() || a.quantity != 1 || a.decimals != 0 || a.reissuable then throw("H26: invalid item issuer or NFT") else a.name
+}
+func uniqueBurn(acc: List[Burn], p: AttachedPayment) = {
+  func duplicate(found: Boolean, previous: Burn) = found || previous.assetId == p.assetId
+  if FOLD<10>(acc, false, duplicate) then throw("H26: duplicate NFT payment") else acc :+ Burn(p.assetId.value(), 1)
+}
+func soulBurn(acc: List[Burn], p: AttachedPayment) = {
+  if canonical(p) != "ART-H26SOUL" then throw("H26: Souls only") else uniqueBurn(acc, p)
+}
+func burnItem(acc: List[Burn], p: AttachedPayment) = uniqueBurn(acc, p)
+func mint(kind: String, receiver: Address, nonce: Int) = invoke(items(), "issueHalloween", [kind, receiver.toString(), nonce], []).exactAs[String]
+func unlockPersistent(oracleKey: String) = invoke(addressFromStringValue(getStringValue(oracle(), oracleKey)), "unlockHalloween", [], []).exactAs[Boolean]
+func top() = if s("h26_top") == "" then [] else s("h26_top").split(";")
+
+@Callable(i)
+func configure(oracleAddress: String, start: Int, candy: String, whiteGift: String, redGift: String) = {
+  strict payments = noPayments(i.payments)
+  if i.caller != this || b("h26_initialized") then throw("H26: self-only one-time configuration") else
+  if start < lastBlock.timestamp || start > lastBlock.timestamp + 366*86400000 then throw("H26: invalid start") else
+  let o = addressFromStringValue(oracleAddress)
+  let egg = assetInfo(getStringValue(o, "static_eggAssetId").fromBase58String()).value()
+  if egg.decimals != 8 then throw("H26: EGG must use eight decimals") else
+  # The three legacy names must be checked against deployed item metadata before activation.
+  if candy == "" || whiteGift == "" || redGift == "" || candy == whiteGift || candy == redGift || whiteGift == redGift then throw("H26: distinct conversion names required") else
+  [StringEntry("static_oracleAddress", o.toString()), BooleanEntry("h26_initialized", true),
+   StringEntry("h26_campaign", "halloween-2026"), IntegerEntry("h26_version", 1),
+   IntegerEntry("h26_start", start), IntegerEntry("h26_end", start + 30*86400000),
+   BooleanEntry("h26_enabled", false), BooleanEntry("h26_recipes", true), BooleanEntry("h26_settled", false),
+   StringEntry("h26_conversions", "ART-BONE;ART-SKELHEAD;ART-BBALL;ART-SNOWBALL;" + candy + ";" + whiteGift + ";" + redGift)]
+}
+
+@Callable(i)
+func setEnabled(enabled: Boolean) = {
+  strict payments = noPayments(i.payments)
+  if i.caller != this || !b("h26_initialized") then throw("H26: admin only") else
+  if enabled && lastBlock.timestamp >= n("h26_end") then throw("H26: campaign has ended") else
+  [BooleanEntry("h26_enabled", enabled)]
+}
+
+@Callable(i)
+func setRecipesEnabled(enabled: Boolean) = {
+  strict payments = noPayments(i.payments)
+  if i.caller != this then throw("H26: admin only") else [BooleanEntry("h26_recipes", enabled)]
+}
+
+@Callable(i)
+func buySoul() = {
+  if !active() then throw("H26: acquisition closed") else
+  if size(i.payments) != 1 then throw("H26: attach exactly one EGG payment") else
+  let egg = getStringValue(oracle(), "static_eggAssetId").fromBase58String()
+  if i.payments[0].assetId != egg || i.payments[0].amount != 100000000 then throw("H26: exactly 1 EGG required") else
+  strict id = mint("ART-H26SOUL", i.caller, 0)
+  ([Burn(egg, 100000000)], id)
+}
+
+@Callable(i)
+func convertSoul() = {
+  if !active() then throw("H26: acquisition closed") else
+  if size(i.payments) != 1 then throw("H26: one conversion item required") else
+  let kind = canonical(i.payments[0])
+  if !containsElement(s("h26_conversions").split(";"), kind) then throw("H26: unsupported conversion") else
+  strict id = mint("ART-H26SOUL", i.caller, 0)
+  ([Burn(i.payments[0].assetId.value(), 1)], id)
+}
+
+@Callable(i)
+func contribute() = {
+  if !active() || b("h26_settled") then throw("H26: contributions closed") else
+  if size(i.payments) < 1 || size(i.payments) > 10 then throw("H26: attach 1..10 Souls") else
+  let receipt = "h26_receipt_" + i.transactionId.toBase58String()
+  if s(receipt) != "" then throw("H26: duplicate receipt") else
+  let burns = FOLD<10>(i.payments, [], soulBurn)
+  let a = i.caller.toString()
+  let amount = size(i.payments)
+  let total = n("h26_total") + amount
+  let personal = n(user(a) + "_total") + amount
+  let sequence = n("h26_sequence") + 1
+  # Existing top order is stable. A newly reached equal score belongs after earlier peers.
+  func insert(acc: (List[String], Boolean), other: String) = {
+    if other == a then acc else
+    if !acc._2 && personal > n(user(other) + "_total") then (acc._1 ++ [a, other], true)
+    else (acc._1 :+ other, acc._2)
+  }
+  let ranked = FOLD<10>(top(), ([], false), insert)
+  func firstTen(acc: List[String], address: String) = if size(acc) < 10 then acc :+ address else acc
+  let leaders = FOLD<11>((if ranked._2 then ranked._1 else ranked._1 :+ a), [], firstTen)
+  func mark(acc: List[BooleanEntry], threshold: Int) = if total >= threshold && !milestone(threshold) then acc :+ BooleanEntry("h26_milestone_"+threshold.toString(), true) else acc
+  strict bullUnlock = if total >= 200 && !milestone(200) then unlockPersistent("static_bullIncubatorAddress") else false
+  strict phoenixUnlock = if total >= 1200 && !milestone(1200) then unlockPersistent("static_incubatorAddress") else false
+  let milestones = FOLD<6>([200,400,600,800,1000,1200], [], mark)
+  burns ++ milestones ++ [IntegerEntry("h26_total", total), IntegerEntry("h26_sequence", sequence),
+    IntegerEntry(user(a)+"_total", personal), IntegerEntry(user(a)+"_sequence", sequence),
+    StringEntry("h26_top", makeString(leaders, ";")),
+    StringEntry(receipt, a+";"+amount.toString()+";"+sequence.toString()),
+    StringEntry("h26_receiptSeq_"+sequence.toString(), i.transactionId.toBase58String())] ++
+    (if total >= 1200 then [BooleanEntry("h26_settled", true), IntegerEntry("h26_settledAt", lastBlock.timestamp)] else [])
+}
+
+@Callable(i)
+func settle() = {
+  strict payments = noPayments(i.payments)
+  if !b("h26_initialized") || lastBlock.timestamp < n("h26_end") || b("h26_settled") then throw("H26: not ready to settle") else
+  [BooleanEntry("h26_settled", true), IntegerEntry("h26_settledAt", lastBlock.timestamp)]
+}
+
+@Callable(i)
+func claimArmor() = {
+  strict payments = noPayments(i.payments)
+  let key = user(i.caller.toString()) + "_armor"
+  if !milestone(800) || n(user(i.caller.toString())+"_total") < 10 || b(key) then throw("H26: armor unavailable or claimed") else
+  strict id = mint("ART-H26ARMOR", i.caller, 0)
+  ([BooleanEntry(key, true)], id)
+}
+
+@Callable(i)
+func claimPumpkinFeed() = {
+  strict payments = noPayments(i.payments)
+  let key = user(i.caller.toString()) + "_feed"
+  if !b("h26_settled") || !containsElement(top(), i.caller.toString()) || b(key) then throw("H26: feed unavailable or claimed") else
+  strict id = mint("ART-H26FEED", i.caller, 0)
+  ([BooleanEntry(key, true)], id)
+}
+
+@Callable(i)
+func craft(kind: String) = {
+  if !b("h26_recipes") then throw("H26: recipes disabled") else
+  let count = size(i.payments)
+  if count < 1 || count > 10 then throw("H26: invalid payment count") else
+  func names(acc: List[String], p: AttachedPayment) = acc :+ canonical(p)
+  let types = FOLD<10>(i.payments, [], names)
+  func souls(acc: Int, name: String) = acc + (if name == "ART-H26SOUL" then 1 else 0)
+  let soulCount = FOLD<10>(types, 0, souls)
+  let sword = kind == "ART-H26SWORD" && milestone(400) && ((count == 10 && soulCount == 10) ||
+    (count == 2 && soulCount == 1 && (containsElement(types,"ART-FIRE_SWORD") || containsElement(types,"ART-EAST_SWORD"))))
+  let cat = kind == "ART-H26CAT" && milestone(600) && count == 3 && soulCount == 2 && containsElement(types,"ART-CAT")
+  if !sword && !cat then throw("H26: locked or invalid recipe") else
+  strict id = mint(kind, i.caller, 0)
+  (FOLD<10>(i.payments, [], burnItem), id)
+}
+
+# Called ONLY inside a successful authenticated completion; replay binds source and initial tx.
+# Inactive events return an empty ID so normal gameplay is never blocked by the calendar.
+@Callable(i)
+func completion(receiver: String, initialTx: String, finishHeight: Int) = {
+  strict payments = noPayments(i.payments)
+  let sources = ["static_breederAddress", "static_turtleBreederAddress", "static_canineBreederAddress", "static_felineBreederAddress", "static_eagleBreederAddress", "static_bullBreederAddress", "static_rebirthAddress", "static_turtleRebirthAddress", "static_canineRebirthAddress", "static_felineRebirthAddress", "static_eagleRebirthAddress", "static_bullIncubatorAddress"]
+  func authorized(acc: Boolean, key: String) = acc || getString(oracle(), key).valueOrElse("") == i.caller.toString()
+  if !FOLD<12>(sources, false, authorized) then throw("H26: unauthorized completion") else
+  if !active() then ([], "") else
+  let tx = initialTx.fromBase58String()
+  let receipt = "h26_drop_" + toBase58String(sha256(i.caller.bytes + tx))
+  if b(receipt) || finishHeight > height || finishHeight < 2 then throw("H26: duplicate or premature completion") else
+  let recipient = addressFromStringValue(receiver)
+  let hash = sha256(toBytes("halloween-2026") + i.caller.bytes + tx + blockInfoByHeight(finishHeight-1).value().vrf.value())
+  let roll = (toInt(hash.take(8)) % 100 + 100) % 100
+  strict id = if roll < 40 then mint("ART-H26SOUL", recipient, 26) else ""
+  ([BooleanEntry(receipt, true)], id)
+}
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)

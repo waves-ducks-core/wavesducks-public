@@ -203,7 +203,10 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 
 }
 
+func halloweenItem(kind: String) = containsElement(["ART-H26SOUL", "ART-H26SWORD", "ART-H26CAT", "ART-H26ARMOR", "ART-H26FEED"], kind)
+
 func issueItem(type: String, nonce: Int, address: Address)={
+    if halloweenItem(type) then throw("H26: campaign issuance only") else
     let artefact = Issue(type, "NFT artefact of Waves Ducks game.", 1, 0, false, unit, nonce)
     let artefactId = artefact.calculateAssetId()
 
@@ -453,6 +456,7 @@ func directBuyItem(itemName:String)={
   let txIdStr = i.transactionId.toBase58String()
   let address = i.originCaller
 
+  if halloweenItem(itemName) then throw("H26: campaign issuance only") else
   let artefact = Issue(itemName, "NFT artefact of Waves Ducks game: "+itemName, 1, 0, false, unit, 0)
   let artefactId = artefact.calculateAssetId()
 
@@ -531,7 +535,7 @@ func manipulateBoostAccountTurtle(boost: Int, address: String)= {
 func checkArtefactDetails(assetId: String) = {
   let asset = assetInfo(assetId.fromBase58String()).value()
   let assetName = asset.name.value()
-   if (containsElement(allArtefact, assetName) || isDefined(tryGetCosmeticItemPrice(assetName))) && asset.issuer == this   
+   if (halloweenItem(assetName) || containsElement(allArtefact, assetName) || isDefined(tryGetCosmeticItemPrice(assetName))) && asset.issuer == this
    then
       (
         [],
@@ -615,6 +619,7 @@ func itemDuplicator()={
 
   strict artefactName = invoke(this,"checkArtefactDetails",[itemAssetId],[]).exactAs[String]
 
+  if halloweenItem(artefactName) then throw("H26: campaign items cannot be duplicated") else
   let artefact = Issue(artefactName, "NFT artefact of Waves Ducks game: "+artefactName, 1, 0, false, unit, 0)
   let artefactId = artefact.calculateAssetId()
 
@@ -680,6 +685,16 @@ func addArteFactToDuck()= {
       Burn(secondPayment.assetId.value(),1)
     ]++validPayment
   }
+}
+
+@Callable(i)
+func issueHalloween(kind: String, receiver: String, nonce: Int) = {
+  if size(i.payments) != 0 || !halloweenItem(kind) then throw("H26: invalid issuance") else
+  if i.caller.toString() != getStringValue(getOracle(), "static_halloweenAddress") then throw("H26: campaign only") else
+  let asset = Issue(kind, "Halloween 2026 Waves Ducks artefact", 1, 0, false, unit, nonce)
+  let id = asset.calculateAssetId()
+  ([asset, StringEntry("artefact_" + id.toBase58String() + "_type", kind),
+    ScriptTransfer(addressFromStringValue(receiver), 1, id)], id.toBase58String())
 }
 
 @Callable(i)

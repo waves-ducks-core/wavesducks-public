@@ -26,6 +26,7 @@ func keyFeedLimit(owner: String) = "limit_"+owner
 
 let stakeable = [
   "ART-LAKE",
+  "ART-H26FEED",
   "ART-ENEST",
   "ART-FTCAST",
   "ART-XTREE",
@@ -95,6 +96,11 @@ func getTurtleStakedPower(address: String) = {
   tryGetIntegerExternal(getTurtleStakingAddress(), "total_staked_" + address)
 }
 
+func bullStakedPower(address: String) = {
+  let farming = addressFromStringValue(getStringValue(getOracle(), "static_bullFarmingAddress"))
+  getInteger(farming, "total_staked_" + address).valueOrElse(0) + getInteger(farming, "h26_origin_" + address + "_count").valueOrElse(0)
+}
+
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("admin only") else 
@@ -106,6 +112,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func stakeItem() = {
+    if size(i.payments) != 2 then throw("AB: exactly two payments required") else
     let validPayment = checkAdditionalPayment(i.payments[1])
     if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
       let assetId = i.payments[0].assetId.value()
@@ -114,6 +121,7 @@ func stakeItem() = {
         if itemIsInCoolDown(artefactName,assetId.toBase58String()) then throw("Item can't be staked yet, it's in cooldown") else
           let invoker = i.caller.toString()
           let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
+          if artefactName == "ART-H26FEED" && bullStakedPower(invoker) > 0 then throw("Unstake bulls before changing Pumpkin Feed") else
           if artefactId != "" then throw("You are already staking "+ artefactName) else 
             strict boostDuck = 
             if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[1,invoker],[]) else
@@ -128,12 +136,14 @@ func stakeItem() = {
 
 @Callable(i)
 func unstakeItem(artefactName: String) = {
+    if size(i.payments) != 1 then throw("AB: exactly one fee payment required") else
     let validPayment = checkAdditionalPayment(i.payments[0])
     if ! containsElement(stakeable, artefactName) then throw("This artefact doesn't exist") else 
       let invoker = i.caller.toString()
       let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
       if artefactName == "ART-XSOCK" then throw("You can not unstake ART-XSOCK anymore") else
       if artefactId == "" then throw("You didnt stake "+artefactName) else
+      if artefactName == "ART-H26FEED" && bullStakedPower(invoker) > 0 then throw("Unstake bulls before changing Pumpkin Feed") else
       if artefactName == "ART-FTCAST" && getTurtleStakedPower(invoker) > 0 then throw("Unstake turtles before unstaking ART-FTCAST") else
         strict boostDuck = 
         if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-1,invoker],[]) else

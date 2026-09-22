@@ -175,6 +175,12 @@ func isTestEnv()={
 }
 
 @Callable(i)
+func unlockHalloween() = {
+  if size(i.payments) != 0 || i.caller.toString() != getStringValue(getOracle(), "static_halloweenAddress") then throw("H26: campaign only") else
+  ([BooleanEntry("h26_darkPhoenixUnlocked", true)], true)
+}
+
+@Callable(i)
 func increaseRarity(assetId: String, farmGen: String) = {
   let asset = assetId.fromBase58String()
   if (i.caller != getRebirthAddress() && i.caller != this) then {
@@ -343,6 +349,8 @@ func issueFreeDuckDefinedGenes(address: String, txIdStr: String, genes:String) =
 
 @Callable(i)
 func issueJackpot(address: String, txIdStr: String, gen: String) = {
+  let darkPhoenixUnlocked = getBoolean(this, "h26_darkPhoenixUnlocked").valueOrElse(false)
+  if gen == "WDARKPHX" && (!darkPhoenixUnlocked || i.caller != getRebirthAddress()) then throw("H26: Dark Phoenix requires permanent unlock and rebirth") else
   if (i.caller != getRebirthAddress() && i.caller != this) then {
     throw("ISJ: admin or rebirth only")
   } else {

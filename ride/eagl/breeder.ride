@@ -253,6 +253,13 @@ func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector,
     ]
 }
 
+
+func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
+  let eventAddress = getString(getOracle(), "static_halloweenAddress").valueOrElse("")
+  if eventAddress == "" then "" else
+    invoke(addressFromStringValue(eventAddress), "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+}
+
 func finishHatchingInternal(txIdStr: String, i: Invocation,
       parentFixedGene: Int,positionFixedGene: Int,
       specifiqueGene: String, specifiqueGenePosition: Int)={
@@ -277,6 +284,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
       let random = outcome._2
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
+      strict halloweenDrop = halloweenCompletion(i.caller.toString(), txIdStr, processFinishHeight)
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
       let normalEntries = if isNormal then [BooleanEntry(getAssetIsNormalKey(assetId.toBase58String()), true)] else []

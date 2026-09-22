@@ -236,6 +236,13 @@ func isTestEnv()={
 }
 
 
+
+func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
+  let eventAddress = getString(getOracle(), "static_halloweenAddress").valueOrElse("")
+  if eventAddress == "" then "" else
+    invoke(addressFromStringValue(eventAddress), "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+}
+
 func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment,
  double: Boolean, blacklistCode: String, rescue: Boolean) = {
   let finishBlock = tryGetInteger("address_" + address + "_initTx_" + initTx + "_finishBlock")
@@ -250,6 +257,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
     if (height < finishBlock) then {
       throw("you cannot finish rebirth, yet")
     } else {
+      strict halloweenDrop = halloweenCompletion(address, initTx, finishBlock)
       let output = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity, blacklistCode)  
       let win = output._2
       let random = output._1
@@ -334,11 +342,11 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                               StringEntry("address_" + address + "_initTx_" + initTx + "_win1", "duckling_100")
                             ]
         result
-      #}else if (win == "phoenix") then {
-      #  strict call = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, "WWWWWWWP"], []) 
-      #  [
-			#StringEntry("address_" + address + "_initTx_" + initTx + "_result", call.exactAs[String])
-		#]
+      }else if (win == "phoenix") then {
+        let dark = getBoolean(getIncubatorAddress(), "h26_darkPhoenixUnlocked").valueOrElse(false)
+        let gene = if dark then "WDARKPHX" else "WWWWWWWP"
+        strict phoenix = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, gene], [])
+        [StringEntry("address_" + address + "_initTx_" + initTx + "_result", phoenix.exactAs[String])]
 
       } else if (win.indexOf("duckling") !=unit) then {
         let level = parseIntValue(win.split("_")[1])

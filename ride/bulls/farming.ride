@@ -143,6 +143,12 @@ func getAssetRarityComplete(isJackpot: Boolean, assetName: String)={
   rarity
 }
 
+func registerPumpkinPosition(asset: String, owner: String) = {
+  if tryGetString("h26_" + asset + "_origin") != "" then [] else
+  [StringEntry("h26_" + asset + "_origin", owner),
+   IntegerEntry("h26_origin_" + owner + "_count", tryGetInteger("h26_origin_" + owner + "_count") + 1)]
+}
+
 func updateFarmingPower(address: String, asset:String, originCaller: String) ={
   let totalStaked = tryGetInteger(totalStakedKey())
   let totalStakedUser = tryGetInteger(totalStakedUserKey(address))
@@ -153,7 +159,7 @@ func updateFarmingPower(address: String, asset:String, originCaller: String) ={
       IntegerEntry(totalStakedKey(),totalStaked-currentFP+newFP._1),
       IntegerEntry(totalStakedUserKey(address),totalStakedUser-currentFP+newFP._1),
       IntegerEntry(assetFarmingPower(address,asset),newFP._1)
-  ] else []
+  ] ++ registerPumpkinPosition(asset, tryGetString(asset + "_original_caller")) else []
 }
 
 func claimStakingResult (address: String, asset: String, recalc: Boolean, walletToReceive: String,bonusCaller:String) = {
@@ -214,7 +220,10 @@ func calculateFarmPower(assetId:String, bonusAddress: String)={
   strict farmBoost = invoke(getItemsAddress(),"calculateFarmingPowerBoost",[assetId,bonusAddress],[]).exactAs[Int]
   strict wearabledBoost = invoke(getWearablesAddress(),"calculateWearblesBoost",[assetId],[]).exactAs[Int]
   #Recalculate bonusses every claim
-  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
+  let originalBonusOwner = tryGetString(assetId + "_original_caller")
+  let pumpkinOwner = if originalBonusOwner == "" then bonusAddress else originalBonusOwner
+  let pumpkin = if getString(getAccBoosterAddress(), "ART-H26FEED_" + pumpkinOwner + "_owner").valueOrElse("") != "" then 3 else 0
+  let finalPowerRarityBoost = finalPowerRarity+finalPowerRarity*pumpkin/100+finalPowerRarity*farmBoost/100+finalPowerRarity*wearabledBoost/1000
   ([
   ],(finalPowerRarityBoost,finalPower))
 
@@ -315,6 +324,7 @@ func stakeNFT(jColor: String, usePerchOrigin: Boolean, stakeWithoutPerch: Boolea
     ]
     ++validPayment
     ++perches
+    ++registerPumpkinPosition(assetId.toBase58String(), i.originCaller.toString())
     ++result._1
     
 }
@@ -332,6 +342,10 @@ func unstakeNFT(asset: String)={
     IntegerEntry("address_"+perchOwner+"_perchesAvailable_"+color, tryGetInteger("address_"+perchOwner+"_perchesAvailable_"+color)+1)
   ]
   strict assetFP = tryGetInteger(assetFarmingPower(address,asset))
+  let pumpkinOrigin = tryGetString("h26_" + asset + "_origin")
+  let pumpkinRelease = if pumpkinOrigin == "" then [] else
+    [DeleteEntry("h26_" + asset + "_origin"),
+     IntegerEntry("h26_origin_" + pumpkinOrigin + "_count", tryGetInteger("h26_origin_" + pumpkinOrigin + "_count") - 1)]
   ([
     IntegerEntry(totalStakedKey(),tryGetInteger(totalStakedKey())-assetFP),
     IntegerEntry(totalStakedUserKey(address),tryGetInteger(totalStakedUserKey(address))-assetFP),
@@ -344,6 +358,7 @@ func unstakeNFT(asset: String)={
   ]
   ++validPayment
   ++perches
+  ++pumpkinRelease
   ++result._1, result._2)
   }
 
