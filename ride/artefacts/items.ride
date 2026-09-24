@@ -207,7 +207,6 @@ func checkAdditionalPayment(payment: AttachedPayment)= {
 func halloweenItem(kind: String) = containsElement(["ART-H26SOUL", "ART-H26SWORD", "ART-H26CAT", "ART-H26ARMOR", "ART-H26FEED"], kind)
 
 func issueItem(type: String, nonce: Int, address: Address)={
-    if halloweenItem(type) then throw("H26: campaign issuance only") else
     let artefact = Issue(type, "NFT artefact of Waves Ducks game.", 1, 0, false, unit, nonce)
     let artefactId = artefact.calculateAssetId()
 
@@ -224,7 +223,11 @@ func itemMerger(baseItem: String, amountBaseItem: Int, endItem:String , payments
 )={
   if size(payments) < amountBaseItem+amountSecondaryItem then throw("IID: Please attach more payments!") else
 
+  if halloweenItem(endItem) && (size(payments) != amountBaseItem+amountSecondaryItem || feeAmount != 0 || !instantFinish) then throw("H26: exact recipe payments required") else
   func isBaseItem(accumulated: (List[Burn],Int,Int, Int, Int), pay: AttachedPayment) = {
+    if halloweenItem(endItem) && (if !isDefined(pay.assetId) then true else
+      let nft = assetInfo(pay.assetId.value()).value()
+      pay.amount != 1 || nft.issuer != this || nft.quantity != 1 || nft.decimals != 0 || nft.reissuable) then throw("H26: canonical item NFTs required") else
     if pay.assetId == unit|| pay.assetId == getEggAssetId() || pay.assetId == getPeteAssetId() then (accumulated._1,accumulated._2, accumulated._3, accumulated._4, accumulated._5) else
     let assetId = pay.assetId.value()
     if assetInfo(assetId.value()).value().issuer == getBreederAddress() then
@@ -354,6 +357,16 @@ func instanMergeItem(receiptName: String)={
   let params = (getAmountBaseItem(receiptName),getEndItem(receiptName),getPrice(receiptName), getAsset(receiptName),
    getInstant(receiptName), getSecondaryItem(receiptName), getAmountSecondaryItem(receiptName),getDucklingsPercent(receiptName),
     getBaseItem(receiptName), getGenValue(receiptName))
+  let output = params._2
+  if halloweenItem(output) && (
+    if output == "ART-H26SOUL" then
+      !tryGetBooleanExternal(getCouponsAddress(), "h26_enabled") ||
+      lastBlock.timestamp < tryGetIntegerExternal(getCouponsAddress(), "h26_start") ||
+      lastBlock.timestamp >= tryGetIntegerExternal(getCouponsAddress(), "h26_end")
+    else if output == "ART-H26SWORD" || output == "ART-H26CAT" then
+      !tryGetBooleanExternal(getCouponsAddress(), "h26_recipes") ||
+      !tryGetBooleanExternal(getCouponsAddress(), if output == "ART-H26SWORD" then "h26_milestone_400" else "h26_milestone_600")
+    else true) then throw("H26: locked or unavailable recipe") else
   strict grantExp = invoke(getCouponsAddress(),"increaseExp",[i.caller.toString()],[])
   itemMerger(
   params._9,
@@ -374,6 +387,11 @@ func instanMergeItem(receiptName: String)={
 
 @Callable(i)
 func directBuyItemMultiple(itemName:String, itemAmount: Int)={
+  if halloweenItem(itemName) && (itemName != "ART-H26SOUL" ||
+    !tryGetBooleanExternal(getCouponsAddress(), "h26_enabled") ||
+    lastBlock.timestamp < tryGetIntegerExternal(getCouponsAddress(), "h26_start") ||
+    lastBlock.timestamp >= tryGetIntegerExternal(getCouponsAddress(), "h26_end")) then throw("H26: acquisition closed or reward not for sale") else
+
   let array = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,
                 15,16,17,18,19,20,21,22,23,24,25,26,27,28,29]
   let basePrice = tryGetCosmeticItemPrice(itemName)
@@ -385,6 +403,7 @@ func directBuyItemMultiple(itemName:String, itemAmount: Int)={
   if !tryGetBoolean(key_saleCosmetic(itemName)) then throw("IDBI: Item not for sale anymore"+key_saleCosmetic(itemName)) else
   let maxSalesValue = tryGetInteger(key_maxSalesCosmetic(itemName))
   let soldValue = tryGetInteger(key_soldCosmetic(itemName))
+  if itemAmount <= 0 then throw("IDBI: positive amount required") else
   if itemAmount > array.size() then throw("IDBI: Max amount to issue is "+array.size().toString()) else
   let price = if grow == 0 then basePrice*itemAmount else throw("IDBI: Items that grow in price can not be bought in batch!")
   if maxSalesValue!=0 && maxSalesValue<= soldValue then throw("IDBI: Max editions sold!") else
@@ -399,8 +418,12 @@ func directBuyItemMultiple(itemName:String, itemAmount: Int)={
   if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
   if amount != price then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
 
+  if itemName == "ART-H26SOUL" && (assetId != getEggAssetId() || basePrice != 100000000 || grow != 0 ||
+    !tryGetBoolean(key_burnCosmetic(itemName)) || tryGetInteger(key_burnCosmetic(itemName)+"Percent") != 100) then throw("H26: invalid Soul store configuration") else
   let shouldBurn = tryGetBoolean(key_burnCosmetic(itemName))
-  let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*95/100 else 0
+  let burnPercent = getInteger(this, key_burnCosmetic(itemName)+"Percent").valueOrElse(95)
+  if burnPercent < 0 || burnPercent > 100 then throw("IDBI: invalid burn percentage") else
+  let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*burnPercent/100 else 0
   let transferAmount = amount - burnAmount
   strict burnCall = if burnAmount > 0 then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),burnAmount)]) else nil
   let transfer = if transferAmount > 0 then [ScriptTransfer(getFeeAggregator(),transferAmount,assetId)] else []
@@ -426,6 +449,11 @@ func directBuyItemMultiple(itemName:String, itemAmount: Int)={
 
 @Callable(i)
 func directBuyItem(itemName:String)={
+  if halloweenItem(itemName) && (itemName != "ART-H26SOUL" ||
+    !tryGetBooleanExternal(getCouponsAddress(), "h26_enabled") ||
+    lastBlock.timestamp < tryGetIntegerExternal(getCouponsAddress(), "h26_start") ||
+    lastBlock.timestamp >= tryGetIntegerExternal(getCouponsAddress(), "h26_end")) then throw("H26: acquisition closed or reward not for sale") else
+
   let basePrice = tryGetCosmeticItemPrice(itemName)
   let grow = tryGetInteger(key_growPercentageCosmetic(itemName))
   let startTs = tryGetInteger(key_startTsCosmetic(itemName))
@@ -448,8 +476,12 @@ func directBuyItem(itemName:String)={
   if (firstPayment.assetId != assetId) then throw("IDBI: You can attach only tokens with the correct payment ") else
   if amount != price then throw("IDBI: Please attach the exact asset amount"+price.toString()) else
 
+  if itemName == "ART-H26SOUL" && (assetId != getEggAssetId() || basePrice != 100000000 || grow != 0 ||
+    !tryGetBoolean(key_burnCosmetic(itemName)) || tryGetInteger(key_burnCosmetic(itemName)+"Percent") != 100) then throw("H26: invalid Soul store configuration") else
   let shouldBurn = tryGetBoolean(key_burnCosmetic(itemName))
-  let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*95/100 else 0
+  let burnPercent = getInteger(this, key_burnCosmetic(itemName)+"Percent").valueOrElse(95)
+  if burnPercent < 0 || burnPercent > 100 then throw("IDBI: invalid burn percentage") else
+  let burnAmount = if shouldBurn && assetId == getEggAssetId() then amount*burnPercent/100 else 0
   let transferAmount = amount - burnAmount
   strict burnCall = if burnAmount > 0 then invoke(getBurnAddress(), "burnAttachedPayments", [],[AttachedPayment(getEggAssetId(),burnAmount)]) else nil
   let transfer = if transferAmount > 0 then [ScriptTransfer(getFeeAggregator(),transferAmount,assetId)] else []
@@ -457,7 +489,6 @@ func directBuyItem(itemName:String)={
   let txIdStr = i.transactionId.toBase58String()
   let address = i.originCaller
 
-  if halloweenItem(itemName) then throw("H26: campaign issuance only") else
   let artefact = Issue(itemName, "NFT artefact of Waves Ducks game: "+itemName, 1, 0, false, unit, 0)
   let artefactId = artefact.calculateAssetId()
 
@@ -714,17 +745,8 @@ func addArteFactToDuck()= {
 }
 
 @Callable(i)
-func issueHalloween(kind: String, receiver: String, nonce: Int) = {
-  if size(i.payments) != 0 || !halloweenItem(kind) then throw("H26: invalid issuance") else
-  if i.caller.toString() != getStringValue(getOracle(), "static_halloweenAddress") then throw("H26: campaign only") else
-  let asset = Issue(kind, "Halloween 2026 Waves Ducks artefact", 1, 0, false, unit, nonce)
-  let id = asset.calculateAssetId()
-  ([asset, StringEntry("artefact_" + id.toBase58String() + "_type", kind),
-    ScriptTransfer(addressFromStringValue(receiver), 1, id)], id.toBase58String())
-}
-
-@Callable(i)
 func issueArtefact(type: String, receiver: String) = {
+  if halloweenItem(type) && (i.caller != getCouponsAddress() || size(i.payments) != 0) then throw("H26: campaign issuance only") else
   if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress()
@@ -754,6 +776,7 @@ func issueArtefact(type: String, receiver: String) = {
 
 @Callable(i)
 func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
+  if halloweenItem(type) && (i.caller != getCouponsAddress() || size(i.payments) != 0) then throw("H26: campaign issuance only") else
   if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getMutantIncubatorAddress()

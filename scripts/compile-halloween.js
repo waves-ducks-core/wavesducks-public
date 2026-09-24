@@ -4,7 +4,7 @@ const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 const ride = require('@waves/ride-js');
 const families = ['ducks','turtle','cani','feli','eagl','bulls'];
-const files = ['ride/events/halloween2026.ride','ride/artefacts/items.ride','ride/artefacts/accBooster.ride',
+const files = ['ride/coupons.ride','ride/artefacts/items.ride','ride/artefacts/accBooster.ride',
   ...families.flatMap(f=>fs.readdirSync(`ride/${f}`).filter(p=>p.endsWith('.ride')).map(p=>`ride/${f}/${p}`))];
 const surfboard = path.resolve(require.resolve('@waves/surfboard/package.json'), '../bin/run');
 let failed = false;

@@ -200,7 +200,7 @@ func getAmountOrClear(amount: String) = {
 
 # Historical turtle winter jackpot: 1/200; summer bull jackpot: 1/1000.
 func halloweenJackpot(txId: ByteVector, finishHeight: Int) = {
-  let eventAddress = getString(getOracle(), "static_halloweenAddress").valueOrElse("")
+  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
   if eventAddress == "" then false else
   let event = addressFromStringValue(eventAddress)
   let enabled = getBoolean(event, "h26_enabled").valueOrElse(false)
@@ -213,7 +213,7 @@ func halloweenJackpot(txId: ByteVector, finishHeight: Int) = {
 }
 
 func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
-  let eventAddress = getString(getOracle(), "static_halloweenAddress").valueOrElse("")
+  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
   if eventAddress == "" then "" else
   let event = addressFromStringValue(eventAddress)
   if !getBoolean(event, "h26_enabled").valueOrElse(false) ||

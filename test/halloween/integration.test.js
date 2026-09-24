@@ -151,3 +151,31 @@ func mockInvoke(a:Address,method:String,args:List[String],payments:List[Attached
   for(const family of ['ducks','cani','feli','eagl'])assert.doesNotMatch(read(`ride/${family}/farming${family==='ducks'?'V2':''}.ride`),/calculateFarmingPowerBoostBull/);
   assert.doesNotMatch(source,/registerPumpkinPosition|h26_origin_/);
 });
+
+test('existing issuance entry points accept Halloween only from coupons',async()=>{
+  const source=read('ride/artefacts/items.ride');
+  const getters=[...new Set((fn(source,'issueArtefact')+fn(source,'issueArtefactIndex')).match(/\bget[A-Z]\w*(?=\()/g))].filter(n=>n!=='getCouponsAddress');
+  const methods=['halloweenItem','issueItem','issueArtefact','issueArtefactIndex'].map(n=>fn(source,n)).join('\n').replace(/\bthis\b/g,'fixture').replace(/artefact\.calculateAssetId\(\)/g,"base58'AB'");
+  for(const [caller,payments,allowed] of [['xyz','[]',true],['abc','[]',false],['xyz','[AttachedPayment(unit,1)]',false]]){
+    const mocks=runtime+`let i=Invocation(${payments},Address(base58'${caller}'),base58'abc',base58'dEf',0,unit,fixture,base58'abc')
+func getCouponsAddress()=Address(base58'xyz')
+func tryGetInteger(k:String)=0
+func tryGetBoolean(k:String)=false
+func isTestEnv()=false
+func last_height_key()="last_height"
+func last_height_key_receiver(a:String)="last_height_"+a
+`+getters.map(n=>`func ${n}()=${n==='getWarsPKey'?"base58'AB'":"Address(base58'AB')"}\n`).join('');
+    for(const call of [`issueArtefact("ART-H26ARMOR","${issuer}")`,`issueArtefactIndex("ART-H26SOUL","${issuer}",26)`]){
+      const result=await exec(mocks+methods,call);
+      if(allowed)assert.equal(result.error,undefined,result.error);else assert.ok(result.error?.includes('campaign issuance only'),result.error);
+    }
+  }
+});
+
+test('coupons completion reuses issueArtefactIndex with the intended recipient and nonce',async()=>{
+  const mint=fn(read('ride/coupons.ride'),'mint').replace(/\binvoke\(/g,'mockInvoke(');
+  const defs=runtime+`func getItemsAddress()=fixture
+func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPayment])=if method=="issueArtefactIndex" && args==["ART-H26SOUL","abc",26] && size(p)==0 then "issued" else throw("wrong issuance route")
+`+mint;
+  const result=await exec(defs,'mint("ART-H26SOUL",fixture,26)');assert.equal(result.error,undefined,result.error);assert.ok(result.result.endsWith('= "issued"'));
+});

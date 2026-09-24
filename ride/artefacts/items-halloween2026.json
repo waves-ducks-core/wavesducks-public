@@ -46,8 +46,603 @@
       "key": "type_cosmetic_ART-H26ARMOR",
       "type": "string",
       "value": "TOP"
+    },
+    {
+      "key": "direct_cosmetic_ART-H26SOUL",
+      "type": "integer",
+      "value": 100000000
+    },
+    {
+      "key": "direct_cosmetic_ART-H26SOUL_sale",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "direct_cosmetic_ART-H26SOUL_burn",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "direct_cosmetic_ART-H26SOUL_burnPercent",
+      "type": "integer",
+      "value": 100
+    },
+    {
+      "key": "direct_cosmetic_ART-H26SOUL_priceAsset",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "key": "direct_cosmetic_ART-H26SOUL_growing_percentage",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "direct_cosmetic_ART-H26SOUL_max_sales",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "direct_cosmetic_ART-H26FEED",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "direct_cosmetic_ART-H26FEED_sale",
+      "type": "boolean",
+      "value": false
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_baseItem",
+      "type": "string",
+      "value": "ART-BONE"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_amount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_secondaryItem",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_secondaryItemAmount",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_endItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BONE_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_baseItem",
+      "type": "string",
+      "value": "ART-SKELHEAD"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_amount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_secondaryItem",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_secondaryItemAmount",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_endItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SKELHEAD_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_baseItem",
+      "type": "string",
+      "value": "ART-BBALL"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_amount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_secondaryItem",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_secondaryItemAmount",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_endItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-BBALL_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_baseItem",
+      "type": "string",
+      "value": "ART-SNOWBALL"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_amount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_secondaryItem",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_secondaryItemAmount",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_endItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-SNOWBALL_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_baseItem",
+      "type": "string",
+      "value": "ART-CNDY"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_amount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_secondaryItem",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_secondaryItemAmount",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_endItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-CNDY_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_baseItem",
+      "type": "string",
+      "value": "ART-GFTW"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_amount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_secondaryItem",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_secondaryItemAmount",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_endItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTW_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_baseItem",
+      "type": "string",
+      "value": "ART-GFTR"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_amount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_secondaryItem",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_secondaryItemAmount",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_endItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SOUL-ART-GFTR_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_ART-H26SWORD_baseItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_ART-H26SWORD_amount",
+      "type": "integer",
+      "value": 10
+    },
+    {
+      "key": "merge_ART-H26SWORD_secondaryItem",
+      "type": "string",
+      "value": ""
+    },
+    {
+      "key": "merge_ART-H26SWORD_secondaryItemAmount",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_ART-H26SWORD_endItem",
+      "type": "string",
+      "value": "ART-H26SWORD"
+    },
+    {
+      "key": "merge_ART-H26SWORD_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_ART-H26SWORD_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_ART-H26SWORD_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_ART-H26SWORD_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_ART-H26SWORD_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_baseItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_amount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_secondaryItem",
+      "type": "string",
+      "value": "ART-FIRE_SWORD"
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_secondaryItemAmount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_endItem",
+      "type": "string",
+      "value": "ART-H26SWORD"
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SWORD-FIRE_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_baseItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_amount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_secondaryItem",
+      "type": "string",
+      "value": "ART-EAST_SWORD"
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_secondaryItemAmount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_endItem",
+      "type": "string",
+      "value": "ART-H26SWORD"
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_H26-SWORD-EASTER_genValue",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_ART-H26CAT_baseItem",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "merge_ART-H26CAT_amount",
+      "type": "integer",
+      "value": 2
+    },
+    {
+      "key": "merge_ART-H26CAT_secondaryItem",
+      "type": "string",
+      "value": "ART-CAT"
+    },
+    {
+      "key": "merge_ART-H26CAT_secondaryItemAmount",
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "key": "merge_ART-H26CAT_endItem",
+      "type": "string",
+      "value": "ART-H26CAT"
+    },
+    {
+      "key": "merge_ART-H26CAT_price",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_ART-H26CAT_asset",
+      "type": "string",
+      "value": "WAVES"
+    },
+    {
+      "key": "merge_ART-H26CAT_instant",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "key": "merge_ART-H26CAT_ducklingsPercent",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "merge_ART-H26CAT_genValue",
+      "type": "integer",
+      "value": 0
     }
   ],
-  "fee": 600000,
+  "fee": 1000000,
   "feeAssetId": "WAVES"
 }

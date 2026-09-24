@@ -224,7 +224,7 @@ func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector,
 }
 
 func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
-  let eventAddress = getString(getOracle(), "static_halloweenAddress").valueOrElse("")
+  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
   if eventAddress == "" then "" else
   let event = addressFromStringValue(eventAddress)
   if !getBoolean(event, "h26_enabled").valueOrElse(false) ||

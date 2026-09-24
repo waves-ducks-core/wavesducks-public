@@ -4,9 +4,15 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const ride = require('@waves/ride-js');
-const source = fs.readFileSync('ride/events/halloween2026.ride', 'utf8');
+const fullSource = fs.readFileSync('ride/coupons.ride', 'utf8');
+function helper(name) {
+ const start=fullSource.indexOf(`func ${name}(`);
+ const next=fullSource.slice(start+5).search(/^(@Callable|@Verifier|func )/m);
+ return fullSource.slice(start,start+5+next);
+}
+const source = ['tryGetStringExternal','tryGetString','tryGetInteger','tryGetBoolean','getOracle','staticKey_itemsAddress','getItemsAddress'].map(helper).join('\n') + fullSource.split('# Halloween 2026 ritual. Keep campaign keys when redeploying coupons.')[1].split('# End Halloween 2026 ritual.')[0];
 const issuer = '3PEPftf2kWZDmAaWBjs6BUJa9957kiA2PkU';
-let executable = source.split('@Verifier')[0].replace(/^\{-#.*\n/gm, '').replace(/^@Callable\(i\)\n/gm, '');
+let executable = source.replace('getBoolean(key)', 'getBoolean(this, key)').split('@Verifier')[0].replace(/^\{-#.*\n/gm, '').replace(/^@Callable\(i\)\n/gm, '');
 executable = executable.replace(/func mint\([^\n]+\n/, 'func mint(kind: String, receiver: Address, nonce: Int) = kind\n');
 executable = executable.replace(/func unlockPersistent\([^\n]+\n/, 'func unlockPersistent(oracleKey: String) = true\n');
 for (const name of ['getInteger','getBoolean','getString','getStringValue','assetInfo','blockInfoByHeight']) {
@@ -100,27 +106,6 @@ test('feed claim needs settled top10, remains once after closure',async()=>{
   value(await evaluate('claimPumpkinFeed()',{data,now:2000}),'h26_user_abc_feed',true);
   for(const change of [{h26_settled:false},{h26_top:'dEf'},{h26_user_abc_feed:true}]) await rejects('claimPumpkinFeed()',{data:{...data,...change}},'unavailable');
 });
-test('EGG purchase burns exactly100000000 with no fee skim',async()=>{
-  const result=await evaluate('buySoul()',{payments:[['abc',100000000]]});
-  assert.ok(result.result?.includes('quantity = 100000000'),JSON.stringify(result));
-  assert.ok(!result.result.includes('ScriptTransfer'));
-  for(const payment of [[],[['abc',99999999]],[['abc',100000001]],[['dEf',100000000]],[[null,100000000]]]) await rejects('buySoul()',{payments:payment},'H26:');
-});
-test('seven canonical conversions only, one item burned',async()=>{
-  const names=['ART-BONE','ART-SKELHEAD','ART-BBALL','ART-SNOWBALL','ART-CNDY','ART-GFTW','ART-GFTR'];
-  for(const kind of names){const result=await evaluate('convertSoul()',{payments:souls(1),assets:[kind],data:{h26_conversions:names.join(';')}});assert.ok(result.result?.includes('Burn('),JSON.stringify(result));}
-  await rejects('convertSoul()',{payments:souls(1),assets:['ART-CAT'],data:{h26_conversions:names.join(';')}},'unsupported');
-});
-test('sword ten-Soul recipe accepts exactly ten payments and stays unlocked after closure',async()=>{
-  const data={h26_milestone_400:true,h26_enabled:false};
-  assert.ok((await evaluate('craft("ART-H26SWORD")',{data,payments:souls(10)})).result?.includes('ART-H26SWORD'));
-  await rejects('craft("ART-H26SWORD")',{data,payments:souls(9)},'invalid recipe');
-  await rejects('craft("ART-H26SWORD")',{data:{...data,h26_recipes:false},payments:souls(10)},'disabled');
-});
-test('alternative swords and Cat enforce exact canonical ingredients',async()=>{
-  for(const sword of ['ART-FIRE_SWORD','ART-EAST_SWORD']) assert.ok((await evaluate('craft("ART-H26SWORD")',{data:{h26_milestone_400:true},payments:souls(2),assets:['ART-H26SOUL',sword]})).result?.includes('ART-H26SWORD'));
-  const result=await evaluate('craft("ART-H26CAT")',{data:{h26_milestone_600:true},payments:souls(3),assets:['ART-H26SOUL','ART-H26SOUL','ART-CAT']});assert.ok(result.result?.includes('ART-H26CAT'),JSON.stringify(result));
-});
 test('admin operations reject arbitrary callers and attached payments',async()=>{
   await rejects('setEnabled(false)',{},'admin only');
   await rejects('setRecipesEnabled(false)',{},'admin only');
@@ -156,13 +141,12 @@ test('ordered interleaved wallets preserve accounting and deterministic top10',a
   }
 });
 test('configuration is self-only once, fixes30 days, starts disabled and pins canonical mappings',async()=>{
-  const call=`configure("${issuer}",600)`;
+  const call=`configureHalloween(600)`;
   const opts={caller:'dEf',decimals:8,data:{h26_initialized:false}};
   const result=await evaluate(call,opts);value(result,'h26_end',600+30*86400000);value(result,'h26_enabled',false);value(result,'h26_version',1);
   await rejects(call,{...opts,caller:'abc'},'self-only');
   await rejects(call,{...opts,data:{h26_initialized:true}},'self-only');
-  await rejects(`configure("${issuer}",499)`,opts,'invalid start');
-  value(result,'h26_conversions','ART-BONE;ART-SKELHEAD;ART-BBALL;ART-SNOWBALL;ART-CNDY;ART-GFTW;ART-GFTR');
+  await rejects(`configureHalloween(499)`,opts,'invalid start');
   await rejects(call,{...opts,decimals:6},'eight decimals');
 });
 test('actual completion rolls39 and40 enforce exact40% boundary without rerolling',async()=>{
