@@ -207,6 +207,31 @@ func getAmountOrClear(amount: String) = {
 
 
 
+
+# Historical turtle winter jackpot: 1/200; summer bull jackpot: 1/1000.
+func halloweenJackpot(txId: ByteVector, finishHeight: Int) = {
+  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
+  if eventAddress == "" then false else
+  let event = addressFromStringValue(eventAddress)
+  let enabled = getBoolean(event, "h26_enabled").valueOrElse(false)
+  let start = getInteger(event, "h26_start").valueOrElse(0)
+  let end = getInteger(event, "h26_end").valueOrElse(0)
+  let digest = sha256(toBytes("h26-jackpot") + txId + blockInfoByHeight(finishHeight-1).value().vrf.value())
+  let roll = (toInt(digest.take(8)) % 200 + 200) % 200
+  enabled && lastBlock.timestamp >= start && lastBlock.timestamp < end &&
+    getInteger(this, "h26_jackpot_issued").valueOrElse(0) < 2 && roll == 1
+}
+
+func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
+  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
+  if eventAddress == "" then "" else
+  let event = addressFromStringValue(eventAddress)
+  if !getBoolean(event, "h26_enabled").valueOrElse(false) ||
+    lastBlock.timestamp < getInteger(event, "h26_start").valueOrElse(0) ||
+    lastBlock.timestamp >= getInteger(event, "h26_end").valueOrElse(0) then "" else
+    invoke(event, "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+}
+
 func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
       parentFixedGene: Int,positionFixedGene: Int,
       specifiqueGene: String, specifiqueGenePosition: Int) = {
@@ -225,11 +250,13 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
     if (processFinishHeight > height) then throw("Breeding is not finished yet " + (processFinishHeight - height).toString() + " blocks remaining, it will take around " +  (processFinishHeight - height).toString() + " minutes")
     else {
       let outcome = generateTRTL(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
-      let Gen = outcome._1
+      let jackpot = halloweenJackpot(txId, processFinishHeight)
+      let Gen = if jackpot then "TRTL-WWIZARDT-JU" else outcome._1
       let random = outcome._2    
-      strict farmGen = invoke(this,"getGenFromName",[Gen],[]).exactAs[String]
+      strict farmGen = if jackpot then "8W-J" else invoke(this,"getGenFromName",[Gen],[]).exactAs[String]
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
+      strict halloweenDrop = halloweenCompletion(i.caller.toString(), txIdStr, processFinishHeight)
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
@@ -259,12 +286,13 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ]#++bonusOutput
+      ] ++ (if jackpot then [IntegerEntry("h26_jackpot_issued", getInteger(this,"h26_jackpot_issued").valueOrElse(0)+1)] else []) #++bonusOutput
     }
 }
 
 @Callable(i)
 func getGenFromName(assetName: String) = {
+  if assetName == "TRTL-WWIZARDT-JU" then ([], "8W-J") else
   # getGen("TRTL-ABCDDCBA-GY") -> 2A2B2C2D-G
   let genotype = assetName.drop(5).dropRight(3).split("")
   let generation = assetName.split("")[14]

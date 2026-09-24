@@ -26,6 +26,7 @@ func keyFeedLimit(owner: String) = "limit_"+owner
 
 let stakeable = [
   "ART-LAKE",
+  "ART-H26FEED",
   "ART-ENEST",
   "ART-FTCAST",
   "ART-XTREE",
@@ -106,6 +107,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func stakeItem() = {
+    if size(i.payments) != 2 then throw("AB: exactly two payments required") else
     let validPayment = checkAdditionalPayment(i.payments[1])
     if !(size(i.payments) == 2 && i.payments[0].amount==1) then throw("Invalid payment") else 
       let assetId = i.payments[0].assetId.value()
@@ -118,6 +120,7 @@ func stakeItem() = {
             strict boostDuck = 
             if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[1,invoker],[]) else
             if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[2,invoker],[]) else
+            if artefactName == "ART-H26FEED" then invoke(getItemsAddress(),"manipulateBoostAccountBull",[3,invoker],[]) else
             if artefactName == "ART-ENEST" then  invoke(getItemsAddress(),"manipulateBoostAccountEagle",[2,invoker],[]) else
             if artefactName == "ART-FTCAST" then invoke(getItemsAddress(),"manipulateBoostAccountTurtle",[2,invoker],[]) else
             if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[3,invoker],[]) else nil
@@ -128,6 +131,7 @@ func stakeItem() = {
 
 @Callable(i)
 func unstakeItem(artefactName: String) = {
+    if size(i.payments) != 1 then throw("AB: exactly one fee payment required") else
     let validPayment = checkAdditionalPayment(i.payments[0])
     if ! containsElement(stakeable, artefactName) then throw("This artefact doesn't exist") else 
       let invoker = i.caller.toString()
@@ -138,6 +142,7 @@ func unstakeItem(artefactName: String) = {
         strict boostDuck = 
         if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-1,invoker],[]) else
         if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],[]) else
+        if artefactName == "ART-H26FEED" then invoke(getItemsAddress(),"manipulateBoostAccountBull",[-3,invoker],[]) else
         if artefactName == "ART-ENEST" then  invoke(getItemsAddress(),"manipulateBoostAccountEagle",[-2,invoker],[]) else
         if artefactName == "ART-FTCAST" then invoke(getItemsAddress(),"manipulateBoostAccountTurtle",[-2,invoker],[]) else
         if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[-3,invoker],[]) else nil

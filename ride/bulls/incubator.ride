@@ -124,13 +124,15 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
 }
 
 func select(color: String)={
-    let oldGenes = [("BULL-AAAAAAAA-G" + color, "8A-G")]
-    let newGenes = [
-      ("BULL-BBBBBBBB-G" + color, "8B-G"),
-      ("BULL-CCCCCCCC-G" + color, "8C-G"),("BULL-DDDDDDDD-G" + color, "8D-G"),
-      ("BULL-EEEEEEEE-G" + color, "8E-G")
-      ]
-    (oldGenes++newGenes, newGenes)
+    let unlocked = getBoolean(this, "h26_genesisUnlocked").valueOrElse(false)
+    let a = ("BULL-AAAAAAAA-G" + color, "8A-G")
+    let b = ("BULL-BBBBBBBB-G" + color, "8B-G")
+    let c = ("BULL-CCCCCCCC-G" + color, "8C-G")
+    let d = ("BULL-DDDDDDDD-G" + color, "8D-G")
+    let e = ("BULL-EEEEEEEE-G" + color, "8E-G")
+    let f = ("BULL-FFFFFFFF-G" + color, "8F-G")
+    let current = if unlocked then [c,d,e,f] else [b,c,d,e]
+    (if unlocked then ([a,b]++current,current) else ([a]++current,current))
 }
 
 func getRandomName(txId: ByteVector, hatchingFinishHeight: Int, all: Boolean) = {
@@ -233,6 +235,17 @@ func getRandomRebirthReturn(tx: ByteVector, finishHeight: Int) = {
   if n == 1 then true else false
 }
 
+
+func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
+  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
+  if eventAddress == "" then "" else
+  let event = addressFromStringValue(eventAddress)
+  if !getBoolean(event, "h26_enabled").valueOrElse(false) ||
+    lastBlock.timestamp < getInteger(event, "h26_start").valueOrElse(0) ||
+    lastBlock.timestamp >= getInteger(event, "h26_end").valueOrElse(0) then "" else
+    invoke(event, "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+}
+
 func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean, blacklistCode: String, rescue: Boolean, finishTx: String) = {
   strict feeValidate = checkAdditionalPayment(additionalPayment)
   let finishBlock = tryGetInteger(getRebirthFinishBlockKey(address, initTx))
@@ -240,6 +253,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
 
   if (status != RebirthStarted) then throw("BRF: rebirth is finished or not open") else
   if (height < finishBlock) then throw("BRF: you cannot finish rebirth yet") else {
+    strict halloweenDrop = halloweenCompletion(address, initTx, finishBlock)
     let output = getRandomRebirthWin(initTx.fromBase58String(), finishBlock, blacklistCode)
     let random = output._1
     let win = output._2
@@ -334,6 +348,12 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
 }
 
 @Callable(i)
+func unlockHalloween() = {
+  if size(i.payments) != 0 || i.caller.toString() != getStringValue(getOracle(), "static_couponsAddress") then throw("H26: campaign only") else
+  ([BooleanEntry("h26_genesisUnlocked", true)], true)
+}
+
+@Callable(i)
 func reduceRarity(assetId: String, fGen: String) = {
   let asset = assetId.fromBase58String()
   if (i.caller != getRebirthAddress() && i.caller != getCouponsAddress() && i.caller != this) then {
@@ -375,6 +395,7 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func issueJackpot(address: String, txIdStr: String, gen: String) = {
+  if gen == "WMOLDYMT" then throw("H26: breeding-only capped jackpot") else
   if (i.caller != getRebirthAddress() && i.caller != this) then {
     throw("ISJ: admin or rebirth only")
   } else {

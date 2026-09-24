@@ -215,6 +215,17 @@ func composeGenericData(Gen: String, IdKey: String, assetId: ByteVector, asset: 
     ]
 }
 
+
+func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
+  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
+  if eventAddress == "" then "" else
+  let event = addressFromStringValue(eventAddress)
+  if !getBoolean(event, "h26_enabled").valueOrElse(false) ||
+    lastBlock.timestamp < getInteger(event, "h26_start").valueOrElse(0) ||
+    lastBlock.timestamp >= getInteger(event, "h26_end").valueOrElse(0) then "" else
+    invoke(event, "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+}
+
 func finishHatchingInternal(txIdStr: String, i: Invocation,
       parentFixedGene: Int,positionFixedGene: Int,
       specifiqueGene: String, specifiqueGenePosition: Int)={
@@ -238,6 +249,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
       let farmGen = getGen(Gen)
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
+      strict halloweenDrop = halloweenCompletion(i.caller.toString(), txIdStr, processFinishHeight)
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 

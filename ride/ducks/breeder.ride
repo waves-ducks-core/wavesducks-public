@@ -218,6 +218,17 @@ func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector,
     ]
 }
 
+
+func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
+  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
+  if eventAddress == "" then "" else
+  let event = addressFromStringValue(eventAddress)
+  if !getBoolean(event, "h26_enabled").valueOrElse(false) ||
+    lastBlock.timestamp < getInteger(event, "h26_start").valueOrElse(0) ||
+    lastBlock.timestamp >= getInteger(event, "h26_end").valueOrElse(0) then "" else
+    invoke(event, "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+}
+
 func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = {
   let txId = fromBase58String(txIdStr)
   let processStatusKey = getProcessStatusKey(owner, txId)
@@ -238,6 +249,7 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
 
       let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
+      strict halloweenDrop = halloweenCompletion(owner, txIdStr, processFinishHeight)
       let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
@@ -403,6 +415,8 @@ specifiqueGene: String, specifiqueGenePosition: Int) = {
 
 @Callable(i)
 func getGenFromName(assetName: String) = {
+    if assetName == "DUCK-WDARKPHX-JU" then ([], "WDARKPHX-J") else
+    if assetName == "DUCK-WWWWWWWP-JU" then ([], "8W-J") else
     let genotype = assetName.drop(5).dropRight(3).split("")
     let generation = assetName.split("")[14]
     let gen = getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
