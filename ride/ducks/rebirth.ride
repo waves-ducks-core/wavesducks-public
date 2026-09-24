@@ -99,7 +99,7 @@ func getAmountOrClear(amount: String) = {
 }
 
 func getAssetOrigin(generation: String) = {
-  if (generation == "G") then {getIncubatorAddress()} else {getBreederAddress()}
+  if (generation == "G" || generation == "J") then {getIncubatorAddress()} else {getBreederAddress()}
 }
 
 func getAssetRarity(genotype: String, generation: String) = {

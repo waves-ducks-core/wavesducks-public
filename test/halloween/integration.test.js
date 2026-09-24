@@ -179,3 +179,43 @@ func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPay
 `+mint;
   const result=await exec(defs,'mint("ART-H26SOUL",fixture,26)');assert.equal(result.error,undefined,result.error);assert.ok(result.result.endsWith('= "issued"'));
 });
+
+for(const [gene,key,other] of [['WWWWWWWP','8W-J','WDARKPHX-J'],['WDARKPHX','WDARKPHX-J','8W-J']])test(`${gene}: mint, parse, rebirth and rescue preserve separate Phoenix counters`,async()=>{
+  const incubator=read('ride/ducks/incubator.ride'),breeder=read('ride/ducks/breeder.ride'),rebirth=read('ride/ducks/rebirth.ride');
+  const parser=fn(breeder,'getGenFromName');
+  const parserHelpers=[...new Set(parser.match(/isSymbol[A-Z]/g))].map(n=>fn(breeder,n)).join('\n')+fn(breeder,'getAmountOrClear');
+  const keys=['getHatchingStatusKey','getHatchingFinishHeightKey','getDuckIdKey','getDuckStatsKey'].map(n=>fn(incubator,n)).join('\n');
+  const mutations=['issueJackpot','reduceRarity','increaseRarity'].map(n=>fn(incubator,n)).join('\n');
+  const readers=['getAssetOrigin','getAssetRarity','getAssetFarmingPower'].map(n=>fn(rebirth,n)).join('\n');
+  const state={'stats_8W-J_quantity':7,'stats_WDARKPHX-J_quantity':3};
+  async function call(expression,enabled=true){
+    const entries=Object.entries(state).map(([k,v])=>`${typeof v==='number'?'Integer':'String'}Entry(${JSON.stringify(k)},${JSON.stringify(v)})`).join(',');
+    const defs=runtime+`let data=[${entries}]
+let i=Invocation([],Address(base58'xyz'),base58'abc',base58'dEf',0,unit,fixture,base58'abc')
+let HatchingFinished="finish"
+func getRebirthAddress()=Address(base58'xyz')
+func getCouponsAddress()=Address(base58'2')
+func getIncubatorAddress()=fixture
+func getBreederAddress()=Address(base58'3')
+func countEggsNeededAmount(n:Int)=100000000
+func tryGetInteger(k:String)=getInteger(data,k).valueOrElse(0)
+func tryGetString(k:String)=getString(data,k).valueOrElse("")
+func mockBoolean(a:Address,k:String)=${enabled}
+func mockIntegerValue(a:Address,k:String)=if a!=fixture then throw("wrong rarity contract") else getInteger(data,k).value()
+func mockAsset(id:ByteVector)=Asset(id,1,0,fixture,base58'abc',false,false,unit,"DUCK-${gene}-JU","")
+`+parserHelpers+parser+`
+func mockInvoke(a:Address,m:String,args:List[String],p:List[AttachedPayment])=if a==getBreederAddress() && m=="getGenFromName" then getGenFromName(args[0])._2 else throw("unexpected invoke")
+`+keys+mutations+readers;
+    return exec(defs.replace(/\bthis\b/g,'fixture').replace(/\bgetBoolean\(/g,'mockBoolean(').replace(/\bgetIntegerValue\(/g,'mockIntegerValue(').replace(/\bassetInfo\(/g,'mockAsset(').replace(/\binvoke\(/g,'mockInvoke(').replace(/asset\.calculateAssetId\(\)/g,"base58'AB'"),expression);
+  }
+  function apply(r){assert.equal(r.error,undefined,r.error);for(const m of r.result.matchAll(/key = "([^"]+)"\n\tvalue = ("[^"]*"|-?\d+)/g))state[m[1]]=JSON.parse(m[2]);}
+  if(gene==='WDARKPHX')assert.ok((await call(`issueJackpot("${issuer}","abc","${gene}")`,false)).error?.includes('permanent unlock'));
+  const before=state[`stats_${key}_quantity`],otherBefore=state[`stats_${other}_quantity`];
+  const mint=await call(`issueJackpot("${issuer}","abc","${gene}")`);apply(mint);
+  assert.equal(state[`stats_${key}_quantity`],before+1);assert.equal(state[`stats_${other}_quantity`],otherBefore);
+  assert.equal(state[`stats_DUCK-${gene}-JU_amount`],1);
+  const parsed=await call(`getGenFromName("DUCK-${gene}-JU")`);assert.equal(parsed.error,undefined,parsed.error);assert.ok(parsed.result.includes(`"${key}"`));
+  const power=await call('getAssetFarmingPower("AB".fromBase58String())');assert.equal(power.error,undefined,power.error);assert.ok(power.result.includes(`"${key}"`));
+  apply(await call(`reduceRarity("AB","${key}")`));assert.equal(state[`stats_${key}_quantity`],before);assert.equal(state[`stats_${other}_quantity`],otherBefore);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],0);
+  apply(await call(`increaseRarity("AB","${key}")`));assert.equal(state[`stats_${key}_quantity`],before+1);assert.equal(state[`stats_${other}_quantity`],otherBefore);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],1);
+});

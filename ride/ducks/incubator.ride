@@ -361,7 +361,7 @@ func issueJackpot(address: String, txIdStr: String, gen: String) = {
     let totalDucksAmount = tryGetInteger("ducks_amount")
     let eggsNeeded = countEggsNeededAmount(totalDucksAmount)
 
-    let (duckGen, farmGen) = ("DUCK-"+gen+"-JU", "8W-J")
+    let (duckGen, farmGen) = ("DUCK-"+gen+"-JU", if gen == "WDARKPHX" then "WDARKPHX-J" else "8W-J")
     let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
     let asset = Issue(duckGen, description, 1, 0, false, unit, height)
@@ -394,7 +394,8 @@ func reduceRarity(assetId: String, fGen: String) = {
   } else {
     let duckGen = assetInfo(asset).value().name
     let letter = duckGen.take(6).takeRight(1)
-    let farmGen = "8"+letter+"-G"
+    let farmGen = if duckGen == "DUCK-WDARKPHX-JU" then "WDARKPHX-J" else
+      if duckGen == "DUCK-WWWWWWWP-JU" then "8W-J" else "8"+letter+"-G"
     [
       IntegerEntry(getDuckStatsKey(duckGen), tryGetInteger(getDuckStatsKey(duckGen)) - 1),
       IntegerEntry("stats_"+farmGen+"_quantity", tryGetInteger("stats_"+farmGen+"_quantity") - 1)

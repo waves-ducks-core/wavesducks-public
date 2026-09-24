@@ -415,6 +415,8 @@ specifiqueGene: String, specifiqueGenePosition: Int) = {
 
 @Callable(i)
 func getGenFromName(assetName: String) = {
+    if assetName == "DUCK-WDARKPHX-JU" then ([], "WDARKPHX-J") else
+    if assetName == "DUCK-WWWWWWWP-JU" then ([], "8W-J") else
     let genotype = assetName.drop(5).dropRight(3).split("")
     let generation = assetName.split("")[14]
     let gen = getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +
