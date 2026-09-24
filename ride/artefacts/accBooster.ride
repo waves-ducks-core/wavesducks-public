@@ -96,11 +96,6 @@ func getTurtleStakedPower(address: String) = {
   tryGetIntegerExternal(getTurtleStakingAddress(), "total_staked_" + address)
 }
 
-func bullStakedPower(address: String) = {
-  let farming = addressFromStringValue(getStringValue(getOracle(), "static_bullFarmingAddress"))
-  getInteger(farming, "total_staked_" + address).valueOrElse(0) + getInteger(farming, "h26_origin_" + address + "_count").valueOrElse(0)
-}
-
 @Callable(i)
 func configureOracle(oracle: String) = {
   if i.caller != this then throw("admin only") else 
@@ -121,11 +116,11 @@ func stakeItem() = {
         if itemIsInCoolDown(artefactName,assetId.toBase58String()) then throw("Item can't be staked yet, it's in cooldown") else
           let invoker = i.caller.toString()
           let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
-          if artefactName == "ART-H26FEED" && bullStakedPower(invoker) > 0 then throw("Unstake bulls before changing Pumpkin Feed") else
           if artefactId != "" then throw("You are already staking "+ artefactName) else 
             strict boostDuck = 
             if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[1,invoker],[]) else
             if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[2,invoker],[]) else
+            if artefactName == "ART-H26FEED" then invoke(getItemsAddress(),"manipulateBoostAccountBull",[3,invoker],[]) else
             if artefactName == "ART-ENEST" then  invoke(getItemsAddress(),"manipulateBoostAccountEagle",[2,invoker],[]) else
             if artefactName == "ART-FTCAST" then invoke(getItemsAddress(),"manipulateBoostAccountTurtle",[2,invoker],[]) else
             if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[3,invoker],[]) else nil
@@ -143,11 +138,11 @@ func unstakeItem(artefactName: String) = {
       let artefactId = tryGetString(keyArtefactOwner(artefactName,invoker))
       if artefactName == "ART-XSOCK" then throw("You can not unstake ART-XSOCK anymore") else
       if artefactId == "" then throw("You didnt stake "+artefactName) else
-      if artefactName == "ART-H26FEED" && bullStakedPower(invoker) > 0 then throw("Unstake bulls before changing Pumpkin Feed") else
       if artefactName == "ART-FTCAST" && getTurtleStakedPower(invoker) > 0 then throw("Unstake turtles before unstaking ART-FTCAST") else
         strict boostDuck = 
         if artefactName == "ART-FRZLAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-1,invoker],[]) else
         if artefactName == "ART-LAKE" then  invoke(getItemsAddress(),"manipulateBoostAccount",[-2,invoker],[]) else
+        if artefactName == "ART-H26FEED" then invoke(getItemsAddress(),"manipulateBoostAccountBull",[-3,invoker],[]) else
         if artefactName == "ART-ENEST" then  invoke(getItemsAddress(),"manipulateBoostAccountEagle",[-2,invoker],[]) else
         if artefactName == "ART-FTCAST" then invoke(getItemsAddress(),"manipulateBoostAccountTurtle",[-2,invoker],[]) else
         if artefactName == "ART-XTREE" then invoke(getItemsAddress(),"manipulateBoostAccount",[-3,invoker],[]) else nil

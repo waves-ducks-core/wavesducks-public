@@ -222,7 +222,11 @@ func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector,
 func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
   let eventAddress = getString(getOracle(), "static_halloweenAddress").valueOrElse("")
   if eventAddress == "" then "" else
-    invoke(addressFromStringValue(eventAddress), "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+  let event = addressFromStringValue(eventAddress)
+  if !getBoolean(event, "h26_enabled").valueOrElse(false) ||
+    lastBlock.timestamp < getInteger(event, "h26_start").valueOrElse(0) ||
+    lastBlock.timestamp >= getInteger(event, "h26_end").valueOrElse(0) then "" else
+    invoke(event, "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
 }
 
 func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = {

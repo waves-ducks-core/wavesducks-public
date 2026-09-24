@@ -1,0 +1,53 @@
+{
+  "type": 12,
+  "version": 1,
+  "data": [
+    {
+      "key": "direct_cosmetic_ART-H26SWORD",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "direct_cosmetic_ART-H26SWORD_sale",
+      "type": "boolean",
+      "value": false
+    },
+    {
+      "key": "type_cosmetic_ART-H26SWORD",
+      "type": "string",
+      "value": "RIGHT_WING"
+    },
+    {
+      "key": "direct_cosmetic_ART-H26CAT",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "direct_cosmetic_ART-H26CAT_sale",
+      "type": "boolean",
+      "value": false
+    },
+    {
+      "key": "type_cosmetic_ART-H26CAT",
+      "type": "string",
+      "value": "PET"
+    },
+    {
+      "key": "direct_cosmetic_ART-H26ARMOR",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "direct_cosmetic_ART-H26ARMOR_sale",
+      "type": "boolean",
+      "value": false
+    },
+    {
+      "key": "type_cosmetic_ART-H26ARMOR",
+      "type": "string",
+      "value": "TOP"
+    }
+  ],
+  "fee": 600000,
+  "feeAssetId": "WAVES"
+}

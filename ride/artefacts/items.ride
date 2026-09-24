@@ -33,6 +33,7 @@ func key_externalBoostDuck(duckId: String) = duckId+"_duck_external_boost"
 
 func key_externalBoostAddress(address: String) = address+"_user_external_boost"
 func key_externalBoostAddressEagle(address: String) = address+"_user_external_boost_eagle"
+func key_externalBoostAddressBull(address: String) = address+"_user_external_boost_bull"
 func key_externalBoostAddressTurtle(address: String) = address+"_user_external_boost_turtle"
 func key_priceCosmetic(item:String)= "direct_cosmetic_"+item
 func key_maxSalesCosmetic(item:String)= "direct_cosmetic_"+item+"_max_sales"
@@ -532,6 +533,21 @@ func manipulateBoostAccountTurtle(boost: Int, address: String)= {
 }
 
 @Callable(i)
+func manipulateBoostAccountBull(boost: Int, address: String)= {
+  let allowedContracts = getTrustedContracts()
+  let allowedContractsList = allowedContracts.split(";")
+  let dappToCall = i.caller.toString()
+  if allowedContractsList.indexOf(dappToCall) == unit then throw("IMBAB: This smart contract can't manipulate the bull boost!") else
+  let key = key_externalBoostAddressBull(address)
+  let activeBoost = tryGetInteger(key)
+  let newBoost = activeBoost+boost
+  if newBoost <0 then throw("IMBAB: Something went wrong with bull boost!") else
+  [
+    IntegerEntry(key,newBoost)
+  ]
+}
+
+@Callable(i)
 func checkArtefactDetails(assetId: String) = {
   let asset = assetInfo(assetId.fromBase58String()).value()
   let assetName = asset.name.value()
@@ -578,6 +594,16 @@ func calculateFarmingPowerBoostEagle(address: String)={
 @Callable(i)
 func calculateFarmingPowerBoostTurtle(address: String)={
   let externalBoostAddress = tryGetInteger(key_externalBoostAddressTurtle(address))
+  (
+    [
+    ],
+    externalBoostAddress
+  )
+}
+
+@Callable(i)
+func calculateFarmingPowerBoostBull(address: String)={
+  let externalBoostAddress = tryGetInteger(key_externalBoostAddressBull(address))
   (
     [
     ],

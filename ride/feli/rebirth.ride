@@ -155,7 +155,11 @@ func getRandomWin(tx: ByteVector, finishHeight: Int, blacklistCode: String) = {
 func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
   let eventAddress = getString(getOracle(), "static_halloweenAddress").valueOrElse("")
   if eventAddress == "" then "" else
-    invoke(addressFromStringValue(eventAddress), "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+  let event = addressFromStringValue(eventAddress)
+  if !getBoolean(event, "h26_enabled").valueOrElse(false) ||
+    lastBlock.timestamp < getInteger(event, "h26_start").valueOrElse(0) ||
+    lastBlock.timestamp >= getInteger(event, "h26_end").valueOrElse(0) then "" else
+    invoke(event, "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
 }
 
 func finishRebirthInternal(initTx: String, address: String, additionalPayment: AttachedPayment, double: Boolean, blacklistCode: String, rescue: Boolean) = {

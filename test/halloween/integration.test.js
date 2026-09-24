@@ -56,21 +56,20 @@ func staticKey_extraFee()="fee"
 func mockIntegerValue(a:Address,k:String)=100
 func tryGetInteger(k:String)=0
 func tryGetString(k:String)=${JSON.stringify(options.staked??'')}
-func bullStakedPower(a:String)=${options.bulls??0}
 func getTurtleStakedPower(a:String)=0
 func keyUnstakeHeight(kind:String,id:String)=kind+id
 func keyArtefactOwner(kind:String,owner:String)=kind+"_"+owner+"_owner"
-func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPayment])="ART-H26FEED"
+func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPayment])=if method=="checkArtefactDetails" then "ART-H26FEED" else if method=="manipulateBoostAccountBull" && args[0].exactAs[Int]==${call.startsWith('stake')?3:-3} then "boost applied" else throw("unexpected boost target or amount")
 `;
   return exec(runtime+mocks+functions,call);
 }
-test('Pumpkin Feed escrow rejects duplicate, wrong payments and open bull positions',async()=>{
+test('Pumpkin Feed escrow updates bull boost and rejects duplicate/wrong payments',async()=>{
   value(await boosterCall('stakeItem()'),'ART-H26FEED_abc_owner','abc');
-  for(const options of [{staked:'xyz'},{bulls:1},{payments:'[]'},{payments:"[AttachedPayment(base58'abc',2),AttachedPayment(unit,100)]"},{payments:"[AttachedPayment(base58'abc',1),AttachedPayment(unit,99)]"}]) assert.ok((await boosterCall('stakeItem()',options)).error);
+  for(const options of [{staked:'xyz'},{payments:'[]'},{payments:"[AttachedPayment(base58'abc',2),AttachedPayment(unit,100)]"},{payments:"[AttachedPayment(base58'abc',1),AttachedPayment(unit,99)]"}]) assert.ok((await boosterCall('stakeItem()',options)).error);
 });
-test('Pumpkin Feed cannot leave escrow with direct or proxy bull positions',async()=>{
+test('Pumpkin Feed removal follows Lake without a bull-position guard',async()=>{
   const result=await boosterCall('unstakeItem("ART-H26FEED")',{staked:'xyz'});assert.equal(result.error,undefined,result.error);assert.ok(result.result.includes('ScriptTransfer('));assert.ok(result.result.includes('DeleteEntry('));
-  assert.ok((await boosterCall('unstakeItem("ART-H26FEED")',{staked:'xyz',bulls:1})).error?.includes('Unstake bulls'));
+  assert.doesNotMatch(booster,/bullStakedPower|Unstake bulls/);
   assert.ok((await boosterCall('unstakeItem("ART-H26FEED")',{staked:''})).error);
 });
 test('all supported families call completion inside successful finish paths',()=>{
@@ -87,4 +86,68 @@ test('reserved breeding jackpots preserve canonical rarity stats for later burn/
     const helpers=[...new Set(body.match(/isSymbol[A-Z]/g))].map(name=>fn(source,name)).join('\n')+fn(source,'getAmountOrClear');
     const result=await exec(helpers+body,`getGenFromName("${gene}")`);assert.equal(result.error,undefined,result.error);assert.ok(result.result.includes('"8W-J"'));
   }
+});
+
+test('bull-only boost helper enforces trusted callers and cannot underflow',async()=>{
+  const source=read('ride/artefacts/items.ride');
+  const methods=['key_externalBoostAddressBull','manipulateBoostAccountBull','calculateFarmingPowerBoostBull'].map(n=>fn(source,n)).join('\n');
+  for(const [trusted,current,delta,allowed] of [[true,0,3,true],[true,3,-3,true],[true,0,-3,false],[false,0,3,false]]){
+    const defs=runtime+`let i=Invocation([],fixture,base58'abc',base58'xyz',0,unit,fixture,base58'abc')
+func getTrustedContracts()="${trusted?'abc':'xyz'}"
+func tryGetInteger(k:String)=if k=="abc_user_external_boost_bull" then ${current} else throw("wrong species key")
+`+methods;
+    const result=await exec(defs,`manipulateBoostAccountBull(${delta},"abc")`);
+    if(allowed)value(result,'abc_user_external_boost_bull',current+delta);else assert.ok(result.error);
+    const readback=await exec(defs,'calculateFarmingPowerBoostBull("abc")');assert.equal(readback.error,undefined,readback.error);assert.ok(readback.result.includes(`_2 = ${current}`),readback.result);
+  }
+});
+
+test('every completion hook skips absent, disabled, cleared and out-of-window campaigns',async()=>{
+  for(const family of ['ducks','turtle','cani','feli','eagl','bulls'])for(const file of ['breeder',family==='bulls'?'incubator':'rebirth']){
+    const hook=fn(read(`ride/${family}/${file}.ride`),'halloweenCompletion').replace(/getString\(/g,'mockString(').replace(/getBoolean\(/g,'mockBoolean(').replace(/getInteger\(/g,'mockInteger(').replace(/\binvoke\(/g,'mockInvoke(').replace(/lastBlock.timestamp/g,'now');
+    for(const [address,enabled,start,end,now,expected] of [['',false,0,0,500,''],[issuer,false,100,1000,500,''],[issuer,false,0,0,500,''],[issuer,true,100,1000,99,''],[issuer,true,100,1000,1000,''],[issuer,true,100,1000,500,'called']]){
+      const defs=runtime+`let now=${now}
+func getOracle()=fixture
+func mockString(a:Address,k:String)="${address}"
+func mockBoolean(a:Address,k:String)=${enabled}
+func mockInteger(a:Address,k:String)=if k=="h26_start" then ${start} else ${end}
+func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPayment])=${expected?'"called"':'throw("inactive event must not be invoked")'}
+`+hook;
+      const result=await exec(defs,'halloweenCompletion("abc","abc",10)');assert.equal(result.error,undefined,`${family}/${file}: ${result.error}`);assert.ok(result.result.endsWith(`= "${expected}"`),result.result);
+    }
+  }
+});
+
+test('Halloween wearable registrations have slots and boost values with public sales disabled',()=>{
+  const items=JSON.parse(read('ride/artefacts/items-halloween2026.json')).data;
+  const boosts=JSON.parse(read('ride/artefacts/wearables-halloween2026.json')).data;
+  const get=(entries,key)=>entries.find(e=>e.key===key)?.value;
+  for(const [name,slot,boost] of [['ART-H26SWORD','RIGHT_WING',30],['ART-H26CAT','PET',5],['ART-H26ARMOR','TOP',30]]){
+    assert.equal(typeof get(items,`direct_cosmetic_${name}`),'number');
+    assert.equal(get(items,`direct_cosmetic_${name}_sale`),false);
+    assert.equal(get(items,`type_cosmetic_${name}`),slot);
+    assert.equal(get(boosts,`boost_${name}`),boost);
+  }
+  assert.equal(new Set(items.map(e=>e.key)).size,items.length);
+});
+
+test('bull farming adds only the bull-specific boost and preserves existing boost components',async()=>{
+  const source=read('ride/bulls/farming.ride');
+  const calculate=fn(source,'calculateFarmPower').replace(/assetInfo\(/g,'mockAssetInfo(').replace(/\binvoke\(/g,'mockInvoke(');
+  for(const bull of [0,3]){
+    const defs=runtime+`func getBreederAddress()=fixture
+func getIncubatorAddress()=fixture
+func getItemsAddress()=fixture
+func getWearablesAddress()=fixture
+func tryGetBooleanExternal(a:Address,k:String)=false
+func isTestEnv()=false
+func getAssetRarityComplete(j:Boolean,name:String)=100
+func tryGetInteger(k:String)=100
+func mockAssetInfo(id:ByteVector)=Asset(id,1,0,fixture,base58'abc',false,false,unit,"BULL-AAAAAAAA-GA","")
+func mockInvoke(a:Address,method:String,args:List[String],payments:List[AttachedPayment])=if method=="calculateFarmingPowerBoost" then 5 else if method=="calculateWearblesBoost" then 30 else if method=="calculateFarmingPowerBoostBull" && args[0]=="owner" then ${bull} else throw("unexpected boost invocation")
+`+calculate;
+    const result=await exec(defs,'calculateFarmPower("abc","owner")');assert.equal(result.error,undefined,result.error);assert.ok(result.result.includes(`_1 = ${108+bull}`),result.result);
+  }
+  for(const family of ['ducks','cani','feli','eagl'])assert.doesNotMatch(read(`ride/${family}/farming${family==='ducks'?'V2':''}.ride`),/calculateFarmingPowerBoostBull/);
+  assert.doesNotMatch(source,/registerPumpkinPosition|h26_origin_/);
 });
