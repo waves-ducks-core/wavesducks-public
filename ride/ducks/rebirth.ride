@@ -262,6 +262,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       throw("you cannot finish rebirth, yet")
     } else {
       strict halloweenDrop = halloweenCompletion(address, initTx, finishBlock)
+      let halloweenBonus = if halloweenDrop != "" then [StringEntry("address_" + address + "_initTx_" + initTx + "_bonusItem", halloweenDrop)] else []
       let output = getRandomWin(initTx.fromBase58String(), finishBlock, assetRarity, blacklistCode)  
       let win = output._2
       let random = output._1
@@ -404,7 +405,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_random",random),
         IntegerEntry("address_" + address + "_initTx_" + initTx + "_jackpotRandom",jackpotRandom)
         
-      ]++validPayment++returnPayload#++bonusOutput
+      ]++validPayment++returnPayload ++ halloweenBonus #++bonusOutput
     }
   }
 }

@@ -250,6 +250,7 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
       let description = "{\"genotype\": \"" + duckGen + "\", \"crossbreeding\": true}"
 
       strict halloweenDrop = halloweenCompletion(owner, txIdStr, processFinishHeight)
+      let halloweenBonus = if halloweenDrop != "" then [StringEntry("address_" + owner + "_initTx_" + txIdStr + "_bonusItem", halloweenDrop)] else []
       let asset = Issue(duckGen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
@@ -277,7 +278,7 @@ func finishDuckHatch(txIdStr: String, owner: String, duckGenesString: String) = 
         ScriptTransfer(addressFromStringValue(owner), 1, assetId),
         IntegerEntry("asset_" + parent1Id + "_children", 1),
         IntegerEntry("asset_" + parent2Id + "_children", 1)
-      ]++parentsSend#++bonusOutput
+      ]++parentsSend ++ halloweenBonus #++bonusOutput
     }
 }
 

@@ -219,3 +219,40 @@ func mockInvoke(a:Address,m:String,args:List[String],p:List[AttachedPayment])=if
   apply(await call(`reduceRarity("AB","${key}")`));assert.equal(state[`stats_${key}_quantity`],before);assert.equal(state[`stats_${other}_quantity`],otherBefore);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],0);
   apply(await call(`increaseRarity("AB","${key}")`));assert.equal(state[`stats_${key}_quantity`],before+1);assert.equal(state[`stats_${other}_quantity`],otherBefore);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],1);
 });
+
+test('Soul drops use the historical source-account bonusItem reward metadata for every family',async()=>{
+  for(const family of ['ducks','turtle','cani','feli','eagl','bulls'])for(const file of ['breeder',family==='bulls'?'incubator':'rebirth']){
+    const source=read(`ride/${family}/${file}.ride`);
+    const metadata=source.match(/let halloweenBonus = ([^\n]+)/)[1];
+    assert.match(source,/\+\+ halloweenBonus\s*#\+\+\s*bonusOutput/);
+    for(const assetId of ['soul-nft-id','']){
+      const defs=runtime+`let owner="abc"\nlet address="abc"\nlet txIdStr="initial-tx"\nlet initTx="initial-tx"\nlet halloweenDrop="${assetId}"\nlet i=Invocation([],fixture,base58'abc',base58'xyz',0,unit,fixture,base58'abc')\n`;
+      const result=await exec(defs,metadata);assert.equal(result.error,undefined,`${family}/${file}: ${result.error}`);
+      if(assetId)value(result,'address_abc_initTx_initial-tx_bonusItem',assetId);
+      else assert.ok(result.result.endsWith('= []'),result.result);
+    }
+  }
+});
+
+test('real duck finish returns the Soul bonus beside its normal NFT and status, never for a missed drop',async()=>{
+  const finish=fn(read('ride/ducks/breeder.ride'),'finishDuckHatch').replace(/asset\.calculateAssetId\(\)/g,"base58'abc'").replace(/\binvoke\(/g,'mockInvoke(').replace(/getStringValue\(/g,'mockStringValue(').replace(/getIntegerValue\(/g,'mockIntegerValue(').replace(/\bthis\b/g,'fixture');
+  for(const drop of ['soul-nft-id','']){
+    const defs=runtime+`let HatchingFinished="BREEDING_FINISHED"
+func getProcessStatusKey(a:String,t:ByteVector)="status"
+func getDuckIdKey(a:String,t:ByteVector)="duckId"
+func getProcessFinishHeightKey(a:String,t:ByteVector)="finish"
+func mockStringValue(a:Address,k:String)="BREEDING_STARTED"
+func mockIntegerValue(a:Address,k:String)=10
+func mockInvoke(a:Address,f:String,args:List[ByteVector|Int|String],p:List[AttachedPayment])="DUCK-AAAAAAAA-GA"
+func halloweenCompletion(a:String,t:String,h:Int)="${drop}"
+func getParentKey(t:ByteVector,n:Int)="parent"
+func tryGetString(k:String)="abc"
+func tryGetBoolean(k:String)=false
+func getRandomNumber(n:Int,t:ByteVector,h:Int,nonce:Int)=1
+func composeGenericData(g:String,k:String,id:ByteVector,a:Issue)=[a]
+`+finish;
+    const result=await exec(defs,`finishDuckHatch("abc","${issuer}","DUCK-AAAAAAAA-GA")`);
+    assert.equal(result.error,undefined,result.error);value(result,'status','BREEDING_FINISHED');assert.ok(result.result.includes('Issue('));assert.ok(result.result.includes('ScriptTransfer('));
+    if(drop)value(result,`address_${issuer}_initTx_abc_bonusItem`,drop);else assert.ok(!result.result.includes('_bonusItem'));
+  }
+});

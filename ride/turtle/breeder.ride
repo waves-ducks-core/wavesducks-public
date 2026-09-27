@@ -257,6 +257,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
       strict halloweenDrop = halloweenCompletion(i.caller.toString(), txIdStr, processFinishHeight)
+      let halloweenBonus = if halloweenDrop != "" then [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", halloweenDrop)] else []
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
 
@@ -286,7 +287,7 @@ func finishTRTLHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ] ++ (if jackpot then [IntegerEntry("h26_jackpot_issued", getInteger(this,"h26_jackpot_issued").valueOrElse(0)+1)] else []) #++bonusOutput
+      ] ++ (if jackpot then [IntegerEntry("h26_jackpot_issued", getInteger(this,"h26_jackpot_issued").valueOrElse(0)+1)] else []) ++ halloweenBonus #++bonusOutput
     }
 }
 
