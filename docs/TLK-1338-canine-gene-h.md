@@ -10,6 +10,9 @@ Both modified contracts compile with Surfboard. Run
 current/retired pools, evaluate the actual Ride selection function for all
 four colors, and require every callable/payment/authority/asset-flow line
 to remain identical to origin/main2 outside the two gene-pool helpers.
+For the event branch, pass its pre-gene-change baseline explicitly:
+`node scripts/test-canine-h.cjs dd867ce`. This preserves the same parity check
+without treating the existing Halloween completion logic as a gene change.
 
 Callable review (no callable changes):
 - Incubator configureOracle/setDiscount: self only. increaseRarity and
