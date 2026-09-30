@@ -14,7 +14,7 @@ const source = ['tryGetStringExternal','tryGetString','tryGetInteger','tryGetBoo
 const issuer = '3PEPftf2kWZDmAaWBjs6BUJa9957kiA2PkU';
 let executable = source.replace('getBoolean(key)', 'getBoolean(this, key)').split('@Verifier')[0].replace(/^\{-#.*\n/gm, '').replace(/^@Callable\(i\)\n/gm, '');
 executable = executable.replace(/func mint\([^\n]+\n/, 'func mint(kind: String, receiver: Address, nonce: Int) = kind\n');
-executable = executable.replace(/func unlockPersistent\([^\n]+\n/, 'func unlockPersistent(oracleKey: String) = true\n');
+executable = executable.replace(/func unlockPersistent\([^\n]+\n/, 'func unlockPersistent(oracleKey: String) = if oracleKey == "static_incubatorAddress" then true else throw("unexpected bull unlock")\n');
 for (const name of ['getInteger','getBoolean','getString','getStringValue','assetInfo','blockInfoByHeight']) {
   executable = executable.replace(new RegExp('\\b'+name+'\\(', 'g'), 'mock'+name+'(');
 }
@@ -167,4 +167,28 @@ test('actual completion rolls39 and40 enforce exact40% boundary without rerollin
     assert.equal(early.result,late.result);
     assert.equal(early.result.includes('ART-H26SOUL'),roll===39);
   }
+});
+
+
+test('200-Soul reward requires milestone and personal ten, mints once without consuming payments',async()=>{
+  const data={h26_milestone_200:true,h26_user_abc_total:10};
+  const r=await evaluate('claimSoul()',{data});
+  value(r,'h26_user_abc_soul',true);assert.ok(r.result.includes('ART-H26SOUL'));
+  for(const change of [{h26_user_abc_total:9},{h26_milestone_200:false},{h26_user_abc_soul:true}]) await rejects('claimSoul()',{data:{...data,...change}},'unavailable');
+  await rejects('claimSoul()',{data,payments:souls(1)},'no payments');
+  await rejects('claimSoul()',{data,caller:'dEf'},'unavailable');
+});
+test('earned milestone Soul stays claimable when paused, after end and after settlement',async()=>{
+  for(const change of [{h26_enabled:false},{h26_settled:true},{h26_enabled:false,h26_settled:true}]){
+    value(await evaluate('claimSoul()',{now:2000,data:{h26_milestone_200:true,h26_user_abc_total:10,...change}}),'h26_user_abc_soul',true);
+  }
+});
+test('crossing contribution can earn milestone Soul at personal ten before totals freeze',async()=>{
+  const before={h26_total:1199,h26_user_abc_total:9,h26_milestone_200:true};
+  const crossed=await evaluate('contribute()',{data:before,payments:souls(1)});
+  value(crossed,'h26_user_abc_total',10);value(crossed,'h26_settled',true);
+  const frozen={...before,h26_total:1200,h26_user_abc_total:10,h26_settled:true};
+  value(await evaluate('claimSoul()',{data:frozen}),'h26_user_abc_soul',true);
+  await rejects('contribute()',{data:frozen,payments:souls(1)},'closed');
+  await rejects('claimSoul()',{data:{...frozen,h26_user_abc_total:9}},'unavailable');
 });

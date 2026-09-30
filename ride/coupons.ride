@@ -358,7 +358,6 @@ func contribute() = {
   func firstTen(acc: List[String], address: String) = if size(acc) < 10 then acc :+ address else acc
   let leaders = FOLD<11>((if ranked._2 then ranked._1 else ranked._1 :+ a), [], firstTen)
   func mark(acc: List[BooleanEntry], threshold: Int) = if total >= threshold && !milestone(threshold) then acc :+ BooleanEntry("h26_milestone_"+threshold.toString(), true) else acc
-  strict bullUnlock = if total >= 200 && !milestone(200) then unlockPersistent("static_bullIncubatorAddress") else false
   strict phoenixUnlock = if total >= 1200 && !milestone(1200) then unlockPersistent("static_incubatorAddress") else false
   let milestones = FOLD<6>([200,400,600,800,1000,1200], [], mark)
   burns ++ milestones ++ [IntegerEntry("h26_total", total), IntegerEntry("h26_sequence", sequence),
@@ -374,6 +373,15 @@ func settle() = {
   strict payments = noPayments(i.payments)
   if !tryGetBoolean("h26_initialized") || lastBlock.timestamp < tryGetInteger("h26_end") || tryGetBoolean("h26_settled") then throw("H26: not ready to settle") else
   [BooleanEntry("h26_settled", true), IntegerEntry("h26_settledAt", lastBlock.timestamp)]
+}
+
+@Callable(i)
+func claimSoul() = {
+  strict payments = noPayments(i.payments)
+  let key = halloweenUser(i.caller.toString()) + "_soul"
+  if !milestone(200) || tryGetInteger(halloweenUser(i.caller.toString())+"_total") < 10 || tryGetBoolean(key) then throw("H26: soul unavailable or claimed") else
+  strict id = mint("ART-H26SOUL", i.caller, 0)
+  ([BooleanEntry(key, true)], id)
 }
 
 @Callable(i)
