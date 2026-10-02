@@ -39,7 +39,7 @@ function selectorSource(source) {
     .replace(/\bgetInteger\(/g, 'mockInteger(').replace(/\bgetIntegerValue\(/g, 'mockIntegerValue(');
 }
 function selectorState(options) {
-  const t = { name: 'BULL-WMOLDYMT-JU', odds: 200, count: 0, max: 2, start: 100, end: 200, now: 150, raw: 0, reads: true, rng: true, ...options };
+  const t = { name: 'BULL-WMOLDYMT-JU', odds: 200, count: 0, max: 2, start: 100, end: 200, now: 150, raw: 1, reads: true, rng: true, ...options };
   return runtime + `let now=${t.now}
 func tryGetStringExternal(a:Address,k:String)=if a==oracle && k=="jackpot_abc" then ${JSON.stringify(t.name)} else throw("WRONG_NAME_KEY")
 func mockInteger(a:Address,k:String)=if a==oracle && k=="jackpot_abc_odds" then ${t.odds} else throw("WRONG_ODDS_KEY")
@@ -69,8 +69,10 @@ for (const [family, name] of [['bulls', 'BULL-WMOLDYMT-JU'], ['turtle', 'TRTL-WW
       { count: 2, rng: false },
       { count: 3, rng: false },
       { max: 0, rng: false },
-      { odds: 1, winner: true },
-      { odds: 2, raw: 1 },
+      { raw: 0 },
+      { raw: -1 },
+      { odds: 1, raw: 0 },
+      { odds: 2, raw: 1, winner: true },
       { odds: 2, raw: -1 },
       { odds: '9223372036854775807', raw: '9223372036854775806' },
       { odds: '9223372036854775807', raw: '-9223372036854775806' },
@@ -86,19 +88,23 @@ for (const [family, name] of [['bulls', 'BULL-WMOLDYMT-JU'], ['turtle', 'TRTL-WW
     const odds = family === 'bulls' ? 1000 : 200;
     let winner;
     let loser;
-    for (let k = 1; k < 30000 && (!winner || !loser); k++) {
+    let zero;
+    let negativeOne;
+    for (let k = 1; k < 30000 && (!winner || !loser || !zero || !negativeOne); k++) {
       const tx = Buffer.alloc(32);
       tx.writeUInt32BE(k, 28);
       const hash = nodeCrypto.createHash('sha256').update(Buffer.concat([tx, Buffer.from(crypto.base58Decode('abc'))])).digest();
       const remainder = hash.readBigInt64BE(2) % BigInt(odds);
-      if (remainder === 0n) winner = crypto.base58Encode(tx);
+      if (remainder === 1n) winner = crypto.base58Encode(tx);
+      else if (remainder === 0n) zero = crypto.base58Encode(tx);
+      else if (remainder === -1n) negativeOne = crypto.base58Encode(tx);
       else loser = crypto.base58Encode(tx);
     }
-    assert.ok(winner && loser);
+    assert.ok(winner && loser && zero && negativeOne);
     const state = selectorState({ name, odds }).replace(/func getRandomNumber\([\s\S]*$/, '');
     const random = fn(source, 'getRandomNumber').replace(/blockInfoByHeight\(/g, 'mockBlock(');
     const block = `func mockBlock(h:Int)=if h!=9 then throw("WRONG_BLOCK") else BlockInfo(500,h,1,base58'abc',fixture,base58'abc',base58'abc',[])\n`;
-    for (const [tx, expected] of [[winner, name], [loser, '']]) {
+    for (const [tx, expected] of [[winner, name], [loser, ''], [zero, ''], [negativeOne, '']]) {
       const result = await execute(state + block + random + '\n' + selectorSource(source), `getJackpot(base58'${tx}',10)`);
       assert.ok(ok(result).endsWith(`= ${JSON.stringify(expected)}`), result.result);
     }
@@ -137,7 +143,7 @@ func mockIntegerValue(a:Address,k:String)=if a==fixture && k==getProcessFinishHe
 func mockStringValue(a:Address,k:String)=if a==fixture && k==getProcessStatusKey("${owner}",base58'${initialTx}') then "BREEDING_STARTED" else throw("WRONG_STATUS_KEY")
 func tryGetInteger(k:String)=if k=="stats_${name}_amount" then ${count} else 0
 func tryGetString(k:String)="abc"
-func getRandomNumber(n:Int,t:ByteVector,h:Int,o:Int)=if n==200 && t==base58'${initialTx}' && h==10 && o==2 then 0 else throw("WRONG_RANDOM_ARGS")
+func getRandomNumber(n:Int,t:ByteVector,h:Int,o:Int)=if n==200 && t==base58'${initialTx}' && h==10 && o==2 then 1 else throw("WRONG_RANDOM_ARGS")
 func generate(t:ByteVector,h:Int,a:Int,b:Int,c:String,d:Int)="${normal}"
 func generateTRTL(t:ByteVector,h:Int,a:Int,b:Int,c:String,d:Int)=("${normal}",0)
 func getCouponsAddress()=oracle

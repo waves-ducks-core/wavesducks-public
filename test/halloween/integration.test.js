@@ -5,19 +5,18 @@ function fn(source,name){const start=source.indexOf(`func ${name}(`);assert.ok(s
 async function exec(source,expression){const repl=ride.repl({nodeUrl:'http://127.0.0.1:1',chainId:'W',address:issuer});const loaded=await repl.evaluate(source.replace(/\bheight\b/g,"testHeight"));assert.equal(loaded.error,undefined,loaded.error);return repl.evaluate(expression);}
 function value(r,key,v){assert.equal(r.error,undefined,r.error);assert.ok(r.result.includes(`key = "${key}"\n\tvalue = ${JSON.stringify(v)}`),r.result);}
 const runtime=`let fixture = Address(base58'abc')\nlet height = 1000\n`;
-test('public duck rebirth reads the configured Phoenix gene only after permanent unlock',async()=>{
+test('public duck rebirth uses one active gene key and ignores stale historical JACKPOT_NAME',async()=>{
   const source=read('ride/ducks/rebirth.ride');
-  const branch=source.match(/\}else if \(win == "phoenix"\) then \{\s*(let dark = [\s\S]*?let gene = [^\n]+)/);
+  const branch=source.match(/\}else if \(win == "phoenix"\) then \{\s*(let gene = [^\n]+)/);
   assert.ok(branch,'The reward must remain inside the selected Phoenix outcome.');
   assert.match(fn(source,'getRandomWin'),/phoenixRandom == 1/);
   assert.match(fn(source,'finishRebirthInternal'),/\[address, txId, gene\]/);
-  for(const [unlocked,configured,expected] of [[false,'WDARKPHX','WWWWWWWP'],[true,'WDARKPHX','WDARKPHX'],[true,'WNEWGENE','WNEWGENE'],[true,null,'WWWWWWWP']]){
-    const defs=runtime+`func getOracle()=fixture
-func getIncubatorAddress()=fixture
-func mockBoolean(a:Address,k:String)=if a==fixture && k=="h26_darkPhoenixUnlocked" then ${unlocked} else throw("wrong unlock source")
-func mockString(a:Address,k:String)=if !${unlocked} then throw("unlocked gene must not be read early") else if a==fixture && k=="phoenix_gen_abc" then ${configured===null?'unit':JSON.stringify(configured)} else throw("wrong gene key")
+  assert.doesNotMatch(branch[1],/h26_|getOracle|getIncubatorAddress|getBoolean/);
+  for(const [configured,expected] of [[null,'WWWWWWWP'],['WDARKPHX','WDARKPHX'],['WNEWGENE','WNEWGENE']]){
+    const defs=runtime+`let data=[StringEntry("JACKPOT_NAME","WWEASTER")${configured===null?'':',StringEntry("phoenix_gen",'+JSON.stringify(configured)+')'}]
+func mockString(k:String)=if k=="phoenix_gen" then getString(data,k) else throw("unexpected legacy or external key")
 func selectedGene()={
-${branch[1].replace(/getBoolean\(/g,'mockBoolean(').replace(/getString\(/g,'mockString(').replace(/\bthis\b/g,'fixture')}
+${branch[1].replace(/getString\(/g,'mockString(')}
 gene
 }
 `;
@@ -138,15 +137,24 @@ func tryGetString(key:String)=getString(data,key).valueOrElse("")
   }
 });
 
-test('Dark Phoenix unlock is campaign-only, payment-free and monotonic',async()=>{
-  for(const family of ['ducks']){
-    let unlock=fn(read(`ride/${family}/incubator.ride`),'unlockHalloween').replace(/getStringValue\(/g,'mockStringValue(');
-    for(const [caller,payments,allowed] of [['abc','[]',true],['xyz','[]',false],['abc',"[AttachedPayment(unit,1)]",false]]){
-      const defs=runtime+`let i=Invocation(${payments},Address(base58'${caller}'),base58'abc',base58'abc',0,unit,fixture,base58'abc')\nfunc getOracle()=fixture\nfunc mockStringValue(a:Address,k:String)="abc"\n`+unlock;
-      const result=await exec(defs,'unlockHalloween()');if(allowed)value(result,'h26_darkPhoenixUnlocked',true);else assert.ok(result.error?.includes('campaign only'));
-    }
+test('active jackpot setter is coupons-only, payment-free and validates the configured gene',async()=>{
+  const source=read('ride/ducks/rebirth.ride'),setter=fn(source,'setJackpot');
+  assert.doesNotMatch(read('ride/ducks/incubator.ride'),/unlockHalloween|h26_darkPhoenixUnlocked/);
+  assert.doesNotMatch(setter,/h26_|JACKPOT_NAME/);
+  for(const [caller,payments,gene,allowed] of [
+    ['abc','[]','WDARKPHX',true],['abc','[]','WNEWGENE',true],
+    ['xyz','[]','WDARKPHX',false],['abc',"[AttachedPayment(unit,1)]",'WDARKPHX',false],
+    ['abc','[]','',false],['abc','[]','SHORT',false],['abc','[]','TOOLONGGENE',false],
+  ]){
+    const defs=runtime+`let i=Invocation(${payments},Address(base58'${caller}'),base58'abc',base58'abc',0,unit,fixture,base58'abc')
+func getCouponsAddress()=fixture
+`+setter;
+    const result=await exec(defs,`setJackpot(${JSON.stringify(gene)})`);
+    if(allowed)value(result,'phoenix_gen',gene);
+    else assert.ok(result.error?.includes(caller!=='abc'||payments!=='[]'?'coupons only':'eight characters'),result.error);
   }
 });
+
 const booster=read('ride/artefacts/accBooster.ride');
 async function boosterCall(call,options={}){
   const payments=options.payments??(call.startsWith('stake')?"[AttachedPayment(base58'abc',1),AttachedPayment(unit,100)]":"[AttachedPayment(unit,100)]");

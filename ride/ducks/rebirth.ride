@@ -356,8 +356,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                             ]
         result
       }else if (win == "phoenix") then {
-        let dark = getBoolean(getIncubatorAddress(), "h26_darkPhoenixUnlocked").valueOrElse(false)
-        let gene = if dark then getString(getOracle(), "phoenix_gen_" + this.toString()).valueOrElse("WWWWWWWP") else "WWWWWWWP"
+        let gene = valueOrElse(getString("phoenix_gen"), "WWWWWWWP")
         strict phoenix = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, gene], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", phoenix.exactAs[String])]
 
@@ -406,6 +405,13 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       ]++validPayment++returnPayload ++bonusItemOutput("rebirth", address, initTx, finishBlock)
     }
   }
+}
+
+@Callable(i)
+func setJackpot(gen: String) = {
+  if size(i.payments) != 0 || i.caller != getCouponsAddress() then throw("RJ: coupons only without payments") else
+  if size(gen) != 8 then throw("RJ: gene must contain eight characters") else
+  ([StringEntry("phoenix_gen", gen)], true)
 }
 
 @Callable(i)

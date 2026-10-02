@@ -10,11 +10,18 @@ function helper(name) {
  const next=fullSource.slice(start+5).search(/^(@Callable|@Verifier|func )/m);
  return fullSource.slice(start,start+5+next);
 }
-const source = ['tryGetStringExternal','tryGetString','tryGetInteger','tryGetBoolean','getOracle','staticKey_itemsAddress','getItemsAddress'].map(helper).join('\n') + fullSource.split('# Halloween 2026 ritual. Keep campaign keys when redeploying coupons.')[1].split('# End Halloween 2026 ritual.')[0];
+const source = ['tryGetStringExternal','tryGetString','tryGetInteger','tryGetBoolean','getOracle','staticKey_itemsAddress','getItemsAddress','getRebirthAddress'].map(helper).join('\n') + fullSource.split('# Halloween 2026 ritual. Keep campaign keys when redeploying coupons.')[1].split('# End Halloween 2026 ritual.')[0];
 const issuer = '3PEPftf2kWZDmAaWBjs6BUJa9957kiA2PkU';
+const rebirth = '3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ';
+const rebirthSource = fs.readFileSync('ride/ducks/rebirth.ride','utf8');
+const setterStart = rebirthSource.indexOf('func setJackpot(');
+assert.ok(setterStart >= 0);
+const setterTail = rebirthSource.slice(setterStart);
+const setterEnd = setterTail.slice(5).search(/^(@Callable|@Verifier|func )/m);
+const setter = setterTail.slice(0,5+setterEnd).replace(/\bi\b/g,'jackpotInvocation');
 let executable = source.replace('getBoolean(key)', 'getBoolean(this, key)').split('@Verifier')[0].replace(/^\{-#.*\n/gm, '').replace(/^@Callable\(i\)\n/gm, '');
 executable = executable.replace(/func mint\([^\n]+\n/, 'func mint(kind: String, receiver: Address, nonce: Int) = kind\n');
-executable = executable.replace(/func unlockPersistent\([^\n]+\n/, 'func unlockPersistent(oracleKey: String) = if oracleKey == "static_incubatorAddress" then true else throw("unexpected bull unlock")\n');
+executable = executable.replace(/\binvoke\(/g, 'mockInvoke(');
 for (const name of ['getInteger','getBoolean','getString','getStringValue','assetInfo','blockInfoByHeight']) {
   executable = executable.replace(new RegExp('\\b'+name+'\\(', 'g'), 'mock'+name+'(');
 }
@@ -24,7 +31,9 @@ function entries(data) {
 }
 async function evaluate(call, opts = {}) {
   const data = { h26_start:100, h26_end:1000, h26_enabled:true, h26_initialized:true, h26_recipes:true,
-    static_oracleAddress:issuer, static_itemsAddress:issuer, static_eggAssetId:'abc', ...opts.data };
+    static_oracleAddress:issuer, static_itemsAddress:issuer, static_eggAssetId:'abc', static_rebirthAddress:rebirth,
+    ['phoenix_gen_'+rebirth]:'WDARKPHX', ...opts.data };
+  if(opts.missingGene)delete data['phoenix_gen_'+rebirth];
   const payments = opts.payments || [];
   const assets = opts.assets || ['ART-H26SOUL'];
   const p = payments.map(([id,amount])=>`AttachedPayment(${id === null ? 'unit' : `base58'${id}'`},${amount})`).join(',');
@@ -39,6 +48,17 @@ func mockgetStringValue(a: Address,k: String) = getString(data,k).value()
 func mockgetBoolean(a: Address,k: String) = getBoolean(data,k)
 func mockassetInfo(id: ByteVector) = Asset(id,${opts.quantity ?? 1},${opts.decimals ?? 0},${opts.counterfeit ? "Address(base58'xyz')" : `addressFromStringValue("${issuer}")`},base58'abc',${opts.reissuable ?? false},false,unit,${assets.length === 1 ? JSON.stringify(assets[0]) : assets.map((n,j)=>`if id == base58'${['abc','dEf','xyz'][j]}' then ${JSON.stringify(n)} else `).join('')+'"unknown"'},"")
 func mockblockInfoByHeight(h: Int) = BlockInfo(500,h,1,base58'abc',testThis,base58'abc',base58'abc',[])
+let jackpotInvocation=Invocation([],testThis,base58'abc',base58'abc',0,unit,Address(base58'abc'),base58'abc')
+func getCouponsAddress()=testThis
+${setter}
+func mockInvoke(a:Address,method:String,args:List[String|Int],payments:List[AttachedPayment])={
+  if ${opts.forbidJackpot ?? false} then throw("jackpot setter must not be called") else
+  if a!=addressFromStringValue("${rebirth}") || method!="setJackpot" || size(args)!=1 || size(payments)!=0 then throw("wrong jackpot target, method or payment") else
+  let configured = args[0].exactAs[String]
+  if configured!=${JSON.stringify(data['phoenix_gen_'+rebirth]??'')} then throw("wrong configured gene") else
+  let result = setJackpot(configured)
+  if result._1!=[StringEntry("phoenix_gen", configured)] || !result._2 then throw("setter did not persist the active gene") else result._2
+}
 `;
   const repl = ride.repl({nodeUrl:'http://127.0.0.1:1',chainId:'W',address:issuer});
   const loaded = await repl.evaluate(fixture+executable);
@@ -164,4 +184,27 @@ test('crossing contribution can earn milestone Soul at personal ten before total
   value(await evaluate('claimSoul()',{data:frozen}),'h26_user_abc_soul',true);
   await rejects('contribute()',{data:frozen,payments:souls(1)},'closed');
   await rejects('claimSoul()',{data:{...frozen,h26_user_abc_total:9}},'unavailable');
+});
+
+
+test('1200 milestone routes the configured gene through the real rebirth setter',async()=>{
+  for(const gene of ['WDARKPHX','WNEWGENE']){
+    const result=await evaluate('contribute()',{payments:souls(1),data:{h26_total:1199,['phoenix_gen_'+rebirth]:gene}});
+    value(result,'h26_milestone_1200',true);value(result,'h26_settled',true);
+  }
+});
+test('prepublished gene is inactive before 1200 and milestone is not applied twice',async()=>{
+  const before=await evaluate('contribute()',{payments:souls(1),forbidJackpot:true,data:{h26_total:1198}});
+  value(before,'h26_total',1199);assert.ok(!before.result.includes('h26_milestone_1200'));
+  const marked=await evaluate('contribute()',{payments:souls(1),forbidJackpot:true,data:{h26_total:1199,h26_milestone_1200:true}});
+  value(marked,'h26_settled',true);
+});
+test('invalid configured gene aborts the crossing contribution and its actions',async()=>{
+  for(const gene of ['', 'SHORT', 'TOOLONGGENE']){
+    const result=await evaluate('contribute()',{payments:souls(1),data:{h26_total:1199,['phoenix_gen_'+rebirth]:gene}});
+    assert.ok(result.error?.includes('eight characters'),result.error);
+    assert.equal(result.result,undefined,'Rejected evaluation must not return burn/milestone actions');
+  }
+  const missing=await evaluate('contribute()',{payments:souls(1),missingGene:true,data:{h26_total:1199}});
+  assert.ok(missing.error);assert.equal(missing.result,undefined);
 });

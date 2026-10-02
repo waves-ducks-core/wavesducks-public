@@ -206,7 +206,7 @@ func getJackpot(txId: ByteVector, finishHeight: Int) = {
   if tryGetInteger(getStatsKey(name)) >= getIntegerValue(getOracle(), key + "_max") ||
      lastBlock.timestamp < getIntegerValue(getOracle(), key + "_start") ||
      lastBlock.timestamp >= getIntegerValue(getOracle(), key + "_end") then "" else
-  if getRandomNumber(odds, txId, finishHeight, 2) == 0 then name else ""
+  if getRandomNumber(odds, txId, finishHeight, 2) == 1 then name else ""
 }
 
 func bonusItemOutput(action: String, owner: String, initialTx: String, finishHeight: Int) = {

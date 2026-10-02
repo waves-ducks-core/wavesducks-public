@@ -247,3 +247,166 @@ func last_height_key_receiver(a:String)="last_height_"+a
     }
   }
 });
+
+test('failed mutant completion burns the failed NFT, preserves parent outcomes and awards its bonus once', async () => {
+  const source = read('ride/mutants/breeder.ride');
+  const keys = ['hatchingFinished', 'getStatsKey_amount', 'getStatsKey', 'getParentKey', 'getProcessStatusKey', 'getProcessFinishHeightKey', 'getIdKey'].map(name => fn(source, name)).join('\n');
+  const names = ['isSymbol', 'getAmountOrClear', 'charList', 'getRarityFromName', 'nrOfTypeGenes', 'validateIfMutantFailed', 'checkAdditionalPayment', 'bonusItemOutput', 'finishHatchingInternal', 'finishMutantHatching'];
+  const methods = names.map(name => fn(source, name)).join('\n')
+    .replace(/\bthis\b/g, 'fixture').replace(/\bheight\b/g, 'testHeight').replace(/lastBlock.timestamp/g, '500')
+    .replace(/\binvoke\(/g, 'mockInvoke(').replace(/\bgetStringValue\(/g, 'mockStringValue(')
+    .replace(/\bgetIntegerValue\(/g, 'mockIntegerValue(').replace(/\bgetInteger\(/g, 'mockInteger(')
+    .replace(/asset\.calculateAssetId\(\)/g, "base58'AB'");
+  for (const t of [
+    {name: 'failed offspring still receives bonus', roll: 0},
+    {name: 'failed offspring with missed bonus', roll: 60},
+    {name: 'replay', status: 'BREEDING_FINISHED', error: 'claimed already'},
+    {name: 'immature', maturity: 1001, error: 'not finished yet'},
+    {name: 'wrong origin owner', origin: '3P3H1W7X5vjLRVKkGGNzHdppECUTMbfpiSS', error: 'WRONG_OWNER'},
+    {name: 'missing fee', payments: '[]', error: 'Wrong amount of payments'},
+  ]) {
+    const mocks = `let fixture=Address(base58'abc')
+let testHeight=1000
+let i=Invocation(${t.payments || '[AttachedPayment(unit,1)]'},Address(base58'xyz'),base58'abc',base58'dEf',0,unit,Address(base58'${t.origin || owner}'),base58'abc')
+func getOracle()=fixture
+func getItemsAddress()=Address(base58'xyz')
+func getCouponsAddress()=Address(base58'456')
+func getFeeAggregator()=Address(base58'789')
+func staticKey_extraFee()="fee"
+func mockStringValue(a:Address,k:String)=if a!=fixture then throw("WRONG_STATE_ACCOUNT") else
+  if k==getProcessStatusKey("${owner}","${initialTx}") then "${t.status || 'BREEDING_STARTED'}" else
+  if k==getIdKey("${owner}","${initialTx}") then "AB" else throw("WRONG_OWNER")
+func mockIntegerValue(a:Address,k:String)=if a!=fixture then throw("WRONG_STATE_ACCOUNT") else
+  if k==getProcessFinishHeightKey("${owner}","${initialTx}") then ${t.maturity || 10} else
+  if k=="fee" then 1 else if k=="bonus_item_abc_breed_start" then 100 else if k=="bonus_item_abc_breed_end" then 1000 else throw("WRONG_INTEGER_KEY")
+func tryGetString(k:String)=if k==getParentKey(base58'${initialTx}',1) then "DEF" else if k==getParentKey(base58'${initialTx}',2) then "GHJ" else throw("WRONG_PARENT_KEY")
+func tryGetInteger(k:String)=if k=="stats_amount" then 7 else 0
+func tryGetStringExternal(a:Address,k:String)=if a==fixture && k=="bonus_item_abc_breed" then "ART-SNOWBALL" else throw("WRONG_CONFIG_KEY")
+func mockInteger(a:Address,k:String)=if a==fixture && k=="bonus_item_abc_breed_chance" then 60 else throw("WRONG_CHANCE_KEY")
+func generate(tx:ByteVector,h:Int,p1:ByteVector,p2:ByteVector)=if tx==base58'${initialTx}' && h==10 && p1==base58'DEF' && p2==base58'GHJ' then ("MTNT-DADADADADADADADA-GA",0) else throw("WRONG_GENERATION_ARGS")
+func getRandomNumber(n:Int,tx:ByteVector,h:Int,o:Int)=if h!=10 then throw("WRONG_RANDOM_HEIGHT") else
+  if n==10 && tx==base58'${initialTx}' then (if o==2 then 5 else if o==3 then 0 else throw("WRONG_PARENT_OFFSET")) else
+  if n==200 && tx==toBytes("bonus|breed")+fixture.bytes+base58'${initialTx}' && o==0 then ${t.roll ?? 'throw("UNEXPECTED_BONUS")'} else throw("WRONG_RANDOM_ARGS")
+func mockInvoke(a:Address,f:String,args:List[String|Int],p:List[AttachedPayment])=if size(p)!=0 then throw("UNEXPECTED_PAYMENT") else
+  if a==getCouponsAddress() && f=="recordAction" && args==["FINISHMUTANT"] then true else
+  if a==getItemsAddress() && f=="issueArtefactIndex" && args==["ART-SNOWBALL","${owner}",2] then "mutant-bonus" else throw("UNEXPECTED_INVOKE")
+`;
+    const repl = await replWith(keys + '\n' + mocks + methods);
+    const result = await repl.evaluate(`finishMutantHatching("${initialTx}")`);
+    if (t.error) {assert.ok(result.error?.includes(t.error), t.name + ': ' + JSON.stringify(result)); continue;}
+    const output = ok(result);
+    value(result, `${owner}_${initialTx}_status`, 'BREEDING_FINISHED');
+    value(result, `${owner}_${initialTx}_di`, 'AB');
+    value(result, 'stats_amount', 8);
+    value(result, 'stats_MTNT-DADADADADADADADA-GA_amount', 1);
+    value(result, 'stats_D:8A__quantity', 1);
+    value(result, 'stats_8A-A_rarity', 1);
+    value(result, 'asset_DEF_children', 1);
+    value(result, 'asset_GHJ_children', 1);
+    assert.equal((output.match(/Issue\(/g) || []).length, 1, output);
+    assert.equal((output.match(/Burn\(/g) || []).length, 2, output);
+    assert.equal((output.match(/ScriptTransfer\(/g) || []).length, 2, output);
+    assert.match(output, /Burn\(\n\tassetId = base58'AB'\n\tquantity = 1/);
+    assert.match(output, /Burn\(\n\tassetId = base58'DEF'\n\tquantity = 1/);
+    assert.match(output, new RegExp(`ScriptTransfer\\(\\n\\trecipient = Address\\(\\n\\t\\tbytes = base58'${owner}'[\\s\\S]*?asset = base58'GHJ'`));
+    value(result, `address_${owner}_initTx_${initialTx}_bonusRandom`, t.roll);
+    if (t.roll === 0) {
+      value(result, `address_${owner}_initTx_${initialTx}_bonusItem`, 'mutant-bonus');
+      assert.equal((output.match(/_bonusItem"/g) || []).length, 1);
+    } else assert.doesNotMatch(output, /_bonusItem/);
+  }
+});
+
+test('double item rebirth uses nonces zero, one and two through the actual indexed issuer', async () => {
+  const source = read('ride/ducks/rebirth.ride');
+  const items = read('ride/artefacts/items.ride');
+  const methods = ['checkAdditionalPayment', 'getRandomWin', 'getRandomReturn', 'bonusItemOutput', 'finishRebirthInternal', 'finishRebirthDouble'].map(name => fn(source, name)).join('\n')
+    .replace(/\bthis\b/g, 'fixture').replace(/\bheight\b/g, 'testHeight').replace(/lastBlock.timestamp/g, '500')
+    .replace(/\binvoke\(/g, 'mockInvoke(').replace(/\bgetIntegerValue\(/g, 'mockIntegerValue(')
+    .replace(/\bgetInteger\(/g, 'mockInteger(').replace(/\bgetStringValue\(/g, 'mockStringValue(')
+    .replace(/\bassetInfo\(/g, 'mockAssetInfo(');
+  // The REPL has no containing transaction for calculateAssetId. Preserve the
+  // production Issue nonce and derive a deterministic fixture ID from it.
+  const issuer = (fn(items, 'issueItem') + '\n' + fn(items, 'issueArtefactIndex'))
+    .replace('nonce: Int) = {', 'nonce: Int, issuerCaller: Address) = {\nlet issuerInvocation=Invocation([],issuerCaller,base58\'abc\',base58\'dEf\',0,unit,Address(base58\'' + owner + '\'),base58\'abc\')')
+    .replace(/\bi\./g, 'issuerInvocation.').replace(/\bthis\b/g, 'itemsFixture').replace(/\bheight\b/g, 'testHeight')
+    .replace(/artefact\.calculateAssetId\(\)/g, 'sha256(toBytes(artefact.name)+toBytes(artefact.nonce))');
+  const getterNames = [...new Set((methods + issuer).match(/\bget[A-Z]\w*(?=\()/g))].filter(name => !['getRandomNumber','getRandomWin','getRandomReturn','getInteger','getBoolean','getString','getOracle','getItemsAddress','getCouponsAddress','getFeeAggregator','getRebirthAddress','getMedhouseIssuedAmount'].includes(name));
+  const getters = getterNames.map(name => `func ${name}()=${name === 'getWarsPKey' ? "base58'999'" : "Address(base58'999')"}`).join('\n');
+  const resultKey = `address_${owner}_initTx_${initialTx}`;
+  for (const t of [
+    {name: 'three equal item types receive distinct nonces'},
+    {name: 'wrong item issuer caller', issuerCaller: "Address(base58'xyz')", error: 'admin only'},
+    {name: 'wrong rebirth owner', caller: '3P3H1W7X5vjLRVKkGGNzHdppECUTMbfpiSS', error: 'WRONG_OWNER'},
+    {name: 'replay', status: 'finish', error: 'not open'},
+    {name: 'immature', maturity: 1001, error: 'cannot finish rebirth'},
+    {name: 'invalid double booster', booster: 'ART-GFTR', error: 'Wrong item'},
+  ]) {
+    const mocks = `let fixture=Address(base58'abc')
+let itemsFixture=Address(base58'456')
+let testHeight=1000
+let i=Invocation([AttachedPayment(base58'DUBL',1),AttachedPayment(unit,1)],Address(base58'${t.caller || owner}'),base58'abc',base58'dEf',0,unit,Address(base58'${owner}'),base58'abc')
+func getOracle()=fixture
+func getItemsAddress()=itemsFixture
+func getCouponsAddress()=Address(base58'789')
+func getFeeAggregator()=Address(base58'ABC')
+func getRebirthAddress()=fixture
+func getMedhouseIssuedAmount()=0
+func staticKey_extraFee()="fee"
+func last_height_key()="last_height"
+func last_height_key_receiver(a:String)="last_height_"+a
+func tryGetBoolean(k:String)=false
+func tryGetInteger(k:String)=if k=="${resultKey}_finishBlock" then ${t.maturity || 10} else if k=="${resultKey}_assetRarity" then 10 else if k=="last_height" || k=="last_height_${owner}" then 0 else throw("WRONG_OWNER")
+func tryGetString(k:String)=if k=="${resultKey}_status" then "${t.status || 'open'}" else throw("WRONG_OWNER")
+func tryGetStringExternal(a:Address,k:String)=if a==fixture && k=="bonus_item_abc_rebirth" then "ART-FREEGENE" else ""
+func mockIntegerValue(a:Address,k:String)=if a!=fixture then throw("WRONG_ORACLE") else if k=="fee" then 1 else if k=="bonus_item_abc_rebirth_start" then 100 else if k=="bonus_item_abc_rebirth_end" then 1000 else throw("WRONG_INTEGER_KEY")
+func mockInteger(a:Address,k:String)=if a==fixture && k=="bonus_item_abc_rebirth_chance" then 100 else throw("WRONG_CHANCE_KEY")
+func mockStringValue(k:String)=throw("UNEXPECTED_RESCUE")
+func mockAssetInfo(id:ByteVector)=Asset(id,1,0,fixture,base58'abc',false,false,unit,"unused","unused")
+func checkReal(id:ByteVector)=throw("UNEXPECTED_RESCUE")
+func getRandomNumber(n:Int,tx:ByteVector,h:Int,o:Int)=if h!=10 then throw("WRONG_RANDOM_HEIGHT") else
+  if tx==base58'${initialTx}' then (if n==1000 && o==0 then 10 else if o==1 || o==2 then 0 else throw("WRONG_BASE_RANDOM")) else
+  if tx==toBytes("bonus|rebirth")+fixture.bytes+base58'${initialTx}' && n==200 && o==0 then 0 else throw("WRONG_BONUS_RANDOM")
+`;
+    const invoke = `func mockInvoke(a:Address,f:String,args:List[String|Int],p:List[AttachedPayment])={
+  if size(p)!=0 then throw("UNEXPECTED_PAYMENT") else
+  if a==getCouponsAddress() && f=="recordAction" && args==["REBIRTH"] then true else
+  if a==itemsFixture && f=="checkArtefactDetails" && args==["DUBL"] then "${t.booster || 'ART-GIFT_DOUBL'}" else
+  if a==itemsFixture && f=="issueArtefactIndex" then {
+    let kind=args[0].exactAs[String]
+    let receiver=args[1].exactAs[String]
+    let nonce=args[2].exactAs[Int]
+    if kind!="ART-FREEGENE" || receiver!="${owner}" || nonce<0 || nonce>2 then throw("WRONG_ISSUE_ARGS") else
+    let issued=issueArtefactIndex(kind,receiver,nonce,${t.issuerCaller || 'fixture'})
+    let nft=issued._1[0].exactAs[Issue]
+    let metadata=issued._1[1].exactAs[StringEntry]
+    let transfer=issued._1[2].exactAs[ScriptTransfer]
+    if nft.nonce!=nonce || nft.name!=kind || nft.quantity!=1 || nft.decimals!=0 || nft.isReissuable then throw("WRONG_ISSUE") else
+    if issued._1[3]!=IntegerEntry("last_height",1000) || issued._1[4]!=IntegerEntry("last_height_${owner}",1000) then throw("WRONG_ISSUER_STATE") else
+    if metadata.key!="artefact_"+issued._2+"_type" || metadata.value!=kind || transfer.recipient!=Address(base58'${owner}') || transfer.amount!=1 || transfer.asset!=issued._2.fromBase58String() then throw("WRONG_ITEM_METADATA") else issued._2
+  } else throw("UNEXPECTED_INVOKE")
+}
+`;
+    const repl = await replWith(mocks + getters + '\n' + issuer + '\n' + invoke + methods);
+    const result = await repl.evaluate(`finishRebirthDouble("${initialTx}")`);
+    if (t.error) {assert.ok(result.error?.includes(t.error), t.name + ': ' + JSON.stringify(result)); continue;}
+    const output = ok(result);
+    const ids = [];
+    for (const nonce of [0, 1, 2]) {
+      const minted = await repl.evaluate(`issueArtefactIndex("ART-FREEGENE","${owner}",${nonce},fixture)`);
+      assert.match(ok(minted), new RegExp(`nonce = ${nonce}`));
+      const id = minted.result.match(/key = "artefact_([^"\n]+)_type"/)[1];
+      ids.push(id);
+      value(result, resultKey + (nonce === 2 ? '_bonusItem' : '_result'), id);
+    }
+    assert.equal(new Set(ids).size, 3);
+    assert.equal((output.match(/_result"/g) || []).length, 2); // Historical duplicate result key is preserved.
+    assert.equal((output.match(/_bonusItem"/g) || []).length, 1);
+    value(result, resultKey + '_win', 'item!ART-FREEGENE');
+    value(result, resultKey + '_win1', 'item!ART-FREEGENE');
+    value(result, resultKey + '_status', 'finish');
+    value(result, resultKey + '_random', 10);
+    value(result, resultKey + '_bonusRandom', 0);
+    assert.match(output, /Burn\(\n\tassetId = base58'DUBL'\n\tquantity = 1/);
+  }
+});
