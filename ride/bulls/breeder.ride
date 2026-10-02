@@ -197,17 +197,16 @@ func getAmountOrClear(amount: String) = {
 
 
 
-# Historical turtle winter jackpot: 1/200; summer bull jackpot: 1/1000.
-func halloweenJackpot(txId: ByteVector, finishHeight: Int) = {
-  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
-  if eventAddress == "" then false else
-  let event = addressFromStringValue(eventAddress)
-  let enabled = getBoolean(event, "h26_enabled").valueOrElse(false)
-  let start = getInteger(event, "h26_start").valueOrElse(0)
-  let end = getInteger(event, "h26_end").valueOrElse(0)
-  let roll = (getRandomNumber(1000, toBytes("h26-jackpot") + txId, finishHeight, 0) + 1000) % 1000
-  enabled && lastBlock.timestamp >= start && lastBlock.timestamp < end &&
-    getInteger(this, "h26_jackpot_issued").valueOrElse(0) < 2 && roll == 1
+func getJackpot(txId: ByteVector, finishHeight: Int) = {
+  let key = "jackpot_" + this.toString()
+  let name = tryGetStringExternal(getOracle(), key)
+  let odds = getInteger(getOracle(), key + "_odds").valueOrElse(0)
+  if name == "" || odds == 0 then "" else
+  if odds < 0 then throw("JACKPOT_ODDS") else
+  if tryGetInteger(getStatsKey(name)) >= getIntegerValue(getOracle(), key + "_max") ||
+     lastBlock.timestamp < getIntegerValue(getOracle(), key + "_start") ||
+     lastBlock.timestamp >= getIntegerValue(getOracle(), key + "_end") then "" else
+  if getRandomNumber(odds, txId, finishHeight, 2) == 0 then name else ""
 }
 
 func bonusItemOutput(action: String, owner: String, initialTx: String, finishHeight: Int) = {
@@ -249,8 +248,8 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
     else {
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
-      let jackpot = halloweenJackpot(txId, processFinishHeight)
-      let Gen = if jackpot then "BULL-WMOLDYMT-JU" else generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
+      let jackpot = getJackpot(txId, processFinishHeight)
+      let Gen = if jackpot != "" then jackpot else generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
       let farmGen = invoke(this,"getGenFromName",[Gen],[]).exactAs[String]
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
@@ -271,7 +270,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ] ++ (if jackpot then [IntegerEntry("h26_jackpot_issued", getInteger(this,"h26_jackpot_issued").valueOrElse(0)+1)] else []) ++bonusItemOutput("breed", i.caller.toString(), txIdStr, processFinishHeight)
+      ] ++bonusItemOutput("breed", i.caller.toString(), txIdStr, processFinishHeight)
     }
 }
 
@@ -305,7 +304,8 @@ func increaseRarity(assetId: String, farmGen: String) = {
 
 @Callable(i)
 func getGenFromName(assetName: String) = {
-  if assetName == "BULL-WMOLDYMT-JU" then ([], "8W-J") else
+  let farmGen = tryGetStringExternal(getOracle(), "farm_gen_" + assetName)
+  if farmGen != "" then ([], farmGen) else
     let genotype = assetName.drop(5).dropRight(3).split("")
     let generation = assetName.split("")[14]
     let gen = getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolA)) + "A") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolB)) + "B") + getAmountOrClear(toString(FOLD<8>(genotype, 0, isSymbolC)) + "C") +

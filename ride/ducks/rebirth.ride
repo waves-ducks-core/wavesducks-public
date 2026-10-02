@@ -357,7 +357,7 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
         result
       }else if (win == "phoenix") then {
         let dark = getBoolean(getIncubatorAddress(), "h26_darkPhoenixUnlocked").valueOrElse(false)
-        let gene = if dark then "WDARKPHX" else "WWWWWWWP"
+        let gene = if dark then getString(getOracle(), "phoenix_gen_" + this.toString()).valueOrElse("WWWWWWWP") else "WWWWWWWP"
         strict phoenix = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, gene], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", phoenix.exactAs[String])]
 

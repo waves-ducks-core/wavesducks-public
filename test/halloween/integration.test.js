@@ -1,18 +1,113 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const ride=require('@waves/ride-js');const crypto=require('@waves/ts-lib-crypto');const nodeCrypto=require('node:crypto');
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const ride=require('@waves/ride-js');
 const issuer='3PEPftf2kWZDmAaWBjs6BUJa9957kiA2PkU';
 const read=p=>fs.readFileSync(p,'utf8');
 function fn(source,name){const start=source.indexOf(`func ${name}(`);assert.ok(start>=0,name);const next=source.slice(start+5).search(/^(@Callable|@Verifier|func )/m);return next<0?source.slice(start):source.slice(start,start+5+next);}
 async function exec(source,expression){const repl=ride.repl({nodeUrl:'http://127.0.0.1:1',chainId:'W',address:issuer});const loaded=await repl.evaluate(source.replace(/\bheight\b/g,"testHeight"));assert.equal(loaded.error,undefined,loaded.error);return repl.evaluate(expression);}
 function value(r,key,v){assert.equal(r.error,undefined,r.error);assert.ok(r.result.includes(`key = "${key}"\n\tvalue = ${JSON.stringify(v)}`),r.result);}
 const runtime=`let fixture = Address(base58'abc')\nlet height = 1000\n`;
+test('public duck rebirth reads the configured Phoenix gene only after permanent unlock',async()=>{
+  const source=read('ride/ducks/rebirth.ride');
+  const branch=source.match(/\}else if \(win == "phoenix"\) then \{\s*(let dark = [\s\S]*?let gene = [^\n]+)/);
+  assert.ok(branch,'The reward must remain inside the selected Phoenix outcome.');
+  assert.match(fn(source,'getRandomWin'),/phoenixRandom == 1/);
+  assert.match(fn(source,'finishRebirthInternal'),/\[address, txId, gene\]/);
+  for(const [unlocked,configured,expected] of [[false,'WDARKPHX','WWWWWWWP'],[true,'WDARKPHX','WDARKPHX'],[true,'WNEWGENE','WNEWGENE'],[true,null,'WWWWWWWP']]){
+    const defs=runtime+`func getOracle()=fixture
+func getIncubatorAddress()=fixture
+func mockBoolean(a:Address,k:String)=if a==fixture && k=="h26_darkPhoenixUnlocked" then ${unlocked} else throw("wrong unlock source")
+func mockString(a:Address,k:String)=if !${unlocked} then throw("unlocked gene must not be read early") else if a==fixture && k=="phoenix_gen_abc" then ${configured===null?'unit':JSON.stringify(configured)} else throw("wrong gene key")
+func selectedGene()={
+${branch[1].replace(/getBoolean\(/g,'mockBoolean(').replace(/getString\(/g,'mockString(').replace(/\bthis\b/g,'fixture')}
+gene
+}
+`;
+    const result=await exec(defs,'selectedGene()');assert.equal(result.error,undefined,result.error);
+    assert.ok(result.result.endsWith(`= "${expected}"`),result.result);
+  }
+});
+
+test('duck gene parsing accepts data overrides and retains historical fallback without a J-wide rule',async()=>{
+  const source=read('ride/ducks/breeder.ride'),parser=fn(source,'getGenFromName');
+  assert.doesNotMatch(parser,/DUCK-WDARKPHX|DUCK-WWWWWWWP/);
+  const helpers=[...new Set(parser.match(/isSymbol[A-Z]/g))].map(n=>fn(source,n)).join('\n')+fn(source,'getAmountOrClear');
+  const defs=runtime+`func getOracle()=fixture
+func tryGetStringExternal(a:Address,k:String)=if a!=fixture then throw("wrong oracle") else if k=="farm_gen_DUCK-WWWWWWWP-JU" || k=="farm_gen_DUCK-WDARKPHX-JU" then "8W-J" else if k=="farm_gen_DUCK-ZCUSTOM8-JU" then "CUSTOM-J" else ""
+`+helpers+parser;
+  for(const [name,expected] of [['DUCK-WWWWWWWP-JU','8W-J'],['DUCK-WDARKPHX-JU','8W-J'],['DUCK-ZCUSTOM8-JU','CUSTOM-J'],['DUCK-AAAAAAAA-GA','8A-G'],['DUCK-WPBRDUCK-JU','1B1C1D1K1P-J']]){
+    const result=await exec(defs,`getGenFromName("${name}")`);assert.equal(result.error,undefined,result.error);assert.ok(result.result.includes(`"${expected}"`),result.result);
+  }
+});
+
+for(const gene of ['WWWWWWWP','WDARKPHX'])test(`${gene}: configured mint, parse, rebirth and rescue share 8W-J while preserving name counts`,async()=>{
+  const incubator=read('ride/ducks/incubator.ride'),breeder=read('ride/ducks/breeder.ride'),rebirth=read('ride/ducks/rebirth.ride');
+  const parser=fn(breeder,'getGenFromName');
+  const parserHelpers=[...new Set(parser.match(/isSymbol[A-Z]/g))].map(n=>fn(breeder,n)).join('\n')+fn(breeder,'getAmountOrClear');
+  const keys=['getHatchingStatusKey','getHatchingFinishHeightKey','getDuckIdKey','getDuckStatsKey'].map(n=>fn(incubator,n)).join('\n');
+  const mutations=['issueJackpot','reduceRarity','increaseRarity'].map(n=>fn(incubator,n)).join('\n');
+  const readers=['getAssetOrigin','getAssetRarity','getAssetFarmingPower'].map(n=>fn(rebirth,n)).join('\n');
+  const other=gene==='WWWWWWWP'?'WDARKPHX':'WWWWWWWP';
+  const state={'stats_8W-J_quantity':7,[`stats_DUCK-${other}-JU_amount`]:2,'stats_DUCK-WPBRDUCK-JU_amount':5,'stats_1B1C1D1K1P1R1U1W-J_quantity':1};
+  const replace=s=>s.replace(/\bthis\b/g,'fixture').replace(/\bgetString\(/g,'mockString(').replace(/\bgetIntegerValue\(/g,'mockIntegerValue(').replace(/\bassetInfo\(/g,'mockAsset(').replace(/\binvoke\(/g,'mockInvoke(').replace(/asset\.calculateAssetId\(\)/g,"base58'AB'");
+  async function call(expression){
+    const entries=Object.entries(state).map(([k,v])=>`${typeof v==='number'?'Integer':'String'}Entry(${JSON.stringify(k)},${JSON.stringify(v)})`).join(',');
+    const defs=runtime+`let data=[${entries}]
+let oracleData=[StringEntry("farm_gen_DUCK-WWWWWWWP-JU","8W-J"),StringEntry("farm_gen_DUCK-WDARKPHX-JU","8W-J")]
+let i=Invocation([],Address(base58'xyz'),base58'abc',base58'dEf',0,unit,fixture,base58'abc')
+let HatchingFinished="finish"
+func getOracle()=fixture
+func getRebirthAddress()=Address(base58'xyz')
+func getCouponsAddress()=Address(base58'2')
+func getIncubatorAddress()=fixture
+func getBreederAddress()=Address(base58'3')
+func countEggsNeededAmount(n:Int)=100000000
+func tryGetInteger(k:String)=getInteger(data,k).valueOrElse(0)
+func tryGetString(k:String)=getString(data,k).valueOrElse("")
+func mockString(a:Address,k:String)=if a!=fixture then throw("wrong oracle") else getString(oracleData,k)
+func tryGetStringExternal(a:Address,k:String)=mockString(a,k).valueOrElse("")
+func mockIntegerValue(a:Address,k:String)=if a!=fixture then throw("wrong rarity contract") else getInteger(data,k).value()
+func mockAsset(id:ByteVector)=Asset(id,1,0,fixture,base58'abc',false,false,unit,"DUCK-${gene}-JU","")
+`+replace(parserHelpers+parser)+`
+func mockInvoke(a:Address,m:String,args:List[String],p:List[AttachedPayment])=if a==getBreederAddress() && m=="getGenFromName" then getGenFromName(args[0])._2 else throw("unexpected invoke")
+`+replace(keys+mutations+readers);
+    return exec(defs,expression);
+  }
+  function apply(result){assert.equal(result.error,undefined,result.error);for(const match of result.result.matchAll(/key = "([^"]+)"\n\tvalue = ("[^"]*"|-?\d+)/g))state[match[1]]=JSON.parse(match[2]);}
+  function untouched(){assert.equal(state[`stats_DUCK-${other}-JU_amount`],2);assert.equal(state['stats_DUCK-WPBRDUCK-JU_amount'],5);assert.equal(state['stats_1B1C1D1K1P1R1U1W-J_quantity'],1);assert.equal(state['stats_WDARKPHX-J_quantity'],undefined);}
+  apply(await call(`issueJackpot("${issuer}","abc","${gene}")`));assert.equal(state['stats_8W-J_quantity'],8);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],1);untouched();
+  const parsed=await call(`getGenFromName("DUCK-${gene}-JU")`);assert.equal(parsed.error,undefined,parsed.error);assert.ok(parsed.result.includes('"8W-J"'));
+  const power=await call('getAssetFarmingPower("AB".fromBase58String())');assert.equal(power.error,undefined,power.error);assert.ok(power.result.includes('"8W-J"'));
+  apply(await call('reduceRarity("AB","8W-J")'));assert.equal(state['stats_8W-J_quantity'],7);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],0);untouched();
+  apply(await call('increaseRarity("AB","8W-J")'));assert.equal(state['stats_8W-J_quantity'],8);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],1);untouched();
+});
+
+test('duck issuer and rarity decrement preserve old fallbacks and accept arbitrary configured buckets',async()=>{
+  const source=read('ride/ducks/incubator.ride');
+  const keys=['getHatchingStatusKey','getHatchingFinishHeightKey','getDuckIdKey','getDuckStatsKey'].map(n=>fn(source,n)).join('\n');
+  const methods=(keys+fn(source,'issueJackpot')+fn(source,'reduceRarity')).replace(/\bthis\b/g,'fixture').replace(/\bgetString\(/g,'mockString(').replace(/\bassetInfo\(/g,'mockAsset(').replace(/asset\.calculateAssetId\(\)/g,"base58'AB'");
+  for(const [gene,mapping,mintBucket,burnBucket] of [['WPBRDUCK',null,'8W-J','8W-G'],['ZCUSTOM8','CUSTOM-J','CUSTOM-J','CUSTOM-J']]){
+    const defs=runtime+`let i=Invocation([],Address(base58'xyz'),base58'abc',base58'dEf',0,unit,fixture,base58'abc')
+let HatchingFinished="finish"
+func getOracle()=fixture
+func getRebirthAddress()=Address(base58'xyz')
+func getCouponsAddress()=Address(base58'2')
+func countEggsNeededAmount(n:Int)=100000000
+func tryGetInteger(k:String)=10
+func tryGetString(k:String)=""
+func mockString(a:Address,k:String)=if a==fixture && k=="farm_gen_DUCK-${gene}-JU" then ${mapping===null?'unit':JSON.stringify(mapping)} else throw("wrong map key")
+func mockAsset(id:ByteVector)=Asset(id,1,0,fixture,base58'abc',false,false,unit,"DUCK-${gene}-JU","")
+`+methods;
+    value(await exec(defs,`issueJackpot("${issuer}","abc","${gene}")`),`stats_${mintBucket}_quantity`,11);
+    value(await exec(defs,`reduceRarity("AB","unused")`),`stats_${burnBucket}_quantity`,9);
+  }
+});
 for(const [family,gene,prefix,idKey,statsKey,rarity] of [
-  ['ducks','WDARKPHX','DUCK','getDuckIdKey','getDuckStatsKey','WDARKPHX-J'],
+  ['ducks','WDARKPHX','DUCK','getDuckIdKey','getDuckStatsKey','8W-J'],
   ['turtle','WWIZARDT','TRTL','getTRTLIdKey','getStatsKey','8W-J'],
   ['bulls','WMOLDYMT','BULL','getIdKey','getStatsKey','8W-J'],
 ])test(`${family} generic jackpot preserves self/rebirth authority and rejects replay`,async()=>{
   const source=read(`ride/${family}/incubator.ride`);
   const methods=['getHatchingStatusKey','getHatchingFinishHeightKey',idKey,statsKey,'issueJackpot'].map(name=>fn(source,name)).join('\n')
-    .replace(/\bthis\b/g,'fixture').replace(/asset\.calculateAssetId\(\)/g,"base58'AB'");
+    .replace(/\bthis\b/g,'fixture').replace(/asset\.calculateAssetId\(\)/g,"base58'AB'").replace(/\bgetString\(/g,'mockString(');
   for(const caller of ['abc','xyz','2']){
     const state={};
     async function invoke(){
@@ -24,6 +119,8 @@ let multiplier=1000000
 func getRebirthAddress()=Address(base58'xyz')
 func getTurtleRebirthAddress()=Address(base58'xyz')
 func countEggsNeededAmount(amount:Int)=100000000
+func getOracle()=fixture
+func mockString(a:Address,k:String)=unit
 func tryGetInteger(key:String)=getInteger(data,key).valueOrElse(0)
 func tryGetString(key:String)=getString(data,key).valueOrElse("")
 `;
@@ -41,44 +138,6 @@ func tryGetString(key:String)=getString(data,key).valueOrElse("")
   }
 });
 
-test('public duck rebirth still selects Dark Phoenix only after the permanent unlock',async()=>{
-  const source=read('ride/ducks/rebirth.ride');
-  const branch=source.match(/\}else if \(win == "phoenix"\) then \{\s*(let dark = [\s\S]*?let gene = [^\n]+)/);
-  assert.ok(branch,'The Phoenix reward must remain inside its existing selected outcome.');
-  assert.match(fn(source,'getRandomWin'),/phoenixRandom == 1/);
-  assert.match(fn(source,'finishRebirthInternal'),/\[address, txId, gene\]/);
-  for(const unlocked of [false,true]){
-    const defs=runtime+`func getIncubatorAddress()=fixture
-func mockBoolean(address:Address,key:String)=if address==fixture && key=="h26_darkPhoenixUnlocked" then ${unlocked} else throw("wrong unlock source")
-func selectedGene()={
-${branch[1].replace(/getBoolean\(/g,'mockBoolean(')}
-gene
-}
-`;
-    const result=await exec(defs,'selectedGene()');
-    assert.equal(result.error,undefined,result.error);
-    assert.ok(result.result.endsWith(`= "${unlocked?'WDARKPHX':'WWWWWWWP'}"`),result.result);
-  }
-});
-for(const [family,denominator] of [['turtle',200],['bulls',1000]]) test(`${family} real Ride jackpot selector: historical probability, cap2, calendar and pause`,async()=>{
-  const source=read(`ride/${family}/breeder.ride`);
-  let callable=(fn(source,'getRandomNumber')+'\n'+fn(source,'halloweenJackpot')).replace(/getString\(/g,'mockString(').replace(/getBoolean\(/g,'mockBoolean(').replace(/getInteger\(/g,'mockInteger(').replace(/blockInfoByHeight\(/g,'mockBlock(').replace(/lastBlock.timestamp/g,'now').replace(/\bthis\b/g,'fixture');
-  // Find a winning initial ID against the exact campaign-domain + block VRF formula.
-  let winner;
-  for(let k=1;k<20000;k++){const tx=Buffer.alloc(8);tx.writeBigInt64BE(BigInt(k));const digest=nodeCrypto.createHash('sha256').update(Buffer.concat([Buffer.from('h26-jackpot'),tx,Buffer.from(crypto.base58Decode('abc'))])).digest();if((digest.readBigInt64BE()%BigInt(denominator)+BigInt(denominator))%BigInt(denominator)===1n){winner=crypto.base58Encode(tx);break;}}
-  assert.ok(winner);
-  for(const [count,enabled,now,expected] of [[0,true,500,true],[1,true,500,true],[2,true,500,false],[0,false,500,false],[0,true,99,false],[0,true,1000,false]]){
-    const mocks=`let now=${now}
-func getOracle()=fixture
-func mockString(a:Address,k:String)="${issuer}"
-func mockBoolean(a:Address,k:String)=${enabled}
-func mockInteger(a:Address,k:String)=if k=="h26_start" then 100 else if k=="h26_end" then 1000 else ${count}
-func mockBlock(h:Int)=BlockInfo(500,h,1,base58'abc',fixture,base58'abc',base58'abc',[])
-`;
-    const result=await exec(runtime+mocks+callable,`halloweenJackpot(base58'${winner}',10)`);assert.equal(result.error,undefined,result.error);assert.ok(result.result.endsWith(`= ${expected}`),result.result);
-  }
-  assert.match(source,/IntegerEntry\("h26_jackpot_issued", getInteger\(this,"h26_jackpot_issued"\)\.valueOrElse\(0\)\+1\)/);
-});
 test('Dark Phoenix unlock is campaign-only, payment-free and monotonic',async()=>{
   for(const family of ['ducks']){
     let unlock=fn(read(`ride/${family}/incubator.ride`),'unlockHalloween').replace(/getStringValue\(/g,'mockStringValue(');
@@ -116,13 +175,6 @@ test('Pumpkin Feed removal follows Lake without a bull-position guard',async()=>
   const result=await boosterCall('unstakeItem("ART-H26FEED")',{staked:'xyz'});assert.equal(result.error,undefined,result.error);assert.ok(result.result.includes('ScriptTransfer('));assert.ok(result.result.includes('DeleteEntry('));
   assert.doesNotMatch(booster,/bullStakedPower|Unstake bulls/);
   assert.ok((await boosterCall('unstakeItem("ART-H26FEED")',{staked:''})).error);
-});
-test('reserved breeding jackpots preserve canonical rarity stats for later burn/deposit',async()=>{
-  for(const [family,gene] of [['bulls','BULL-WMOLDYMT-JU'],['turtle','TRTL-WWIZARDT-JU']]){
-    const source=read(`ride/${family}/breeder.ride`);const body=fn(source,'getGenFromName');
-    const helpers=[...new Set(body.match(/isSymbol[A-Z]/g))].map(name=>fn(source,name)).join('\n')+fn(source,'getAmountOrClear');
-    const result=await exec(helpers+body,`getGenFromName("${gene}")`);assert.equal(result.error,undefined,result.error);assert.ok(result.result.includes('"8W-J"'));
-  }
 });
 
 test('bull-only boost helper enforces trusted callers and cannot underflow',async()=>{
@@ -181,43 +233,4 @@ test('coupons claims reuse issueArtefactIndex with the intended recipient and no
 func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPayment])=if method=="issueArtefactIndex" && args==["ART-H26SOUL","abc",0] && size(p)==0 then "issued" else throw("wrong issuance route")
 `+mint;
   const result=await exec(defs,'mint("ART-H26SOUL",fixture,0)');assert.equal(result.error,undefined,result.error);assert.ok(result.result.endsWith('= "issued"'));
-});
-
-for(const [gene,key,other] of [['WWWWWWWP','8W-J','WDARKPHX-J'],['WDARKPHX','WDARKPHX-J','8W-J']])test(`${gene}: mint, parse, rebirth and rescue preserve separate Phoenix counters`,async()=>{
-  const incubator=read('ride/ducks/incubator.ride'),breeder=read('ride/ducks/breeder.ride'),rebirth=read('ride/ducks/rebirth.ride');
-  const parser=fn(breeder,'getGenFromName');
-  const parserHelpers=[...new Set(parser.match(/isSymbol[A-Z]/g))].map(n=>fn(breeder,n)).join('\n')+fn(breeder,'getAmountOrClear');
-  const keys=['getHatchingStatusKey','getHatchingFinishHeightKey','getDuckIdKey','getDuckStatsKey'].map(n=>fn(incubator,n)).join('\n');
-  const mutations=['issueJackpot','reduceRarity','increaseRarity'].map(n=>fn(incubator,n)).join('\n');
-  const readers=['getAssetOrigin','getAssetRarity','getAssetFarmingPower'].map(n=>fn(rebirth,n)).join('\n');
-  const state={'stats_8W-J_quantity':7,'stats_WDARKPHX-J_quantity':3};
-  async function call(expression,enabled=true){
-    const entries=Object.entries(state).map(([k,v])=>`${typeof v==='number'?'Integer':'String'}Entry(${JSON.stringify(k)},${JSON.stringify(v)})`).join(',');
-    const defs=runtime+`let data=[${entries}]
-let i=Invocation([],Address(base58'xyz'),base58'abc',base58'dEf',0,unit,fixture,base58'abc')
-let HatchingFinished="finish"
-func getRebirthAddress()=Address(base58'xyz')
-func getCouponsAddress()=Address(base58'2')
-func getIncubatorAddress()=fixture
-func getBreederAddress()=Address(base58'3')
-func countEggsNeededAmount(n:Int)=100000000
-func tryGetInteger(k:String)=getInteger(data,k).valueOrElse(0)
-func tryGetString(k:String)=getString(data,k).valueOrElse("")
-func mockBoolean(a:Address,k:String)=${enabled}
-func mockIntegerValue(a:Address,k:String)=if a!=fixture then throw("wrong rarity contract") else getInteger(data,k).value()
-func mockAsset(id:ByteVector)=Asset(id,1,0,fixture,base58'abc',false,false,unit,"DUCK-${gene}-JU","")
-`+parserHelpers+parser+`
-func mockInvoke(a:Address,m:String,args:List[String],p:List[AttachedPayment])=if a==getBreederAddress() && m=="getGenFromName" then getGenFromName(args[0])._2 else throw("unexpected invoke")
-`+keys+mutations+readers;
-    return exec(defs.replace(/\bthis\b/g,'fixture').replace(/\bgetBoolean\(/g,'mockBoolean(').replace(/\bgetIntegerValue\(/g,'mockIntegerValue(').replace(/\bassetInfo\(/g,'mockAsset(').replace(/\binvoke\(/g,'mockInvoke(').replace(/asset\.calculateAssetId\(\)/g,"base58'AB'"),expression);
-  }
-  function apply(r){assert.equal(r.error,undefined,r.error);for(const m of r.result.matchAll(/key = "([^"]+)"\n\tvalue = ("[^"]*"|-?\d+)/g))state[m[1]]=JSON.parse(m[2]);}
-  const before=state[`stats_${key}_quantity`],otherBefore=state[`stats_${other}_quantity`];
-  const mint=await call(`issueJackpot("${issuer}","abc","${gene}")`);apply(mint);
-  assert.equal(state[`stats_${key}_quantity`],before+1);assert.equal(state[`stats_${other}_quantity`],otherBefore);
-  assert.equal(state[`stats_DUCK-${gene}-JU_amount`],1);
-  const parsed=await call(`getGenFromName("DUCK-${gene}-JU")`);assert.equal(parsed.error,undefined,parsed.error);assert.ok(parsed.result.includes(`"${key}"`));
-  const power=await call('getAssetFarmingPower("AB".fromBase58String())');assert.equal(power.error,undefined,power.error);assert.ok(power.result.includes(`"${key}"`));
-  apply(await call(`reduceRarity("AB","${key}")`));assert.equal(state[`stats_${key}_quantity`],before);assert.equal(state[`stats_${other}_quantity`],otherBefore);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],0);
-  apply(await call(`increaseRarity("AB","${key}")`));assert.equal(state[`stats_${key}_quantity`],before+1);assert.equal(state[`stats_${other}_quantity`],otherBefore);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],1);
 });
