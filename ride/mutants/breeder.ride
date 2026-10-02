@@ -96,6 +96,26 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
   randomHash.toInt(offset) % variants
 }
 
+func bonusItemOutput(action: String, owner: String, initialTx: String, finishHeight: Int) = {
+  let key = "bonus_item_" + this.toString() + "_" + action
+  let encoded = tryGetStringExternal(getOracle(), key)
+  let chance = getInteger(getOracle(), key + "_chance").valueOrElse(0)
+  if encoded == "" || chance == 0 then [] else
+  let items = encoded.split(",")
+  if chance < 0 || chance > 100 || size(items) > 2 then throw("BONUS_CONFIG") else
+  if lastBlock.timestamp < getIntegerValue(getOracle(), key + "_start") ||
+     lastBlock.timestamp >= getIntegerValue(getOracle(), key + "_end") then [] else
+  let seed = toBytes("bonus|" + action) + this.bytes + initialTx.fromBase58String()
+  let random = (getRandomNumber(200, seed, finishHeight, 0) + 200) % 200
+  let resultKey = "address_" + owner + "_initTx_" + initialTx
+  let result = [IntegerEntry(resultKey + "_bonusRandom", random % 100)]
+  if random % 100 >= chance then result else {
+    let item = items[if size(items) == 2 then random / 100 else 0]
+    strict bonus = invoke(getItemsAddress(), "issueArtefactIndex", [item, owner, 2], []).exactAs[String]
+    result ++ [StringEntry(resultKey + "_bonusItem", bonus)]
+  }
+}
+
 func getRandomGen(gen1: String, gen2: String, step: Int, txId: ByteVector, hatchingFinishHeight: Int) = {
   let randomNum = getRandomNumber(2, txId, hatchingFinishHeight, step)
   let gen = if (randomNum == 0) then gen1 else gen2
@@ -248,7 +268,6 @@ func finishHatchingInternal(txId: String, owner: String)={
 
       let output = generate(txId.fromBase58String(), processFinishHeight,parent1IdBytes, parent2IdBytes)
       let gen = output._1
-      let random = output._2
       let farmGen = nrOfTypeGenes(gen)
       let rarityFromName = getRarityFromName(gen)
 
@@ -267,14 +286,6 @@ func finishHatchingInternal(txId: String, owner: String)={
       let transferOrBurnParent1 = if getRandomNumber(10, txId.fromBase58String(), processFinishHeight, 2) == 5 then Burn(parent1IdBytes,1) else ScriptTransfer(ownerAsAddress, 1, parent1IdBytes)
       let transferOrBurnParent2 = if getRandomNumber(10, txId.fromBase58String(), processFinishHeight, 3) == 5 then Burn(parent2IdBytes,1) else ScriptTransfer(ownerAsAddress, 1, parent2IdBytes)
       strict recordAction = invoke(getCouponsAddress(),"recordAction",["FINISHMUTANT"],[])
-      let bonusOutput = if (random %2 ==0) then
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTR",owner,0],[])
-        [StringEntry("address_" + owner + "_initTx_" + txId + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + owner + "_initTx_" + txId + "_bonusRandom",random)]
-      else
-        strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-GFTW",owner,0],[])
-        [StringEntry("address_" + owner + "_initTx_" + txId + "_bonusItem", bonus.exactAs[String]),
-        IntegerEntry("address_" + owner + "_initTx_" + txId + "_bonusRandom",random)]
       [
         StringEntry(processStatusKey, hatchingFinished()),
         StringEntry(IdKey, assetId.toBase58String()),
@@ -289,7 +300,7 @@ func finishHatchingInternal(txId: String, owner: String)={
         transferOrBurn,
         transferOrBurnParent1,
         transferOrBurnParent2
-      ]#++bonusOutput
+      ]++bonusItemOutput("breed", owner, txId, processFinishHeight)
     }
 
 }

@@ -113,14 +113,6 @@ test('admin operations reject arbitrary callers and attached payments',async()=>
   value(await evaluate('setEnabled(false)',{caller:'dEf'}),'h26_enabled',false);
   await rejects('setEnabled(true)',{caller:'dEf',now:1000},'ended');
 });
-test('completion relay rejects untrusted caller, invalid finish and replay',async()=>{
-  await rejects(`completion("${issuer}","abc",10)`,{},'unauthorized');
-  const data={static_breederAddress:'abc'};
-  await rejects(`completion("${issuer}","abc",21)`,{data},'premature');
-  const result=await evaluate(`completion("${issuer}","abc",10)`,{data});assert.equal(result.error,undefined,result.error);
-  const key=result.result.match(/key = "(h26_drop_[^"]+)"/)[1];
-  await rejects(`completion("${issuer}","abc",10)`,{data:{...data,[key]:true}},'duplicate');
-});
 test('ordered interleaved wallets preserve accounting and deterministic top10',async()=>{
   const state={};const totals=new Map();const reached=new Map();let expectedTotal=0;
   const wallets=['abc','dEf','xyz','2','3','4','5','6','7','8','9','A'];
@@ -148,25 +140,6 @@ test('configuration is self-only once, fixes30 days, starts disabled and pins ca
   await rejects(call,{...opts,data:{h26_initialized:true}},'self-only');
   await rejects(`configureHalloween(499)`,opts,'invalid start');
   await rejects(call,{...opts,decimals:6},'eight decimals');
-});
-test('actual completion rolls39 and40 enforce exact40% boundary without rerolling',async()=>{
-  const crypto=require('@waves/ts-lib-crypto');const nodeCrypto=require('node:crypto');
-  const rolls=new Map();
-  for(let k=1;rolls.size<2&&k<10000;k++){
-    const tx=Buffer.alloc(8);tx.writeBigInt64BE(BigInt(k));
-    const digest=nodeCrypto.createHash('sha256').update(Buffer.concat([Buffer.from('halloween-2026'),Buffer.from(crypto.base58Decode('abc')),tx,Buffer.from(crypto.base58Decode('abc'))])).digest();
-    const roll=Number((digest.readBigInt64BE()%100n+100n)%100n);
-    if(roll===39||roll===40)rolls.set(roll,crypto.base58Encode(tx));
-  }
-  assert.equal(rolls.size,2);
-  for(const [roll,tx] of rolls){
-    const call=`completion("${issuer}","${tx}",10)`;
-    const early=await evaluate(call,{data:{static_breederAddress:'abc'},now:200});
-    const late=await evaluate(call,{data:{static_breederAddress:'abc'},now:900});
-    assert.equal(early.error,undefined,early.error);assert.equal(late.error,undefined,late.error);
-    assert.equal(early.result,late.result);
-    assert.equal(early.result.includes('ART-H26SOUL'),roll===39);
-  }
 });
 
 

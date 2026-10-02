@@ -582,7 +582,7 @@ func manipulateBoostAccountBull(boost: Int, address: String)= {
 func checkArtefactDetails(assetId: String) = {
   let asset = assetInfo(assetId.fromBase58String()).value()
   let assetName = asset.name.value()
-   if (halloweenItem(assetName) || containsElement(allArtefact, assetName) || isDefined(tryGetCosmeticItemPrice(assetName))) && asset.issuer == this
+   if (containsElement(allArtefact, assetName) || isDefined(tryGetCosmeticItemPrice(assetName))) && asset.issuer == this
    then
       (
         [],
@@ -776,7 +776,7 @@ func issueArtefact(type: String, receiver: String) = {
 
 @Callable(i)
 func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
-  if halloweenItem(type) && (i.caller != getCouponsAddress() || size(i.payments) != 0) then throw("H26: campaign issuance only") else
+  if halloweenItem(type) && (size(i.payments) != 0 || (type != "ART-H26SOUL" && i.caller != getCouponsAddress())) then throw("H26: campaign issuance only") else
   if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getMutantIncubatorAddress()
@@ -789,6 +789,11 @@ func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
   && i.caller != getBullBreederAddress()
   && i.caller != getCouponsAddress()
   && i.caller != getCanineRebirthAddress() && i.caller != getFelineeRebirthAddress() && i.caller != getBullIncubatorAddress() && i.caller != getHuntDistroAddress()
+  && i.caller.toString() != tryGetStringExternal(getOracle(), "static_incubatorAddress")
+  && i.caller.toString() != tryGetStringExternal(getOracle(), "static_turtleIncubatorAddress")
+  && i.caller.toString() != tryGetStringExternal(getOracle(), "static_canineIncubatorAddress")
+  && i.caller.toString() != tryGetStringExternal(getOracle(), "static_felineIncubatorAddress")
+  && i.caller.toString() != tryGetStringExternal(getOracle(), "static_eagleIncubatorAddress")
   && i.callerPublicKey != getWarsPKey()) then throw("IIAI: admin only") else 
      if ((i.caller == getHuntDistroAddress()|| i.callerPublicKey == getWarsPKey()) && !type.contains("ART-FIRE_") && !tryGetBoolean(type+"_issue") ) then throw("FIRE AND WHITELIST ITEM ONLY!") else
     let address = Address(fromBase58String(receiver))

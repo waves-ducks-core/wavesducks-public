@@ -254,14 +254,24 @@ func composeGenericData(duckGen: String, duckIdKey: String, assetId: ByteVector,
 }
 
 
-func halloweenCompletion(receiver: String, initialTx: String, finishHeight: Int) = {
-  let eventAddress = getString(getOracle(), "static_couponsAddress").valueOrElse("")
-  if eventAddress == "" then "" else
-  let event = addressFromStringValue(eventAddress)
-  if !getBoolean(event, "h26_enabled").valueOrElse(false) ||
-    lastBlock.timestamp < getInteger(event, "h26_start").valueOrElse(0) ||
-    lastBlock.timestamp >= getInteger(event, "h26_end").valueOrElse(0) then "" else
-    invoke(event, "completion", [receiver, initialTx, finishHeight], []).exactAs[String]
+func bonusItemOutput(action: String, owner: String, initialTx: String, finishHeight: Int) = {
+  let key = "bonus_item_" + this.toString() + "_" + action
+  let encoded = tryGetStringExternal(getOracle(), key)
+  let chance = getInteger(getOracle(), key + "_chance").valueOrElse(0)
+  if encoded == "" || chance == 0 then [] else
+  let items = encoded.split(",")
+  if chance < 0 || chance > 100 || size(items) > 2 then throw("BONUS_CONFIG") else
+  if lastBlock.timestamp < getIntegerValue(getOracle(), key + "_start") ||
+     lastBlock.timestamp >= getIntegerValue(getOracle(), key + "_end") then [] else
+  let seed = toBytes("bonus|" + action) + this.bytes + initialTx.fromBase58String()
+  let random = (getRandomNumber(200, seed, finishHeight, 0) + 200) % 200
+  let resultKey = "address_" + owner + "_initTx_" + initialTx
+  let result = [IntegerEntry(resultKey + "_bonusRandom", random % 100)]
+  if random % 100 >= chance then result else {
+    let item = items[if size(items) == 2 then random / 100 else 0]
+    strict bonus = invoke(getItemsAddress(), "issueArtefactIndex", [item, owner, 2], []).exactAs[String]
+    result ++ [StringEntry(resultKey + "_bonusItem", bonus)]
+  }
 }
 
 func finishHatchingInternal(txIdStr: String, i: Invocation,
@@ -285,26 +295,14 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
     else {
       let outcome = generate(txId, processFinishHeight,parentFixedGene,positionFixedGene,specifiqueGene,specifiqueGenePosition)
       let Gen = outcome._1
-      let random = outcome._2
       let description = "{\"genotype\": \"" + Gen + "\", \"crossbreeding\": true}"
 
-      strict halloweenDrop = halloweenCompletion(i.caller.toString(), txIdStr, processFinishHeight)
-      let halloweenBonus = if halloweenDrop != "" then [StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", halloweenDrop)] else []
       let asset = Issue(Gen, description, 1, 0, false, unit, processFinishHeight)
       let assetId = asset.calculateAssetId()
       let normalEntries = if isNormal then [BooleanEntry(getAssetIsNormalKey(assetId.toBase58String()), true)] else []
 
       let parent1Id = tryGetString(getParentKey(txId, 1))
       let parent2Id = tryGetString(getParentKey(txId, 2))
-      #let bonusOutput = if random % 2 == 0 then {
-      #  strict bonus = invoke(getItemsAddress(),"issueArtefactIndex",["ART-BBALL",i.caller.toString(),2],[])
-      #  [
-      #    StringEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusItem", bonus.exactAs[String]),
-      #    IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
-      #  ]
-      #} else [
-      #  IntegerEntry("address_" + i.caller.toString() + "_initTx_" + txIdStr + "_bonusRandom",random)
-      #]
       composeGenericData(Gen,IdKey,assetId,asset)++
       normalEntries++
       [
@@ -314,7 +312,7 @@ func finishHatchingInternal(txIdStr: String, i: Invocation,
         ScriptTransfer(i.caller, 1, assetId),
         ScriptTransfer(i.caller, 1, parent1Id.fromBase58String()),
         ScriptTransfer(i.caller, 1, parent2Id.fromBase58String())
-      ] ++ halloweenBonus #++bonusOutput
+      ] ++bonusItemOutput("breed", i.caller.toString(), txIdStr, processFinishHeight)
     }
 }
 

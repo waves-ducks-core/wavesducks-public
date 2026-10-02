@@ -124,6 +124,26 @@ func getRandomNumber(variants: Int, txId: ByteVector, hatchingFinishHeight: Int,
   randomHash.toInt(offset*8) % variants
 }
 
+func bonusItemOutput(action: String, owner: String, initialTx: String, finishHeight: Int) = {
+  let key = "bonus_item_" + this.toString() + "_" + action
+  let encoded = tryGetStringExternal(getOracle(), key)
+  let chance = getInteger(getOracle(), key + "_chance").valueOrElse(0)
+  if encoded == "" || chance == 0 then [] else
+  let items = encoded.split(",")
+  if chance < 0 || chance > 100 || size(items) > 2 then throw("BONUS_CONFIG") else
+  if lastBlock.timestamp < getIntegerValue(getOracle(), key + "_start") ||
+     lastBlock.timestamp >= getIntegerValue(getOracle(), key + "_end") then [] else
+  let seed = toBytes("bonus|" + action) + this.bytes + initialTx.fromBase58String()
+  let random = (getRandomNumber(200, seed, finishHeight, 0) + 200) % 200
+  let resultKey = "address_" + owner + "_initTx_" + initialTx
+  let result = [IntegerEntry(resultKey + "_bonusRandom", random % 100)]
+  if random % 100 >= chance then result else {
+    let item = items[if size(items) == 2 then random / 100 else 0]
+    strict bonus = invoke(getItemsAddress(), "issueArtefactIndex", [item, owner, 2], []).exactAs[String]
+    result ++ [StringEntry(resultKey + "_bonusItem", bonus)]
+  }
+}
+
 func select(color: String)={
     let oldGenes = []
     let newGenes = [("EAGL-AAAAAAAA-G" + color, "8A-G"),("EAGL-BBBBBBBB-G" + color, "8B-G"),
@@ -372,7 +392,7 @@ func finishHatching(txIdStr: String) = {
       ] ++ normalEntries ++ [
         asset,
         ScriptTransfer(i.caller, 1, assetId)
-      ]++feeValidate
+      ]++feeValidate++bonusItemOutput("hatch", i.caller.toString(), txIdStr, hatchingFinishHeight)
     }
 }
 

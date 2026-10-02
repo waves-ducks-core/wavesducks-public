@@ -403,26 +403,6 @@ func claimPumpkinFeed() = {
 }
 
 
-# Called ONLY inside a successful authenticated completion; replay binds source and initial tx.
-# Inactive events return an empty ID so normal gameplay is never blocked by the calendar.
-@Callable(i)
-func completion(receiver: String, initialTx: String, finishHeight: Int) = {
-  strict payments = noPayments(i.payments)
-  let sources = ["static_breederAddress", "static_turtleBreederAddress", "static_canineBreederAddress", "static_felineBreederAddress", "static_eagleBreederAddress", "static_bullBreederAddress", "static_rebirthAddress", "static_turtleRebirthAddress", "static_canineRebirthAddress", "static_felineRebirthAddress", "static_eagleRebirthAddress", "static_bullIncubatorAddress"]
-  func authorized(acc: Boolean, key: String) = acc || getString(getOracle(), key).valueOrElse("") == i.caller.toString()
-  if !FOLD<12>(sources, false, authorized) then throw("H26: unauthorized completion") else
-  if !active() then ([], "") else
-  let tx = initialTx.fromBase58String()
-  let receipt = "h26_drop_" + toBase58String(sha256(i.caller.bytes + tx))
-  if tryGetBoolean(receipt) || finishHeight > height || finishHeight < 2 then throw("H26: duplicate or premature completion") else
-  let recipient = addressFromStringValue(receiver)
-  let hash = sha256(toBytes("halloween-2026") + i.caller.bytes + tx + blockInfoByHeight(finishHeight-1).value().vrf.value())
-  let roll = (toInt(hash.take(8)) % 100 + 100) % 100
-  strict id = if roll < 40 then mint("ART-H26SOUL", recipient, 26) else ""
-  ([BooleanEntry(receipt, true)], id)
-}
-
-
 # End Halloween 2026 ritual.
 
 @Callable(i)

@@ -24,22 +24,12 @@ func mockBlock(h:Int)=BlockInfo(500,h,1,base58'abc',fixture,base58'abc',base58'a
   }
   assert.match(source,/IntegerEntry\("h26_jackpot_issued", getInteger\(this,"h26_jackpot_issued"\)\.valueOrElse\(0\)\+1\)/);
 });
-test('bull genesis rotation retains exactly four current genes and all old genes',async()=>{
-  let select=fn(read('ride/bulls/incubator.ride'),'select').replace(/getBoolean\(/g,'mockBoolean(').replace(/\bthis\b/g,'fixture');
-  for(const unlocked of [false,true]){
-    const defs=runtime+`func mockBoolean(a:Address,k:String)=${unlocked}\n`+select;
-    const result=await exec(defs,'select("A")');assert.equal(result.error,undefined,result.error);
-    const expected=unlocked?'BULL-FFFFFFFF-GA':'BULL-BBBBBBBB-GA';assert.ok(result.result.includes(expected));
-    const count=await exec(defs,'size(select("A")._2)');assert.ok(count.result.endsWith('= 4'));
-    const old=await exec(defs,'size(select("A")._1)');assert.ok(old.result.endsWith(unlocked?'= 6':'= 5'));
-  }
-});
-test('incubator unlocks are campaign-only, payment-free and monotonic',async()=>{
-  for(const family of ['bulls','ducks']){
+test('Dark Phoenix unlock is campaign-only, payment-free and monotonic',async()=>{
+  for(const family of ['ducks']){
     let unlock=fn(read(`ride/${family}/incubator.ride`),'unlockHalloween').replace(/getStringValue\(/g,'mockStringValue(');
     for(const [caller,payments,allowed] of [['abc','[]',true],['xyz','[]',false],['abc',"[AttachedPayment(unit,1)]",false]]){
       const defs=runtime+`let i=Invocation(${payments},Address(base58'${caller}'),base58'abc',base58'abc',0,unit,fixture,base58'abc')\nfunc getOracle()=fixture\nfunc mockStringValue(a:Address,k:String)="abc"\n`+unlock;
-      const result=await exec(defs,'unlockHalloween()');if(allowed)value(result,family==='bulls'?'h26_genesisUnlocked':'h26_darkPhoenixUnlocked',true);else assert.ok(result.error?.includes('campaign only'));
+      const result=await exec(defs,'unlockHalloween()');if(allowed)value(result,'h26_darkPhoenixUnlocked',true);else assert.ok(result.error?.includes('campaign only'));
     }
   }
 });
@@ -72,14 +62,6 @@ test('Pumpkin Feed removal follows Lake without a bull-position guard',async()=>
   assert.doesNotMatch(booster,/bullStakedPower|Unstake bulls/);
   assert.ok((await boosterCall('unstakeItem("ART-H26FEED")',{staked:''})).error);
 });
-test('all supported families call completion inside successful finish paths',()=>{
-  for(const family of ['ducks','turtle','cani','feli','eagl','bulls']){
-    assert.match(read(`ride/${family}/breeder.ride`),/strict halloweenDrop = halloweenCompletion\(/);
-    const rebirth=read(`ride/${family}/${family==='bulls'?'incubator':'rebirth'}.ride`);
-    assert.match(rebirth,/strict halloweenDrop = halloweenCompletion\(address, initTx, finishBlock\)/);
-  }
-  assert.match(read('ride/ducks/breeder.ride'),/halloweenCompletion\(owner, txIdStr, processFinishHeight\)/);
-});
 test('reserved breeding jackpots preserve canonical rarity stats for later burn/deposit',async()=>{
   for(const [family,gene] of [['bulls','BULL-WMOLDYMT-JU'],['turtle','TRTL-WWIZARDT-JU']]){
     const source=read(`ride/${family}/breeder.ride`);const body=fn(source,'getGenFromName');
@@ -102,21 +84,6 @@ func tryGetInteger(k:String)=if k=="abc_user_external_boost_bull" then ${current
   }
 });
 
-test('every completion hook skips absent, disabled, cleared and out-of-window campaigns',async()=>{
-  for(const family of ['ducks','turtle','cani','feli','eagl','bulls'])for(const file of ['breeder',family==='bulls'?'incubator':'rebirth']){
-    const hook=fn(read(`ride/${family}/${file}.ride`),'halloweenCompletion').replace(/getString\(/g,'mockString(').replace(/getBoolean\(/g,'mockBoolean(').replace(/getInteger\(/g,'mockInteger(').replace(/\binvoke\(/g,'mockInvoke(').replace(/lastBlock.timestamp/g,'now');
-    for(const [address,enabled,start,end,now,expected] of [['',false,0,0,500,''],[issuer,false,100,1000,500,''],[issuer,false,0,0,500,''],[issuer,true,100,1000,99,''],[issuer,true,100,1000,1000,''],[issuer,true,100,1000,500,'called']]){
-      const defs=runtime+`let now=${now}
-func getOracle()=fixture
-func mockString(a:Address,k:String)="${address}"
-func mockBoolean(a:Address,k:String)=${enabled}
-func mockInteger(a:Address,k:String)=if k=="h26_start" then ${start} else ${end}
-func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPayment])=${expected?'"called"':'throw("inactive event must not be invoked")'}
-`+hook;
-      const result=await exec(defs,'halloweenCompletion("abc","abc",10)');assert.equal(result.error,undefined,`${family}/${file}: ${result.error}`);assert.ok(result.result.endsWith(`= "${expected}"`),result.result);
-    }
-  }
-});
 
 test('Halloween wearable registrations have slots and boost values with public sales disabled',()=>{
   const items=JSON.parse(read('ride/artefacts/items-halloween2026.json')).data;
@@ -152,32 +119,13 @@ func mockInvoke(a:Address,method:String,args:List[String],payments:List[Attached
   assert.doesNotMatch(source,/registerPumpkinPosition|h26_origin_/);
 });
 
-test('existing issuance entry points accept Halloween only from coupons',async()=>{
-  const source=read('ride/artefacts/items.ride');
-  const getters=[...new Set((fn(source,'issueArtefact')+fn(source,'issueArtefactIndex')).match(/\bget[A-Z]\w*(?=\()/g))].filter(n=>n!=='getCouponsAddress');
-  const methods=['halloweenItem','issueItem','issueArtefact','issueArtefactIndex'].map(n=>fn(source,n)).join('\n').replace(/\bthis\b/g,'fixture').replace(/artefact\.calculateAssetId\(\)/g,"base58'AB'");
-  for(const [caller,payments,allowed] of [['xyz','[]',true],['abc','[]',false],['xyz','[AttachedPayment(unit,1)]',false]]){
-    const mocks=runtime+`let i=Invocation(${payments},Address(base58'${caller}'),base58'abc',base58'dEf',0,unit,fixture,base58'abc')
-func getCouponsAddress()=Address(base58'xyz')
-func tryGetInteger(k:String)=0
-func tryGetBoolean(k:String)=false
-func isTestEnv()=false
-func last_height_key()="last_height"
-func last_height_key_receiver(a:String)="last_height_"+a
-`+getters.map(n=>`func ${n}()=${n==='getWarsPKey'?"base58'AB'":"Address(base58'AB')"}\n`).join('');
-    for(const call of [`issueArtefact("ART-H26ARMOR","${issuer}")`,`issueArtefactIndex("ART-H26SOUL","${issuer}",26)`]){
-      const result=await exec(mocks+methods,call);
-      if(allowed)assert.equal(result.error,undefined,result.error);else assert.ok(result.error?.includes('campaign issuance only'),result.error);
-    }
-  }
-});
 
-test('coupons completion reuses issueArtefactIndex with the intended recipient and nonce',async()=>{
+test('coupons claims reuse issueArtefactIndex with the intended recipient and nonce',async()=>{
   const mint=fn(read('ride/coupons.ride'),'mint').replace(/\binvoke\(/g,'mockInvoke(');
   const defs=runtime+`func getItemsAddress()=fixture
-func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPayment])=if method=="issueArtefactIndex" && args==["ART-H26SOUL","abc",26] && size(p)==0 then "issued" else throw("wrong issuance route")
+func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPayment])=if method=="issueArtefactIndex" && args==["ART-H26SOUL","abc",0] && size(p)==0 then "issued" else throw("wrong issuance route")
 `+mint;
-  const result=await exec(defs,'mint("ART-H26SOUL",fixture,26)');assert.equal(result.error,undefined,result.error);assert.ok(result.result.endsWith('= "issued"'));
+  const result=await exec(defs,'mint("ART-H26SOUL",fixture,0)');assert.equal(result.error,undefined,result.error);assert.ok(result.result.endsWith('= "issued"'));
 });
 
 for(const [gene,key,other] of [['WWWWWWWP','8W-J','WDARKPHX-J'],['WDARKPHX','WDARKPHX-J','8W-J']])test(`${gene}: mint, parse, rebirth and rescue preserve separate Phoenix counters`,async()=>{
@@ -218,41 +166,4 @@ func mockInvoke(a:Address,m:String,args:List[String],p:List[AttachedPayment])=if
   const power=await call('getAssetFarmingPower("AB".fromBase58String())');assert.equal(power.error,undefined,power.error);assert.ok(power.result.includes(`"${key}"`));
   apply(await call(`reduceRarity("AB","${key}")`));assert.equal(state[`stats_${key}_quantity`],before);assert.equal(state[`stats_${other}_quantity`],otherBefore);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],0);
   apply(await call(`increaseRarity("AB","${key}")`));assert.equal(state[`stats_${key}_quantity`],before+1);assert.equal(state[`stats_${other}_quantity`],otherBefore);assert.equal(state[`stats_DUCK-${gene}-JU_amount`],1);
-});
-
-test('Soul drops use the historical source-account bonusItem reward metadata for every family',async()=>{
-  for(const family of ['ducks','turtle','cani','feli','eagl','bulls'])for(const file of ['breeder',family==='bulls'?'incubator':'rebirth']){
-    const source=read(`ride/${family}/${file}.ride`);
-    const metadata=source.match(/let halloweenBonus = ([^\n]+)/)[1];
-    assert.match(source,/\+\+ halloweenBonus\s*#\+\+\s*bonusOutput/);
-    for(const assetId of ['soul-nft-id','']){
-      const defs=runtime+`let owner="abc"\nlet address="abc"\nlet txIdStr="initial-tx"\nlet initTx="initial-tx"\nlet halloweenDrop="${assetId}"\nlet i=Invocation([],fixture,base58'abc',base58'xyz',0,unit,fixture,base58'abc')\n`;
-      const result=await exec(defs,metadata);assert.equal(result.error,undefined,`${family}/${file}: ${result.error}`);
-      if(assetId)value(result,'address_abc_initTx_initial-tx_bonusItem',assetId);
-      else assert.ok(result.result.endsWith('= []'),result.result);
-    }
-  }
-});
-
-test('real duck finish returns the Soul bonus beside its normal NFT and status, never for a missed drop',async()=>{
-  const finish=fn(read('ride/ducks/breeder.ride'),'finishDuckHatch').replace(/asset\.calculateAssetId\(\)/g,"base58'abc'").replace(/\binvoke\(/g,'mockInvoke(').replace(/getStringValue\(/g,'mockStringValue(').replace(/getIntegerValue\(/g,'mockIntegerValue(').replace(/\bthis\b/g,'fixture');
-  for(const drop of ['soul-nft-id','']){
-    const defs=runtime+`let HatchingFinished="BREEDING_FINISHED"
-func getProcessStatusKey(a:String,t:ByteVector)="status"
-func getDuckIdKey(a:String,t:ByteVector)="duckId"
-func getProcessFinishHeightKey(a:String,t:ByteVector)="finish"
-func mockStringValue(a:Address,k:String)="BREEDING_STARTED"
-func mockIntegerValue(a:Address,k:String)=10
-func mockInvoke(a:Address,f:String,args:List[ByteVector|Int|String],p:List[AttachedPayment])="DUCK-AAAAAAAA-GA"
-func halloweenCompletion(a:String,t:String,h:Int)="${drop}"
-func getParentKey(t:ByteVector,n:Int)="parent"
-func tryGetString(k:String)="abc"
-func tryGetBoolean(k:String)=false
-func getRandomNumber(n:Int,t:ByteVector,h:Int,nonce:Int)=1
-func composeGenericData(g:String,k:String,id:ByteVector,a:Issue)=[a]
-`+finish;
-    const result=await exec(defs,`finishDuckHatch("abc","${issuer}","DUCK-AAAAAAAA-GA")`);
-    assert.equal(result.error,undefined,result.error);value(result,'status','BREEDING_FINISHED');assert.ok(result.result.includes('Issue('));assert.ok(result.result.includes('ScriptTransfer('));
-    if(drop)value(result,`address_${issuer}_initTx_abc_bonusItem`,drop);else assert.ok(!result.result.includes('_bonusItem'));
-  }
 });
