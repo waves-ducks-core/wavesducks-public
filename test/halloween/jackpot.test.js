@@ -90,7 +90,8 @@ for (const [family, name] of [['bulls', 'BULL-WMOLDYMT-JU'], ['turtle', 'TRTL-WW
     let loser;
     let zero;
     let negativeOne;
-    for (let k = 1; k < 30000 && (!winner || !loser || !zero || !negativeOne); k++) {
+    let negativeWinner;
+    for (let k = 1; k < 30000 && (!winner || !loser || !zero || !negativeOne || !negativeWinner); k++) {
       const tx = Buffer.alloc(32);
       tx.writeUInt32BE(k, 28);
       const hash = nodeCrypto.createHash('sha256').update(Buffer.concat([tx, Buffer.from(crypto.base58Decode('abc'))])).digest();
@@ -98,13 +99,15 @@ for (const [family, name] of [['bulls', 'BULL-WMOLDYMT-JU'], ['turtle', 'TRTL-WW
       if (remainder === 1n) winner = crypto.base58Encode(tx);
       else if (remainder === 0n) zero = crypto.base58Encode(tx);
       else if (remainder === -1n) negativeOne = crypto.base58Encode(tx);
+      // Ride uses floor modulo: a negative hash can also land on winning slot 1.
+      else if (remainder === 1n - BigInt(odds)) negativeWinner = crypto.base58Encode(tx);
       else loser = crypto.base58Encode(tx);
     }
-    assert.ok(winner && loser && zero && negativeOne);
+    assert.ok(winner && loser && zero && negativeOne && negativeWinner);
     const state = selectorState({ name, odds }).replace(/func getRandomNumber\([\s\S]*$/, '');
     const random = fn(source, 'getRandomNumber').replace(/blockInfoByHeight\(/g, 'mockBlock(');
     const block = `func mockBlock(h:Int)=if h!=9 then throw("WRONG_BLOCK") else BlockInfo(500,h,1,base58'abc',fixture,base58'abc',base58'abc',[])\n`;
-    for (const [tx, expected] of [[winner, name], [loser, ''], [zero, ''], [negativeOne, '']]) {
+    for (const [tx, expected] of [[winner, name], [negativeWinner, name], [loser, ''], [zero, ''], [negativeOne, '']]) {
       const result = await execute(state + block + random + '\n' + selectorSource(source), `getJackpot(base58'${tx}',10)`);
       assert.ok(ok(result).endsWith(`= ${JSON.stringify(expected)}`), result.result);
     }
