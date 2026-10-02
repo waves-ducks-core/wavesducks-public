@@ -180,7 +180,7 @@ func composeGenericData(g:String,k:String,id:ByteVector,a:Issue)=[a]
   }
 });
 
-test('Soul issuance reuses ordinary trusted callers; other Halloween rewards remain coupons-only', async () => {
+test('generic item issuers preserve trusted callers and distributor restrictions for campaign rewards', async () => {
   const source = read('ride/artefacts/items.ride');
   const allowedGetters = ['getRebirthAddress','getTurtleRebirthAddress','getCanineRebirthAddress','getFelineeRebirthAddress','getEagleRebirthAddress','getBullIncubatorAddress','getDuckBreederAddress','getTurtleBreederAddress','getCanineBreederAddress','getFelineBreederAddress','getEagleBreederAddress','getBullBreederAddress'];
   allowedGetters.push('getMutantIncubatorAddress');
@@ -200,7 +200,7 @@ let oracleData=[${Object.entries(incubators).map(([key, address]) => `StringEntr
 func mockString(a:Address,k:String)=getString(oracleData,k)
 func tryGetStringExternal(a:Address,k:String)=mockString(a,k).valueOrElse("")
 func tryGetInteger(k:String)=0
-func tryGetBoolean(k:String)=${whitelisted} && k=="ART-H26SOUL_issue"
+func tryGetBoolean(k:String)=${whitelisted} && k==${JSON.stringify(kind + "_issue")}
 func isTestEnv()=false
 func last_height_key()="last_height"
 func last_height_key_receiver(a:String)="last_height_"+a
@@ -208,28 +208,42 @@ func last_height_key_receiver(a:String)="last_height_"+a
     const repl = await replWith(env + getters + '\n' + methods);
     return repl.evaluate(indexed ? `issueArtefactIndex("${kind}","${owner}",${nonce})` : `issueArtefact("${kind}","${owner}")`);
   }
-  for (const [name, caller] of [...allowedGetters.map(getter => [getter, addresses[getter]]), ...Object.entries(incubators)]) {
-    const win = await run(caller, 'ART-H26SOUL');
-    assert.match(ok(win), /Issue\(/, name);
-    assert.match(win.result, /nonce = 2/, name);
-    for (const options of [
-      ['ART-H26SOUL',2,true,true], ['ART-H26SOUL',2,false,false],
-      ['ART-H26SWORD',2,false,true], ['ART-H26CAT',2,false,true],
-      ['ART-H26ARMOR',2,false,true], ['ART-H26FEED',2,false,true],
-    ]) assert.ok((await run(caller, ...options)).error?.includes('campaign issuance only'), name + ':' + options.join(','));
-    // The direct helper selects nonce 2, but the generic issuer retains its
-    // historical nonce interface for all trusted contracts.
-    for (const nonce of [0, 1, 26]) ok(await run(caller, 'ART-H26SOUL', nonce));
+  const campaignItems = ['ART-H26SOUL','ART-H26SWORD','ART-H26CAT','ART-H26ARMOR','ART-H26FEED'];
+  const gameplayCallers = [...allowedGetters.map(getter => [getter, addresses[getter]]), ...Object.entries(incubators)];
+  for (const [name, caller] of [...gameplayCallers, ['coupons', addresses.getCouponsAddress], ['self', 'abc']]) {
+    for (const kind of [...campaignItems, 'ART-GFTR']) {
+      assert.match(ok(await run(caller, kind)), /Issue\(/, `${name}: ${kind}`);
+    }
   }
-  assert.ok((await run('xyz', 'ART-H26SOUL')).error?.includes('admin only'));
-  ok(await run('abc', 'ART-H26SOUL')); // Existing self authority.
-  assert.ok((await run(addresses.getHuntDistroAddress, 'ART-H26SOUL')).error?.includes('WHITELIST'));
-  ok(await run(addresses.getHuntDistroAddress, 'ART-H26SOUL', 2, false, true, true));
-  assert.ok((await run('xyz', 'ART-H26SOUL', 2, false, true, false, true)).error?.includes('WHITELIST'));
-  ok(await run('xyz', 'ART-H26SOUL', 2, false, true, true, true));
-  for (const kind of ['ART-H26SOUL','ART-H26SWORD','ART-H26CAT','ART-H26ARMOR','ART-H26FEED']) {
-    ok(await run(addresses.getCouponsAddress, kind, 26));
-    ok(await run(addresses.getCouponsAddress, kind, 0, false, false));
-    assert.ok((await run(addresses.getCouponsAddress, kind, 26, true)).error?.includes('campaign issuance only'));
+  // Generic minting keeps its established nonce/payment interface. The bonus
+  // helper independently selects nonce 2 and sends no payment.
+  for (const nonce of [0, 1, 26]) {
+    const result = await run(addresses.getRebirthAddress, 'ART-H26SOUL', nonce, true);
+    assert.match(ok(result), new RegExp(`nonce = ${nonce}`));
+  }
+  const nonindexedCallers = new Set(['getRebirthAddress', 'getTurtleRebirthAddress', 'getCanineRebirthAddress']);
+  for (const [name, caller] of gameplayCallers) {
+    const result = await run(caller, 'ART-H26ARMOR', 0, false, false);
+    if (nonindexedCallers.has(name)) assert.match(ok(result), /Issue\(/, name);
+    else assert.ok(result.error?.includes('admin only'), name);
+  }
+  for (const caller of [addresses.getCouponsAddress, 'abc']) {
+    for (const kind of campaignItems) {
+      assert.match(ok(await run(caller, kind, 0, true, false)), /Issue\(/);
+    }
+  }
+  for (const indexed of [true, false]) {
+    for (const kind of [...campaignItems, 'ART-GFTR']) {
+      assert.ok((await run('xyz', kind, 2, false, indexed)).error?.includes('admin only'));
+      assert.ok((await run(addresses.getHuntDistroAddress, kind, 2, false, indexed)).error?.includes('WHITELIST'));
+      assert.match(ok(await run(addresses.getHuntDistroAddress, kind, 2, false, indexed, true)), /Issue\(/);
+      const wars = await run('xyz', kind, 2, false, indexed, false, true);
+      if (indexed) assert.ok(wars.error?.includes('WHITELIST'));
+      else assert.match(ok(wars), /Issue\(/); // The historical nonindexed Wars authority is unrestricted.
+      assert.match(ok(await run('xyz', kind, 2, false, indexed, true, true)), /Issue\(/);
+    }
+    for (const [caller, wars] of [[addresses.getHuntDistroAddress, false], ['xyz', true]]) {
+      assert.match(ok(await run(caller, 'ART-FIRE_SHIELD', 2, false, indexed, false, wars)), /Issue\(/);
+    }
   }
 });

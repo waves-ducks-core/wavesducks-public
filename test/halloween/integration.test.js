@@ -5,9 +5,64 @@ function fn(source,name){const start=source.indexOf(`func ${name}(`);assert.ok(s
 async function exec(source,expression){const repl=ride.repl({nodeUrl:'http://127.0.0.1:1',chainId:'W',address:issuer});const loaded=await repl.evaluate(source.replace(/\bheight\b/g,"testHeight"));assert.equal(loaded.error,undefined,loaded.error);return repl.evaluate(expression);}
 function value(r,key,v){assert.equal(r.error,undefined,r.error);assert.ok(r.result.includes(`key = "${key}"\n\tvalue = ${JSON.stringify(v)}`),r.result);}
 const runtime=`let fixture = Address(base58'abc')\nlet height = 1000\n`;
+for(const [family,gene,prefix,idKey,statsKey,rarity] of [
+  ['ducks','WDARKPHX','DUCK','getDuckIdKey','getDuckStatsKey','WDARKPHX-J'],
+  ['turtle','WWIZARDT','TRTL','getTRTLIdKey','getStatsKey','8W-J'],
+  ['bulls','WMOLDYMT','BULL','getIdKey','getStatsKey','8W-J'],
+])test(`${family} generic jackpot preserves self/rebirth authority and rejects replay`,async()=>{
+  const source=read(`ride/${family}/incubator.ride`);
+  const methods=['getHatchingStatusKey','getHatchingFinishHeightKey',idKey,statsKey,'issueJackpot'].map(name=>fn(source,name)).join('\n')
+    .replace(/\bthis\b/g,'fixture').replace(/asset\.calculateAssetId\(\)/g,"base58'AB'");
+  for(const caller of ['abc','xyz','2']){
+    const state={};
+    async function invoke(){
+      const entries=Object.entries(state).map(([key,value])=>`${typeof value==='number'?'Integer':'String'}Entry(${JSON.stringify(key)},${JSON.stringify(value)})`).join(',');
+      const mocks=runtime+`let data=[${entries}]
+let i=Invocation([],Address(base58'${caller}'),base58'abc',base58'dEf',0,unit,fixture,base58'abc')
+let HatchingFinished="finish"
+let multiplier=1000000
+func getRebirthAddress()=Address(base58'xyz')
+func getTurtleRebirthAddress()=Address(base58'xyz')
+func countEggsNeededAmount(amount:Int)=100000000
+func tryGetInteger(key:String)=getInteger(data,key).valueOrElse(0)
+func tryGetString(key:String)=getString(data,key).valueOrElse("")
+`;
+      return exec(mocks+methods,`issueJackpot("${issuer}","abc","${gene}")`);
+    }
+    const minted=await invoke();
+    if(caller==='2'){assert.ok(minted.error?.includes('admin or rebirth only'),minted.error);continue;}
+    assert.equal(minted.error,undefined,minted.error);
+    assert.ok(minted.result.includes(`name = "${prefix}-${gene}-JU"`),minted.result);
+    value(minted,`stats_${prefix}-${gene}-JU_amount`,1);
+    value(minted,`stats_${rarity}_quantity`,1);
+    for(const match of minted.result.matchAll(/key = "([^"]+)"\n\tvalue = ("[^"]*"|-?\d+)/g))state[match[1]]=JSON.parse(match[2]);
+    const replay=await invoke();
+    assert.ok(replay.error?.includes('override following duckId'),replay.error);
+  }
+});
+
+test('public duck rebirth still selects Dark Phoenix only after the permanent unlock',async()=>{
+  const source=read('ride/ducks/rebirth.ride');
+  const branch=source.match(/\}else if \(win == "phoenix"\) then \{\s*(let dark = [\s\S]*?let gene = [^\n]+)/);
+  assert.ok(branch,'The Phoenix reward must remain inside its existing selected outcome.');
+  assert.match(fn(source,'getRandomWin'),/phoenixRandom == 1/);
+  assert.match(fn(source,'finishRebirthInternal'),/\[address, txId, gene\]/);
+  for(const unlocked of [false,true]){
+    const defs=runtime+`func getIncubatorAddress()=fixture
+func mockBoolean(address:Address,key:String)=if address==fixture && key=="h26_darkPhoenixUnlocked" then ${unlocked} else throw("wrong unlock source")
+func selectedGene()={
+${branch[1].replace(/getBoolean\(/g,'mockBoolean(')}
+gene
+}
+`;
+    const result=await exec(defs,'selectedGene()');
+    assert.equal(result.error,undefined,result.error);
+    assert.ok(result.result.endsWith(`= "${unlocked?'WDARKPHX':'WWWWWWWP'}"`),result.result);
+  }
+});
 for(const [family,denominator] of [['turtle',200],['bulls',1000]]) test(`${family} real Ride jackpot selector: historical probability, cap2, calendar and pause`,async()=>{
   const source=read(`ride/${family}/breeder.ride`);
-  let callable=fn(source,'halloweenJackpot').replace(/getString\(/g,'mockString(').replace(/getBoolean\(/g,'mockBoolean(').replace(/getInteger\(/g,'mockInteger(').replace(/blockInfoByHeight\(/g,'mockBlock(').replace(/lastBlock.timestamp/g,'now').replace(/\bthis\b/g,'fixture');
+  let callable=(fn(source,'getRandomNumber')+'\n'+fn(source,'halloweenJackpot')).replace(/getString\(/g,'mockString(').replace(/getBoolean\(/g,'mockBoolean(').replace(/getInteger\(/g,'mockInteger(').replace(/blockInfoByHeight\(/g,'mockBlock(').replace(/lastBlock.timestamp/g,'now').replace(/\bthis\b/g,'fixture');
   // Find a winning initial ID against the exact campaign-domain + block VRF formula.
   let winner;
   for(let k=1;k<20000;k++){const tx=Buffer.alloc(8);tx.writeBigInt64BE(BigInt(k));const digest=nodeCrypto.createHash('sha256').update(Buffer.concat([Buffer.from('h26-jackpot'),tx,Buffer.from(crypto.base58Decode('abc'))])).digest();if((digest.readBigInt64BE()%BigInt(denominator)+BigInt(denominator))%BigInt(denominator)===1n){winner=crypto.base58Encode(tx);break;}}
@@ -157,7 +212,6 @@ func mockInvoke(a:Address,m:String,args:List[String],p:List[AttachedPayment])=if
     return exec(defs.replace(/\bthis\b/g,'fixture').replace(/\bgetBoolean\(/g,'mockBoolean(').replace(/\bgetIntegerValue\(/g,'mockIntegerValue(').replace(/\bassetInfo\(/g,'mockAsset(').replace(/\binvoke\(/g,'mockInvoke(').replace(/asset\.calculateAssetId\(\)/g,"base58'AB'"),expression);
   }
   function apply(r){assert.equal(r.error,undefined,r.error);for(const m of r.result.matchAll(/key = "([^"]+)"\n\tvalue = ("[^"]*"|-?\d+)/g))state[m[1]]=JSON.parse(m[2]);}
-  if(gene==='WDARKPHX')assert.ok((await call(`issueJackpot("${issuer}","abc","${gene}")`,false)).error?.includes('permanent unlock'));
   const before=state[`stats_${key}_quantity`],otherBefore=state[`stats_${other}_quantity`];
   const mint=await call(`issueJackpot("${issuer}","abc","${gene}")`);apply(mint);
   assert.equal(state[`stats_${key}_quantity`],before+1);assert.equal(state[`stats_${other}_quantity`],otherBefore);

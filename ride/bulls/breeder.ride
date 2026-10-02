@@ -205,8 +205,7 @@ func halloweenJackpot(txId: ByteVector, finishHeight: Int) = {
   let enabled = getBoolean(event, "h26_enabled").valueOrElse(false)
   let start = getInteger(event, "h26_start").valueOrElse(0)
   let end = getInteger(event, "h26_end").valueOrElse(0)
-  let digest = sha256(toBytes("h26-jackpot") + txId + blockInfoByHeight(finishHeight-1).value().vrf.value())
-  let roll = (toInt(digest.take(8)) % 1000 + 1000) % 1000
+  let roll = (getRandomNumber(1000, toBytes("h26-jackpot") + txId, finishHeight, 0) + 1000) % 1000
   enabled && lastBlock.timestamp >= start && lastBlock.timestamp < end &&
     getInteger(this, "h26_jackpot_issued").valueOrElse(0) < 2 && roll == 1
 }

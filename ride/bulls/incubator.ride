@@ -386,7 +386,6 @@ func configureOracle(oracle: String) = {
 
 @Callable(i)
 func issueJackpot(address: String, txIdStr: String, gen: String) = {
-  if gen == "WMOLDYMT" then throw("H26: breeding-only capped jackpot") else
   if (i.caller != getRebirthAddress() && i.caller != this) then {
     throw("ISJ: admin or rebirth only")
   } else {

@@ -746,7 +746,6 @@ func addArteFactToDuck()= {
 
 @Callable(i)
 func issueArtefact(type: String, receiver: String) = {
-  if halloweenItem(type) && (i.caller != getCouponsAddress() || size(i.payments) != 0) then throw("H26: campaign issuance only") else
   if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getCanineRebirthAddress()
@@ -776,7 +775,6 @@ func issueArtefact(type: String, receiver: String) = {
 
 @Callable(i)
 func issueArtefactIndex(type: String, receiver: String, nonce: Int) = {
-  if halloweenItem(type) && (size(i.payments) != 0 || (type != "ART-H26SOUL" && i.caller != getCouponsAddress())) then throw("H26: campaign issuance only") else
   if (!type.contains("ART-")) then throw("You are a retard. Go kill urself.") else
 
   if (i.caller != this && i.caller != getRebirthAddress() && i.caller != getTurtleRebirthAddress() && i.caller != getMutantIncubatorAddress()
