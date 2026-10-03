@@ -1,0 +1,104 @@
+{
+  "data": [
+    {
+      "key": "jackpot_3PDAZRdArHH6kRtZxFQSL67KwoF23hSFHA8",
+      "type": "string",
+      "value": "BULL-WMOLDYMT-JU"
+    },
+    {
+      "key": "jackpot_3PDAZRdArHH6kRtZxFQSL67KwoF23hSFHA8_odds",
+      "type": "integer",
+      "value": 1000
+    },
+    {
+      "key": "jackpot_3PDAZRdArHH6kRtZxFQSL67KwoF23hSFHA8_max",
+      "type": "integer",
+      "value": 2
+    },
+    {
+      "key": "jackpot_3PDAZRdArHH6kRtZxFQSL67KwoF23hSFHA8_start",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "jackpot_3PDAZRdArHH6kRtZxFQSL67KwoF23hSFHA8_end",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "jackpot_3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t",
+      "type": "string",
+      "value": "TRTL-WWIZARDT-JU"
+    },
+    {
+      "key": "jackpot_3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t_odds",
+      "type": "integer",
+      "value": 200
+    },
+    {
+      "key": "jackpot_3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t_max",
+      "type": "integer",
+      "value": 2
+    },
+    {
+      "key": "jackpot_3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t_start",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "jackpot_3P97G4z2qH2pZGPYwWw47pFQu7cpyjR579t_end",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "farm_gen_BULL-WMOLDYMT-JU",
+      "type": "string",
+      "value": "8W-J"
+    },
+    {
+      "key": "farm_gen_TRTL-WWIZARDT-JU",
+      "type": "string",
+      "value": "8W-J"
+    },
+    {
+      "key": "farm_gen_DUCK-WWWWWWWP-JU",
+      "type": "string",
+      "value": "8W-J"
+    },
+    {
+      "key": "farm_gen_DUCK-WDARKPHX-JU",
+      "type": "string",
+      "value": "8W-J"
+    },
+    {
+      "key": "phoenix_gen_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ",
+      "type": "string",
+      "value": "WDARKPHX"
+    },
+    {
+      "key": "phoenix_gen_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_locked",
+      "type": "string",
+      "value": "WWWWWWWP"
+    },
+    {
+      "key": "phoenix_gen_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_unlock",
+      "type": "string",
+      "value": "h26_milestone_1200"
+    },
+    {
+      "key": "phoenix_odds_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_1",
+      "type": "integer",
+      "value": 500
+    },
+    {
+      "key": "phoenix_odds_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_50",
+      "type": "integer",
+      "value": 250
+    },
+    {
+      "key": "phoenix_odds_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_100",
+      "type": "integer",
+      "value": 50
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "type": 12,
+  "version": 1,
+  "data": [
+    {
+      "key": "boost_ART-H26SWORD",
+      "type": "integer",
+      "value": 30
+    },
+    {
+      "key": "boost_ART-H26CAT",
+      "type": "integer",
+      "value": 5
+    },
+    {
+      "key": "boost_ART-H26ARMOR",
+      "type": "integer",
+      "value": 30
+    }
+  ],
+  "fee": 600000,
+  "feeAssetId": "WAVES"
+}
