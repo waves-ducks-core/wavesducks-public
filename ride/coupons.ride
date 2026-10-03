@@ -357,9 +357,6 @@ func contribute() = {
   func firstTen(acc: List[String], address: String) = if size(acc) < 10 then acc :+ address else acc
   let leaders = FOLD<11>((if ranked._2 then ranked._1 else ranked._1 :+ a), [], firstTen)
   func mark(acc: List[BooleanEntry], threshold: Int) = if total >= threshold && !milestone(threshold) then acc :+ BooleanEntry("h26_milestone_"+threshold.toString(), true) else acc
-  strict phoenixUnlock = if total >= 1200 && !milestone(1200) then
-    invoke(getRebirthAddress(), "setJackpot", [getStringValue(getOracle(), "phoenix_gen_" + getRebirthAddress().toString())], []).exactAs[Boolean]
-  else false
   let milestones = FOLD<6>([200,400,600,800,1000,1200], [], mark)
   burns ++ milestones ++ [IntegerEntry("h26_total", total), IntegerEntry("h26_sequence", sequence),
     IntegerEntry(halloweenUser(a)+"_total", personal), IntegerEntry(halloweenUser(a)+"_sequence", sequence),

@@ -323,7 +323,7 @@ test('double item rebirth uses nonces zero, one and two through the actual index
   const methods = ['checkAdditionalPayment', 'getRandomWin', 'getRandomReturn', 'bonusItemOutput', 'finishRebirthInternal', 'finishRebirthDouble'].map(name => fn(source, name)).join('\n')
     .replace(/\bthis\b/g, 'fixture').replace(/\bheight\b/g, 'testHeight').replace(/lastBlock.timestamp/g, '500')
     .replace(/\binvoke\(/g, 'mockInvoke(').replace(/\bgetIntegerValue\(/g, 'mockIntegerValue(')
-    .replace(/\bgetInteger\(/g, 'mockInteger(').replace(/\bgetStringValue\(/g, 'mockStringValue(')
+    .replace(/\bgetInteger\(/g, 'mockInteger(').replace(/getStringValue\(getOracle\(\),/g, 'mockOracleStringValue(getOracle(),').replace(/\bgetStringValue\(/g, 'mockStringValue(')
     .replace(/\bassetInfo\(/g, 'mockAssetInfo(');
   // The REPL has no containing transaction for calculateAssetId. Preserve the
   // production Issue nonce and derive a deterministic fixture ID from it.
@@ -360,8 +360,9 @@ func tryGetInteger(k:String)=if k=="${resultKey}_finishBlock" then ${t.maturity 
 func tryGetString(k:String)=if k=="${resultKey}_status" then "${t.status || 'open'}" else throw("WRONG_OWNER")
 func tryGetStringExternal(a:Address,k:String)=if a==fixture && k=="bonus_item_abc_rebirth" then "ART-FREEGENE" else ""
 func mockIntegerValue(a:Address,k:String)=if a!=fixture then throw("WRONG_ORACLE") else if k=="fee" then 1 else if k=="bonus_item_abc_rebirth_start" then 100 else if k=="bonus_item_abc_rebirth_end" then 1000 else throw("WRONG_INTEGER_KEY")
-func mockInteger(a:Address,k:String)=if a==fixture && k=="bonus_item_abc_rebirth_chance" then 100 else throw("WRONG_CHANCE_KEY")
+func mockInteger(a:Address,k:String)=if a!=fixture then throw("WRONG_ORACLE") else if k=="bonus_item_abc_rebirth_chance" then 100 else if k=="phoenix_odds_abc_1" then 500 else if k=="phoenix_odds_abc_50" then 250 else if k=="phoenix_odds_abc_100" then 50 else throw("WRONG_CHANCE_KEY")
 func mockStringValue(k:String)=throw("UNEXPECTED_RESCUE")
+func mockOracleStringValue(a:Address,k:String)=if a==fixture then throw("UNEXPECTED_PHOENIX") else ""
 func mockAssetInfo(id:ByteVector)=Asset(id,1,0,fixture,base58'abc',false,false,unit,"unused","unused")
 func checkReal(id:ByteVector)=throw("UNEXPECTED_RESCUE")
 func getRandomNumber(n:Int,tx:ByteVector,h:Int,o:Int)=if h!=10 then throw("WRONG_RANDOM_HEIGHT") else

@@ -139,10 +139,15 @@ func getMedhouseIssuedAmount() = {
 func getRandomWin(tx: ByteVector, finishHeight: Int, assetRarity: Int, blacklistCode: String) = {
   let n = getRandomNumber(1000, tx, finishHeight, 0)
 
+  let key = "phoenix_odds_" + this.toString()
+  let low = getInteger(getOracle(), key + "_1").valueOrElse(0)
+  let middle = getInteger(getOracle(), key + "_50").valueOrElse(0)
+  let high = getInteger(getOracle(), key + "_100").valueOrElse(0)
   let phoenixOptions = if (assetRarity < 50)
-    then 500 - ((250 * (assetRarity - 1)) / 49)
-    else 250 - ((200 * (assetRarity - 50)) / 50)
-  let phoenixRandom = getRandomNumber(phoenixOptions, tx, finishHeight, 1)
+    then low - (((low - middle) * (assetRarity - 1)) / 49)
+    else middle - (((middle - high) * (assetRarity - 50)) / 50)
+  let phoenixRandom = if phoenixOptions < 0 then throw("PHOENIX_ODDS") else
+    if phoenixOptions == 0 then 0 else if phoenixOptions == 1 then 1 else getRandomNumber(phoenixOptions, tx, finishHeight, 1)
   let jackpotRandom = getRandomNumber(100, tx, finishHeight, 2)
   let baseResult = if (phoenixRandom == 1) then { "phoenix" } else 
 
@@ -356,7 +361,11 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
                             ]
         result
       }else if (win == "phoenix") then {
-        let gene = valueOrElse(getString("phoenix_gen"), "WWWWWWWP")
+        let key = "phoenix_gen_" + this.toString()
+        let unlock = tryGetStringExternal(getOracle(), key + "_unlock")
+        let geneKey = if unlock == "" || getBoolean(getCouponsAddress(), unlock).valueOrElse(false) then key else key + "_locked"
+        let gene = getStringValue(getOracle(), geneKey)
+        if size(gene) != 8 then throw("PHOENIX_GENE") else
         strict phoenix = invoke(getIncubatorAddress(), "issueJackpot", [address, txId, gene], [])
         [StringEntry("address_" + address + "_initTx_" + initTx + "_result", phoenix.exactAs[String])]
 
@@ -405,13 +414,6 @@ func finishRebirthInternal(initTx: String, address: String, additionalPayment: A
       ]++validPayment++returnPayload ++bonusItemOutput("rebirth", address, initTx, finishBlock)
     }
   }
-}
-
-@Callable(i)
-func setJackpot(gen: String) = {
-  if size(i.payments) != 0 || i.caller != getCouponsAddress() then throw("RJ: coupons only without payments") else
-  if size(gen) != 8 then throw("RJ: gene must contain eight characters") else
-  ([StringEntry("phoenix_gen", gen)], true)
 }
 
 @Callable(i)

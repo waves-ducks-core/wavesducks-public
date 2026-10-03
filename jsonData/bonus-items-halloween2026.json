@@ -239,6 +239,146 @@
       "key": "bonus_item_3PK5WcMpfQweLcxuuQ6F3w56PbeRTVn3Jjt_rebirth_end",
       "type": "integer",
       "value": 0
+    },
+    {
+      "key": "bonus_item_3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv_hatch",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "bonus_item_3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv_hatch_chance",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv_hatch_start",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PEktVux2RhchSN63DsDo4b4mz4QqzKSeDv_hatch_end",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PE9yT1qVM9hsRkpiV6Y7AKEubafyT5NCuB_hatch",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "bonus_item_3PE9yT1qVM9hsRkpiV6Y7AKEubafyT5NCuB_hatch_chance",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PE9yT1qVM9hsRkpiV6Y7AKEubafyT5NCuB_hatch_start",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PE9yT1qVM9hsRkpiV6Y7AKEubafyT5NCuB_hatch_end",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PD6L4yr52Lac9qeqXNoi4mAiiak5ZBnx5D_hatch",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "bonus_item_3PD6L4yr52Lac9qeqXNoi4mAiiak5ZBnx5D_hatch_chance",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PD6L4yr52Lac9qeqXNoi4mAiiak5ZBnx5D_hatch_start",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PD6L4yr52Lac9qeqXNoi4mAiiak5ZBnx5D_hatch_end",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3P9SJwLFhgRQG5jAQinzZFyPzE9cP3oyu8Q_hatch",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "bonus_item_3P9SJwLFhgRQG5jAQinzZFyPzE9cP3oyu8Q_hatch_chance",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3P9SJwLFhgRQG5jAQinzZFyPzE9cP3oyu8Q_hatch_start",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3P9SJwLFhgRQG5jAQinzZFyPzE9cP3oyu8Q_hatch_end",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PPistJKgf9WaX3sZrPdw5oLny66N9f6WeF_hatch",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "bonus_item_3PPistJKgf9WaX3sZrPdw5oLny66N9f6WeF_hatch_chance",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PPistJKgf9WaX3sZrPdw5oLny66N9f6WeF_hatch_start",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PPistJKgf9WaX3sZrPdw5oLny66N9f6WeF_hatch_end",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PK5WcMpfQweLcxuuQ6F3w56PbeRTVn3Jjt_hatch",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "bonus_item_3PK5WcMpfQweLcxuuQ6F3w56PbeRTVn3Jjt_hatch_chance",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PK5WcMpfQweLcxuuQ6F3w56PbeRTVn3Jjt_hatch_start",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PK5WcMpfQweLcxuuQ6F3w56PbeRTVn3Jjt_hatch_end",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PJr8TE2b8bEmPXXoHcJnPanke3Yi41zzya_breed",
+      "type": "string",
+      "value": "ART-H26SOUL"
+    },
+    {
+      "key": "bonus_item_3PJr8TE2b8bEmPXXoHcJnPanke3Yi41zzya_breed_chance",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PJr8TE2b8bEmPXXoHcJnPanke3Yi41zzya_breed_start",
+      "type": "integer",
+      "value": 0
+    },
+    {
+      "key": "bonus_item_3PJr8TE2b8bEmPXXoHcJnPanke3Yi41zzya_breed_end",
+      "type": "integer",
+      "value": 0
     }
   ]
 }

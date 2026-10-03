@@ -5,23 +5,37 @@ function fn(source,name){const start=source.indexOf(`func ${name}(`);assert.ok(s
 async function exec(source,expression){const repl=ride.repl({nodeUrl:'http://127.0.0.1:1',chainId:'W',address:issuer});const loaded=await repl.evaluate(source.replace(/\bheight\b/g,"testHeight"));assert.equal(loaded.error,undefined,loaded.error);return repl.evaluate(expression);}
 function value(r,key,v){assert.equal(r.error,undefined,r.error);assert.ok(r.result.includes(`key = "${key}"\n\tvalue = ${JSON.stringify(v)}`),r.result);}
 const runtime=`let fixture = Address(base58'abc')\nlet height = 1000\n`;
-test('public duck rebirth uses one active gene key and ignores stale historical JACKPOT_NAME',async()=>{
+test('Phoenix genes come only from the oracle and follow the configured milestone key',async()=>{
   const source=read('ride/ducks/rebirth.ride');
-  const branch=source.match(/\}else if \(win == "phoenix"\) then \{\s*(let gene = [^\n]+)/);
-  assert.ok(branch,'The reward must remain inside the selected Phoenix outcome.');
-  assert.match(fn(source,'getRandomWin'),/phoenixRandom == 1/);
-  assert.match(fn(source,'finishRebirthInternal'),/\[address, txId, gene\]/);
-  assert.doesNotMatch(branch[1],/h26_|getOracle|getIncubatorAddress|getBoolean/);
-  for(const [configured,expected] of [[null,'WWWWWWWP'],['WDARKPHX','WDARKPHX'],['WNEWGENE','WNEWGENE']]){
-    const defs=runtime+`let data=[StringEntry("JACKPOT_NAME","WWEASTER")${configured===null?'':',StringEntry("phoenix_gen",'+JSON.stringify(configured)+')'}]
-func mockString(k:String)=if k=="phoenix_gen" then getString(data,k) else throw("unexpected legacy or external key")
+  const branch=source.split('}else if (win == "phoenix") then {')[1].split('strict phoenix =')[0];
+  assert.ok(branch.includes('getOracle()'));
+  assert.doesNotMatch(branch,/h26_|WWWWWWWP|WDARKPHX|JACKPOT_NAME/);
+  for(const t of [
+    {milestone:'unit',expected:'WWWWWWWP'},
+    {milestone:'false',expected:'WWWWWWWP'},
+    {milestone:'true',expected:'WDARKPHX'},
+    {milestone:'true',gene:'WNEWGENE',expected:'WNEWGENE'},
+    {unlock:'',milestone:'throw("UNEXPECTED_MILESTONE_READ")',expected:'WDARKPHX'},
+    {unlock:'next_event_done',milestone:'true',expected:'WDARKPHX'},
+    {milestone:'true',missing:true,error:'MISSING_GENE'},
+    {milestone:'true',gene:'SHORT',error:'PHOENIX_GENE'},
+  ]){
+    const unlock=t.unlock??'h26_milestone_1200';
+    const defs=runtime+`let oracle=Address(base58'xyz')
+func getOracle()=oracle
+func getCouponsAddress()=Address(base58'123')
+func tryGetStringExternal(a:Address,k:String)=if a!=oracle || k!="phoenix_gen_abc_unlock" then throw("WRONG_CONFIG_KEY") else ${JSON.stringify(unlock)}
+func mockBoolean(a:Address,k:String)=if a!=getCouponsAddress() || k!=${JSON.stringify(unlock)} then throw("WRONG_MILESTONE_SOURCE") else ${t.milestone}
+func mockStringValue(a:Address,k:String)=if a!=oracle then throw("LOCAL_GENE_READ") else if ${!!t.missing} then throw("MISSING_GENE") else
+  if k=="phoenix_gen_abc" then ${JSON.stringify(t.gene??'WDARKPHX')} else if k=="phoenix_gen_abc_locked" then "WWWWWWWP" else throw("WRONG_GENE_KEY")
 func selectedGene()={
-${branch[1].replace(/getString\(/g,'mockString(')}
+${branch.replace(/\bthis\b/g,'fixture').replace(/getBoolean\(/g,'mockBoolean(').replace(/getStringValue\(/g,'mockStringValue(')}
 gene
 }
 `;
-    const result=await exec(defs,'selectedGene()');assert.equal(result.error,undefined,result.error);
-    assert.ok(result.result.endsWith(`= "${expected}"`),result.result);
+    const result=await exec(defs,'selectedGene()');
+    if(t.error)assert.ok(result.error?.includes(t.error),result.error);
+    else {assert.equal(result.error,undefined,result.error);assert.ok(result.result.endsWith(`= "${t.expected}"`),result.result);}
   }
 });
 
@@ -137,22 +151,9 @@ func tryGetString(key:String)=getString(data,key).valueOrElse("")
   }
 });
 
-test('active jackpot setter is coupons-only, payment-free and validates the configured gene',async()=>{
-  const source=read('ride/ducks/rebirth.ride'),setter=fn(source,'setJackpot');
-  assert.doesNotMatch(read('ride/ducks/incubator.ride'),/unlockHalloween|h26_darkPhoenixUnlocked/);
-  assert.doesNotMatch(setter,/h26_|JACKPOT_NAME/);
-  for(const [caller,payments,gene,allowed] of [
-    ['abc','[]','WDARKPHX',true],['abc','[]','WNEWGENE',true],
-    ['xyz','[]','WDARKPHX',false],['abc',"[AttachedPayment(unit,1)]",'WDARKPHX',false],
-    ['abc','[]','',false],['abc','[]','SHORT',false],['abc','[]','TOOLONGGENE',false],
-  ]){
-    const defs=runtime+`let i=Invocation(${payments},Address(base58'${caller}'),base58'abc',base58'abc',0,unit,fixture,base58'abc')
-func getCouponsAddress()=fixture
-`+setter;
-    const result=await exec(defs,`setJackpot(${JSON.stringify(gene)})`);
-    if(allowed)value(result,'phoenix_gen',gene);
-    else assert.ok(result.error?.includes(caller!=='abc'||payments!=='[]'?'coupons only':'eight characters'),result.error);
-  }
+test('Phoenix configuration has no callable or local-key mutation path',()=>{
+  assert.doesNotMatch(read('ride/ducks/rebirth.ride'),/func setJackpot|StringEntry\("phoenix_gen"|getString\("phoenix_gen"/);
+  assert.doesNotMatch(read('ride/coupons.ride'),/"setJackpot"|phoenixUnlock/);
 });
 
 const booster=read('ride/artefacts/accBooster.ride');
@@ -241,4 +242,47 @@ test('coupons claims reuse issueArtefactIndex with the intended recipient and no
 func mockInvoke(a:Address,method:String,args:List[String|Int],p:List[AttachedPayment])=if method=="issueArtefactIndex" && args==["ART-H26SOUL","abc",0] && size(p)==0 then "issued" else throw("wrong issuance route")
 `+mint;
   const result=await exec(defs,'mint("ART-H26SOUL",fixture,0)');assert.equal(result.error,undefined,result.error);assert.ok(result.result.endsWith('= "issued"'));
+});
+
+test('oracle odds preserve all 100 historical rarity points and the existing RNG stream',async()=>{
+  const original=fn(read('ride/ducks/rebirth.ride'),'getRandomWin');
+  const source=original.replace('blacklistCode: String)', 'blacklistCode: String, odds: List[Int], expectedOdds: Int, raw: Int)')
+    .replace(/\bthis\b/g,'fixture').replace(/getInteger\(getOracle\(\), key \+ "_(1|50|100)"\).valueOrElse\(0\)/g,(_,n)=>`odds[${{'1':0,'50':1,'100':2}[n]}]`)
+    .replace('getRandomNumber(phoenixOptions, tx, finishHeight, 1)','checkedRandom(phoenixOptions, tx, finishHeight, 1, expectedOdds, raw)');
+  const defs=runtime+`
+func getMedhouseIssuedAmount()=50
+func getRandomNumber(n:Int,t:ByteVector,h:Int,o:Int)=if t!=base58'abc' || h!=10 then throw("WRONG_RNG_SEED") else if n==1000 && o==0 then 10 else if n==100 && o==2 then 0 else throw("WRONG_RNG_STREAM")
+func checkedRandom(n:Int,t:ByteVector,h:Int,o:Int,expected:Int,raw:Int)=if n!=expected || t!=base58'abc' || h!=10 || o!=1 then throw("CHANGED_PHOENIX_RNG") else raw
+`+source;
+  const repl=ride.repl({nodeUrl:'http://127.0.0.1:1',chainId:'W',address:issuer});
+  const loaded=await repl.evaluate(defs.replace(/\bheight\b/g,"testHeight"));assert.equal(loaded.error,undefined,loaded.error);
+  async function check(rarity,odds,expected,raw,win){
+    const result=await repl.evaluate(`getRandomWin(base58'abc',10,${rarity},"",[${odds}],${expected},${raw})`);
+    assert.equal(result.error,undefined,result.error);
+    assert.ok(result.result.includes(`_2 = "${win}"`),result.result);
+  }
+  for(let rarity=1;rarity<=100;rarity++){
+    const expected=rarity<50?500-Math.trunc(250*(rarity-1)/49):250-Math.trunc(200*(rarity-50)/50);
+    await check(rarity,[500,250,50],expected,1,'phoenix');
+    await check(rarity,[500,250,50],expected,0,'item!ART-FREEGENE');
+  }
+  for(const rarity of [1,49,50,51,100]){
+    await check(rarity,[200,200,200],200,1,'phoenix');
+    await check(rarity,[0,0,0],-1,1,'item!ART-FREEGENE');
+    await check(rarity,[1,1,1],-1,0,'phoenix');
+  }
+  const invalid=await repl.evaluate('getRandomWin(base58\'abc\',10,50,"",[-1,-1,-1],-1,0)');
+  assert.ok(invalid.error?.includes('PHOENIX_ODDS'));
+});
+
+test('absent Phoenix odds disable the drop without reading its RNG',async()=>{
+  const source=fn(read('ride/ducks/rebirth.ride'),'getRandomWin').replace(/\bthis\b/g,'fixture').replace(/\bgetInteger\(/g,'mockInteger(');
+  const defs=runtime+`
+func getOracle()=Address(base58'xyz')
+func mockInteger(a:Address,k:String)=if a!=getOracle() || !["phoenix_odds_abc_1","phoenix_odds_abc_50","phoenix_odds_abc_100"].containsElement(k) then throw("WRONG_ORACLE_KEY") else unit
+func getMedhouseIssuedAmount()=50
+func getRandomNumber(n:Int,t:ByteVector,h:Int,o:Int)=if o==1 then throw("DISABLED_PHOENIX_RNG") else 0
+`+source;
+  const result=await exec(defs,'getRandomWin(base58\'abc\',10,50,"")');
+  assert.equal(result.error,undefined,result.error);assert.ok(result.result.includes('_2 = "item!ART-FREEGENE"'));
 });

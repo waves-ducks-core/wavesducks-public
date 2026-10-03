@@ -74,6 +74,31 @@
       "key": "phoenix_gen_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ",
       "type": "string",
       "value": "WDARKPHX"
+    },
+    {
+      "key": "phoenix_gen_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_locked",
+      "type": "string",
+      "value": "WWWWWWWP"
+    },
+    {
+      "key": "phoenix_gen_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_unlock",
+      "type": "string",
+      "value": "h26_milestone_1200"
+    },
+    {
+      "key": "phoenix_odds_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_1",
+      "type": "integer",
+      "value": 500
+    },
+    {
+      "key": "phoenix_odds_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_50",
+      "type": "integer",
+      "value": 250
+    },
+    {
+      "key": "phoenix_odds_3PCC6fVHNa6289DTDmcUo3RuLaFmteZZsmQ_100",
+      "type": "integer",
+      "value": 50
     }
   ]
 }
